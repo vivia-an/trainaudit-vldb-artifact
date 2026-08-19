@@ -1,0 +1,130 @@
+{
+  "experiment": "trainaudit_inline_check",
+  "results": [
+    {
+      "bug_id": "CF1",
+      "variant": "buggy",
+      "verdict": "DETECTED",
+      "rule": "P4-invocation-frequency",
+      "n_violations": 16,
+      "first_violation_step": 0,
+      "evidence": [
+        {
+          "step": 0,
+          "calls_per_step": 2,
+          "expected": 1
+        },
+        {
+          "step": 1,
+          "calls_per_step": 2,
+          "expected": 1
+        },
+        {
+          "step": 2,
+          "calls_per_step": 2,
+          "expected": 1
+        }
+      ]
+    },
+    {
+      "bug_id": "CF1",
+      "variant": "fixed",
+      "verdict": "CLEAN",
+      "rule": "P4-invocation-frequency",
+      "n_violations": 0,
+      "first_violation_step": null,
+      "evidence": []
+    },
+    {
+      "bug_id": "CM1",
+      "variant": "buggy",
+      "verdict": "DETECTED",
+      "rule": "P3-cross-rank-replication",
+      "n_violations": 96,
+      "first_violation_step": 0,
+      "evidence": [
+        {
+          "step": 0,
+          "rank": 1,
+          "value": 1000.5328555107117,
+          "rank0": 1007.7049803733826
+        },
+        {
+          "step": 0,
+          "rank": 2,
+          "value": 993.1060531139374,
+          "rank0": 1007.7049803733826
+        },
+        {
+          "step": 0,
+          "rank": 3,
+          "value": 1008.842156291008,
+          "rank0": 1007.7049803733826
+        }
+      ]
+    },
+    {
+      "bug_id": "CM1",
+      "variant": "fixed",
+      "verdict": "CLEAN",
+      "rule": "P3-cross-rank-replication",
+      "n_violations": 0,
+      "first_violation_step": null,
+      "evidence": []
+    },
+    {
+      "bug_id": "OF1",
+      "variant": "buggy",
+      "verdict": "DETECTED",
+      "rule": "P1-dtype-preservation",
+      "n_violations": 20,
+      "first_violation_step": 0,
+      "evidence": [
+        {
+          "step": 0,
+          "rel_drift": 5.291074302187281e-05,
+          "input_dtype": "torch.float32",
+          "output_via": "torch.float16"
+        },
+        {
+          "step": 1,
+          "rel_drift": 0.00018170827115946423,
+          "input_dtype": "torch.float32",
+          "output_via": "torch.float16"
+        },
+        {
+          "step": 2,
+          "rel_drift": 0.00025716269355703165,
+          "input_dtype": "torch.float32",
+          "output_via": "torch.float16"
+        }
+      ]
+    },
+    {
+      "bug_id": "OF1",
+      "variant": "fixed",
+      "verdict": "CLEAN",
+      "rule": "P1-dtype-preservation",
+      "n_violations": 0,
+      "first_violation_step": null,
+      "evidence": []
+    }
+  ],
+  "summary": {
+    "CF1": {
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P4-invocation-frequency"
+    },
+    "CM1": {
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P3-cross-rank-replication"
+    },
+    "OF1": {
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P1-dtype-preservation"
+    }
+  }
+}

@@ -1,0 +1,1610 @@
+{
+  "meta": {
+    "batch": 2,
+    "count": 90
+  },
+  "bugs": [
+    {
+      "bug_id": "O-034",
+      "framework": "olmo",
+      "source_pool": "128_only",
+      "title": "Activation checkpointing dtype mismatch in FSDPv2: skipped type casting in _pre_forward during recomputation",
+      "category": "dtype",
+      "root_cause": "FSDPv2 的 _pre_forward hook 在 activation checkpointing 的 recomputation 阶段跳过了 dtype casting，导致 recomputed activation 是 float32 而 saved metadata 记录的是 bfloat16",
+      "invariant": null,
+      "detection_method": "activation checkpointing recomputation 时 tensor dtype 与 forward pass 不一致（bf16 vs fp32）",
+      "detection_signal": "activation checkpointing recomputation 时 tensor dtype 与 forward pass 不一致（bf16 vs fp32）",
+      "check_stage": "after_backward",
+      "invariant_type": "dtype_consistency",
+      "trigger_conditions": [],
+      "parallel_dimension": "FSDP"
+    },
+    {
+      "bug_id": "O-035",
+      "framework": "olmo",
+      "source_pool": "128_only",
+      "title": "FSDP with param_init_fn + sync_module_states=True produces random accuracy (model not learning)",
+      "category": "sharding",
+      "root_cause": "FSDP 使用 param_init_fn 和 sync_module_states=True 时，因 re-initialization 在 flatten/shard 后改变了参数 shape 导致 RNG 序列不同，模型实际上无法学习但不报错",
+      "invariant": null,
+      "detection_method": "accuracy 和 F1 保持随机水平（模型未学习）；loss 看似下降但实际效果为零",
+      "detection_signal": "accuracy 和 F1 保持随机水平（模型未学习）；loss 看似下降但实际效果为零",
+      "check_stage": "initialization",
+      "invariant_type": "cross_rank_equality",
+      "trigger_conditions": [],
+      "parallel_dimension": "FSDP"
+    },
+    {
+      "bug_id": "O-036",
+      "framework": "olmo",
+      "source_pool": "128_only",
+      "title": "Meta device initialization on HF models + FSDP leads to different numerical behavior",
+      "category": "numerical",
+      "root_cause": "HuggingFace 模型使用 meta device 初始化后再 move to GPU + FSDP wrap，与直接 GPU 初始化相比产生不同的数值结果，即使 buffers/parameters 看起来相同",
+      "invariant": null,
+      "detection_method": "meta device 初始化 vs GPU 直接初始化的 loss 输出不同；参数值看起来相同但计算结果不同",
+      "detection_signal": "meta device 初始化 vs GPU 直接初始化的 loss 输出不同；参数值看起来相同但计算结果不同",
+      "check_stage": "initialization",
+      "invariant_type": "implementation_equivalence",
+      "trigger_conditions": [],
+      "parallel_dimension": "FSDP"
+    },
+    {
+      "bug_id": "O-037",
+      "framework": "olmo",
+      "source_pool": "128_only",
+      "title": "FSDP2 precision issues in reverse process: gradient precision degradation with block-level wrapping",
+      "category": "numerical",
+      "root_cause": "FSDP2 对 model block 逐个 fully_shard() 再 wrap 整个模型时，backward 中 text layer 的 gradient 出现精度问题，单 GPU 也能复现",
+      "invariant": null,
+      "detection_method": "block-level FSDP wrapping 与 whole-model wrapping 的 gradient 精度不同；单 GPU + FSDP 也出现精度退化",
+      "detection_signal": "block-level FSDP wrapping 与 whole-model wrapping 的 gradient 精度不同；单 GPU + FSDP 也出现精度退化",
+      "check_stage": "after_backward",
+      "invariant_type": "numerical_stability",
+      "trigger_conditions": [],
+      "parallel_dimension": "FSDP"
+    },
+    {
+      "bug_id": "O-038",
+      "framework": "olmo",
+      "source_pool": "128_only",
+      "title": "Tensor parallelism grad norm incorrectly scaled by world_size instead of DP size",
+      "category": "gradient_sync",
+      "root_cause": "TP 模式下 gradient norm scaler 错误地使用 world_size 而非 DP size 来做归一化，导致 gradient clipping 不正确，且 tokens-per-GPU 统计也错误",
+      "invariant": null,
+      "detection_method": "TP 模式下 grad norm 与非 TP 模式不一致（scale by world_size vs DP_size）；gradient clipping 阈值实际效果随 TP degree 变化",
+      "detection_signal": "TP 模式下 grad norm 与非 TP 模式不一致（scale by world_size vs DP_size）；gradient clipping 阈值实际效果随 TP degree 变化",
+      "check_stage": "after_backward",
+      "invariant_type": "scale_invariance",
+      "trigger_conditions": [],
+      "parallel_dimension": "TP"
+    },
+    {
+      "bug_id": "O-039",
+      "framework": "olmo-core",
+      "source_pool": "128_only",
+      "title": "Fixed bug attempting to save duplicate final checkpoint on restart",
+      "category": "checkpoint",
+      "root_cause": "训练从 checkpoint 恢复后，trainer 尝试重复保存最终 checkpoint，可能覆盖已有的正确 checkpoint",
+      "invariant": null,
+      "detection_method": "恢复训练后在最终 step 保存了重复的 checkpoint；checkpoint 文件被覆盖",
+      "detection_signal": "恢复训练后在最终 step 保存了重复的 checkpoint；checkpoint 文件被覆盖",
+      "check_stage": "checkpoint_save",
+      "invariant_type": "no_duplicate",
+      "trigger_conditions": [],
+      "parallel_dimension": "none"
+    },
+    {
+      "bug_id": "B1",
+      "framework": "megatron-lm",
+      "source_pool": "295_only",
+      "title": "SwitchMLP router torch.nn.Linear init not wrapped in data-parallel RNG tracker",
+      "category": "moe",
+      "root_cause": "Buggy init does `self.router = torch.nn.Linear(...)` outside of any RNG tracker fork. If the default CUDA RNG state is asymmetric across TP ranks at the point of router construction, weights diverge. Fix wraps init in `get_cuda_rng_tracker().fork(get_data_parallel_rng_tracker_name())`.",
+      "invariant": "During SwitchMLP construction, the router's weight init must execute inside a get_cuda_rng_tracker().fork(<data-parallel name>) context",
+      "detection_method": "rng_tracker_fork_observation_plus_cross_rank_hash",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "tensor_model_parallel_size > 1",
+        "num_experts >= 2 (SwitchMLP MoE)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B10",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-2 + CPU offload micro_step_id off-by-one and wrong copy/accumulate gating",
+      "category": "gradient_sync",
+      "root_cause": "DeepSpeedZeroOptimizer initialised micro_step_id=0 (instead of -1). After backward()'s `+= 1`, the first global step sees ids (1..gas) while subsequent steps see (0..gas-1). The copy/accumulate gating used `not is_gradient_accumulation_boundary` for copy, which copies on every non-boundary microstep instead of only the first.",
+      "invariant": "On every global step, micro_step_id sequence must start at 0 (so first call has id == 0)",
+      "detection_method": "hook_first_microstep_id",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 2",
+        "CPU offload optimizer",
+        "gradient_accumulation_steps > 1"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B11",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "clip_grad_norm_ uses torch.max instead of torch.min for clip_coef",
+      "category": "gradient_sync",
+      "root_cause": "deepspeed/runtime/utils.py:clip_grad_norm_ used torch.max(1, max_norm/total_norm) so clip_coef=1 when grads exceed threshold (no clipping). Fix changes max -> min so clip_coef<=1 properly clips.",
+      "invariant": "After clip_grad_norm_, ||grad|| must be <= max_norm (within tolerance)",
+      "detection_method": "runtime_value_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "FP32 training (no bf16/fp16)",
+        "ZeRO disabled (stage 0)",
+        "gradient_clipping > 0",
+        "actual gradient norm > max_norm"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B12",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "AdamWConfig.build does not set initial_lr on param_groups; restart-time peak LR lost",
+      "category": "lr_schedule",
+      "root_cause": "build() returned torch.optim.AdamW without setting initial_lr. PyTorch LRScheduler with last_epoch>=0 requires initial_lr in each param_group; without it, peak LR after restart is lost.",
+      "invariant": "after AdamWConfig.build(model), every param_group must contain key 'initial_lr'",
+      "detection_method": "structural_invariant_after_train_step",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Optimizer built via olmo_core.optim.AdamWConfig.build(model)",
+        "Restart / scheduler that depends on param_groups[*]['initial_lr']"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B13",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "OLMoSequentialBlock attn_norm overwrites residual stream",
+      "category": "numerical",
+      "root_cause": "OLMoSequentialBlock.forward did `x = self.attn_norm(x)` clobbering residual stream so identity path uses normed x.",
+      "invariant": "After calling self.attn_norm, the residual variable x must equal original input, not the normed version",
+      "detection_method": "residual_stream_invariance",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "block_type='sequential'",
+        "norm_after=False (pre-LN, default)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B14",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "cross_entropy_loss z-loss reduction='mean' uses wrong masked-mean formula",
+      "category": "numerical",
+      "root_cause": "buggy: z_squared = z_squared / (labels != ignore).mean() returns vector divided by scalar, wrong scaling. Fix: z_squared = (z_squared * (labels != ignore)).mean() returns scalar masked-mean.",
+      "invariant": "olmo.train.cross_entropy_loss z_loss with reduction='mean' must equal 1e-4 * masked_mean(logsumexp**2 of valid tokens)",
+      "detection_method": "value_compare_vs_reference",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "compute_z_loss=True",
+        "reduction='mean'",
+        "labels contain ignore_index (-100) tokens"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B15",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Trainer.train_micro_batch divides z_loss by num_micro_batches instead of batch_size_in_tokens",
+      "category": "numerical",
+      "root_cause": "z_loss = z_loss / num_micro_batches scales auxiliary loss by gradient accumulation count, not by token count. With T=batch_size_in_tokens >> num_micro_batches, z_loss dominates loss and corrupts training.",
+      "invariant": "z_loss returned by train_micro_batch must equal raw_z_loss / batch_size_in_tokens (same divisor as ce_loss)",
+      "detection_method": "value_compare_after_train_micro_batch",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "softmax_auxiliary_loss = True",
+        "num_micro_batches != batch_size_in_tokens"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B2",
+      "framework": "megatron-lm",
+      "source_pool": "295_only",
+      "title": "LinearWithFrozenWeight backward forgets to all-reduce grad_input across TP",
+      "category": "gradient_sync",
+      "root_cause": "LinearWithFrozenWeight.backward returns grad_input without all-reducing across TP ranks. Each rank only sees its column-shard of grad. linear_with_frozen_weight took async_grad_allreduce as dummy arg.",
+      "invariant": "After backward of linear_with_frozen_weight on TP=N, grad_input should equal sum across N ranks (i.e., expected = N * local_grad)",
+      "detection_method": "compare_grad_input_magnitude_vs_expected",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "tensor_model_parallel_size > 1",
+        "weight has requires_grad=False (frozen)",
+        "linear_with_frozen_weight code path"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B3",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "DeepSpeedEngine.communication_data_type defaults to fp32 when only bfloat16 is enabled",
+      "category": "dtype",
+      "root_cause": "DeepSpeedEngine.communication_data_type returned torch.float32 when bf16_enabled but no explicit comm dtype, so allreduce/reduce ran in fp32 silently breaking bf16 contract. Fix: return torch.bfloat16 when bfloat16_enabled.",
+      "invariant": "engine.communication_data_type() must be torch.bfloat16 when only bf16 is enabled",
+      "detection_method": "engine_method_value_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "bf16 enabled",
+        "no explicit communication_data_type in config"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B4",
+      "framework": "megatron-lm",
+      "source_pool": "295_only",
+      "title": "get_data_parallel_src_rank uses global_rank % num_dp_groups instead of looking up first global rank in the DP group",
+      "category": "control_flow",
+      "root_cause": "Buggy formula `global_rank % num_data_parallel_groups` only matches the true DP src rank when DP groups are contiguous global ranks; with PP > 1 or other interleavings, the formula returns the wrong rank.",
+      "invariant": "get_data_parallel_src_rank() must equal min(global ranks in the local DP group)",
+      "detection_method": "compare_with_actual_dp_group_min",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "world_size >= 4",
+        "non-trivial parallel layout (e.g. PP=2, DP=2)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B5",
+      "framework": "megatron-lm",
+      "source_pool": "295_only",
+      "title": "DistributedDataParallel.finish_grad_sync forgets to scale expert_grads by 1/dp_world_size",
+      "category": "gradient_sync",
+      "root_cause": "DistributedDataParallel.finish_grad_sync syncs the regular grad buffers but never divides expert_grads (local-only main_grads of MoE expert params). Buggy expert grads are dp_world_size× larger than intended.",
+      "invariant": "After finish_grad_sync, expert_grad_norm_after / expert_grad_norm_before == 1 / data_parallel_world_size",
+      "detection_method": "expert_grad_norm_ratio_pre_post_sync",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "MoE training (--num-experts >= 2)",
+        "data_parallel_world_size > 1"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B6",
+      "framework": "megatron-lm",
+      "source_pool": "295_only",
+      "title": "forward_backward_pipelining_with_interleaving uses num_microbatches instead of total_num_microbatches in the param-sync gate",
+      "category": "gradient_sync",
+      "root_cause": "Condition `param_sync_microbatch_id < num_microbatches` should be `< total_num_microbatches`; only first num_microbatches param-syncs were aligned across PP ranks.",
+      "invariant": "param_sync_func should be invoked the same number of times whether the gate uses num_microbatches or total_num_microbatches when total = num*num_chunks > num",
+      "detection_method": "count_param_sync_invocations",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "interleaved pipeline parallelism (num_layers_per_virtual_pipeline_stage > 0)",
+        "config.param_sync_func is set",
+        "num_model_chunks >= 3 (so the inner range matters)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B7",
+      "framework": "megatron-lm",
+      "source_pool": "295_only",
+      "title": "FlashSelfAttention.forward sets self.dropout_p=0 in eval branch and never restores",
+      "category": "control_flow",
+      "root_cause": "The eval branch did `self.dropout_p = 0`, mutating the instance. After the call self.dropout_p is permanently 0 even when training resumes. Fix introduces a local `dropout_p` variable.",
+      "invariant": "After running forward in eval mode, the FlashSelfAttention.dropout_p attribute must equal the constructor's attention_dropout (no permanent mutation)",
+      "detection_method": "post_eval_attribute_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "FlashSelfAttention with attention_dropout > 0",
+        "model.eval() / forward called with self.training=False",
+        "model.train() afterwards (dropout_p stays 0)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B8",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "InferenceEngine creates EP groups with num_experts instead of ep_size",
+      "category": "moe",
+      "root_cause": "InferenceEngine.__init__ called self._create_ep_parallel_group(config.moe.moe_experts); should be (config.moe.ep_size). When num_experts > ep_size the EP group has wrong size — when num_experts > world_size, group construction fails or creates malformed groups.",
+      "invariant": "InferenceEngine._create_ep_parallel_group must be called with ep_size, not num_experts",
+      "detection_method": "hook_create_ep_parallel_group_argument",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "deepspeed.init_inference with a model containing deepspeed.moe.MoE",
+        "world_size > 1",
+        "num_experts != ep_size"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "B9",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "single_all_to_all routes uneven-head path on second all2all when divisibility fails",
+      "category": "communication",
+      "root_cause": "Buggy gate `if get_num_kv_heads() is not None or num_heads % seq_world_size != 0` routes to uneven_heads_all2all even on the second all2all when divisibility fails. Uneven path does not produce correct output for second all2all.",
+      "invariant": "On second all2all (scatter_idx<2) with divisibility failure and kv_heads None, must NOT take uneven_heads_all2all path",
+      "detection_method": "branch_observe_uneven_heads_all2all",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "DeepSpeed sequence-parallel single_all_to_all with scatter_idx<2 (second all2all)",
+        "num_heads % seq_world_size != 0",
+        "get_num_kv_heads() is None at call time"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-1",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "TopKGate applies topk to logits instead of post-softmax gates",
+      "category": "numerical",
+      "root_cause": "torch.topk(logits, k) selects experts from raw logits, not softmax probabilities",
+      "invariant": "topk must be applied to gates (post-softmax), not logits (pre-softmax)",
+      "detection_method": "source_analysis",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-12",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "seq_parallel_communication_data_type config key typo causes silent ignore",
+      "category": "control_flow",
+      "root_cause": "SEQ_PARALLEL_COMMUNICATION_DATA_TYPE constant uses 'seq_parallel_comm_data_type' but config uses 'seq_parallel_communication_data_type'",
+      "invariant": "User-specified seq_parallel_communication_data_type must be reflected in parsed engine config",
+      "detection_method": "runtime_hook",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-13",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-1/2 CPU-offload gradient norm underestimated with manual GA",
+      "category": "optimizer_state",
+      "root_cause": "copy_grads_in_partition only accumulates when ga_steps > 1, misses micro_step_id > 0 case",
+      "invariant": "CPU gradient buffer must be updated on every micro-step when cpu_offload is enabled",
+      "detection_method": "runtime_hook",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-14",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "WarmupCosineLR multi-group initialization returns wrong-length LR list",
+      "category": "lr_schedule",
+      "root_cause": "get_lr_ratio returns [0.0] list instead of 0.0 scalar; get_lr returns [0.0] instead of per-group list",
+      "invariant": "LR scheduler get_lr() must return one value per optimizer param group",
+      "detection_method": "runtime_hook",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-15",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "BF16 + ZeRO-0 gradients never zeroed between optimizer steps",
+      "category": "optimizer_state",
+      "root_cause": "_take_model_step hits `pass` for bf16+zero_stage=0, skipping zero_grad entirely",
+      "invariant": "Gradients must be zeroed after each optimizer step to prevent stale accumulation",
+      "detection_method": "runtime_hook",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-16",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-3 reduce_and_partition_stream syncs against wrong CUDA stream",
+      "category": "optimizer_state",
+      "root_cause": "__add_grad_to_ipg_bucket uses default_stream() instead of current_stream() for reduce_and_partition_stream synchronization",
+      "invariant": "Stream synchronization must use current_stream() not default_stream() to prevent race conditions",
+      "detection_method": "runtime_hook",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-17",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "Loss double-scaling in backward — scale_if_loss applied to gas_scaled_loss",
+      "category": "numerical",
+      "root_cause": "",
+      "invariant": null,
+      "detection_method": null,
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-18",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-1/2 CPU-offload gradient loss with multiple backward() per step",
+      "category": "gradient_sync",
+      "root_cause": "",
+      "invariant": null,
+      "detection_method": null,
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-19",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "extra_large_param uses param.dtype instead of comm_dtype — gradient silently dropped",
+      "category": "gradient_sync",
+      "root_cause": "",
+      "invariant": null,
+      "detection_method": null,
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-2",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "WarmupCosineLR returns scalar instead of per-group LR list",
+      "category": "lr_schedule",
+      "root_cause": "",
+      "invariant": "get_lr() must return one value per param group",
+      "detection_method": "runtime_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-20",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "BF16_Optimizer incorrectly selected for bf16+fp32_grad_accum without ZeRO",
+      "category": "control_flow",
+      "root_cause": "",
+      "invariant": null,
+      "detection_method": null,
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-21",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "bf16 without ZeRO incorrectly treated as having ZeRO optimizer state in checkpoint",
+      "category": "checkpoint",
+      "root_cause": "",
+      "invariant": null,
+      "detection_method": null,
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-22",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO 1/2 elastic checkpoint optimizer state alignment ignores nccl_start_alignment_factor",
+      "category": "checkpoint",
+      "root_cause": "In _partition_base_optimizer_state, the alignment used for re-flattening merged optimizer state was just dist.get_world_size(group), but ZeRO pads optimizer states by nccl_start_alignment_factor * world_size when saving. As a result the per-rank optimizer state slices were misaligned and silently restored to the wrong parameters.",
+      "invariant": "After load_checkpoint, optimizer.state[p] tensors must equal the pre-save optimizer.state[p] tensors element-wise for every parameter p.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 1 or 2",
+        "load elastic checkpoint with different world size",
+        "load_optimizer_states=True"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-23",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO2 allreduce_bucket forces rank=None, never uses single-rank reduce path",
+      "category": "communication",
+      "root_cause": "In refactor PR #4695, allreduce_bucket(self, bucket, rank=None, ...) was added with a hard `rank = None` reset at the very top of the function, which silently overrides any rank passed in by callers. The intended single-destination reduce path is therefore never taken and gradients always go through allreduce, producing different numerics on the receiving rank than expected.",
+      "invariant": "When use_multi_rank_bucket_allreduce is False, dist.reduce should be called for gradient buckets while dist.all_reduce should not.",
+      "detection_method": "function_call_counting",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 1 or 2",
+        "use_multi_rank_bucket_allreduce=False"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-24",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO3 contiguous_gradients off-by-one — last param exactly filling bucket is dropped",
+      "category": "gradient_sync",
+      "root_cause": "The decision to copy a parameter's gradient into the contiguous IPG bucket used a strict less-than comparison (`elements_in_ipg_bucket + param.grad.numel() < reduce_bucket_size`). When a param exactly fills the remaining bucket capacity the branch was skipped, so the gradient was never copied into the contiguous buffer and never reduced — the parameter silently received a stale (or zero) gradient.",
+      "invariant": "For every trainable param p with non-None grad after backward, the reduced gradient on the owning rank must be non-zero (or, when expected to be zero, must equal the locally computed grad).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3",
+        "contiguous_gradients=True",
+        "param.numel == bucket free space"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-25",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "load_module_only with bf16 silently skips refresh_fp32_params, optimizer trains on uninitialized fp32 weights",
+      "category": "checkpoint",
+      "root_cause": "Two bugs together: (1) load_zero_checkpoint required load_optimizer_states even when only loading the bf16 module, so it ran with no checkpoint files; (2) inside _load_checkpoint, the call to optimizer.refresh_fp32_params() was guarded by self.fp16_enabled(), so for bf16 the high-precision master weights were never refreshed from the loaded 16-bit module. Training proceeds with default-initialized fp32 master weights.",
+      "invariant": "After load_checkpoint with load_module_only=True, optimizer.fp32_groups_flat[i] must equal bf16_groups_flat[i].float() for every group i.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "bf16 enabled",
+        "load_checkpoint(load_module_only=True, load_optimizer_states=False)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-26",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO3 quantized_nontrainable_weights flag overwrites quantized_weights instead",
+      "category": "control_flow",
+      "root_cause": "In zero.Init.__init__, when the deepspeed config has zero_quantized_nontrainable_weights=True but the local kwarg is False, the code mistakenly assigns the value to self.quantized_weights instead of self.quantized_nontrainable_weights — a copy-paste typo. Trainable weights end up being quantized while the nontrainable weights stay full precision (the opposite of what was requested).",
+      "invariant": "After zero.Init, self.quantized_nontrainable_weights must equal config.zero_quantized_nontrainable_weights.",
+      "detection_method": "config_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3",
+        "zero_quantized_nontrainable_weights=True in config",
+        "constructor caller did not pass zero_quantized_nontrainable_weights explicitly"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-27",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO3 communication_data_type comparison inverted — buffer cast happens only when no cast is needed",
+      "category": "dtype",
+      "root_cause": "In __avg_scatter_contiguous_grads the gate was `if self.communication_data_type == self.dtype:` — exactly backward. When the user requested a different communication dtype, the buffer was NOT cast, so reduce-scatter ran on the wrong dtype; when it matched the model dtype the code wastefully cast to itself.",
+      "invariant": "Inside __avg_scatter_contiguous_grads the tensor passed to reduce_scatter must have dtype == self.communication_data_type.",
+      "detection_method": "dtype_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3",
+        "communication_data_type != model dtype (e.g. fp32 comm with bf16 model)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-28",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "bf16+ZeRO1+CPU offload silently routes through bf16 wrapper; extra-large param uses raw param.grad instead of reduction grad",
+      "category": "offload",
+      "root_cause": "Two related bugs: (a) The dtype dispatch picked the BFLOAT16 optimizer path for bf16+fp32-grad-accum even when CPU offload was on, where it doesn't work correctly. (b) For an extra-large param the reduction code took `self.extra_large_param_to_reduce.grad` directly instead of routing through get_gradient_for_reduction(), so when use_grad_accum_for_reduction was on the accumulated fp32 grad was bypassed and the raw bf16 grad was reduced (loss of precision and stale value).",
+      "invariant": "When use_grad_accum_for_reduction is True, the tensor passed to average_tensor must be the same object/dtype as get_gradient_for_reduction(param), not param.grad.",
+      "detection_method": "dtype_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "bf16 model",
+        "grad_accum_dtype=fp32",
+        "ZeRO stage 1",
+        "zero_cpu_offload=True",
+        "param.numel > reduce_bucket_size"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-29",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO2 + MoE: fp32→fp16 master-weight copy uses outer-loop partition_id, writing into wrong rank's slice",
+      "category": "moe",
+      "root_cause": "After optimizer.step(), the loop that copies fp32 master weights back to bf16/fp16 partitions used a single `partition_id` taken from the outer scope. With MoE, different param groups use different real_dp_process_group with different ranks, so the wrong partition slot in bit16_partitions was overwritten and the local rank's actual partition was never updated.",
+      "invariant": "After optimizer.step, bit16_partitions[i][rank_i_in_group] must equal single_partition_of_fp32_groups[i].to(bit16_dtype) for every group i, where rank_i_in_group = dist.get_rank(group=real_dp_process_group[i]).",
+      "detection_method": "cross_rank_equality",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 2",
+        "MoE model with expert parallel groups != data parallel group"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-3",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "Frozen parameters included in optimizer groups",
+      "category": "optimizer_state",
+      "root_cause": "",
+      "invariant": "Optimizer groups must only contain params with requires_grad=True",
+      "detection_method": "runtime_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-30",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO2 + CPU offload: DeepSpeedCPUAdam fp32→fp16 partition_id is wrong across param groups",
+      "category": "offload",
+      "root_cause": "When building bit16_param_groups for DeepSpeedCPUAdam.step(fp16_param_groups=...) and when copying fp32 partitions back to bit16 partitions, the code used a single outer-scope partition_id for all groups instead of computing the rank within each group's real_dp_process_group. With more than one group, every group except the first received the wrong rank's partition.",
+      "invariant": "For each ZeRO param group i, the bit16 partition that was updated by DeepSpeedCPUAdam must be bit16_partitions[i][dist.get_rank(real_dp_process_group[i])].",
+      "detection_method": "cross_rank_equality",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 2",
+        "DeepSpeedCPUAdam offload optimizer",
+        "multiple param groups using different real_dp_process_group"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-31",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO2 round-robin gradient partitioning uses non-reordered group, mapping params to wrong partition owner",
+      "category": "sharding",
+      "root_cause": "The bookkeeping loop that builds param_to_partition_ids/is_partition_reduced iterated over self.fp16_groups (the original parameter order) even though gradient reduction itself uses self.round_robin_fp16_groups (the reordered list). The partition-owner table therefore disagreed with the actual reduction destination, so some params' gradients were attributed to the wrong owner and never appeared in the optimizer step.",
+      "invariant": "param_to_partition_ids must be built from the same parameter ordering that average_tensor / reduce_scatter uses (round_robin_fp16_groups when round_robin_gradients is enabled).",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 2",
+        "round_robin_gradients=True"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-32",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "Pipeline partition_balanced returns degenerate partitions, last PP stage can be assigned zero layers",
+      "category": "sharding",
+      "root_cause": "ds_utils.partition_balanced used a binary-search probe (_lprobe / _rb_partition_balanced) that, when probed with uniform weights, returned a non-monotone boundary list like [0,2,4,5,5] for 5 items / 4 parts — i.e. the last stage owns 0 layers. Pipeline modules construct from that boundary list and silently train with a stage holding no parameters.",
+      "invariant": "For every adjacent pair (parts[p], parts[p+1]) returned by partition_balanced, parts[p+1] - parts[p] must be >= 1 (each PP stage owns at least one item).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "pipeline parallel num_stages > 2",
+        "uniform layer weights (e.g. partition by parameter count of identical layers)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-33",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "MiCS save_non_zero_checkpoint True on every rank — checkpoint files race-overwrite each other",
+      "category": "checkpoint",
+      "root_cause": "self.save_non_zero_checkpoint = (rank == 0) or zero_optimization_partition_weights() became True for every MiCS rank because zero_optimization_partition_weights() is True under MiCS. All ranks then wrote the consolidated non-ZeRO checkpoint file, racing with each other and silently leaving inconsistent contents on disk.",
+      "invariant": "For a MiCS run with shard_size S, exactly S ranks (those with global_rank < S) should report save_non_zero_checkpoint=True; all other ranks should report False.",
+      "detection_method": "function_call_counting",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "MiCS sharding (mics_shard_size > 0)",
+        "world_size > mics_shard_size",
+        "save_checkpoint called on all ranks"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-34",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO3 allgather hardcodes ds_tensor dtype — mixed-dtype param groups silently allgather wrong bytes",
+      "category": "dtype",
+      "root_cause": "all_gather_coalesced built one flat partition buffer assuming a single ds_tensor dtype across all params in the group, so when the param list contained mixed dtypes the larger-dtype params were silently truncated/aliased into the smaller-dtype buffer. After allgather, parameters held garbage bit patterns until the next iteration overwrote them.",
+      "invariant": "After all_gather_coalesced, every gathered param p must satisfy p.data.dtype == p.ds_tensor.dtype and p.numel() * p.element_size() bytes were transferred for p.",
+      "detection_method": "dtype_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3",
+        "model contains parameters of more than one floating dtype (e.g. fp32 LayerNorm + bf16 weights)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-35",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO3 InflightParamRegistry shared between train and eval coordinators causes stale handles on mode switch",
+      "category": "control_flow",
+      "root_cause": "The training and eval PartitionedParameterCoordinators were both constructed with the same shared InflightParamRegistry. When the engine switched modes, in-flight allgather handles registered under one coordinator were observed by the other, which would either re-issue allgather on a still-inflight param or wait on a handle that was never going to fire — leading to silently-stale parameter values during the first iteration after the switch.",
+      "invariant": "Each PartitionedParameterCoordinator must own a private InflightParamRegistry; the registry instance held by the train coordinator must not be the same Python object as the eval coordinator's.",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3",
+        "alternating model.train()/model.eval() inside a step",
+        "overlap_comm or prefetch enabled"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-36",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO step uses post-decay loss_scale to unscale grad norm instead of prev_scale used during backward",
+      "category": "numerical",
+      "root_cause": "In DeepSpeedZeroOptimizer.step, _global_grad_norm was computed as scaled_global_grad_norm / self.loss_scale. But self.loss_scale is the *new* scale (already updated for this step), while the gradients that produced scaled_global_grad_norm were scaled by the *previous* scale (prev_scale). Dividing by the wrong scale silently skews the global grad norm used for clipping.",
+      "invariant": "self._global_grad_norm * prev_scale must equal scaled_global_grad_norm for the step (i.e. unscaling uses the same factor that backward applied).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 1 or 2",
+        "fp16 with dynamic loss scaling",
+        "step where loss_scale was just halved due to overflow / scale-window"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-38",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "Sparse gradients silently not updating — SparseTensor wraps .data instead of param.grad",
+      "category": "data_loading",
+      "root_cause": "In _get_gradients_for_reduction, the sparse-gradient branch wrapped `param.grad.data` into a SparseTensor: `grad_data = SparseTensor(grad_data)`. Because Python re-bound the local name and never wrote back into param.grad, the post-allreduce updated values were stored on a temporary SparseTensor that had no link to the parameter — the sparse embedding gradients were silently dropped.",
+      "invariant": "After buffered_allreduce_fallback, param.grad of a sparse-gradient parameter must reflect the all-reduced values (non-zero where local grad was non-zero).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "module produces sparse gradients (e.g. nn.Embedding(sparse=True))",
+        "DP > 1"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-39",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "Pipeline parallel _aggregate_total_loss broadcasts torch.stack of mixed-dtype losses, non-last stages receive wrong dtype",
+      "category": "communication",
+      "root_cause": "In _aggregate_total_loss the last stage built `losses = torch.stack([self.dp_group_loss, agg_loss])` and broadcast it to other PP stages. When the source tensors were bf16 the broadcast tensor was bf16 too, but other ranks initialised their receive buffer as fp32 (default Tensor()), so dist.broadcast wrote bf16 bytes into an fp32 tensor and other PP stages saw garbage scalar losses.",
+      "invariant": "After dist.broadcast inside _aggregate_total_loss, the losses tensor must have the same dtype on every PP rank.",
+      "detection_method": "dtype_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "pipeline parallel num_stages > 1",
+        "bf16 model loss tensor"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-40",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO param dtype cast inside zero_wrapper_for_fp_tensor_constructor reassigns Parameter to a non-Parameter Tensor",
+      "category": "dtype",
+      "root_cause": "zero_wrapper_for_fp_tensor_constructor cast tensors to the target dtype with `tensor = tensor.to(target_fp_dtype)`. For tensors that were already nn.Parameter (or had requires_grad=True), .to() returns a fresh non-Parameter Tensor without the autograd hook; the wrapper rebound the local name but the model still held the original reference, so the model's Parameter kept the wrong dtype and the (correctly-cast) shadow tensor became unreachable.",
+      "invariant": "After zero.Init wraps a tensor constructor, the tensor visible to the model must satisfy `tensor.dtype == target_fp_dtype` and remain the same Python object that the model references.",
+      "detection_method": "dtype_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "zero.Init context",
+        "model code constructs a tensor with requires_grad=True (e.g. via torch.empty(...).requires_grad_(True))"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-42",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO3 checkpoint silently omits frozen (requires_grad=False) parameters from saved state",
+      "category": "checkpoint",
+      "root_cause": "ZeRO3's checkpoint logic only iterated trainable parameters when assembling the per-rank state and the zero_to_fp32 reconstruction script. Frozen parameters were never written to the checkpoint at all, so resuming with a fresh model whose frozen tensors are random-initialised silently trains from corrupted weights with no warning.",
+      "invariant": "For every nn.Parameter p in module.named_parameters(), the saved checkpoint must contain a tensor or fragment whose name matches p (regardless of p.requires_grad).",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3",
+        "model has parameters with requires_grad=False (e.g. frozen embedding, LoRA-tuned model)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-43",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO3 builds fp16 partitions from full param_groups including frozen params, OOM-equivalent silent waste plus unused optimizer state",
+      "category": "optimizer_state",
+      "root_cause": "DeepSpeedZeroOptimizer_Stage3._setup_for_real_optimizer called _create_fp16_partitions_with_defragmentation() on the raw self.optimizer.param_groups, including frozen params. Frozen params became part of the partitioned trainable list — they were placed into Adam fp32 state and received update increments from optimizer.step, silently un-freezing them.",
+      "invariant": "Across optimizer steps, p.data must remain unchanged for every nn.Parameter with requires_grad=False.",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3",
+        "model contains parameters with requires_grad=False"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-44",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "MOE save_checkpoint with TP > 1 only writes mp_rank_00_model_states.pt — non-zero TP ranks lose non-MoE weights",
+      "category": "moe",
+      "root_cause": "_save_moe_checkpoint short-circuited with `if exp_dp_rank != 0: return` before saving the per-mp-rank model_states.pt files. With TP > 1, only the rank that was both expert-DP-zero and mp-rank-zero ever wrote model_states.pt; all other TP shards were skipped, so resuming silently loaded mp_rank_00 onto every TP rank, training all TP ranks with the same shard.",
+      "invariant": "After save_checkpoint with MoE+TP, exactly one mp_rank_XX_model_states.pt must exist for every X in [0, tp_world_size).",
+      "detection_method": "function_call_counting",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "MoE model",
+        "tensor parallel size > 1",
+        "expert parallel enabled"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-45",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO3 backward hook closure captures stale group index `i` — gradient routed to wrong reduction bucket",
+      "category": "gradient_sync",
+      "root_cause": "create_reduce_and_remove_grad_hooks built the per-param backward hook via `wrapper(param, i)` where `i` was the loop index over groups. Because `i` was Python-late-bound inside the closure, every hook fired with the same final value of `i`, routing earlier groups' gradients into the last group's reduction bucket. The fix removes the unused `i` argument entirely (the bucket is determined from the param itself).",
+      "invariant": "For every backward hook registered for parameter p in group i, the hook must call reduce_independent_p_g_buckets_and_remove_grads(p) without binding to a stale group index.",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3",
+        "multiple parameter groups"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-46",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO optimizer.step() called once during initialization, increments Adam step counter before any real update",
+      "category": "optimizer_state",
+      "root_cause": "All ZeRO/BF16 wrappers eagerly called the inner optimizer's step() during construction in order to materialize state tensors. This silently incremented the Adam state[`step`] counter for every param before any real backward pass, so the bias-correction terms were off by one (and beta1^t / beta2^t for the first few real steps were wrong) compared to vanilla PyTorch.",
+      "invariant": "Right after deepspeed.initialize, optimizer.state[p]['step'] must equal 0 for every parameter p (no fake step has run).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 1/2/3 or BF16_Optimizer",
+        "client constructs optimizer through deepspeed.initialize"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-47",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "BF16 model + ZeRO defaults silently force fp32 grad accum buffer despite ZeRO requiring matching dtype",
+      "category": "dtype",
+      "root_cause": "When grad_accum_dtype was unspecified, the engine auto-selected fp32 for any bf16 model. Under ZeRO this is silently wrong because ZeRO assumes grad_accum_dtype == model_dtype; gradient accumulation buffers ended up in fp32 while reduction ran in bf16, so accumulated gradients were lost on the first cast back.",
+      "invariant": "When ZeRO is enabled and grad_accum_dtype is not user-set, grad_accum_dtype must equal model_dtype.",
+      "detection_method": "config_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "model dtype = bf16",
+        "no explicit grad_accum_dtype in ds_config",
+        "ZeRO enabled"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-48",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "Pipeline + ZeRO: gradient accumulation boundary flag never propagated, ZeRO does early reduction every micro-step",
+      "category": "gradient_sync",
+      "root_cause": "DeepSpeedEngine.allreduce_gradients drove ZeRO's overlapping_partition_gradients_reduce_epilogue, but never told the optimizer whether the engine was at a real GAS boundary. ZeRO's internal `is_gradient_accumulation_boundary` therefore stayed at its default and reduction kicked off on every micro-batch, silently destroying accumulation correctness for PP+ZeRO.",
+      "invariant": "self.optimizer.is_gradient_accumulation_boundary must equal engine.is_gradient_accumulation_boundary() at the entry of allreduce_gradients (one True per GAS, GAS-1 Falses).",
+      "detection_method": "function_call_counting",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "pipeline parallel + ZeRO stage 2 or 3",
+        "gradient_accumulation_steps > 1"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-49",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "DeepSpeedDataLoader.len reports sampler length, ignores batch_size and drop_last",
+      "category": "data_loading",
+      "root_cause": "DeepSpeedDataLoader.__init__ set self.len = len(self.data_sampler), the count of underlying samples. Callers using len(dataloader) (e.g. lr scheduler total_num_steps, progress bars, max_steps detection) silently received the sample count instead of the batch count, off by ~batch_size× — schedules and step counters silently drift.",
+      "invariant": "len(DeepSpeedDataLoader) must equal len(sampler)//batch_size when drop_last=True, else ceil(len(sampler)/batch_size).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "any DeepSpeedDataLoader where dataset_size != batch_size"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-50",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "BF16_Optimizer fp32 grad accumulator allocated as fp32 even when grad_acc_dtype is bf16",
+      "category": "dtype",
+      "root_cause": "BF16_Optimizer ignored the requested grad_acc_dtype and always allocated `fp32_groups_gradients_flat` as fp32. When the user explicitly requested bf16 grad accumulation (to save memory) the buffer dtype mismatched the configured dtype, the engine reported wrong memory usage, and the param_partition.grad cast at step time silently down-cast accumulated values losing precision in an unexpected place.",
+      "invariant": "BF16_Optimizer.fp32_groups_gradients_flat[i].dtype must equal the configured grad_acc_dtype.",
+      "detection_method": "dtype_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "bf16 model without ZeRO",
+        "data_types.grad_accum_dtype = bf16 in ds_config"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-51",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO2 extra_large_param leaks reference when contiguous_gradients=False — silent stale-grad reduction in next step",
+      "category": "gradient_sync",
+      "root_cause": "reduce_independent_p_g_buckets_and_remove_grads set `self.extra_large_param_to_reduce = param` whenever a param exceeded reduce_bucket_size, regardless of contiguous_gradients. With contiguous_gradients=False the IPG buffer path is never taken, so the assignment was a dead store but the reference outlived the iteration. On the next backward pass the ipg-flush code saw the stale extra_large_param_to_reduce and called average_tensor on a previous-iteration gradient (silent corruption).",
+      "invariant": "self.extra_large_param_to_reduce must be None (or never set) when self.contiguous_gradients is False.",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 2",
+        "contiguous_gradients=False",
+        "at least one param.numel() > reduce_bucket_size"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-53",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "AutoEP ZeRO-2 forgets to scale per-rank loss by EP-group size — expert gradients undercount by factor ep_size",
+      "category": "moe",
+      "root_cause": "AutoEP runs one logical batch across an EP group (each EP rank sees a slice of tokens), so each rank's scalar loss is only 1/ep_size of the logical-batch loss. The buggy DeepSpeedEngine.backward() does not multiply the loss by ep_size before backward, so reduced expert gradients end up scaled by 1/ep_size relative to the equivalent ZeRO-2 / ep_size=1 baseline. Optimizer.step then applies effectively-shrunk gradients, biasing every step.",
+      "invariant": "For matched (DP=N, EP=1) vs (DP=N/ep, EP=ep) AutoEP runs with identical logical batch and seed, post-step expert weights must be approximately equal (within fp32 tolerance).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "AutoEP MoE layer present",
+        "ZeRO stage 2",
+        "expert_parallel_size > 1"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-54",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "MoE checkpoint records dp_world_size instead of seq_dp_world_size — wrong replication factor on resume with sequence parallel",
+      "category": "checkpoint",
+      "root_cause": "_save_checkpoint writes the global dp_world_size into the state-dict's 'dp_world_size' field for MoE expert checkpoints. When sequence parallel is also enabled the relevant DP world size is seq_dp_world_size = dp_world_size / sp_size. On resume the checkpoint loader uses this value to re-shard expert tensors, producing the wrong split: experts get replicated/sliced across SP ranks instead of across true DP ranks, so each EP-rank loads weights for the wrong slice and starts from corrupted parameters.",
+      "invariant": "After load_checkpoint, every MoE expert parameter on rank r must bit-equal the corresponding fragment that rank r wrote into the saved checkpoint.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "MoE module present",
+        "sequence_parallel_size > 1",
+        "save then load checkpoint"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-55",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO 1/2 expert gradients pre-divide by edp_world_size then skip the bucket-level divide — net divisor is dp/edp not dp",
+      "category": "moe",
+      "root_cause": "When the IPG bucket contains MoE params, average_tensor pre-divides each expert grad by dist.get_world_size(expert_dp_process_group)/sp_size and then skips the bucket-final divide by dist.get_world_size(dp_process_group)/sp_size. This was meant to handle the smaller EP group but it never compensates for the dp/ep ratio. The expert grad is then all-reduced over expert_dp_process_group; the final reduced value equals (sum over edp ranks)/edp_world_size — but the model's effective DP world for expert grads is dp_world_size, so the proper averaging factor should be dp_world_size, not edp_world_size. Result: expert gradients are systematically off by a factor of (dp/edp).",
+      "invariant": "For matched (DP=N, EP=1) vs (DP=N, EP=2) runs with identical batch and seed, after one optimizer step the expert weights must agree to within fp32 tolerance.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "MoE layers present",
+        "ZeRO stage 1 or 2",
+        "ep_size != dp_size"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-56",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "topkgating drop_tokens=False does not recompute locations after capacity update — dispatch positions stale",
+      "category": "moe",
+      "root_cause": "When drop_tokens=False, topkgating computes new_capacity via all_reduce(MAX) over expert counts, then assigns capacity=new_capacity. But it forgets to recompute `locations = torch.cumsum(mask, dim=0) - 1` after this capacity update path. The old `locations` from a stale earlier mask is used to scatter tokens into expert slots — so tokens go into the wrong dispatch positions, and the combine_weights matrix maps experts back to the wrong tokens.",
+      "invariant": "After the drop_tokens branch in topkgating, locations[i,j] must equal cumsum(mask[:,j])[i] - 1 for every (i,j) where mask[i,j]==1.",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "MoE topkgating",
+        "drop_tokens=False",
+        "expert load varies across ranks"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-57",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO++ ds_secondary_tensor stale after model load / checkpoint resume — dirty allgather poisons next forward",
+      "category": "checkpoint",
+      "root_cause": "_partition_param_sec was called without the has_been_updated flag from the GatheredParameters partition path, so ds_secondary_tensor was never refreshed after the master ds_tensor changed. Similarly, checkpoint_event_epilogue did not call invalidate_secondary_tensor after _load_zero_checkpoint refilled fp16_partitioned_groups_flat (= ds_tensor). The next ZeRO++ allgather reads from the stale ds_secondary_tensor and constructs a corrupted full parameter that mixes new master weights with old secondary-partition values.",
+      "invariant": "After any update to param.ds_tensor (load_state_dict, load_checkpoint, optimizer.step), ds_secondary_tensor must equal the corresponding slice of the freshly partitioned parameter (or be marked invalid).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3 with hierarchical ZeRO++ (zero_quantized_weights or zero_hpz_partition_size>0)",
+        "either (a) deepspeed.zero.Init followed by GatheredParameters/_load_from_state_dict, or (b) load_checkpoint after engine init"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-58",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "Asymmetric int8 dequantize hard-codes output dtype to half — silently downcasts when caller asks for float",
+      "category": "dtype",
+      "root_cause": "In quantization_utils.h::dequantize for the asymmetric path, the result line was `return conversion::to<__half>(val_deq_f);` regardless of the output template parameter T. When the kernel is instantiated with T=float, the float-typed val_deq_f gets cast to __half and back to float, throwing away ~13 bits of mantissa. The kernel still writes to the fp32 output tensor (correct shape, correct dtype), only with severely truncated precision.",
+      "invariant": "For asymmetric dequantize<float>(int8 in, scale, offset), output must equal float(in)*scale + offset to within fp32 precision (relative error <1e-6), not within fp16 precision (relative error ~1e-3).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "asymmetric quantization",
+        "dequantize template instantiated with T=float (fp32 output)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-59",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO++ all_to_all_quant_reduce hard-codes gpu_per_node=16 — wrong intra-node split on every non-16-GPU node",
+      "category": "communication",
+      "root_cause": "csrc/quantization/pt_binding.cpp::quantized_reduction had `const int gpu_per_node = 16;` hard-coded. The Python wrapper all_to_all_quant_reduce passes the actual local_world_size, but the C++ side ignored it. Buffer slicing inside the kernel (sz.back() / gpu_per_node, in_groups / gpu_per_node, elems_per_in_tensor / gpu_per_node) is therefore done with the wrong divisor on any non-16-GPU node — rows of the quantized intermediate get attributed to the wrong intra-node rank, producing wrong reduced gradients.",
+      "invariant": "Inside quantized_reduction, the divisor used to compute elems_per_in_tensor must equal the actual intra-node world size (devices_per_node argument), not a constant.",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3 with zero_quantized_gradients=true (qgZ)",
+        "any node-local-world-size != 16 (e.g. 8 GPUs/node, single node multi-GPU, etc.)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-60",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "Universal checkpoint stage3 multi-machine load uses local_rank instead of global DP rank for partition slicing",
+      "category": "checkpoint",
+      "root_cause": "load_hp_checkpoint_state used `local_rank = dist.get_local_rank()` (per-node rank 0..gpus_per_node-1) and then narrowed the loaded flat tensor at offset `local_rank * partitioned_numel`. With 2 nodes × 4 GPUs (world=8, dp=8), the local_rank wraps to 0..3 on each node, so global ranks 0 and 4 both load the SAME slice (offset 0), 1 and 5 both load slice 1, etc. Half the parameters never get the correct partition; training resumes from a hash of two unrelated weight slices.",
+      "invariant": "After load_hp_checkpoint_state on rank r, checkpoint_state_partition must equal loaded_checkpoint_state.narrow(0, r * partitioned_numel, partitioned_numel) where r is the rank within self.dp_process_group.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3",
+        "multi-node training (more than one node)",
+        "load_universal_checkpoint=True"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-61",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-1 fp16 overflow flag broadcast only on partition_gradients path — Z1 ranks diverge on overflow",
+      "category": "numerical",
+      "root_cause": "In has_overflow_partitioned_grads_serial, the cross-rank `dist.all_reduce(overflow_gpu, op=MAX, group=dp_process_group)` was guarded by `if partition_gradients`. ZeRO stage 1 is partition_gradients=False, so the all-reduce was skipped. Each rank then made an independent overflow decision: ranks that saw overflow skip the step and shrink loss-scale, ranks that did not see overflow apply the step. After a few overflow events ranks have different loss_scale values and (more critically) different parameter values — DDP-equivalence is broken.",
+      "invariant": "After has_overflow returns, every rank in dp_process_group must agree on self.overflow and self.loss_scale (and therefore on whether to take the step).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "fp16 (with dynamic loss scaler)",
+        "ZeRO stage 1",
+        "some training step where one rank's grads overflow but other ranks' do not"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-62",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "BF16_Optimizer skips fp32 cast of gradient when grad_acc_dtype != fp32 — Adam runs on bf16 grads",
+      "category": "dtype",
+      "root_cause": "BF16_Optimizer.step() previously assumed param_partition.grad was already in the param's fp32 dtype because initialize_optimizer_states() did the cast at init. When grad_acc_dtype is bf16, that one-shot cast at init becomes meaningless — every subsequent step the bf16-grad accumulator gets reduced into the partition's grad slot but nothing converts it to fp32 before the wrapped Adam.step() reads it. Adam then computes m_t, v_t, and the parameter update entirely in bf16, with corresponding precision loss in the second moment.",
+      "invariant": "Inside BF16_Optimizer.step(), at the moment self.optimizer.step() is called, every param_partition.grad's dtype must equal param_partition.dtype (i.e. fp32).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "bf16 model + BF16_Optimizer",
+        "grad_accum_dtype set to bf16 (not fp32)",
+        "any optimizer.step()"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-63",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "CPUAdam IncrementStep non-idempotent across same-step subgroup updates — bias-correction drifts between subgroups",
+      "category": "optimizer_state",
+      "root_cause": "Adam_Optimizer::IncrementStep first did `_step++; if (_step != step) { recompute betta1_t/betta2_t with pow }` else `_betta1_t *= _betta1`. ZeRO-3 calls IncrementStep once per subgroup with the SAME logical `step` value. The first subgroup call increments _step to match, takes the multiplicative branch (betta_t *= betta). The second subgroup call also increments _step (now _step != step), so it falls through to the pow-recompute branch which computes pow(betta, step) — a different floating-point value than the just-multiplied one (catastrophic cancellation in pow vs repeated multiply). So subgroup 0 and subgroup 1 see different betta1_t when applying the same logical Adam step → updated weights drift apart between subgroups.",
+      "invariant": "Repeated calls to step_subgroup(step=k) for different subgroups must produce bit-identical bias-correction coefficients (betta1_t, betta2_t).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "DeepSpeedCPUAdam (cpu_offload optimizer)",
+        "ZeRO-3 with sub_group_size > 0 OR SuperOffload (multiple subgroup optimizer calls per logical step)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-64",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "FP16 fused optimizer grad-norm reduces only TP-rank-0 gradients — TP grad_norm undercounted by sqrt(tp_size)",
+      "category": "gradient_sync",
+      "root_cause": "FP16_Optimizer.get_grad_norm computed the per-group flattened grad norm and treated all of the flat buffer as if it belonged to a non-TP parameter. So only tp_rank=0 contributed (since for non-TP params the duplicate copies on tp_rank>0 should be skipped). For genuine TP-sliced parameters this skip is wrong — the per-rank slices are different and all should sum into the global norm. Result: at TP=4 the reported total_norm is ~1/sqrt(4) = 1/2 of the true value, gradient clipping is therefore much weaker than configured.",
+      "invariant": "global_grad_norm computed by FP16_Optimizer at TP=k must equal (within fp32 tolerance) the global_grad_norm computed at TP=1 with the same global batch and seed.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "fp16 + FP16_Optimizer (fused, non-ZeRO or ZeRO-1)",
+        "Megatron-style tensor parallel with tp_size > 1",
+        "param groups containing both TP and non-TP parameters"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-65",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "PipelineEngine non-last-stage backward double-updates hp_grads when bfloat16_immediate_grad_update is enabled",
+      "category": "gradient_sync",
+      "root_cause": "PipelineEngine._exec_backward_pass for non-last-stage manually calls self.optimizer.update_hp_grads(clear_lp_grads=False) because backward is invoked via torch.autograd.backward instead of optimizer.backward(). With immediate_grad_update=True the per-param backward hooks already populate fp32_groups_gradients_flat as each lp.grad is produced. The unconditional call to update_hp_grads then iterates every parameter and adds lp.grad to the fp32 accumulator a SECOND time — every gradient on PP non-last stages is doubled.",
+      "invariant": "On any non-last pipeline stage, after _exec_backward_pass, fp32_groups_gradients_flat[p] must equal exactly one cast of lp.grad[p] (i.e. updated once, not twice).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "pipeline parallel (PP > 1)",
+        "bf16 with BF16_Optimizer",
+        "bfloat16_immediate_grad_update=True (per-param hooks update hp_grads inline)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-66",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-3 CPU offload set_local_grad does not refresh norm_for_param_grads — gradient clipping uses pre-clipping norm",
+      "category": "gradient_sync",
+      "root_cause": "set_local_grad copies the supplied tensor into the fp32 partition's grad slot but does not update self.norm_for_param_grads[param_id]. With CPU offload, scaled_global_grad_norm is later computed as the L2-aggregate of these cached per-param norms (because the actual grad lives in pinned CPU memory). The aggregate therefore reflects pre-modification gradients, while unscale_and_clip_grads applies a clip factor based on this stale norm to the modified grads — silent mis-clipping. Note that scaled_global_grad_norm also drives the loss-scale-aware clip decision in optimizer.step.",
+      "invariant": "Whenever fp32 grad partition for param p is overwritten via set_local_grad, norm_for_param_grads[p] must equal _constant_buffered_norm2 of the new gradient.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3",
+        "offload_optimizer (CPU)",
+        "user calls safe_set_local_grad to modify a partition's gradient between backward and step (e.g. external clipping/sanitizing)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-67",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-0 + torch.autocast(fp16) trains without a GradScaler — fp16 gradients underflow to zero",
+      "category": "numerical",
+      "root_cause": "init_autocast_params installed lower-precision modules without instantiating a torch.amp.GradScaler. Because ZeRO stage 0 + torch.autocast doesn't go through any DeepSpeed loss-scaler path, backward propagated unscaled fp16 grads — anything below ~6e-5 magnitude flushes to 0. The optimizer step then applies near-zero updates and training stalls / converges to a degenerate solution.",
+      "invariant": "When torch_autocast is enabled with dtype=fp16 and zero_optimization stage is 0, a non-trivial loss-scale must be applied before loss.backward (loss.grad_fn.scale > 1).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "zero_optimization disabled (stage 0)",
+        "torch.autocast enabled with dtype=torch.float16",
+        "no manual GradScaler in client code"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-68",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-2 ipg double-buffer swap not synchronized — current backward writes into bucket while previous reduce still reads",
+      "category": "communication",
+      "root_cause": "In ipg_remove_grads, after triggering an async reduce_ipg_grads on bucket index k, the code immediately swaps `bucket.index = 1 - bucket.index` so the next gradient writes into bucket index (1-k). Without an explicit reduction_stream <-> current_stream wait, the backward kernel writing into bucket (1-k) on the current stream can begin before the previous reduce-scatter on bucket k has finished — and on accelerators that don't auto-resolve cross-stream data deps, both buffers (k and 1-k) are aliased through the same flat IPG tensor allocation, so the write into bucket 1-k can stomp on bucket k's still-in-flight reduce input. Loss became 0 with grad_norm 1.414 by step 3 in the user's repro.",
+      "invariant": "Before swapping ipg bucket index after a reduce, default stream must wait for reduction_stream to complete on accelerators where resolves_data_dependency()==False.",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 2",
+        "contiguous_gradients=True",
+        "overlap_comm=True",
+        "model large enough to fill more than one ipg bucket per step"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-69",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO 1/2 reduction stream not waited by current stream — ipg_buffer rewrite races allreduce when comm > compute",
+      "category": "communication",
+      "root_cause": "In average_tensor (overlap_comm path), reduction_stream did wait_stream(current_stream) so the allreduce waits for backward to finish populating the buffer, but current_stream did NOT wait_stream(reduction_stream) afterwards. When backward of the next bucket completes faster than the previous allreduce, the next gradient gets written into the same ipg_buffer slot that allreduce is still reading, corrupting the reduce input. Equivalence (loss with vs without overlap_comm) is broken on small sequence-length / fast-compute models.",
+      "invariant": "On an accelerator without automatic data-dep resolution, after triggering an async reduce on the reduction_stream, current_stream must wait for reduction_stream before reusing the IPG buffer.",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 1 or 2",
+        "overlap_comm=True",
+        "communication time per allreduce > backward compute time of next bucket"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-70",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-1/2 IPG buffer averaged over full allocated size — averages garbage from unused tail elements",
+      "category": "communication",
+      "root_cause": "In average_tensor's contiguous_gradients/non-extra-large branch, the code passed `self.ipg_buffer[self.ipg_index]` (the whole pre-allocated buffer of size reduce_bucket_size) to average_tensor. When the bucket flushes early (e.g. last params of a step or after a dtype switch), only elements_in_ipg_bucket are valid; the tail still holds whatever was last computed there. Those stale floats get included in the all-reduce sum and the divide-by-world-size, contaminating the per-rank averaged gradient slice for the genuine grads near the end of the buffer.",
+      "invariant": "The tensor passed to average_tensor must be exactly self.ipg_buffer.narrow(0, 0, self.elements_in_ipg_bucket).",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 1 or 2",
+        "contiguous_gradients=True",
+        "no extra_large_param to reduce",
+        "elements_in_ipg_bucket < reduce_bucket_size (i.e. bucket flushed before fill)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-71",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-3 partition padding allocated with torch.empty — undefined values get reduced into other ranks' partitions",
+      "category": "communication",
+      "root_cause": "When a parameter's last partition is smaller than partition_numel, _avg_scatter_dense_grads built a padded_partition with `torch.empty(...)` and only copied the valid prefix into it. The trailing pad elements held arbitrary garbage from the GPU allocator. That whole padded tensor was then included in the reduce_scatter, so other ranks received contaminated padding bytes mixed into the next parameter's region (because reduce_scatter sums element-wise across ranks before slicing).",
+      "invariant": "Any padding bytes appended to a per-param grad partition before reduce-scatter must be exactly zero.",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3",
+        "any param whose partition_numel > the slice numel for the last rank (requires padding)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-72",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "Sequence parallel single_all_to_all reshape collapses batch and seq dims — QKV permuted into wrong tokens",
+      "category": "communication",
+      "root_cause": "single_all_to_all's reshape for the head-scatter path used `[seq_world_size, inp_shape[scatter_idx]] + inp_shape[scatter_idx+1:]` and then transposed (0,2). This collapses batch and sequence into a single dimension and reorders elements such that after the all_to_all+reshape back, query[b,s,h] no longer corresponds to the same logical token. Pre-attention QKV are permuted into the wrong (b,s,h) positions, attention is computed on scrambled tokens, and the model never converges.",
+      "invariant": "For an identity test (round-trip _SeqAllToAll(scatter, gather) followed by _SeqAllToAll(gather, scatter)), output must equal input element-wise.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "DeepSpeed sequence parallelism (DistributedAttention)",
+        "sp_world_size > 1",
+        "scatter_idx >= 2 (head-scatter path used in the second alltoall)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-73",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "AutoEP manual loss.backward path skips ep_size loss scaling — parity with engine.backward broken",
+      "category": "moe",
+      "root_cause": "The manual-backward path (scale_loss → loss.backward) only applied optimizer.scale_if_loss / torch_autocast scaling, but forgot the AutoEP-specific multiplication by self._autoep_output_grad_scale that engine.backward applies. Since manual-backward is the recommended path for HF Trainer integrations, expert gradients in those setups are again undercount by ep_size relative to the engine.backward path.",
+      "invariant": "Across two AutoEP runs differing only in (engine.backward(loss)) vs (engine.scale_loss(loss).backward()), per-step expert weights must match within fp32 tolerance.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "AutoEP MoE layer present",
+        "user calls engine.scale_loss(loss).backward() manually instead of engine.backward(loss)",
+        "ep_size > 1"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-74",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-3 NVMe optimizer offload writes all ranks' tensors to one shared dir — last writer wins, load gets wrong rank's state",
+      "category": "checkpoint",
+      "root_cause": "save_checkpoint and load_checkpoint copied the entire NVMe swap_folder under `<save_dir>/<tag>/offloaded_tensors/` without per-rank subdir. With dp_size>1, every rank's local NVMe optimizer state (Adam exp_avg, exp_avg_sq slices) gets copied into the same destination directory; rsync/copytree overwrites file-by-file. The resulting checkpoint contains an arbitrary mix of per-rank slices. On load, every rank reads back the same files, so each rank initializes its optimizer state from another rank's slice → optimizer momenta no longer correspond to the parameters they belong to.",
+      "invariant": "After save_checkpoint, the on-disk path for NVMe-offloaded optimizer tensors must be unique per DP rank (e.g. .../offloaded_tensors/rank<r>/...).",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3",
+        "nvme optimizer offload (zero_nvme_offload_optimizer)",
+        "save_checkpoint OR load_checkpoint with multi-rank DP"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-75",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "CPU Adam/Adagrad uses params.size(0) instead of numel() — only the first row of multi-dim params gets updated",
+      "category": "optimizer_state",
+      "root_cause": "ds_adam_step / ds_adagrad_step (and the *_plus_copy variants) passed `params_c.size(0)` (the size of the FIRST dimension only) as the element count to the kernel's Step_8. For a Linear weight of shape (out, in), only `out` elements are stepped instead of `out*in`. The kernel happily walks `size(0)` floats from the data pointer (which is in-bounds) and writes back only those — the other (size(0)*(size(1)-1) ... ) elements never receive an update.",
+      "invariant": "After CPU Adam step, every element of every parameter tensor must change by exactly the Adam-prescribed update (within fp32 tolerance) — none should remain at its prior value.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "DeepSpeedCPUAdam or CPU Adagrad",
+        "any tensor parameter with ndim >= 2 (e.g. linear weights, embedding tables)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-76",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-3 init broadcast tracked through autograd — backward through synchronization op silently corrupts gradients",
+      "category": "communication",
+      "root_cause": "In DeepSpeedEngine._broadcast_model, dist.broadcast(p, ...) was invoked on the parameter Tensor itself (which has requires_grad=True). c10d::broadcast_ has no registered autograd kernel; PyTorch falls through with a warning that explicitly states 'may lead to silently incorrect behavior'. When the user later calls loss.backward(), autograd traverses the broadcast op as part of the computation graph and computes incorrect gradients (silently — no exception, just wrong numbers).",
+      "invariant": "Tensor operations performed for cross-rank state synchronization at init must not be on autograd's recorded computation graph (must be inside torch.no_grad() or use .data).",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "DeepSpeed engine init with ZeRO 1/2 (broadcast model path)",
+        "any param requires_grad=True (almost always)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-77",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO++ secondary partition copy not synchronized — prefetch all-gather reads garbage",
+      "category": "communication",
+      "root_cause": "_partition_param_sec issued an asynchronous device-to-device copy from the full param into ds_secondary_tensor (via .narrow(...).copy_()) but never recorded a stream-synchronization at the end. The next allgather of ds_secondary_tensor (launched by the prefetch coordinator) could be enqueued before the copy completed. Because both ops live on the same device but on different streams, the reader stream sees pre-copy contents — a stale fragment of the previous step's secondary tensor — and broadcasts it; the constructed full parameter is a mix of new values for the master partition and stale values for everyone else's secondary partition.",
+      "invariant": "After _partition_param_sec, get_accelerator().current_stream().synchronize() must complete before any consumer of param.ds_secondary_tensor (e.g. _all_gather_dtype) is enqueued.",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "ZeRO stage 3 with hierarchical ZeRO++ (zero_hpz_partition_size > 1)",
+        "stage3 prefetching enabled (default)",
+        "any forward/backward step that triggers 2nd-tensor allgather before the 2nd-tensor partition copy completes"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-78",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "ZeRO-1/2/3 allreduce_bucket hard-codes communication_data_type=fp16 — bf16 grads silently downcast for reduction",
+      "category": "communication",
+      "root_cause": "DeepSpeedZeroOptimizer.allreduce_bucket and DeepSpeedZeroOptimizer_Stage3.allreduce_bucket had a default-valued kwarg `communication_data_type=torch.float16`. The caller never passed self.communication_data_type, so all reductions converted bf16 grads to fp16 before the all-reduce. fp16 has 1 bit less mantissa than bf16 and a 5-bit exponent vs bf16's 8 — values outside fp16's range (>~65k or <~6e-5) become Inf/0, the rest lose ~half their relative precision. Reduced gradients are therefore systematically degraded relative to the user-configured comm dtype.",
+      "invariant": "Inside allreduce_bucket, the dtype of tensor_to_allreduce must equal self.communication_data_type configured by the user (not torch.float16).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "bf16 model with ZeRO 1/2/3",
+        "user explicitly sets communication_data_type to bfloat16 (or relies on the engine to match it to the model dtype)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-79",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "WarmupLR / LRRangeTest / OneCycle do not initialize optimizer group lr at construction — first step uses original lr",
+      "category": "lr_schedule",
+      "root_cause": "WarmupLR.__init__ stored its desired schedule but never wrote min_lr into self.optimizer.param_groups[0]['lr']. As a result, when the engine's first optimizer.step() runs (before lr_scheduler.step() which by convention is called after), the optimizer uses whatever lr the user instantiated the optimizer with — typically the peak lr — for one full step instead of the scheduler's warmup_min_lr (e.g. 0). With a typical 1e-4 peak lr and 0 warmup_min_lr, the first parameter update is therefore ~10000x larger than intended, often catastrophic for early training stability.",
+      "invariant": "After lr_scheduler construction (with last_batch_iteration == -1), every optimizer.param_groups[i]['lr'] must equal scheduler.get_lr()[i].",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "any DeepSpeed LRScheduler in {WarmupLR, LRRangeTest, OneCycle}",
+        "user reads lr_scheduler.get_last_lr() / param_group['lr'] before the first step()",
+        "optimizer.param_groups[0]['lr'] differs from scheduler's intended initial lr (which is min_lr / warmup_min_lr, typically 0)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "D-NEW-8",
+      "framework": "deepspeed",
+      "source_pool": "295_only",
+      "title": "WarmupLR ignores optimizer LR, always uses hardcoded 0.001",
+      "category": "lr_schedule",
+      "root_cause": "warmup_max_lr defaults to 0.001 instead of inheriting from optimizer param_groups",
+      "invariant": "After warmup, LR must equal optimizer's configured LR, not a hardcoded default",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-2",
+  "framework": "deepspeed",
+  "category": "lr_schedule",
+  "parallel_dimension": "none",
+  "invariant_type": "completeness",
+  "required_trace_fields": ["scheduler_get_lr_return", "num_param_groups"],
+  "check_stage": "before_optimizer",
+  "minimum_sufficient_layer": "schema_only",
+  "pattern_id": "P1",
+  "tier_field": "Tier 3",
+  "rationale": "WarmupCosineLR.get_lr() returned a scalar rather than a list of length num_param_groups. Detection: single-rank check that len(scheduler.get_lr()) == len(optimizer.param_groups). Layer schema_only: no cross-rank compare and no module-attr precond needed (rule applies to all schedulers uniformly). Borderline value_equality vs completeness (anti-example 12): chose completeness because the invariant is over the set of param-group LRs (cardinality), not a single value matching a constant. Pattern P1 because the trace field 'len(get_lr())' has a deterministic expected value derived from optimizer config.",
+  "borderline_flags": []
+}

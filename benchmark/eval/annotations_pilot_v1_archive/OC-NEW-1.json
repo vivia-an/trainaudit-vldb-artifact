@@ -1,0 +1,15 @@
+{
+  "bug_id": "OC-NEW-1",
+  "framework": "olmo-core",
+  "category": "data_loading",
+  "parallel_dimension": "none",
+  "invariant_type": "dtype_consistency",
+  "required_trace_fields": ["op_name", "input_dtype", "output_dtype", "step"],
+  "check_stage": "before_forward",
+  "pi_schema_applicable": true,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P4",
+  "tier_field": "Tier 0",
+  "rationale": "as_tensor truncates float soft_target_probs to int via astype(np.int_). Detected by hooking the dataloader op and asserting output_dtype matches input_dtype when input is float. Borderline dtype vs data_loading: chose data_loading because the failure surface is the dataset/collator path, not a model dtype mismatch. pi_precond=true (op==as_tensor on float array)."
+}

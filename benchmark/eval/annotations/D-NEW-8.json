@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-8",
+  "framework": "deepspeed",
+  "category": "lr_schedule",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["lr", "warmup_max_lr_config", "optimizer_param_group_lr", "step"],
+  "check_stage": "before_optimizer",
+  "minimum_sufficient_layer": "schema_only",
+  "pattern_id": "P1",
+  "tier_field": "Tier 3",
+  "rationale": "WarmupLR hardcoded warmup_max_lr=0.001 instead of inheriting optimizer's configured lr. After warmup completes, scheduler lr must equal optimizer's configured lr. Single-rank, single-field check; no cross-rank compare and no module-attr guard needed -> schema_only. Pattern P1 because lr (Tier 3 trace field) has a deterministic expected value from config. Borderline value_equality vs implementation_equivalence (anti-example 11): chose value_equality because the expected value is a known config constant (0.005), not the output of a reference scheduler implementation.",
+  "borderline_flags": []
+}

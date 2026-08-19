@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "date": "2026-05-10",
+    "purpose": "Map each new D1' surrogate to its blueprint reproducible bug in the 392 pool",
+    "blueprint_pool": "benchmark/eval/manifest_v2.json (reproduction_status=reproduced subset)"
+  },
+  "surrogates": {
+    "CF1": {
+      "category": "control_flow",
+      "blueprint_bug_id": "M-010",
+      "blueprint_title": "MoE aux_loss accumulated twice with activation checkpointing",
+      "blueprint_root_cause": "MoE layer recompute re-runs forward without no_grad, calling save_to_aux_losses_tracker() twice per step. The aux_loss counter ends each step with calls_per_step=2 instead of 1.",
+      "surrogate_invariant": "calls_per_step == 1 at end of each training step",
+      "surrogate_bug_signal": "buggy aux_loss accumulator is 2x fixed; calls_per_step=2 vs 1",
+      "baseline_adaptability": {
+        "trainaudit": "P4 invocation-frequency rule on tracker.save_to_aux_losses_tracker, expected count == 1 per step",
+        "traincheck": "should infer the invariant 'tracker.calls_per_step == 1 at end of step' from healthy trace",
+        "naive": "single-step grad/loss difference is sub-percent (aux loss is small), should NOT trigger threshold-based alerting"
+      }
+    },
+    "CM1": {
+      "category": "communication",
+      "blueprint_bug_id": "O-014",
+      "blueprint_title": "Non-zero ranks reporting partially-reduced metrics",
+      "blueprint_root_cause": "Throughput metrics not using reduce_type=max → partially-reduced values on non-zero ranks",
+      "surrogate_invariant": "metric_log_per_rank[0] == metric_log_per_rank[r] for all r at every step",
+      "surrogate_bug_signal": "buggy uses max_local (local values pass through), giving rank-disagreement >> 0",
+      "baseline_adaptability": {
+        "trainaudit": "P3 cross-rank-replication rule on metric_log entries, expecting cross-rank equality",
+        "traincheck": "should infer 'metric_log_per_rank[i] == metric_log_per_rank[j]' from healthy trace",
+        "naive": "buggy throughput per-rank fluctuates around clean local; aggregate-level loss/grad_norm unchanged → naive misses"
+      }
+    },
+    "OF1": {
+      "category": "offload",
+      "blueprint_bug_id": "D-029",
+      "blueprint_title": "MoE CPU offload grad norm tensor stays on CPU instead of GPU (dtype variant)",
+      "blueprint_root_cause": "Offload-restore path silently casts to fp16 instead of preserving fp32, introducing sub-percent precision drift in clip threshold",
+      "surrogate_invariant": "gnorm.dtype == gnorm_after_offload.dtype throughout offload round-trip",
+      "surrogate_bug_signal": "avg grad_norm differs by ~1e-4 (sub-thousandth-percent); param trajectory diverges over many steps",
+      "baseline_adaptability": {
+        "trainaudit": "P1 dtype-preservation rule on offload round-trip; checks output dtype == input dtype",
+        "traincheck": "may struggle — dtype check requires schema-level annotation; if proxy captures dtype, expected to flag the fp16 truncation",
+        "naive": "drift is sub-percent and accumulates only over many steps; will NOT trip loss-spike or grad_norm-bound monitor"
+      }
+    }
+  },
+  "kept_d1_prime_full_set": [
+    "B1", "B2", "B3", "B8", "B11", "B12",
+    "M-012", "M-020", "M-024",
+    "O-005", "O-NEW-1", "O-NEW-9",
+    "OC-NEW-2", "OC-NEW-3",
+    "CF1", "CM1", "OF1"
+  ],
+  "removed_from_d1": [
+    {"id": "B13", "reason": "numerical, redundant with B11/O-NEW-1"},
+    {"id": "M-014", "reason": "numerical, redundant with B11/O-NEW-1"},
+    {"id": "M-NEW-5", "reason": "moe, redundant with B8/M-012"}
+  ]
+}

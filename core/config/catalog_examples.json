@@ -1,0 +1,274 @@
+{
+  "version": "induction-examples-from-frozen-v1",
+  "note": "Illustrative subset of the frozen Pattern Catalog (full list in pattern_catalog_snapshot.json / frozen_template_catalog.json).",
+  "templates": [
+    {
+      "id": "T01",
+      "name": "cross-rank-replica-equality",
+      "relation": "equality_across_ranks",
+      "objects": "replicated training state, replication group",
+      "witness": "State that the parallelism recipe declares replicated (parameters, reduced gradients, loss-scale/overflow state, RNG for dropout, derived grad-norm scalars, broadcast training batches) must be bit/checksum-equal across all ranks of its repl",
+      "schema_predicate": "FORALL x in replicated_state, FORALL r1,r2 in replica_group(x): checksum(x, r1, step) == checksum(x, r2, step)",
+      "aliases": [],
+      "default_pi_topo": {
+        "dp": ">1",
+        "ep": ">1",
+        "tp": ">1",
+        "pp": ">1"
+      },
+      "default_pi_precond": {
+        "stage": "initialization"
+      },
+      "permitted_topology_guards": [
+        "DP>1",
+        "EP>1 and DP>1",
+        "DP>1 and TP>1",
+        "DP>1 and PP>1",
+        "PP>1",
+        "TP>1"
+      ],
+      "permitted_preconditions": [
+        "ZeRO-1/2 with reduce_scatter",
+        "gradient accumulation over micro-batches",
+        "MoE gate/expert params under ZeRO or distributed optimizer",
+        "fp16 dynamic loss scaler",
+        "model-parallel RNG initialization",
+        "skip-step optimizer decision statistic (loss) all-reduced before consumption",
+        "MoE router/gate creation with perform_initialization=False (else-branch must not re-randomize the weight outside the RNG fork)",
+        "training-batch broadcast must originate from the true first global rank of the DP group under non-contiguous DP-group layouts (e.g. PP>1), not a contiguity-assuming rank formula",
+        "MoE (EP+DP) expert gradients under MultiGroupDistributedDataParallel must go through wired per-bucket grad reduce (view-based batching, comm-dtype downcast applied, no zeroed partial buckets) so post-reduction gradients agree across DP ranks",
+        "tied word-embedding replicas across pipeline stages (share-embeddings-and-output-weights, incl. MTP-only last stage) must be routed to the same optimizer so every tied copy receives an identical update each step (no AdamW-vs-Muon split routing)",
+        "TP linear with frozen weight (linear_with_frozen_weight path) must all-reduce grad_input across the TP group in backward so the activation gradient is identical on all TP ranks"
+      ],
+      "permitted_phases": [
+        "init",
+        "backward",
+        "optimizer_step",
+        "data_loading"
+      ],
+      "positive_examples": [
+        "D-003",
+        "D-011",
+        "D-031",
+        "D-035",
+        "M-018",
+        "M-021",
+        "D-NEW-61",
+        "OC-NEW-43",
+        "M-NEW-26",
+        "B4",
+        "OC-NEW-27",
+        "M-NEW-MUON-MTP",
+        "B2",
+        "M-NEW-31"
+      ],
+      "counterexamples": [
+        "TP/EP-sharded tensors that are intentionally different per rank must not be compared as replicas",
+        "Local per-rank gradients inspected before the reduction collective has run"
+      ],
+      "support_count": 13,
+      "source": "frozen_template_catalog.json",
+      "healthy_probe_sql": "WITH t AS (\n  SELECT step,\n    json_extract_string(data, '$.name') AS name,\n    json_extract_string(data, '$.cksum') AS cksum\n  FROM coredump\n  WHERE stage = 'model-after-optimizer-step'\n    AND (\n      lower(json_extract_string(data, '$.name')) LIKE '%layernorm%'\n      OR lower(json_extract_string(data, '$.name')) LIKE '%layer_norm%'\n      OR lower(json_extract_string(data, '$.name')) LIKE '%router%'\n    )\n)\nSELECT name, step, COUNT(DISTINCT cksum) AS n_cksum\nFROM t\nGROUP BY name, step\nHAVING COUNT(DISTINCT cksum) > 1"
+    },
+    {
+      "id": "T07",
+      "name": "gradient-accumulation-conservation",
+      "relation": "conservation",
+      "objects": "gradient accumulation buffer, per-micro-batch gradient contributions",
+      "witness": "The accumulated gradient must equal the exact sum of all per-micro-batch (per-rank) gradient contributions: starting from a zeroed buffer, each contribution added exactly once to its designated destination, with no foreign bytes (e.g. unini",
+      "schema_predicate": "FORALL p: accum_grad(p, after N micro_steps) == SUM_{i=1..N} grad_i(p), with accum_grad(p, 0) == 0, each grad_i added exactly once to the designated buffer of p's partition owner, and padding_region(comm_buffer) == 0",
+      "aliases": [],
+      "default_pi_topo": {
+        "dp": ">1",
+        "pp": ">1"
+      },
+      "default_pi_precond": {
+        "stage": "model-after-backward"
+      },
+      "permitted_topology_guards": [
+        "DP>1",
+        "PP>1",
+        "any"
+      ],
+      "permitted_preconditions": [
+        "ZeRO-1/2/3 with CPU offload",
+        "gradient accumulation steps > 1",
+        "immediate grad-update hooks on pipeline non-last stages",
+        "reduce-scatter partition padding",
+        "accumulation outside no_sync with CPU offloading",
+        "buffer-reuse first-iteration zeroing",
+        "DistributedOptimizer fp32 master shard views (must be detached from autograd, no duplicate grad chain)",
+        "ZeRO-2 round_robin_gradients partition-owner bookkeeping aligned with actual reduction destination",
+        "ZeRO-1/2 contiguous_gradients partial-bucket flush (averaging extent limited to valid elements)",
+        "sparse-gradient allreduce results written back into param.grad",
+        "reuse_grad_buf_for_mxfp8_param_ag with overlap_param_gather: main-param bytes copied into the shared param/grad buffer must not remain in main_grad at the start of the first accumulation (first iteration before the forward_pre_hook is registered)",
+        "ZeRO-2 contiguous_gradients=False: the extra-large-param reduction reference must be cleared/refreshed each iteration so no previous-iteration gradient enters the reduction",
+        "ZeRO-2 CPU-offload copy-vs-accumulate gating keyed to micro_step_id: copy into the offloaded buffer only on the first micro-step, accumulate on every subsequent micro-step of the same global step",
+        "bf16 model with grad_accum_dtype=fp32 under ZeRO-1 CPU offload: extra-large (bucket-exceeding) param reduction must consume the accumulated fp32 gradient buffer (get_gradient_for_reduction), not raw bf16 param.grad",
+        "Megatron-FSDP DTensor params with gradient_accumulation_fusion: main_grad must be reconstructed in-place (weight.get_main_grad()) each iteration so fused wgrad accumulates into the live buffer, not a stale one",
+        "grouped-linear fused-ops backward_dw under DDP overlap_grad_reduce: wgrad accumulate-and-reduce hooks must fire on the parameter-owning modules so param.grad is cleared and each microbatch's expert wgrad enters main_grad exactly once (no AccumulateGrad double count)",
+        "multi-param-group sharded (ZeRO-3) backward hooks must bind each parameter's own group index (no Python late-bound closure) so every gradient is routed into its owning group's reduction bucket"
+      ],
+      "permitted_phases": [
+        "backward",
+        "init"
+      ],
+      "positive_examples": [
+        "D-012",
+        "D-017",
+        "D-NEW-65",
+        "D-NEW-71",
+        "M-040",
+        "O-029",
+        "M-NEW-54",
+        "D-NEW-31",
+        "D-NEW-70",
+        "D-NEW-38",
+        "M-NEW-38",
+        "D-NEW-51",
+        "D-NEW-18",
+        "B10",
+        "D-NEW-28",
+        "M-NEW-17",
+        "D-NEW-13",
+        "M-NEW-45",
+        "D-NEW-45"
+      ],
+      "counterexamples": [
+        "A configured averaging (not summing) accumulation mode where the divisor is documented",
+        "Gradients legitimately reset to zero at accumulation-boundary steps"
+      ],
+      "support_count": 18,
+      "source": "frozen_template_catalog.json",
+      "healthy_probe_sql": "SELECT step FROM coredump\nWHERE json_extract_string(data, '$.cksum') = '__trainaudit_gaccum_impossible__'\nLIMIT 1"
+    },
+    {
+      "id": "T11",
+      "name": "checkpoint-restore-state-equality",
+      "relation": "restoration_after_reload",
+      "objects": "restored training state, saved training state",
+      "witness": "After checkpoint load, every element of training state (parameters, optimizer moments, LR/scheduler fields, RNG, derived caches) must equal the value it had at save, keyed to the correct parameter; derived caches must be refreshed to match ",
+      "schema_predicate": "FORALL k in state_keys: value_after_load(k) == value_at_save(k), with key mapping preserved under renames, derived caches (e.g. secondary param shards) refreshed to match restored primaries, and no re-applied transformation on load (idempotent load)",
+      "aliases": [],
+      "default_pi_topo": {
+        "dp": ">1",
+        "ep": ">1",
+        "tp": ">1"
+      },
+      "default_pi_precond": {
+        "stage": "checkpoint_load"
+      },
+      "permitted_topology_guards": [
+        "DP>1",
+        "any",
+        "EP>1 and SP>1",
+        "TP>1 and EP>1"
+      ],
+      "permitted_preconditions": [
+        "ZeRO++ secondary tensors after gather/load",
+        "ZeRO-3 universal checkpoint with multiple subgroups",
+        "load_optimizer_state with changed block_group_size",
+        "load_state_dict between forward and backward under FSDP FULL_SHARD",
+        "initial_lr present in restored param_groups",
+        "ZeRO++ secondary partition must be refreshed/invalidated after the primary ds_tensor changes (weight load, checkpoint resume) before it feeds any allgather",
+        "ChainedOptimizer with multiple sub-optimizers must restore every sub-optimizer via split_state_dict (state_dicts[1:] must not be left None, silently skipping expert-optimizer load)",
+        "muP checkpoint resume: set_base_shapes must not re-apply width rescaling to already-muP-scaled restored parameters (mup_rescale_params=False on from_checkpoint)",
+        "sharded (ZeRO-3) checkpoint save must include requires_grad=False frozen parameters so they restore bitwise on load",
+        "MoE checkpoint replication-factor metadata must record the sequence-parallel-adjusted expert-DP world size so resume re-shards each rank's exact saved expert slice",
+        "ZeRO-1/2 elastic checkpoint re-flattening of merged optimizer state must honor the nccl_start_alignment_factor * world_size padding used at save so per-rank slices restore to the correct parameters under a changed world size",
+        "MoE checkpoint save with expert parallelism and TP>1 must write every TP rank's non-expert model-states shard (not only mp_rank_00, no exp_dp_rank short-circuit) so each TP rank restores its own saved shard",
+        "muP resume per-group hyperparameters: the restart lr/initial_lr/weight_decay reset must restore each param group's muP-scaled values (tagged mup_lr/mup_weight_decay), not the single base config value for every group",
+        "ZeRO-3 NVMe optimizer offload: each rank's offloaded optimizer state must be saved to and reloaded from a rank-exclusive location (no shared-directory last-writer-wins overwrite) so every rank restores exactly its own shard",
+        "load_checkpoint(load_module_only=True) under bf16: refresh_fp32_params must run (not gated on fp16_enabled) so the fp32 master partitions equal the upcast loaded 16-bit module weights before training resumes"
+      ],
+      "permitted_phases": [
+        "checkpoint_load",
+        "checkpoint_save"
+      ],
+      "positive_examples": [
+        "D-024",
+        "D-044",
+        "M-017",
+        "O-016",
+        "O-026",
+        "O-NEW-33",
+        "D-NEW-57",
+        "M-NEW-65",
+        "O-NEW-17",
+        "D-NEW-42",
+        "D-NEW-54",
+        "D-NEW-22",
+        "D-NEW-44",
+        "O-NEW-18",
+        "D-NEW-74",
+        "D-NEW-25"
+      ],
+      "counterexamples": [
+        "State intentionally overridden at load by an explicit user flag (that is T18's obligation, not a restore violation)",
+        "Optimizer state legitimately re-initialized when the user requests a fresh optimizer"
+      ],
+      "support_count": 16,
+      "source": "frozen_template_catalog.json",
+      "healthy_probe_sql": "SELECT step, stage FROM coredump\nWHERE json_extract_string(data, '$.cksum') = '__trainaudit_ckpt_impossible__'\nLIMIT 1"
+    },
+    {
+      "id": "T27",
+      "name": "init-distribution-conformance",
+      "relation": "value_scaling_consistency",
+      "objects": "parameter statistics at initialization, configured initialization spec",
+      "witness": "Parameter statistics immediately after initialization must conform to the configured initialization spec: correct (depth-scaled) standard deviation, correct truncation cutoff, distribution matching a specified target (e.g. teacher embedding",
+      "schema_predicate": "FORALL W in initialized_params: |std(W) - spec_std(W, depth, cfg)| <= tol AND truncation_width(W) == cfg.cutoff_factor AND NOT (spec_std(W) > 0 AND std(W) == 0) AND (spec_zero(W) IMPLIES norm(W) == 0) AND stats(W) inconsistent_with_uninitialized_memory == false",
+      "aliases": [],
+      "default_pi_topo": {},
+      "default_pi_precond": {
+        "stage": "initialization"
+      },
+      "permitted_topology_guards": [
+        "any",
+        "FSDP"
+      ],
+      "permitted_preconditions": [
+        "depth-scaled output-projection init configured",
+        "muP enabled (readout zero-init interactions)",
+        "optional projections materialized from meta device",
+        "muP coord-check standard-parametrization baseline (infshapes=None) load path",
+        "Mitchell truncated-normal init must honor the configured init_cutoff_factor (not hardcode 3.0)",
+        "distillation byte-embedding init must match the teacher embedding mean/std (te-scaled init assigned to the main embedding weight, not only hash_embeddings)",
+        "hybrid-model GatedDeltaNet mixer state params (A_log/dt_bias) must receive the GDN-prescribed init: the generic InitMethod path must delegate to the mixer, never leave torch.empty uninitialized memory or default linear init",
+        "FSDP meta-device init on torch>=2.1 must apply reset_parameters after materialization (FSDP no longer auto-calls it; params otherwise keep default/zero fill)",
+        "muP readout (output projection) must be zero-initialized: reset_parameters must skip the generic normal init under use_mup",
+        "embedding fan_in initialization combined with a nontrivial embed_scale multiplier: the init std must compensate embed_scale so the scaled embedding magnitude matches the intended scale",
+        "per-projection init std must use the projection's actual fan-in (in_features**-0.5), not a uniform d_model**-0.5, under GQA (n_kv_heads != n_heads) or output projections where in_features != d_model",
+        "block-level MuReadout (ff_proj) under use_mup: block reset_parameters must not unconditionally re-apply generic normal init over the muP-prescribed zero/special readout init",
+        "readout ff_out must be constructed with the configured init_device so the meta-init/FSDP materialization pipeline applies the designed init scale (no default-device kaiming escape)",
+        "isinstance-ordered init dispatch over module subclasses must reach the subclass branch (subclass checked before parent) so subclass-specific projections receive their designated init, never empty-allocation memory values"
+      ],
+      "permitted_phases": [
+        "init"
+      ],
+      "positive_examples": [
+        "O-024",
+        "O-NEW-21",
+        "OC-NEW-66",
+        "O-NEW-62",
+        "O-NEW-40",
+        "OC-NEW-46",
+        "OC-NEW-14",
+        "O-NEW-60",
+        "O-NEW-20",
+        "OC-NEW-32",
+        "OC-NEW-11",
+        "O-NEW-55",
+        "O-NEW-61",
+        "OC-NEW-51"
+      ],
+      "counterexamples": [
+        "Weights specified as zero-init by the architecture (e.g. residual output scaling schemes that document zero init)",
+        "Statistical fluctuation of small tensors within tolerance of spec std"
+      ],
+      "support_count": 14,
+      "source": "frozen_template_catalog.json",
+      "healthy_probe_sql": "SELECT step, stage, json_extract_string(data, '$.name') AS name\nFROM coredump\nWHERE stage LIKE '%init%'\n  AND TRY_CAST(json_extract(data, '$.std') AS DOUBLE) IS NOT NULL\n  AND (\n    TRY_CAST(json_extract(data, '$.std') AS DOUBLE) < 0\n    OR TRY_CAST(json_extract(data, '$.std') AS DOUBLE) > 10\n  )\nLIMIT 20"
+    }
+  ]
+}

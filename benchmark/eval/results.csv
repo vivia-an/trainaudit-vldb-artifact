@@ -1,0 +1,35 @@
+bug_id,framework,category,phase,verdict,rule_id,duration_s,fail_stage,message
+B1,megatron-lm,moe_router_init,buggy,DETECTED,,0.34,,[buggy] T1-replica-cksum-equal: 1 replica params diverged across replica group
+B1,megatron-lm,moe_router_init,fixed,CLEAN,,0.34,,[fixed] T1-replica-cksum-equal did not fire
+B2,megatron-lm,tensor_parallel_grad,buggy,DETECTED,,0.08,,[buggy] T1-grad-replica-cksum-equal: 1 replica params' gradients diverged across replica group (B2-style backward all-reduce miss)
+B2,megatron-lm,tensor_parallel_grad,fixed,CLEAN,,0.08,,[fixed] T1-grad-replica-cksum-equal did not fire
+B3,deepspeed,communication_dtype,buggy,DETECTED,,0.07,,[buggy] T1-comm-dtype-matches-training: 1 comm op(s) used dtype != declared training_dtype (bfloat16)
+B3,deepspeed,communication_dtype,fixed,CLEAN,,0.07,,[fixed] T1-comm-dtype-matches-training did not fire
+B8,deepspeed,moe_parallel_grouping,buggy,DETECTED,,0.08,,[buggy] T1-process-group-size-correct: 1 parallelism group(s) have wrong size (declared != actual)
+B8,deepspeed,moe_parallel_grouping,fixed,CLEAN,,0.08,,[fixed] T1-process-group-size-correct did not fire
+B11,deepspeed,gradient_clipping,buggy,DETECTED,,0.87,,[buggy] T0-clip-grad-bounded: 1 clip_grad calls left grad norm > max_norm
+B11,deepspeed,gradient_clipping,fixed,CLEAN,,0.87,,[fixed] T0-clip-grad-bounded did not fire
+B12,olmo-core,lr_schedule,buggy,DETECTED,,0.10,,[buggy] T0-initial-lr-present: 1 scheduler-resume(s) found param_groups without initial_lr
+B12,olmo-core,lr_schedule,fixed,CLEAN,,0.10,,[fixed] T0-initial-lr-present did not fire
+B13,olmo,residual_connection,buggy,DETECTED,,0.07,,[buggy] T1-residual-stream-preserved: 1/1 residual blocks: output closer to normed than to original input
+B13,olmo,residual_connection,fixed,CLEAN,,0.07,,[fixed] T1-residual-stream-preserved did not fire
+M-012,megatron-lm,dtype,buggy,DETECTED,,0.07,,[buggy] T1-expert-bias-fp32: 1 router(s) have non-fp32 expert_bias
+M-012,megatron-lm,dtype,fixed,CLEAN,,0.07,,[fixed] T1-expert-bias-fp32 did not fire
+M-014,megatron-lm,numerical,buggy,DETECTED,,0.16,,[buggy] T0-softmax-degenerate: 2 softmax/router outputs are degenerate one-hot
+M-014,megatron-lm,numerical,fixed,CLEAN,,0.16,,[fixed] T0-softmax-degenerate did not fire
+M-020,megatron-lm,configuration_validation,buggy,DETECTED,,0.06,,[buggy] T1-layer-count-strict: layer count mismatch: actual 20 (per-rank 4 × pp_size 5) != declared 24
+M-020,megatron-lm,configuration_validation,fixed,CLEAN,,0.06,,[fixed] T1-layer-count-strict did not fire
+M-024,megatron-lm,dtype,buggy,DETECTED,,0.07,,[buggy] T1-jitter-preserves-dtype: 1 jitter calls promoted dtype
+M-024,megatron-lm,dtype,fixed,CLEAN,,0.07,,[fixed] T1-jitter-preserves-dtype did not fire
+M-NEW-5,megatron-lm,loss_scaling,buggy,DETECTED,,0.06,,[buggy] T1-router-has-calculate-per-token-loss: 1 router(s) missing calculate_per_token_loss attr
+M-NEW-5,megatron-lm,loss_scaling,fixed,CLEAN,,0.06,,[fixed] T1-router-has-calculate-per-token-loss did not fire
+O-005,olmo,control_flow,buggy,DETECTED,,0.13,,[buggy] T0-checkpoint-preserve-rng: 1 checkpoint calls used preserve_rng_state=False while dropout is present
+O-005,olmo,control_flow,fixed,CLEAN,,0.13,,[fixed] T0-checkpoint-preserve-rng did not fire
+O-NEW-1,olmo,normalization,buggy,DETECTED,,0.18,,[buggy] T0-norm-output-unit-rms: 3 normalizer outputs have abnormal RMS
+O-NEW-1,olmo,normalization,fixed,CLEAN,,0.18,,[fixed] T0-norm-output-unit-rms did not fire
+O-NEW-9,olmo,data_processing,buggy,DETECTED,,0.06,,[buggy] T0-token-id-in-vocab: 2 dataloader batches have out-of-range ids
+O-NEW-9,olmo,data_processing,fixed,CLEAN,,0.06,,[fixed] T0-token-id-in-vocab did not fire
+OC-NEW-2,olmo-core,optimizer,buggy,DETECTED,,0.25,,[buggy] T0-optim-step-counter-monotonic: optim state['step'] failed to increment in 3/3 transitions
+OC-NEW-2,olmo-core,optimizer,fixed,CLEAN,,0.25,,[fixed] T0-optim-step-counter-monotonic did not fire
+OC-NEW-3,olmo-core,lr_schedule,buggy,DETECTED,,0.08,,[buggy] T1-sqrt-decay-front-loaded: sqrt decay shape inverted: end-of-training |slope|=3.2000 >> start-of-training |slope|=0.0000
+OC-NEW-3,olmo-core,lr_schedule,buggy,DETECTED,,0.08,,[fixed] T1-sqrt-decay-front-loaded: sqrt decay shape inverted: end-of-training |slope|=0.5000 >> start-of-training |slope|=0.0000

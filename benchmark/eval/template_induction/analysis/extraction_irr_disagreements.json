@@ -1,0 +1,198 @@
+[
+ {
+  "case_id": "D-005",
+  "e1": "determinism",
+  "e2": "value_scaling_consistency",
+  "e1_stmt": "bias_correction2 must be identical across all subgroup invocations of the same optimizer step regardless of computation path.",
+  "e2_stmt": "The bias-correction scaling applied to parameter updates must be identical across all subgroup invocations within the same optimizer step."
+ },
+ {
+  "case_id": "D-006",
+  "e1": "structural_integrity",
+  "e2": "parameter_update_applied",
+  "e1_stmt": "The tensor size metadata must faithfully represent the true element count (no int32 overflow) so the update kernel executes.",
+  "e2_stmt": "Parameters and optimizer state must change after an optimizer step with nonzero gradients, for tensors of any size including >= 2^31 elements."
+ },
+ {
+  "case_id": "D-008",
+  "e1": "determinism",
+  "e2": "restoration_after_reload",
+  "e1_stmt": "Recomputed activations under activation checkpointing must be identical to the original forward pass, so dropout masks match.",
+  "e2_stmt": "Activations recomputed during activation-checkpoint backward must equal the original forward activations after the saved RNG state is restored."
+ },
+ {
+  "case_id": "D-015",
+  "e1": "structural_integrity",
+  "e2": "parameter_update_applied",
+  "e1_stmt": "The overflow-guarded early return must trigger only when overflow is actually detected, so the step applies updates otherwise.",
+  "e2_stmt": "The optimizer step must apply parameter updates whenever no gradient overflow is detected; it may skip only on overflow."
+ },
+ {
+  "case_id": "D-NEW-12",
+  "e1": "dtype_preservation",
+  "e2": "config_effectiveness",
+  "e1_stmt": "The runtime sequence-parallel communication dtype must equal the user-configured seq_parallel_communication_data_type whenever that key is set.",
+  "e2_stmt": "The dtype actually used for sequence-parallel communication must equal the user-configured seq_parallel_communication_data_type value."
+ },
+ {
+  "case_id": "D-NEW-21",
+  "e1": "config_state_consistency",
+  "e2": "restoration_after_reload",
+  "e1_stmt": "The checkpoint's optimizer-state layout must match the actually configured optimizer mode (no ZeRO-partitioned state when ZeRO is disabled) under bf16 training without ZeRO.",
+  "e2_stmt": "Checkpoint save/load must classify the optimizer correctly (bf16 without ZeRO has no ZeRO partitioned state) so that reload restores exactly the state that was saved."
+ },
+ {
+  "case_id": "D-NEW-27",
+  "e1": "dtype_preservation",
+  "e2": "config_effectiveness",
+  "e1_stmt": "The reduce-scatter input buffer must be cast to the configured communication_data_type exactly when it differs from the model dtype under ZeRO-3.",
+  "e2_stmt": "The reduce-scatter communication buffer must be cast to the user-configured communication_data_type whenever it differs from the model dtype."
+ },
+ {
+  "case_id": "D-NEW-38",
+  "e1": "conservation",
+  "e2": "parameter_update_applied",
+  "e1_stmt": "Allreduced sparse gradients must be written back into the parameter's grad so no gradient contribution is dropped under DP>1.",
+  "e2_stmt": "Post-allreduce sparse gradient values must be written back into the parameter's gradient consumed by the optimizer so sparse-embedding parameters are actually updated."
+ },
+ {
+  "case_id": "D-NEW-81",
+  "e1": "structural_integrity",
+  "e2": "parameter_update_applied",
+  "e1_stmt": "The gate weight tensor used in the router forward must remain the same object registered with the distributed optimizer (no rebinding to a fresh copy) under ZeRO with fp16/bf16 downcast.",
+  "e2_stmt": "The gate weight used in forward must be the same storage as the optimizer/ZeRO-managed parameter so that its gradients are reduced and its updates are applied across steps."
+ },
+ {
+  "case_id": "M-014",
+  "e1": "gradient_flow",
+  "e2": "parameter_update_applied",
+  "e1_stmt": "Router gating weights must receive nonzero gradients through non-degenerate routing probabilities when top-k routing with k=1 uses post-topk softmax.",
+  "e2_stmt": "Router gate parameters must receive nonzero gradients (routing probabilities must not be a constant 1.0) when num_experts >= 2, so the router actually learns."
+ },
+ {
+  "case_id": "M-029",
+  "e1": "invariance_across_config",
+  "e2": "structural_integrity",
+  "e1_stmt": "Gradients must be invariant to torch.compile being enabled (match the eager-mode reference) even when requires_grad switching triggers the recompile limit in RL-style loops.",
+  "e2_stmt": "Gradients must propagate through the broadcast collective's registered autograd kernel (intact autograd graph) under guard: DP training with torch.compile inside a PPO loop."
+ },
+ {
+  "case_id": "M-030",
+  "e1": "value_scaling_consistency",
+  "e2": "restoration_after_reload",
+  "e1_stmt": "The learning rate applied at the first post-load step must equal the newly configured scheduler value (not the checkpoint value) under guard G = checkpoint resumed with --override-opt_param-scheduler.",
+  "e2_stmt": "After checkpoint load with --override-opt_param-scheduler, the first-step learning rate must equal the newly configured schedule value, not the checkpoint's old value."
+ },
+ {
+  "case_id": "M-040",
+  "e1": "structural_integrity",
+  "e2": "conservation",
+  "e1_stmt": "The gradient buffer must be zeroed (finish_param_sync) before the first accumulation so initial parameter values do not pollute grads under guard G = reuse_grad_buf_for_mxfp8_param_ag with forward_pre_hook disabled.",
+  "e2_stmt": "The gradient buffer must be zero-initialized before accumulation so main gradients equal only the summed micro-batch gradients, under guard: first iteration with forward_pre_hook disabled."
+ },
+ {
+  "case_id": "M-NEW-11",
+  "e1": "copy_consistency",
+  "e2": "structural_integrity",
+  "e1_stmt": "The gradient buffer consumed by the optimizer must be the same buffer written by backward (decoupled_grad) under Megatron-FSDP with a fused optimizer.",
+  "e2_stmt": "The optimizer must read gradients from the buffer where they are written (decoupled_grad), so parameter updates reflect the computed gradient, under guard: Megatron-FSDP + precision-aware FusedAdam."
+ },
+ {
+  "case_id": "M-NEW-14",
+  "e1": "copy_consistency",
+  "e2": "structural_integrity",
+  "e1_stmt": "Expert parameter buffers used in forward must equal the optimizer's updated main parameters after parameter synchronization completes, even when the gather group size is 1.",
+  "e2_stmt": "param_gather must mark dispatch/finish so expert parameters are refreshed to current values even when the intra distributed-optimizer instance size is 1."
+ },
+ {
+  "case_id": "O-017",
+  "e1": "value_scaling_consistency",
+  "e2": "schedule_conformance",
+  "e1_stmt": "The CosWithWarmupAndLinearDecay scheduler must produce LR values matching the specified warmup/decay schedule under guard G = scheduler initialization.",
+  "e2_stmt": "The realized learning rate at each step must conform to the CosWithWarmupAndLinearDecay schedule from correct initialization."
+ },
+ {
+  "case_id": "O-027",
+  "e1": "invariance_across_config",
+  "e2": "structural_integrity",
+  "e1_stmt": "Compiled execution must produce the same results as eager execution when torch.compile is applied over FSDP set_ operations.",
+  "e2_stmt": "torch.compile CSE must not eliminate expressions following an unfunctionalized set_, so the mutation's effect on FSDP results is preserved."
+ },
+ {
+  "case_id": "O-NEW-10",
+  "e1": "count_frequency_match",
+  "e2": "structural_integrity",
+  "e1_stmt": "Each step's observed gradient norm must be incorporated exactly once into the grad-norm EMA update (the EMA must not be updated from itself) whenever adaptive clipping is active.",
+  "e2_stmt": "The grad-norm EMA update must combine the previous EMA and the current grad norm (ema = beta*ema_prev + (1-beta)*x), not update self-referentially."
+ },
+ {
+  "case_id": "O-NEW-11",
+  "e1": "boundedness",
+  "e2": "dtype_preservation",
+  "e1_stmt": "Attention outputs must remain finite (masked bias values must be representable in the compute dtype, e.g. finfo.min instead of -inf) under autocast mixed precision with padded/masked sequences.",
+  "e2_stmt": "Masked-position bias must use finfo(target_dtype).min and be cast before the SDP call, so no -inf survives downcast to produce NaN under autocast."
+ },
+ {
+  "case_id": "O-NEW-13",
+  "e1": "proportionality",
+  "e2": "monotonicity",
+  "e1_stmt": "Reported cumulative Gflops must be proportional to the total number of tokens processed (accumulating monotonically across resumes) whenever speed monitoring is enabled.",
+  "e2_stmt": "The cumulative FLOPs counter must accumulate per token and increase monotonically across steps and resumes, not be reset/overwritten each step."
+ },
+ {
+  "case_id": "O-NEW-16",
+  "e1": "config_runtime_consistency",
+  "e2": "structural_integrity",
+  "e1_stmt": "The runtime device placement and distributed mode must match the actually available/requested backend (CUDA hosts must not be silently rewritten to MPS/CPU with distributed disabled) at startup.",
+  "e2_stmt": "The device-selection guard must evaluate the real predicate (torch.backends.mps.is_available()), so the chosen device matches available hardware instead of always resolving to MPS."
+ },
+ {
+  "case_id": "O-NEW-20",
+  "e1": "initialization_conformance",
+  "e2": "invariance_across_config",
+  "e1_stmt": "The readout (output projection) weights must be initialized to zero, per the muP prescription, when use_mup is enabled.",
+  "e2_stmt": "The output readout weights must retain the muP zero initialization so that the model's output scale at init is invariant across model widths when use_mup is enabled."
+ },
+ {
+  "case_id": "O-NEW-22",
+  "e1": "value_scaling_consistency",
+  "e2": "invariance_across_config",
+  "e1_stmt": "The muP attention scale must equal sqrt(base_d)/d, matching the standard-parameterization scale 1/sqrt(d) exactly at the base width, whenever use_mup is enabled on the SDP path.",
+  "e2_stmt": "The attention temperature under muP must equal the standard-parameterization value 1/sqrt(d) whenever the head count equals the muP base width, and track muP scaling rules otherwise."
+ },
+ {
+  "case_id": "O-NEW-55",
+  "e1": "value_scaling_consistency",
+  "e2": "invariance_across_config",
+  "e1_stmt": "The readout (MuReadout) weights must retain the muP prescribed zero/special init and not be overwritten by generic truncated-normal init under guard: use_mup enabled.",
+  "e2_stmt": "Weights constructed as muP readout modules must retain the muP-prescribed zero/special initialization so activation magnitudes remain width-invariant when use_mup is enabled."
+ },
+ {
+  "case_id": "OC-NEW-29",
+  "e1": "implementation_equivalence",
+  "e2": "structural_integrity",
+  "e1_stmt": "The FFN output must equal the reference gated computation silu(w1(h)) * w3(h) under guard that a SwiGLU-style gated FFN is configured.",
+  "e2_stmt": "The gated-FFN output must include the multiplicative gate branch, i.e. both projections must contribute to the computed output when a SwiGLU FFN is configured."
+ },
+ {
+  "case_id": "OC-NEW-3",
+  "e1": "value_scaling_consistency",
+  "e2": "monotonicity",
+  "e1_stmt": "The learning rate at each training progress point must follow the configured sqrt-decay functional form 1-sqrt(1-progress) under guard that the sqrt decay scheduler is selected.",
+  "e2_stmt": "During the decay phase the learning-rate multiplier must decrease with training progress following the intended 1-sqrt(1-progress) curve shape."
+ },
+ {
+  "case_id": "OC-NEW-41",
+  "e1": "proportionality",
+  "e2": "conservation",
+  "e1_stmt": "Each rank's contribution to the globally reduced loss must be proportional to its count of kept (unmasked) tokens under guard that per-rank sum-then-allreduce averaging is used.",
+  "e2_stmt": "The global loss must equal the sum of per-token losses divided by the global count of loss-contributing tokens across the data-parallel group, even when some ranks mask out instances."
+ },
+ {
+  "case_id": "OC-NEW-48",
+  "e1": "structural_integrity",
+  "e2": "boundedness",
+  "e1_stmt": "The sliding-window mask value at each (query,key) pair must equal the logical AND of both one-sided window conditions under guard that a two-sided sliding window is configured.",
+  "e2_stmt": "Attended key positions must be bounded within the configured two-sided window around each query position when sliding-window attention is enabled."
+ }
+]

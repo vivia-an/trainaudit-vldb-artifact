@@ -1,0 +1,176 @@
+{
+  "tool": "traincheck",
+  "n_bugs": 17,
+  "results": [
+    {
+      "bug_id": "B1",
+      "category": "gradient_sync",
+      "framework": "Megatron-LM",
+      "tier": "T1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "violations": "0/315",
+      "status": "CLEAN"
+    },
+    {
+      "bug_id": "B2",
+      "category": "gradient_sync",
+      "framework": "Megatron-LM",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "violations": "6/520",
+      "status": "DETECTED"
+    },
+    {
+      "bug_id": "B3",
+      "category": "dtype",
+      "framework": "DeepSpeed",
+      "tier": "T1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "violations": "0/439",
+      "status": "CLEAN"
+    },
+    {
+      "bug_id": "B8",
+      "category": "moe",
+      "framework": "DeepSpeed",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "violations": "2/433",
+      "status": "DETECTED"
+    },
+    {
+      "bug_id": "B11",
+      "category": "numerical",
+      "framework": "DeepSpeed",
+      "tier": "T0",
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "violations": "11/604",
+      "status": "DETECTED"
+    },
+    {
+      "bug_id": "B12",
+      "category": "lr_schedule",
+      "framework": "OLMo-core",
+      "tier": "T0",
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "violations": "24/478",
+      "status": "DETECTED"
+    },
+    {
+      "bug_id": "M-012",
+      "category": "moe",
+      "framework": "Megatron-LM",
+      "tier": "T1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "violations": "0/431",
+      "status": "CLEAN"
+    },
+    {
+      "bug_id": "M-020",
+      "category": "sharding",
+      "framework": "Megatron-LM",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "violations": "1/758",
+      "status": "DETECTED"
+    },
+    {
+      "bug_id": "M-024",
+      "category": "dtype",
+      "framework": "Megatron-LM",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "violations": "1/430",
+      "status": "DETECTED"
+    },
+    {
+      "bug_id": "O-005",
+      "category": "checkpoint",
+      "framework": "OLMo",
+      "tier": "T0",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "violations": "infer:     assert not isinstance(            ^^^^^^^^^^^^^^^ AssertionError: Exc",
+      "status": "FAIL"
+    },
+    {
+      "bug_id": "O-NEW-1",
+      "category": "numerical",
+      "framework": "OLMo",
+      "tier": "T0",
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "violations": "1/683",
+      "status": "DETECTED"
+    },
+    {
+      "bug_id": "O-NEW-9",
+      "category": "data_loading",
+      "framework": "OLMo",
+      "tier": "T0",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "violations": "0/260",
+      "status": "CLEAN"
+    },
+    {
+      "bug_id": "OC-NEW-2",
+      "category": "optimizer_state",
+      "framework": "OLMo-core",
+      "tier": "T0",
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "violations": "18/506",
+      "status": "DETECTED"
+    },
+    {
+      "bug_id": "OC-NEW-3",
+      "category": "lr_schedule",
+      "framework": "OLMo-core",
+      "tier": "T1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "violations": "0/381",
+      "status": "CLEAN"
+    },
+    {
+      "bug_id": "CF1",
+      "category": "control_flow",
+      "framework": "(surrogate)",
+      "tier": "T0/T1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "violations": "0/199 failed",
+      "status": "CLEAN"
+    },
+    {
+      "bug_id": "CM1",
+      "category": "communication",
+      "framework": "(surrogate)",
+      "tier": "T1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "violations": "0/4 failed",
+      "status": "CLEAN"
+    },
+    {
+      "bug_id": "OF1",
+      "category": "offload",
+      "framework": "(surrogate)",
+      "tier": "T1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "violations": "0/601 failed",
+      "status": "CLEAN"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+bug_id,trainaudit_verdict,traincheck_verdict,note
+B11,DETECTED,PENDING_INTEGRATION,"TrainCheck imports OK; full instrumentation integration is the follow-up — its API expects file-backed traces via `collect_trace`, which we'd plumb through synthetic_runners. Recorded TrainAudit verdict for diff baseline."
+B12,DETECTED,PENDING_INTEGRATION,"TrainCheck imports OK; full instrumentation integration is the follow-up — its API expects file-backed traces via `collect_trace`, which we'd plumb through synthetic_runners. Recorded TrainAudit verdict for diff baseline."
+O-NEW-1,DETECTED,PENDING_INTEGRATION,"TrainCheck imports OK; full instrumentation integration is the follow-up — its API expects file-backed traces via `collect_trace`, which we'd plumb through synthetic_runners. Recorded TrainAudit verdict for diff baseline."
+OC-NEW-2,DETECTED,PENDING_INTEGRATION,"TrainCheck imports OK; full instrumentation integration is the follow-up — its API expects file-backed traces via `collect_trace`, which we'd plumb through synthetic_runners. Recorded TrainAudit verdict for diff baseline."
+M-014,DETECTED,PENDING_INTEGRATION,"TrainCheck imports OK; full instrumentation integration is the follow-up — its API expects file-backed traces via `collect_trace`, which we'd plumb through synthetic_runners. Recorded TrainAudit verdict for diff baseline."

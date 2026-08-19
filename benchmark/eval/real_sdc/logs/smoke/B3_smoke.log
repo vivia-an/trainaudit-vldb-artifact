@@ -1,0 +1,55 @@
+Warning: Permanently added '[183.242.150.6]:32054' (ED25519) to the list of known hosts.
+===== BUGGY (d56268f3~1) =====
+HEAD is now at 39825a90 Fix redundant shared_params in zero_to_fp32.py (#3149)
+W0518 00:27:53.554000 17038 torch/distributed/run.py:851] 
+W0518 00:27:53.554000 17038 torch/distributed/run.py:851] *****************************************
+W0518 00:27:53.554000 17038 torch/distributed/run.py:851] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0518 00:27:53.554000 17038 torch/distributed/run.py:851] *****************************************
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:49: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @autocast_custom_fwd
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:75: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  @autocast_custom_bwd
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:49: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @autocast_custom_fwd
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:75: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  @autocast_custom_bwd
+[2026-05-18 00:28:02,304] [INFO] [comm.py:586:init_distributed] Initializing TorchBackend in DeepSpeed with backend nccl
+[B3] bf16_enabled = True (stub)
+[B3] fp16_enabled = False (stub)
+[B3] communication_data_type() = torch.float32
+[B3] BUG DETECTED: communication_data_type returns float32 despite bf16 enabled
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W518 00:28:02.057387055 ProcessGroupNCCL.cpp:5178] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+
+===== FIXED (d56268f3) =====
+HEAD is now at d56268f3 fixing default communication_data_type for bfloat16_enabled and docs (#3370)
+W0518 00:28:07.038000 17194 torch/distributed/run.py:851] 
+W0518 00:28:07.038000 17194 torch/distributed/run.py:851] *****************************************
+W0518 00:28:07.038000 17194 torch/distributed/run.py:851] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0518 00:28:07.038000 17194 torch/distributed/run.py:851] *****************************************
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:49: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @autocast_custom_fwd
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:75: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  @autocast_custom_bwd
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:49: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @autocast_custom_fwd
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:75: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  @autocast_custom_bwd
+[2026-05-18 00:28:13,581] [INFO] [comm.py:586:init_distributed] Initializing TorchBackend in DeepSpeed with backend nccl
+[B3] bf16_enabled = True (stub)
+[B3] fp16_enabled = False (stub)
+[B3] communication_data_type() = torch.bfloat16
+[B3] CLEAN: communication_data_type returns bfloat16
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W518 00:28:13.294918033 ProcessGroupNCCL.cpp:5178] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+

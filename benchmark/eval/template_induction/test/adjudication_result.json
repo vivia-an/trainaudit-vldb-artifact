@@ -1,0 +1,93 @@
+{
+ "adjudicated": [
+  {
+   "case_id": "M-006",
+   "rater_a_verdict": "MATCH(T03, groundable=yes)",
+   "rater_b_verdict": "MATCH(T03, groundable=no)",
+   "final_verdict": "MATCH",
+   "final_template_id": "T03",
+   "final_groundable": "yes",
+   "sided_with": "A",
+   "deciding_clause": "RATER_INSTRUCTIONS §2 NON_GROUNDABLE definition + T03 schema_predicate/grounding_concerns",
+   "rationale": "Groundability is a property of the topology/precondition guards (TP>1, vocab_size % tp_size != 0), both of which are instantiable at runtime; the paired reference-config execution is T03's defining witness class, not a grounding failure, or every T03 case would be non-groundable. The catalog records a grounding concern only for O-036, where the root cause was not isolated — here the uneven vocab split is isolated.",
+   "uncovered_category": null
+  },
+  {
+   "case_id": "M-013",
+   "rater_a_verdict": "MATCH(T20)",
+   "rater_b_verdict": "MATCH(T08)",
+   "final_verdict": "MATCH",
+   "final_template_id": "T08",
+   "final_groundable": "yes",
+   "sided_with": "B",
+   "deciding_clause": "§3.1 relation-operator split + T08 schema_predicate (mask_valid_counts) and its padded-batch masked-mean precondition",
+   "rationale": "The primary relation is that the load-balancing statistic be normalized over mask-valid token positions only, which T08's schema_predicate carries explicitly via mask_valid_counts and whose guard kind T08 already lists ('ratio-loss target statistics on variable-length padded batches must be masked means over mask-valid positions only'). T20's object is the cross-entropy loss mask over pad positions and its operator is exclusivity, a different relation operator from the misnormalized aux-loss statistic (§3.1).",
+   "uncovered_category": null
+  },
+  {
+   "case_id": "M-NEW-15",
+   "rater_a_verdict": "MATCH(T28)",
+   "rater_b_verdict": "MATCH(T22)",
+   "final_verdict": "MATCH",
+   "final_template_id": "T22",
+   "final_groundable": "yes",
+   "sided_with": "B",
+   "deciding_clause": "T28 merge_boundary vs T22 (§3.4) + T22 schema_predicate id-identity clause and its Megatron-FSDP precision-aware FusedAdam precondition",
+   "rationale": "The optimizer steps a duplicate master that never receives gradients, so the witness is step-over-step parameter non-change and the violation of id(forward_used_tensor(p)) == id(optimizer_registered_param(p)) — exactly T22's schema, and T22 already permits the Megatron-FSDP precision-aware FusedAdam precondition. T28's merge_boundary explicitly reserves master-working elementwise agreement at a sync point as a different observable from step-over-step parameter change (§3.4).",
+   "uncovered_category": null
+  },
+  {
+   "case_id": "O-013",
+   "rater_a_verdict": "MATCH(T03)",
+   "rater_b_verdict": "MATCH(T04)",
+   "final_verdict": "MATCH",
+   "final_template_id": "T03",
+   "final_groundable": "yes",
+   "sided_with": "A",
+   "deciding_clause": "T03 merge_boundary vs T04 (§3.4) + T03 attention-backend-selection precondition",
+   "rationale": "The native PyTorch cross-entropy is an in-codebase, config-selectable implementation of a performance-only knob, so the witness is a paired run of the same code under another config — which T03's merge_boundary claims explicitly ('including a second attention backend') and whose guard kind T03 already lists as backend selection. T04's oracle class is an external analytic spec or independent reference implementation, which is not what distinguishes fused from unfused CE here.",
+   "uncovered_category": null
+  },
+  {
+   "case_id": "O-NEW-67",
+   "rater_a_verdict": "SINGLETON_NEW_RELATION",
+   "rater_b_verdict": "UNOBSERVABLE",
+   "final_verdict": "SINGLETON_NEW_RELATION",
+   "final_template_id": null,
+   "final_groundable": null,
+   "sided_with": "A",
+   "deciding_clause": "RATER_INSTRUCTIONS decision-order note (UNOBSERVABLE only when the relation itself cannot be witnessed by any in-run signal) + T34/T18 merge boundaries (§3.2)",
+   "rationale": "The relation — model max_sequence_length must cover the length the data was tokenized at — is witnessable in-run by comparing the served instance extent (tokenized at 2048) against the model's configured context length, since the loader's silent truncation of every example is a trace-visible signal, so UNOBSERVABLE does not apply. No frozen template carries it: T18's effective value does equal the configured 1024 (honored), and T34's counted object is the example budget against the step plan, not per-example sequence extent (§3.2).",
+   "uncovered_category": "U5"
+  },
+  {
+   "case_id": "OC-NEW-54",
+   "rater_a_verdict": "MATCH(T04)",
+   "rater_b_verdict": "SINGLETON_NEW_RELATION",
+   "final_verdict": "MATCH",
+   "final_template_id": "T04",
+   "final_groundable": "yes",
+   "sided_with": "A",
+   "deciding_clause": "RATER_INSTRUCTIONS decision-order note (prefer MATCH over NON_GROUNDABLE over SINGLETON_NEW_RELATION) + T04 schema_predicate and same-guard-kind rule",
+   "rationale": "The debias term must equal its analytic reference — the stable masked log-sum-exp — evaluated on identical inputs, and the computed -inf deviates unboundedly from it, which is precisely T04's computed-vs-analytic-formula schema; the BLT-debias low-probability tail is the same guard kind as T04's other analytic-formula preconditions, so it does not block a MATCH. SINGLETON_NEW_RELATION requires that no frozen template cover the relation, which fails here, and B's own boundedness framing correctly rules out T14/T29/T33 without establishing novelty.",
+   "uncovered_category": null
+  },
+  {
+   "case_id": "OC-NEW-67",
+   "rater_a_verdict": "MATCH(T04, groundable=no)",
+   "rater_b_verdict": "UNOBSERVABLE",
+   "final_verdict": "MATCH",
+   "final_template_id": "T04",
+   "final_groundable": "no: the intended WSD reference curve is recorded nowhere in the run — the config selects CosWithWarmup and the realized cosine trajectory is self-consistent at runtime, so no in-run oracle instantiates the schema",
+   "sided_with": "A",
+   "deciding_clause": "T04 schema_predicate (spec_reference may be external) + T04 grounding_concerns precedent (M-022, OC-NEW-53) + §7 C_schema/C_joint metric split",
+   "rationale": "T04's oracle is explicitly allowed to be an external spec or reference implementation, and the catalog's frozen precedent admits M-022 and OC-NEW-53 as T04 MATCHes with grounding_concerns despite the extractor reporting no in-run anomaly and none_runtime observability — so an external-only oracle yields MATCH with groundable=no, not UNOBSERVABLE. LR-schedule-shape conformance is already within T04's scope via its 'post-warmup LR must follow the intended warmup+decay reference curve (WarmupDecayLR, not WarmupLR)' precondition, the same guard kind as the wrong-variant selection here; the case is a C_schema − C_joint gap contributor under §7.",
+   "uncovered_category": null
+  }
+ ],
+ "summary": {
+  "sided_with_a": 5,
+  "sided_with_b": 2,
+  "neither": 0
+ }
+}

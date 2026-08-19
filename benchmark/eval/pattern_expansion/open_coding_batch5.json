@@ -1,0 +1,342 @@
+{
+  "meta": {
+    "batch": 5,
+    "count": 30,
+    "note": "Open coding labels for bugs not covered by P1-P8 catalog. Labels are kebab-case, 5-10 per bug, avoiding direct reuse of P1-P8 names."
+  },
+  "bugs": [
+    {
+      "bug_id": "OC-NEW-22",
+      "labels": [
+        "rope-position-reset",
+        "packed-document-boundary",
+        "intra-document-independence",
+        "cu-doc-lens-ignored",
+        "post-rope-equality",
+        "global-vs-local-index",
+        "document-aware-attention"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-25",
+      "labels": [
+        "shared-cache-write-race",
+        "fingerprint-named-file-overwrite",
+        "concurrent-job-collision",
+        "tmp-replace-race",
+        "cross-rank-file-agreement",
+        "idempotent-cache-write",
+        "deterministic-name-nondeterministic-content"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-26",
+      "labels": [
+        "tmp-path-collision",
+        "seeded-rng-non-uniqueness",
+        "cross-rank-name-clash",
+        "concurrent-writer-coordination",
+        "entropy-source-misuse",
+        "rename-during-read",
+        "silent-fallback-masks-error"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-29",
+      "labels": [
+        "torch-api-positional-misuse",
+        "silu-inplace-flag-misread",
+        "swiglu-gate-dropped",
+        "ffn-formula-violation",
+        "missing-elementwise-multiply",
+        "single-arg-activation-required",
+        "silent-architecture-degradation"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-3",
+      "labels": [
+        "lr-schedule-formula-error",
+        "decay-curve-shape-inverted",
+        "sqrt-decay-misimplementation",
+        "schedule-vs-reference-mismatch",
+        "lr-shape-monotonicity"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-30",
+      "labels": [
+        "router-score-underflow",
+        "missing-epsilon-floor",
+        "log-of-zero-nan-propagation",
+        "low-precision-sigmoid-zero",
+        "router-score-positivity",
+        "downstream-divide-by-zero",
+        "moe-aux-loss-numerical-stability"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-32",
+      "labels": [
+        "embed-init-ignores-scale",
+        "fan-in-init-not-compensated",
+        "embedding-magnitude-blowup",
+        "init-scale-coupling-missing",
+        "post-scale-std-target",
+        "early-layer-dynamics-distortion"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-34",
+      "labels": [
+        "rope-position-reset",
+        "complex-rope-cu-doc-ignored",
+        "api-argument-not-threaded",
+        "silent-fallback-to-global-position",
+        "packed-document-boundary",
+        "post-rope-equality",
+        "rotary-variant-feature-parity"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-36",
+      "labels": [
+        "future-callback-ordering",
+        "done-callback-after-finished",
+        "join-misses-callback",
+        "checkpoint-state-staleness",
+        "async-bookkeeping-completeness",
+        "future-state-vs-side-effects"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-38",
+      "labels": [
+        "dtensor-not-unwrapped",
+        "metric-records-distributed-tensor",
+        "implicit-replication-semantics",
+        "tp-aware-reduce-mismatch",
+        "plain-tensor-required",
+        "grad-norm-cross-rank-mis-reduction"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-4",
+      "labels": [
+        "divide-by-zero-loss",
+        "all-masked-rank-edge-case",
+        "denominator-positivity-guard",
+        "token-count-zero-nan",
+        "rank-local-degenerate-batch"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-42",
+      "labels": [
+        "metric-not-divided-by-microbatches",
+        "grad-accum-metric-inflation",
+        "logged-metric-vs-loss-divergence",
+        "average-vs-sum-confusion",
+        "metric-normalization-missing"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-44",
+      "labels": [
+        "sliding-window-off-by-one",
+        "closed-vs-open-interval-semantics",
+        "flash-attn-window-convention",
+        "config-vs-kernel-window-mismatch",
+        "receptive-field-size-equality"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-46",
+      "labels": [
+        "embedding-init-skipped",
+        "teacher-distribution-not-applied",
+        "init-applied-to-wrong-submodule",
+        "default-init-leakage",
+        "byte-vs-hash-embedding-confusion",
+        "distillation-init-distribution"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-47",
+      "labels": [
+        "backend-ignores-cu-doc-lens",
+        "intra-doc-attention-leak",
+        "argument-accepted-but-unused",
+        "attention-backend-feature-parity",
+        "packed-document-boundary",
+        "silent-full-attention",
+        "fail-loud-on-unsupported-feature"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-49",
+      "labels": [
+        "freeze-pattern-incomplete",
+        "shared-parameter-mismatch",
+        "name-pattern-misses-shared-module",
+        "param-tied-but-name-divergent",
+        "freeze-coverage-completeness",
+        "teacher-student-shared-blocks"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-51",
+      "labels": [
+        "isinstance-dispatch-order-bug",
+        "subclass-shadowed-by-parent",
+        "init-branch-not-reached",
+        "partial-module-initialization",
+        "mla-projections-uninitialized",
+        "init-once-completeness"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-52",
+      "labels": [
+        "config-duplicated-across-layers",
+        "multiplicative-double-counting",
+        "single-authority-violation",
+        "nested-config-interaction",
+        "source-group-size-mis-set",
+        "packing-distribution-shifted"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-53",
+      "labels": [
+        "hf-clone-config-incomplete",
+        "qk-norm-axis-mismatch",
+        "missing-feature-flag",
+        "default-vs-reference-divergence",
+        "model-factory-parity-checklist",
+        "per-head-vs-per-channel-norm"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-54",
+      "labels": [
+        "logsumexp-numerical-instability",
+        "exp-underflow-to-zero",
+        "log-of-zero-nan-propagation",
+        "multiplicative-mask-vs-where",
+        "in-place-inf-pollution",
+        "log-domain-reduction-pattern"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-55",
+      "labels": [
+        "masked-mean-required",
+        "padding-positions-included",
+        "ratio-target-bias",
+        "variable-length-statistic",
+        "padded-tensor-mean-incorrect",
+        "boundary-mask-mean-formula"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-56",
+      "labels": [
+        "loss-finalize-call-missing",
+        "loss-component-not-normalized",
+        "weighted-sum-coefficient-distortion",
+        "loss-div-factor-skipped",
+        "logging-completeness-vs-loss",
+        "raw-sum-vs-mean-mismatch"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-58",
+      "labels": [
+        "loss-divisor-granularity-mismatch",
+        "byte-vs-patch-denominator",
+        "numel-misused-as-token-count",
+        "loss-component-weighting-error",
+        "div-factor-passed-incorrectly"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-6",
+      "labels": [
+        "sliding-window-off-by-one",
+        "config-vs-kernel-window-mismatch",
+        "receptive-field-size-equality",
+        "window-tuple-convention",
+        "attention-window-too-small"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-60",
+      "labels": [
+        "label-offset-not-applied",
+        "branch-duplication-missed-edit",
+        "fuse-boundaries-edge-case",
+        "ce-target-index-mismatch",
+        "boundary-position-offset-completeness",
+        "code-path-divergence"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-61",
+      "labels": [
+        "mask-not-and-with-byte-mask",
+        "stale-mask-from-previous-batch",
+        "padding-position-pollution",
+        "ignore-index-violated",
+        "mask-composition-incomplete",
+        "boundary-mask-vs-byte-mask"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-63",
+      "labels": [
+        "dataset-rounding-down",
+        "ceil-then-floor-mismatch",
+        "epoch-wrap-silent",
+        "instances-vs-steps-mismatch",
+        "largest-remainder-redistribution",
+        "training-runs-into-epoch-2",
+        "loss-drop-near-end-of-run"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-66",
+      "labels": [
+        "optional-projection-uninitialized",
+        "init-branch-misses-gate",
+        "uninitialized-memory-as-weights",
+        "meta-device-empty-leakage",
+        "init-once-completeness",
+        "attention-gate-projection"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-8",
+      "labels": [
+        "detached-tensor-in-loss-sum",
+        "z-loss-no-gradient",
+        "regularizer-not-backpropped",
+        "metric-vs-loss-confusion",
+        "requires-grad-precondition",
+        "lmhead-detached-output"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-9",
+      "labels": [
+        "detached-tensor-in-loss-sum",
+        "hard-ce-gradient-zeroed",
+        "soft-ce-mixing-bug",
+        "alpha-decay-collapses-grad",
+        "wrong-output-tensor-summed",
+        "grad-norm-positivity-invariant",
+        "lmhead-detached-output"
+      ]
+    }
+  ]
+}

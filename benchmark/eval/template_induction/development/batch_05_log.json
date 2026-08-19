@@ -1,0 +1,187 @@
+{
+  "batch": 5,
+  "decisions": [
+    {
+      "case_id": "D-NEW-56",
+      "decision": "SINGLETON",
+      "template_id": null,
+      "guard_extension": null,
+      "note": "state_freshness re-resolved to index_consistency (dispatch/combine index vs current routing mask); no template or singleton shares objects per §3.2."
+    },
+    {
+      "case_id": "OC-NEW-48",
+      "decision": "NEW_TEMPLATE",
+      "template_id": "T30",
+      "guard_extension": null,
+      "note": "Promoted with earlier singleton O-NEW-2 (independent causal-exclusivity incident); structural_integrity re-resolved to exclusivity — static-pattern forbidden attention mass."
+    },
+    {
+      "case_id": "M-NEW-MUON-MTP",
+      "decision": "MATCH",
+      "template_id": "T01",
+      "guard_extension": "topology += PP>1; precondition += tied word-embedding replicas across PP stages routed to the same optimizer (Muon/MTP-only last stage)",
+      "note": "Tied embedding replicas are replicated state that must stay checksum-equal after each optimizer step."
+    },
+    {
+      "case_id": "D-NEW-54",
+      "decision": "MATCH",
+      "template_id": "T11",
+      "guard_extension": "topology += EP>1 and SP>1; precondition += replication-factor metadata records seq-adjusted expert-DP world size",
+      "note": "Restored expert slice must equal the saved slice; wrong recorded replication factor breaks re-sharding on resume."
+    },
+    {
+      "case_id": "D-NEW-22",
+      "decision": "MATCH",
+      "template_id": "T11",
+      "guard_extension": "precondition += elastic ZeRO-1/2 re-flattening honors nccl_start_alignment_factor save padding",
+      "note": "Misaligned slices restore optimizer state to the wrong parameters — restore-equality violation."
+    },
+    {
+      "case_id": "D-NEW-33",
+      "decision": "MATCH",
+      "template_id": "T26",
+      "guard_extension": "topology += DP>1; precondition += MiCS consolidated checkpoint written by exactly one designated rank per save",
+      "note": "exclusivity re-resolved to count_frequency_match: count(file writes per save) == 1."
+    },
+    {
+      "case_id": "D-NEW-50",
+      "decision": "MATCH",
+      "template_id": "T05",
+      "guard_extension": "precondition += grad-accum flat buffers allocated in configured grad_accum_dtype (no hard-coded fp32)",
+      "note": "Configured accumulation dtype honored at allocation, following the communication_data_type precedent."
+    },
+    {
+      "case_id": "M-NEW-11",
+      "decision": "MATCH",
+      "template_id": "T22",
+      "guard_extension": "topology += DP>1; precondition += precision-aware FusedAdam consumes decoupled_grad (use_decoupled_grad=True)",
+      "note": "copy_consistency re-resolved to update_effectiveness: params unchanged despite nonzero gradients is T22's witness."
+    },
+    {
+      "case_id": "OC-NEW-53",
+      "decision": "MATCH",
+      "template_id": "T04",
+      "guard_extension": "precondition += reference-clone per-head QK normalization axis (use_head_qk_norm)",
+      "note": "implementation_equivalence aliases to reference_equivalence; grounding concern recorded (none_runtime, external reference only)."
+    },
+    {
+      "case_id": "D-NEW-32",
+      "decision": "SINGLETON",
+      "template_id": null,
+      "guard_extension": null,
+      "note": "Module-level layer ownership is not T25 tensor layout (§3.2); appended as singleton, promoted into T32 by M-NEW-29 later in this batch."
+    },
+    {
+      "case_id": "OC-NEW-56",
+      "decision": "MATCH",
+      "template_id": "T08",
+      "guard_extension": "precondition += every weighted-sum loss component normalized by the same token-count divisor as its siblings",
+      "note": "Missing loss_div_factor on one component is a scale-factor violation applied-exactly-once."
+    },
+    {
+      "case_id": "B10",
+      "decision": "MATCH",
+      "template_id": "T07",
+      "guard_extension": "precondition += ZeRO-2 CPU-offload copy-vs-accumulate gating keyed to micro_step_id",
+      "note": "Copy-on-every-microstep clobbers the accumulated sum — conservation of per-microbatch contributions."
+    },
+    {
+      "case_id": "D-NEW-48",
+      "decision": "MATCH",
+      "template_id": "T26",
+      "guard_extension": "topology += PP>1 and DP>1; precondition += GAS boundary flag propagated so reduction fires once per boundary",
+      "note": "count(reduction launches per accumulation boundary) == 1."
+    },
+    {
+      "case_id": "OC-NEW-5",
+      "decision": "NEW_TEMPLATE",
+      "template_id": "T31",
+      "guard_extension": null,
+      "note": "Promoted with earlier singleton D-022 (independent sort-key incident): realized order must equal intended sort-key order."
+    },
+    {
+      "case_id": "D-NEW-16",
+      "decision": "MATCH",
+      "template_id": "T10",
+      "guard_extension": "precondition += reduce_and_partition_stream syncs against current_stream (not default_stream)",
+      "note": "Happens-before between gradient-producing stream and reduction consumer."
+    },
+    {
+      "case_id": "OC-NEW-11",
+      "decision": "MATCH",
+      "template_id": "T27",
+      "guard_extension": "precondition += per-projection init std uses actual fan-in under GQA/w_out (in_features != d_model)",
+      "note": "Init std must conform to the fan-in-derived spec."
+    },
+    {
+      "case_id": "M-NEW-29",
+      "decision": "NEW_TEMPLATE",
+      "template_id": "T32",
+      "guard_extension": null,
+      "note": "Promoted with this batch's singleton D-NEW-32 (independent incident, different framework): layer-to-stage assignment must equal the configured partition map."
+    },
+    {
+      "case_id": "OC-NEW-6",
+      "decision": "MATCH",
+      "template_id": "T18",
+      "guard_extension": "precondition += realized sliding-window attention extent equals configured window size",
+      "note": "count_frequency_match re-resolved to config_effectiveness: effective window extent == configured window size (softmax-scale precedent)."
+    },
+    {
+      "case_id": "OC-NEW-26",
+      "decision": "SINGLETON",
+      "template_id": null,
+      "guard_extension": null,
+      "note": "Temp-file name distinctness: filesystem artifact naming plays a different role than O-NEW-51's data-shard partition (§3.2)."
+    },
+    {
+      "case_id": "M-NEW-5",
+      "decision": "MATCH",
+      "template_id": "T08",
+      "guard_extension": "precondition += MoE aux loss scaled by num_tokens under calculate_per_token_loss",
+      "note": "Missing num_tokens factor under per-token mode."
+    },
+    {
+      "case_id": "OC-NEW-50",
+      "decision": "MATCH",
+      "template_id": "T18",
+      "guard_extension": "precondition += config fields declared as dataclass attributes so override-merge preserves configured values",
+      "note": "restoration_after_reload re-resolved to config_effectiveness: witness is effective-vs-configured freeze_experts (OC-NEW-64 precedent); earlier singleton OC-NEW-21 (whole-config encode/decode equivalence) left in place."
+    },
+    {
+      "case_id": "D-NEW-73",
+      "decision": "MATCH",
+      "template_id": "T08",
+      "guard_extension": "precondition += manual scale_loss/backward applies the same EP output-grad scale as engine.backward",
+      "note": "Expert gradients undercount by ep_size on the manual API path — factor applied exactly once."
+    },
+    {
+      "case_id": "O-NEW-31",
+      "decision": "MATCH",
+      "template_id": "T09",
+      "guard_extension": null,
+      "note": "Evidently the same HSDP num_model_replicas incident as existing support O-NEW-32 (§4.1): listed in positive_examples, support_count unchanged."
+    },
+    {
+      "case_id": "B2",
+      "decision": "MATCH",
+      "template_id": "T01",
+      "guard_extension": "topology += TP>1; precondition += frozen-weight TP linear all-reduces grad_input across the TP group",
+      "note": "grad_input is TP-group-replicated-by-contract state; witness is cross-rank checksum in the replication group."
+    },
+    {
+      "case_id": "O-NEW-63",
+      "decision": "MATCH",
+      "template_id": "T04",
+      "guard_extension": "precondition += post-warmup LR follows the decaying warmup reference curve (WarmupDecayLR mapping)",
+      "note": "monotonicity re-resolved to reference_equivalence (LR trajectory vs intended schedule); checked against T04's seed-era warmup-mapping precondition — no same-incident evidence, counts independently."
+    }
+  ],
+  "n_matched": 19,
+  "n_new_singletons": 3,
+  "n_new_templates": 3,
+  "core_edits": [],
+  "templates_total_after": 32,
+  "singletons_total_after": 21,
+  "notes": "n_new_singletons counts SINGLETON decisions; one of them (D-NEW-32) was promoted into T32 later in the same batch, so net singleton growth is +2 (D-NEW-56, OC-NEW-26) while promotions removed O-NEW-2 and D-022, leaving the singleton list at 21."
+}

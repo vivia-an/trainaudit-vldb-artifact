@@ -1,0 +1,31 @@
+Warning: Permanently added '[183.242.150.6]:32462' (ED25519) to the list of known hosts.
+===== TrainAudit on OC-NEW-6 BUGGY (a2f9f010~1) =====
+Traceback (most recent call last):
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/bugs/OC-NEW-6/trainaudit_driver.py", line 73, in main
+    runpy.run_path(_DETECT_PATH, run_name="__main__")
+  File "<frozen runpy>", line 291, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/bugs/OC-NEW-6/detect.py", line 49, in <module>
+    main()
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/bugs/OC-NEW-6/detect.py", line 17, in main
+    config = AttentionConfig(
+             ^^^^^^^^^^^^^^^^
+TypeError: AttentionConfig.__init__() got an unexpected keyword argument 'head_dim'
+[OC-NEW-6] FAIL: detect.py: TypeError: AttentionConfig.__init__() got an unexpected keyword argument 'head_dim'
+
+===== TrainAudit on OC-NEW-6 FIXED (a2f9f010) =====
+Traceback (most recent call last):
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/bugs/OC-NEW-6/trainaudit_driver.py", line 73, in main
+    runpy.run_path(_DETECT_PATH, run_name="__main__")
+  File "<frozen runpy>", line 291, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/bugs/OC-NEW-6/detect.py", line 49, in <module>
+    main()
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/bugs/OC-NEW-6/detect.py", line 17, in main
+    config = AttentionConfig(
+             ^^^^^^^^^^^^^^^^
+TypeError: AttentionConfig.__init__() got an unexpected keyword argument 'head_dim'
+[OC-NEW-6] FAIL: detect.py: TypeError: AttentionConfig.__init__() got an unexpected keyword argument 'head_dim'
+

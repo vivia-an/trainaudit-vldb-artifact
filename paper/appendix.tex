@@ -1,0 +1,797 @@
+%%%%%%%% SIGMOD / PACMMOD DOUBLE-BLIND SUBMISSION — SUPPLEMENTARY MATERIAL %
+
+\documentclass[sigconf,anonymous]{acmart}
+
+% Real-SE headline numbers shared with main.tex — single source of truth
+\input{numbers}
+
+\usepackage{rotating}
+
+\usepackage{tcolorbox}
+\tcbuselibrary{listings, minted, skins, breakable}
+
+\newtcblisting{confcode}[2][]{%
+    listing engine=minted,
+    minted language=python,
+    minted options={fontsize=\small, linenos, breaklines, autogobble, #1},
+    colback=gray!5,
+    colframe=black!40,
+    coltitle=black,
+    fonttitle=\bfseries,
+    title={#2},
+    breakable,
+    enhanced,
+    sharp corners,
+    boxrule=0.5pt,
+    toptitle=1mm,
+    bottomtitle=1mm,
+    left=1mm, right=1mm, top=0.5mm, bottom=0.5mm,
+    listing only,
+}
+
+\newtcblisting{sqlcode}[2][]{%
+    listing engine=minted,
+    minted language=sql,
+    minted options={fontsize=\small, linenos, breaklines, autogobble, #1},
+    colback=gray!5,
+    colframe=black!40,
+    coltitle=black,
+    fonttitle=\bfseries,
+    title={#2},
+    breakable,
+    enhanced,
+    sharp corners,
+    boxrule=0.5pt,
+    toptitle=1mm,
+    bottomtitle=1mm,
+    left=1mm, right=1mm, top=0.5mm, bottom=0.5mm,
+    listing only,
+}
+
+\newtcblisting{scriptcode}[2][]{%
+    listing engine=minted,
+    minted language=bash,
+    minted options={fontsize=\small, linenos, breaklines, autogobble, #1},
+    colback=gray!5,
+    colframe=black!40,
+    coltitle=black,
+    fonttitle=\bfseries,
+    title={#2},
+    breakable,
+    enhanced,
+    sharp corners,
+    boxrule=0.5pt,
+    toptitle=1mm,
+    bottomtitle=1mm,
+    left=1mm, right=1mm, top=0.5mm, bottom=0.5mm,
+    listing only,
+}
+
+\usepackage{multirow}
+\usepackage{minted}
+\usepackage{tabularx}
+\usepackage{enumitem}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,automata,fit,calc,shadows.blur}
+
+\usepackage[capitalize,noabbrev]{cleveref}
+\usepackage{subcaption}
+\usepackage{placeins}
+\usepackage{float}
+
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\usepackage[htt]{hyphenat}
+\emergencystretch=1em
+
+\usepackage{balance}
+\usepackage{pifont}
+
+%% SIGMOD 2027 conference metadata (page headers and title block)
+\setcopyright{none}
+\copyrightyear{2027}
+\acmConference[SIGMOD/PODS '27]{ACM SIGMOD/PODS International Conference on Management of Data}{June 13--19, 2027}{Huntington Beach, CA, USA}
+\acmYear{2027}
+\acmDOI{}
+\acmISBN{}
+\settopmatter{printacmref=false, printccs=false, printfolios=true}
+
+\begin{document}
+
+%% Authors removed for double-blind review
+
+\title[TrainAudit: Supplementary Material]{TrainAudit: Silent Error Detection for LLM Training via Verified Guarded Relational Constraints---Supplementary Material}
+
+\begin{abstract}
+This PDF is \emph{review-only} supplementary material for the main paper.
+The main paper is self-contained: reviewers are not required to read this file
+(SIGMOD/PACMMOD appendix policy). Content here is limited to methodology protocols, the mining/SQL
+specifications needed to audit main-text claims, and per-case tables.
+Prompt dumps and collector scripts are omitted (released with the artifact).
+This appendix is not part of the camera-ready.
+\end{abstract}
+
+\maketitle
+
+\appendix
+\onecolumn
+\counterwithin{figure}{section}
+\counterwithin{table}{section}
+\counterwithin{equation}{section}
+% Pack floats tightly (appendix is review-only; avoid sparse float pages)
+\raggedbottom
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{0pt}
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.95}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.85}
+\setcounter{topnumber}{4}
+\setcounter{bottomnumber}{4}
+\setcounter{totalnumber}{8}
+
+\section*{Roadmap: Appendix Sections vs.\ Main Paper}
+\label{app:roadmap}
+\noindent
+Table~\ref{tab:app-roadmap} maps each appendix section to the main-paper claim it supports.
+Primary reading order for verifying main claims: B$\to$D$\to$E$\to$F$\to$I (then G/H only if needed).
+Implementation dumps and figures that only restate the main text are omitted (released with the artifact).
+
+\begin{table}[H]
+\centering
+\small
+\caption{Where to look when checking a main-paper claim.}
+\label{tab:app-roadmap}
+\begin{tabularx}{\linewidth}{@{}c >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{App.} & \textbf{Supports (main)} & \textbf{Content} \\
+\midrule
+A & \S Related Work & Compact oracle/scope positioning (no new claims) \\
+B & \S Empirical / Real-SE setup & Pool construction, silent filter, IRR, reproducibility \\
+C & Table~1 taxonomy & Fine-grained 392-case distribution figure \\
+D & \S Pattern Catalog & Frozen induction protocol; $\kappa{=}0.954$; 92.3\% locked test \\
+E & \S Invariant Miner & Funnel gates, CE I/O, provenance (SwitchMLP pointer) \\
+F & \S Online Detection & Trace schema and compiled SQL \\
+G & Diagnosis paragraph & Drill-down on the 17 detected cases (53\% / $\sim$6$\times$) \\
+H & Out-of-pool / production & Production Cases~1--2 (main-text anchors only) \\
+I & \S Detection / Efficiency & Per-case table, tier curve, $\mathcal{P}$ deployment, panorama \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% Appendix A: Extended Related Work Comparison
+%==============================================================================
+\section{Extended Related Work Comparison}
+\label{app:related-work-comparison}
+
+This note expands one axis of the main-text Related Work: the
+\emph{oracle source} of correctness.
+Outcome-metric monitors fire only after macro curves bend;
+TrainCheck~\cite{jiang2025traincheck} learns single-process API regularities;
+TTrace~\cite{ttrace2025} and TrainVerify~\cite{trainverify2025} need a reference
+or a static plan;
+data-quality validators (CFDs~\cite{fan2008cfd}, denial
+constraints~\cite{chu2013discovering}, Auto-Validate~\cite{song2021autovalidate},
+Deequ~\cite{schelter2018deequ}) target static tables.
+\textsc{TrainAudit} inherits the relational-constraint view but binds each
+obligation to live traces with topology and phase guards
+$\pi_{\text{topo}}$ and $\pi_{\text{precond}}$---the distinction already stated
+in the main text, not a new claim.
+
+% Appendix B: Bug Pool Construction & Methodology
+%==============================================================================
+\section{Bug Pool Construction and Methodology}
+\label{app:methodology}
+
+This appendix documents the source, filtering, classification, and
+inter-rater validation of the 392-record silent-error evidence corpus. The
+merged manifest, deterministic mapping tables, disagreement sets, provenance
+audit, and the available reproduction artifacts are released with the paper.
+
+\subsection{Pool Construction}
+\label{app:method-pool}
+
+Four frameworks with auditable training-critical history:
+Megatron-LM, DeepSpeed, OLMo, and OLMo-core. The corpus frozen on 2026-05-10
+merges a 295-record commit-oriented pool and a 128-record issue/PR pool
+(32 overlaps): retain 96 unique issue/PR records + all 295 + one fully
+specified orphan $\Rightarrow$ \textbf{392 records} (Megatron-LM 110,
+DeepSpeed 123, OLMo 77, OLMo-core 82). Commit diffs are the preferred
+experimental unit (concrete buggy/fixed transition); the 96 issue/PR-only
+records stay for catalog coverage but never enter Real-SE without a later
+commit-pair audit. Screening keeps training-correctness semantic failures
+that can proceed without an immediate exception and that expose extractable
+objects/relation/witness; duplicate upstream incidents are collapsed.
+Provenance: 289 fixed-commit IDs (288 resolve locally; dates 2021-08-06--2026-05-06),
+96 URL-only, 7 summary-only. This is \emph{not} an exhaustive default-branch
+census; full audit in \texttt{benchmark/eval/corpus\_provenance\_audit.md}.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Separation of the three experimental datasets. The catalog study and
+the detector benchmark apply different filters to the same evidence corpus.}
+\label{tab:dataset-construction-flow}
+\begin{tabularx}{\linewidth}{@{}l l X l@{}}
+\toprule
+\textbf{Stage} & \textbf{Input} & \textbf{Construction rule} & \textbf{Output} \\
+\midrule
+Evidence corpus &
+295-record pool + 96 records unique to the 128-record pool + 1 orphan &
+Retain each of the 32 shared incidents once; exclude an incomplete external
+orphan before assembly &
+392 records \\
+Catalog induction &
+392 records &
+Incident-grouped, framework/class-stratified seed/dev/test split; Real-SE
+forced into locked test &
+128 / 186 / 78 \\
+Detector benchmark &
+392 records &
+Class/framework coverage targets plus commit pair, runnable driver, archived
+buggy/fixed evidence, and no surrogate &
+17 + 1 boundary \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Silent-vs-Loud Filtering}
+\label{app:method-silent}
+
+Main-text silent-error criteria cannot all be physically replayed on 392
+records, so we separate evidence strength (Table~\ref{tab:silent-evidence}):
+keyword/metadata triage versus runnable buggy/fixed comparisons. L1 is
+physical (reproduced, no exception, \texttt{expected\_output} differs); L2--L3
+are textual; L4 is a sparse-field review queue. Absence of a newly added
+\texttt{raise}/\texttt{assert} is supporting counter-evidence only (0 recorded
+additions); a crash-keyword scan yields 2/392 warnings retained after
+adjudication (both false positives). Physical anchors are the 23 L1
+reproductions, audited Real-SE pairs, and fault replays---not the sum of
+textual tiers. Per-record tiers:
+\texttt{silent\_evidence\_392.json}.
+
+\begin{table}[H]
+\centering
+\caption{Distribution of the 4-tier silent-evidence rating on the 392-record
+corpus. L1 provides physical buggy/fixed evidence; L2--L3 are textual evidence
+levels; L4 records have sparse evidence and are retained only as a review
+queue. Source: \texttt{silent\_evidence\_392.json}.}
+\label{tab:silent-evidence}
+\begin{tabularx}{\linewidth}{@{}c >{\raggedright\arraybackslash}X r >{\raggedright\arraybackslash}X@{}}
+\toprule
+Tier & Criterion & Count & Note \\
+\midrule
+L1 & reproduced + \texttt{expected\_output} shows silent & 23 & physical ground truth \\
+L2 & \texttt{root\_cause} has silent keywords, no crash keywords & 161 & --- \\
+L3 & only issue title carries silent signal & 72 & --- \\
+L4 & sparse fields & 136 & weakest tier; manual review required \\
+\midrule
+\multicolumn{2}{>{\raggedright\arraybackslash}X}{\textit{Loud-bug counter-evidence}} & & \\
+\multicolumn{2}{>{\raggedright\arraybackslash}X}{available metadata signals a newly added \texttt{raise}/\texttt{assert}} & 0 recorded & supporting evidence only \\
+\multicolumn{2}{>{\raggedright\arraybackslash}X}{crash-keyword WARNING (retained after manual review)} & 2/392 (0.5\%) & both false positives \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Descriptive Subsystem Coding}
+\label{app:method-taxonomy}
+
+Open coding then axial clustering yields 13 coarse reporting labels
+(\textit{numerical}, \textit{control\_flow}, \textit{gradient\_sync},
+\textit{checkpoint}, \textit{moe}, \textit{optimizer\_state},
+\textit{data\_loading}, \textit{communication}, \textit{dtype},
+\textit{loss\_computation}, \textit{sharding}, \textit{lr\_schedule},
+\textit{offload})---descriptive bins, not the Pattern Catalog. Of 295
+records with legacy labels: \textbf{138/295} direct match,
+\textbf{154/295} via deterministic \texttt{ALIAS\_MAP}, \textbf{3/295}
+adjudicated. Map and scripts:
+\texttt{taxonomy\_methodology.md}, \texttt{build\_392\_catalog.py}.
+
+\subsection{Inter-Rater Reliability}
+\label{app:method-irr}
+
+Coding consistency cannot rest on a single metric. We adopt a dual-protocol cross validation: protocol~A measures re-annotation agreement using 32 doubly-and-independently annotated records in the pool; protocol~B introduces an LLM rerater fully independent of the original annotators and computes Cohen's $\kappa$ on a 50-record stratified sample.
+
+\paragraph{Protocol A: Re-annotation agreement.}
+32 records in the pool went through two mutually independent annotation flows, forming a natural inter-rater test set. We observe \textbf{25/32 = 78.1\% raw agreement}; all 7 disagreements are released with per-record rationale, and the disagreements concentrate between the broad \textit{control\_flow} label and more specific subsystem labels (\textit{lr\_schedule}, \textit{gradient\_sync}).
+
+\paragraph{Protocol B: Independent LLM rerater.}
+We drew a 50-record sample stratified over the reporting labels, hid the
+reference labels, and had an independent LLM rerater assign labels based only
+on the issue title, \texttt{root\_cause}, and fix diff. Raw agreement is
+60.0\% (30/50); under the chance baseline of
+$p_{\text{expected}}=0.078$ for the observed label vocabulary, this gives
+\textbf{Cohen's $\kappa=0.566$}. This moderate agreement reinforces why the
+labels are used only for coarse corpus description rather than as the
+detector's semantic representation. \texttt{irr\_50\_results.json} releases
+the stripped input, independent and reference labels, per-label metrics, and
+all disagreement details. Table~\ref{tab:irr} summarizes the two protocols.
+
+\paragraph{Literature benchmark.}
+Protocol~B is a single-round, no-discussion independent assignment, so its
+$\kappa{=}0.566$ should be compared to \emph{first-round} agreement in
+published multi-class bug-coding studies, not to final post-adjudication
+values. First-round $\kappa$ is often low before discussion
+(e.g., ${\sim}0.35$ for DL-framework bug labeling~\cite{chen2023understanding}),
+while final agreed values after arbitration commonly exceed $0.74$
+(e.g., $0.74$--$0.82$ for mobile DL deployment-fault coding~\cite{chen2021deployment}).
+Under that protocol alignment, $0.566$ sits above typical first-round
+baselines and remains only moderate---consistent with using these labels
+solely for coarse corpus description.
+
+\begin{table}[H]
+\centering
+\caption{Inter-rater reliability across the two protocols. Protocol A measures re-annotation agreement on 32 doubly-and-independently annotated bugs; Protocol B uses an independent LLM rerater on a 50-bug stratified sample to compute Cohen's $\kappa$. Source: \texttt{irr\_50\_results.json}.}
+\label{tab:irr}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}l >{\raggedright\arraybackslash}X l l >{\raggedright\arraybackslash}X@{}}
+\toprule
+Protocol & Sample & Metric & Value & Interpretation \\
+\midrule
+A (Re-annotation)      & 32 bugs        & raw agreement & 78.1\% (25/32) & high \\
+B (Independent LLM)    & 50 stratified  & Cohen's $\kappa$ & \textbf{0.566} & moderate (single-round) \\
+B                      & 50 stratified  & raw agreement & 60.0\% (30/50) & --- \\
+B                      & 50 stratified  & $p_{\text{expected}}$ & 0.078 & label-vocabulary baseline \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Label-boundary notes.}
+\label{app:method-limitation}
+Protocol~B confusions concentrate on broad \textit{control\_flow}
+(per-label F1${=}0$) and symptom-biased \textit{gradient\_sync} over-prediction;
+five labels reach F1$\geq$0.80. Details in \texttt{irr\_50\_results.json}.
+
+\subsection{From the Evidence Corpus to Real-SE}
+\label{app:method-reproducibility}
+
+Real-SE is not a random sample of
+\texttt{reproduction\_status}. Diversity targets (labels$\times$frameworks)
+plus six admission criteria: (i)~auditable provenance; (ii)~silent semantic
+failure; (iii)~buggy/fixed commit pair; (iv)~runnable driver; (v)~archived
+commands/env/logs/verdict; (vi)~no pattern-only surrogate. Criteria and
+manifest are frozen before detector scoring. Result: 17 detector-coverable
+\emph{native-commit method-level} replays (every label; not end-to-end jobs)
++ boundary O-003 (deliberate miss; in buggy denominator). O-022 stays out (no
+commit pair) but remains survey/catalog evidence. Detection rate is not a
+prevalence estimate. Manifest: \texttt{benchmark/eval/real\_sdc/}; rebuild
+\texttt{build\_392\_catalog.py}/\texttt{build\_manifest\_v2.py} (392/392;
+7/32 disagreements; $\kappa{=}0.566$).
+
+%==============================================================================
+% Appendix C: Fine-Grained Distribution of the 392-Record Evidence Corpus
+%==============================================================================
+\section{Fine-Grained Distribution of the 392-Record Evidence Corpus}
+\label{app:bug-distribution}
+
+The main text gives a compact distribution over the coarse primary subsystem
+labels. This appendix presents the finer distribution---both by reporting
+label and by training parallelism dimension---to facilitate experimental
+reproduction and inspect sampling diversity.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{figures/bug_distribution.pdf}
+    \Description{Two-panel bar chart of the 392-record evidence corpus. Left
+    panel shows counts by the 13 descriptive labels with the corpus and
+    historical pre-filter diversity targets used during benchmark
+    construction. Right panel shows
+    counts by dominant training parallelism dimension.}
+    \caption{Fine-grained distribution of the 392-record evidence corpus.
+    \textit{(a)} By descriptive subsystem label: the background color (sand)
+    marks the corpus, while the foreground (teal) marks historical pre-filter
+    diversity targets used during Real-SE construction; \texttt{s/p} denotes
+    target/pool. \textit{(b)} By dominant training
+    parallelism dimension (None = no obvious dimension dependency; Combo =
+    multi-dimension composite).}
+    \label{fig:bug-distribution-detail}
+\end{figure}
+
+%==============================================================================
+% Appendix D: Template Induction Protocol and Results
+%==============================================================================
+\section{Template Induction Protocol and Results}
+\label{app:pattern-catalog}
+
+Frozen protocol for one versioned Pattern Catalog snapshot (experimental
+control, not a fixed catalog size). Before the locked test: fixed split,
+extraction fields, merge/split rules, admission rule, and stopping criterion.
+Split: 128 seed / 186 development / 78 locked-test; same-incident records stay
+together; prior template labels hidden.
+
+\paragraph{Extraction and template boundaries.}
+Annotators record objects, relation, witness, topology, phase, and
+precondition. Merge only when relation/roles/witness agree and residuals are
+guards; split when merge changes the relation, needs unrelated disjunctions,
+lacks a common witness, or flags a legal run. Recurring admission requires two
+independent incidents; one-offs stay singletons.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Frozen snapshot used in the template-induction study. Schema coverage counts cases matched to a template in that snapshot; joint coverage additionally requires topology and validity guards to be instantiable. Counts describe this experiment, not a fixed system-wide catalog size.}
+\label{tab:template-induction}
+\begin{tabularx}{\linewidth}{l r r r X}
+\toprule
+\textbf{Stage} & \textbf{Cases} & \textbf{Operators} & \textbf{Templates} & \textbf{Result} \\
+\midrule
+Seed construction & 128 & 18 & 27 & Initial catalog snapshot \\
+Development completion & 186 & 20 & 35 & No core relation revised; saturation rule not reached \\
+Locked test & 78 & --- & --- & 72/78 schema match; 71/78 joint grounding; 3 new singletons \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Reliability and generalization.}
+Open extraction is least stable (79 cases, relation-operator $\kappa{=}0.600$).
+After freeze: template assignment $\kappa{=}0.954$, match-versus-uncovered
+$\kappa{=}0.843$, six-way verdict $\kappa{=}0.772$. Locked test: schema 72/78
+(92.3\%), joint grounding 71/78 (91.0\%), novelty 3/78 (3.8\%; none recurs).
+
+\paragraph{Snapshot growth and scope of the claim.}
+Stopping never fires: templates 27$\to$35, operators 18$\to$20, no core-relation
+revision, coverage ${\approx}0.86$ across development
+(Figure~\ref{fig:template-induction}). Claim: templates are reusable and the
+catalog extensible---not complete, minimal, saturated, or fixed-size.
+Pairwise audit: no mergeable pair under the frozen criterion
+(criterion-relative irredundancy). Full protocol under
+\texttt{benchmark/eval/template\_induction/}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.62\columnwidth]{benchmark/eval/template_induction/analysis/saturation_curve.pdf}
+\caption{Induction on 186 development cases (200 orderings; 5--95\% bands):
+coverage ${\approx}0.86$ while templates grow 27$\to$35 (core transfers; tail
+unsaturated). Early/late points use seed vs.\ expanded catalogs.}
+\Description{Template count rises 27--35; coverage near 0.86 with percentile bands.}
+\label{fig:template-induction}
+\end{figure}
+
+%==============================================================================
+% Appendix: Invariant Miner (case-study pointer folded in)
+%==============================================================================
+\section{Invariant Miner: Complete Algorithm Specification}
+\label{app:algorithm}
+\label{app:case_study}
+
+The main-text running example is SwitchMLP \texttt{router.weight}
+(three-predicate SQL). Below: verification funnel counts, one CE I/O record,
+and the provenance audit. Offline mining uses five logical roles
+($S_1$--$S_5$: gap analysis, evidence, synthesis, persistence, reporting;
+prompt dumps with the artifact)---an engineering convenience, not the
+contribution (main text).
+
+\subsection{Four-Stage Verification Funnel}
+
+A candidate is accepted only if it clears the main-text accept rule. Equivalently,
+it is rejected when any gate fails: (1)~semantic duplicate of an existing rule;
+(2)~fewer than two independent evidence sources; (3)~any constructed
+counterexample evaluates to \texttt{HOLDS} on a correct execution;
+(4)~$\textsc{Conf}(c) < \theta_{\text{conf}}{=}0.8$ after the hard gates pass.
+Stages~1--4 of Figure~\ref{fig:mining-funnel} implement these gates in order.
+
+\paragraph{Per-stage candidate counts and skip-stress validation.}
+Figure~\ref{fig:mining-funnel} gives the per-stage counts across four target
+frameworks. The 420 pattern hypotheses at Stage~1 expand to 5{,}334 concrete
+candidates at Stage~2; clean-trace validation retains 3{,}436 at Stage~3;
+adversarial verification retains 357 at Stage~4; and a separate manual
+cross-framework curation selects 45 deployment rules. Without Stage~3,
+114/400 sampled candidate--trace evaluations fire on held-out clean traces
+(28.5\%). Skipping Stage~4 and evaluating Stage~3 survivors on the same
+held-out protocol yields 0/6{,}922 alerts; full-funnel (Stage~4) survivors
+raise 0/764. Stage~4 further removes workload-specific candidates that
+same-workload clean traces do not falsify (main-paper dual-axis funnel table).
+The leave-one-database-out guard ablation ($\Sigma$FP $342\!\to\!429/551/598$
+over 42 databases) is reported in the main text; this appendix adds the
+per-stage funnel figure and the CE/provenance audit below.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.50\columnwidth]{figures/fig_mining_funnel.pdf}
+\Description{Horizontal funnel diagram showing candidate counts shrinking from 420 pattern hypotheses through four verification stages to 45 deployed constraints across four frameworks.}
+\caption{Per-stage candidate counts of the four-stage mining funnel (aggregated across 4 frameworks). F1--F4 are the accept/reject gates above; Deploy is the deployment library after manual cross-framework curation. Callouts match the main-paper dual-axis table: $114/400$ clean FP without Stage~3; Skip-F4 $=0/6{,}922$; full funnel $=0/764$. \emph{Note}: F1--F4 here denote funnel levels and are a different axis from the evidence tiers L1--L4 of \S\ref{app:method-silent}.}
+\label{fig:mining-funnel}
+\end{figure}
+
+The 5{,}334 Stage~2 candidates arise from the cross product of relation, parameter scope, $\pi_{\text{topo}}$, and $\pi_{\text{precond}}$ slots; verification---not manual enumeration---is the binding filter down to 357 then 45 (main-text mining discussion).
+
+
+\subsection{Concrete Input/Output Specifications}
+\label{app:io_examples}
+
+One persisted counterexample-verification record (Stage~3), matching the
+main-text confidence/CE discussion:
+
+\begin{verbatim}
+{
+  "counterexample_id": 1,
+  "scenario": "What if using SGD without momentum?",
+  "query": "Megatron-LM SGD optimizer state sync",
+  "verification_result": "REFUTED",
+  "evidence": "SGD has no internal state to sync",
+  "source": "megatron/optimizer/optimizer.py:L142-L156"
+}
+\end{verbatim}
+
+\subsection{Mining Provenance Audit Protocol}
+\label{app:provenance}
+
+This subsection records the protocol behind the main-text \emph{mining provenance} claim (Generalizability): case-level Real-SE material does not enter the mining inputs.
+
+\begin{itemize}[leftmargin=*]
+\item \textbf{Pre-registered exclusion list.} The \NumRealSE{} Real-SE case
+IDs, frameworks, and (when available) fix-commit short hashes are
+pre-registered in a JSON exclusion list shipped with the artifact; the list
+supports the audit below and any future from-scratch re-mining study. It is
+derived from Table~\ref{tab:detection-results} and is not edited after
+registration.
+\item \textbf{Primary library audit.} The archived mining-session logs used to build the deployed Megatron-LM verified constraint library $\mathcal{P}$ (150 \texttt{llm\_interactions\_*.log} files covering the construction window) were scanned for (i)~every fix-commit hash on the exclusion list and (ii)~any GitHub issue/PR URL of the form \texttt{github.com/.../(issues|pull)/[0-9]+}. Both scans returned zero hits: the miner messages contain framework source paths, documentation excerpts, and injection-lineage tables, not case-level bug reports.
+\item \textbf{What this does and does not show.} Zero log hits rule out case-level leakage into the recorded mining transcripts. They do not rule out LLM pretraining exposure to public bug discussions---that residual channel is stated in the main-text Limitations paragraph.
+\end{itemize}
+
+%==============================================================================
+% Appendix F: SQL Query Specification
+%==============================================================================
+\section{SQL Query Specification}
+\label{app:sql}
+
+This appendix documents the constraint-to-SQL translation rules and provides representative query examples. Alignment with the main-text formalization: $\pi_{\text{topo}}$ and $\pi_{\text{precond}}$ compile to \texttt{WHERE} filters; for relational checks, $\pi_{\text{schema}}$ is evaluated per \emph{comparison group} (the guarded tuples sharing the grouping key, e.g., all replicas of one parameter at one step) and appears as the \texttt{HAVING} predicate---matching Eq.~(violation set) and the Online Detection section of the main paper. Single-tuple checks are the singleton special case of the same shape.
+
+\subsection{Database Schema}
+
+\begin{sqlcode}{Database Schema}
+CREATE TABLE coredump (
+    step    INTEGER,    -- Training step index
+    stage   TEXT,       -- Training stage identifier
+    data    JSON        -- Tensor metadata as JSON
+);
+\end{sqlcode}
+
+\subsection{JSON Field Structure}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\caption{JSON Data Field Specification}
+\label{tab:json_schema}
+\begin{tabularx}{\linewidth}{llX}
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\midrule
+name & string & Parameter name (e.g., \texttt{decoder.layers.0.attention.qkv.weight}) \\
+cksum & string & Content checksum of tensor data (e.g., xxHash/SHA-256) \\
+shape & array & Tensor dimensions (e.g., \texttt{[4096, 4096]}) \\
+type & string & Tensor dtype (e.g., \texttt{torch.cuda.BFloat16Tensor}) \\
+requires\_grad & boolean & Whether parameter requires gradient \\
+dp/tp/pp/cp/ep & integer & Parallel rank indices \\
+grad\_cksum & string & Checksum of gradient tensor (nullable) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Representative SQL Queries}
+
+\subsubsection{DP Parameter Consistency Check}
+
+\begin{sqlcode}{DP Parameter Consistency Check}
+WITH param_stats AS (
+    SELECT
+        json_extract_string(data, '$.name') as param_name,
+        CAST(json_extract_string(data, '$.dp') AS INTEGER) as dp_rank,
+        json_extract_string(data, '$.cksum') as cksum,
+        step
+    FROM coredump
+    WHERE stage = 'model-after-optimizer-step'
+      AND json_extract_string(data, '$.cksum') IS NOT NULL
+),
+inconsistency_check AS (
+    SELECT
+        param_name, step,
+        COUNT(DISTINCT cksum) as distinct_cksums,
+        array_agg(DISTINCT dp_rank) as dp_ranks
+    FROM param_stats
+    GROUP BY param_name, step
+    HAVING COUNT(DISTINCT cksum) > 1
+)
+SELECT * FROM inconsistency_check ORDER BY step, param_name;
+\end{sqlcode}
+
+\subsubsection{TP Weight Partition Check}
+
+\begin{sqlcode}{TP Weight Partition Check}
+WITH tp_params AS (
+    SELECT
+        json_extract_string(data, '$.name') as param_name,
+        CAST(json_extract_string(data, '$.tp') AS INTEGER) as tp_rank,
+        json_extract_string(data, '$.cksum') as cksum
+    FROM coredump
+    WHERE stage = 'model-after-backward'
+      AND json_extract_string(data, '$.name') LIKE '%qkv%'
+)
+SELECT param_name, COUNT(DISTINCT cksum) as unique_shards
+FROM tp_params
+GROUP BY param_name
+HAVING COUNT(DISTINCT cksum) = 1;  -- Should be different across TP ranks
+\end{sqlcode}
+
+%==============================================================================
+% Appendix: Diagnosis
+\section{Diagnosis Accuracy}
+\label{app:diagnosis}
+
+This section quantifies the main-text diagnosis claim ($\sim$6$\times$ candidate-set reduction) on the same 17 detected cases; it adds detail, not a new experiment. Detecting an error alone offers limited value to engineers---they also need to know \emph{which constraint was violated} and \emph{at which layer the fault manifests}. This appendix answers two questions: (i) when one of \textsc{TrainAudit}'s checks fires, does the check itself name the fault's semantic class? (ii) for complex faults that propagate across multiple layers, can the drill-down logic converge to the root cause?
+
+\paragraph{Setup.}
+\sloppypar
+\textsc{TrainAudit}'s diagnosis chain consists of two stages: (1) \textit{rule names as fault signatures}---each rule's name (e.g., \texttt{optim-step-counter-monotonic}) directly encodes ``which object should satisfy which condition''; (2) \textit{C1 expander + C2 drill-down logic}---the C1 expander walks the constraint hierarchy backward along the ``upstream dependency'' template to expand a candidate source-tensor set, and the C2 drill-down logic uses runtime evidence (first-NaN step, stride offset relative to \texttt{zero\_grad}, etc.) to converge to a root cause within the expanded set. We measure this chain on the 17 Real-SE cases detected in the main paper's detection study (the boundary case triggers no rule and is excluded). For each case we record the candidate-set size $|S_{\mathrm{rule}}|$ at rule firing time, $|S_{\mathrm{C1}}|$ after the C1 expander, and $|S_{\mathrm{C2}}|$ after the C2 drill-down, taking the fix-patch-annotated true root cause ($|\text{set}|=1$) as ground truth.
+\par
+
+\paragraph{Finding 1: Rule names alone converge 53\% of the cases at the alert stage.}
+Figure~\ref{fig:diagnosis-mechanism}: \textbf{9/17 (53\%)} have $|S_{\mathrm{rule}}|=1$ at alert---the rule name localizes the object (e.g., \texttt{optim-step-counter-monotonic}, \texttt{checkpoint-preserve-rng}). Naming is required at generation time. TrainCheck-style templates often report only pairwise disagreement, leaving semantic identity to the engineer.
+
+\paragraph{Finding 2: C1+C2 compresses the search space by $\sim 6\times$ on the 47\% ambiguous cases.}
+On the remaining 8/17 cases, C1 expands along upstream dependencies to a median candidate-set size of \textbf{6} (peak 12); C2 then converges with runtime evidence. Of these 8, 7 reach $|\text{set}|=1$ (5 by C1, 2 by C2); the remaining case (1/17 overall) stays ambiguous without offline signals.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\columnwidth]{figures/fig_diagnosis_mechanism.pdf}
+\caption{C1+C2 drill-down mechanism on 17 detected Real-SE cases: 9/17 converge at rule alert, 5/17 require C1, 2/17 require C2; the median candidate-set trajectory on the 8 ambiguous cases is $1\!\to\!6\!\to\!1$.}
+\Description{Chart of candidate-set sizes at rule alert, after C1 expander, and after C2 drill-down for Real-SE cases.}
+\label{fig:diagnosis-mechanism}
+\end{figure}
+
+\section{Production Case Studies}
+\label{app:production-cases}
+
+This section expands the two production cases referenced in the main text
+(Case~1 figure caption; Case~2 production-experience paragraph); it introduces
+no additional production claim. Figure~\ref{fig:case-studies} shows loss (left)
+versus an auxiliary signal (right); the purple dashed line marks the first
+\textsc{TrainAudit} alert. An additional out-of-pool DeepSpeed confirmation is
+released with the artifact.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.62\linewidth]{figures/fig_case_studies.pdf}
+  \caption{Diagnostic signals for two production silent-error cases
+  (SFT tokenizer; Megatron Muon+PP+MTP routing).
+  Case~1: losses overlap 2{,}000 steps while SWE-bench diverges 15.7 points;
+  the rule fires at step~1.}
+  \Description{Two-row figure comparing loss curves and auxiliary diagnostic signals for Case~1 and Case~2.}
+  \label{fig:case-studies}
+\end{figure}
+
+\paragraph{Case~1 (SFT tokenizer).}
+A wrong chat-template emits role delimiters absent from the vocabulary; BPE
+silently splits them. Loss tracks the fixed run; SWE-bench plateaus at
+28.8\% versus 44.5\%. Rule \texttt{SFT\_CHAT\_TEMPLATE\_VOCAB\_INTEGRITY}
+fires at step~1.
+
+\paragraph{Case~2 (Megatron Muon+PP+MTP)}
+Tied \texttt{word\_embeddings} replicas are routed to AdamW and Muon on
+different PP ranks. \textsc{TrainAudit} fires
+\texttt{MEGATRON\_TIED\_EMBED\_OPT\_ROUTING} before the first step; we
+reported the fault upstream, where maintainers confirmed and fixed this
+previously unrecorded bug (main-text production-experience paragraph).
+
+\section{Extended Experimental Data}
+\label{app:extended_data}
+
+Claim-check order below: per-case detection table (main-text totals), schema-tier curve, then the Megatron deployment of the verified constraint library $\mathcal{P}$ and the training panorama.
+\subsection{Per-Case Detection Results}
+
+\begin{table}[H]
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    \renewcommand{\arraystretch}{0.95}
+    \caption{Per-case buggy detection results on Real-SE (matching the
+    main-text \emph{Detection Effectiveness and Precision} totals:
+    TrainAudit \NumRealSEDet/\NumRealSE, TrainCheck
+    \NumTCDet/\NumBaselineEval, Na\"ive 0/\NumBaselineEval).
+    \textbf{Case ID} uses ``framework abbreviation + fixed commit short hash'';
+    cases without a paired commit ID keep their original identifiers.
+    \textbf{Tier}: A0 = PyTorch public-interface layer; A1 = framework
+    adapter layer. $\checkmark$ = detected; $\times$ = missed. The TrainCheck
+    column shows in parentheses \textit{TC violations / total checks}.
+    LC1/O-003 is the observability-boundary case (subthreshold drift; all
+    three tools $\times$ as theoretically expected; baseline verdicts on it
+    pending re-run).}
+    \label{tab:detection-results}
+    \small
+    \begin{tabularx}{\linewidth}{@{}l l c >{\raggedright\arraybackslash}X >{\centering\arraybackslash}c >{\centering\arraybackslash}c >{\centering\arraybackslash}c@{}}
+    \toprule
+    \textbf{Case ID} & \textbf{Framework} & \textbf{Tier} & \textbf{Triggered Constraint / Fault Pattern} & \textbf{TrainAudit} & \textbf{TrainCheck} & \textbf{Naïve} \\
+    \midrule
+    \multicolumn{7}{l}{\textit{Real-SE reproducible cases}} \\
+    Megatron-3c637fc0d & Megatron-LM & A1 & replica-cksum-equal                         & $\checkmark$ & $\checkmark$\,(1/316)  & $\times$ \\
+    DS-d56268f3        & DeepSpeed   & A1 & comm-dtype-matches-training                  & $\checkmark$ & $\times$\,(0/439)      & $\times$ \\
+    DS-8cbbbb53        & DeepSpeed   & A1 & process-group-size-correct                   & $\checkmark$ & $\checkmark$\,(2/433)  & $\times$ \\
+    DS-005afe12        & DeepSpeed   & A0 & clip-grad-bounded                            & $\checkmark$ & $\checkmark$\,(11/604) & $\times$ \\
+    OLMoC-6e330ba2     & OLMo-core   & A0 & initial-lr-present                           & $\checkmark$ & $\checkmark$\,(24/478) & $\times$ \\
+    Megatron-99f999a4  & Megatron-LM & A1 & layer-count-strict                           & $\checkmark$ & $\times$\,(0/757)      & $\times$ \\
+    OLMo-204ad53c      & OLMo        & A0 & checkpoint-preserve-rng                      & $\checkmark$ & $\times$              & $\times$ \\
+    OLMo-167a7ac8      & OLMo        & A0 & data-loader-token-id-range                   & $\checkmark$ & $\times$\,(0/260)      & $\times$ \\
+    OLMoC-2b6cf996     & OLMo-core   & A0 & optim-step-counter-monotonic                 & $\checkmark$ & $\checkmark$\,(18/506) & $\times$ \\
+    Megatron-e6d56d68  & Megatron-LM & A1 & invocation-frequency-per-step                & $\checkmark$ & $\times$\,(0/199)      & $\times$ \\
+    DS-e6e8c137        & DeepSpeed   & A1 & moe-cpu-offload grad-norm device             & $\checkmark$ & $\times$\,(0/601)      & $\times$ \\
+    DS-40009eb1        & DeepSpeed   & A1 & bf16-lp-grad-clear                           & $\checkmark$ & $\times$\,(0/440)      & $\times$ \\
+    OLMo-ce5f30d5      & OLMo        & A0 & emb-init-std-sqrt-dmodel                     & $\checkmark$ & $\times$\,(0/363)      & $\times$ \\
+    OLMo-a57f3803      & OLMo        & A0 & zloss-mean-reduction                         & $\checkmark$ & $\times$\,(0/187)      & $\times$ \\
+    OLMo-d7994c86      & OLMo        & --- & LC1/O-003: subthreshold z-loss drift         & $\times$     & $\times$              & $\times$ \\
+    OLMoC-db2b6eff     & OLMo-core   & A1 & a100-peak-flops-2x                           & $\checkmark$ & $\times$\,(0/4)        & $\times$ \\
+    Megatron-1505db4c  & Megatron-LM & A1 & chained-optimizer-param-groups-resync        & $\checkmark$ & $\times$\,(0/4)        & $\times$ \\
+    OLMoC-df72f4ee     & OLMo-core   & A0 & rope-packed-doc-position-reset               & $\checkmark$ & $\times$\,(0/4)        & $\times$ \\
+    \midrule
+    \textbf{Total} & & & & \textbf{\RealSEDetFrac} & \textbf{\TCDetFrac} & \textbf{\NaiveDetFrac} \\
+    \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{Schema Tier Coverage--Overhead Curve}
+
+Figure~\ref{fig:tier-coverage} plots the schema-collection tier curve that
+supports the main-text efficiency discussion: each step adds the fields that
+newly enabled rules require, so coverage and overhead move together.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.52\columnwidth]{figures/tier_coverage.pdf}
+\caption{Schema collection tier coverage vs.\ overhead. S0$\to$S1 raises coverage $28\%\!\to\!49\%$ and lowers overhead $\sim$8\%$\to\sim$1.5\%; S5--6 hit the 78\% coverage ceiling.}
+\Description{Line chart of bug coverage percentage versus per-step overhead for schema tiers S0 through S6.}
+\label{fig:tier-coverage}
+\end{figure}
+
+\subsection{Verified Constraint Library and Hookpoint Deployment}
+\label{app:motivation-figures}
+
+Appendix~\ref{app:pattern-catalog} documents the frozen experimental snapshot and its held-out validation. Matching the main-text efficiency discussion, the evaluated Megatron-LM deployment of the verified constraint library $\mathcal{P}$ activates 24 rules (12 A0 + 9 A1 + 3 probes) bound to 8 hookpoints: \texttt{optim.step.\{pre,post\}}, \texttt{module.forward.\{pre,post\}}, \texttt{checkpoint.\{save,load\}}, \texttt{distributed.all\_reduce}, and \texttt{build.snapshot}. These counts are deployment-version measurements, not architectural constants. Catalog relations without a concrete framework hook remain offline candidates until the Invariant Miner grounds and verifies them. The rule-to-hookpoint index is automatically maintained at every tick by the hookpoint-aware verifier, compressing the per-tick evaluation cost to an average of 1--3 rules.
+
+Figure~\ref{fig:training-panorama} is the panorama referenced from the main-text silent-error definition (four parallelism dimensions, five hotspots). Table~\ref{tab:realse-class-coverage} lists one representative Real-SE case per descriptive subsystem label.
+
+\begin{center}
+\includegraphics[width=0.60\columnwidth,height=0.20\textheight,keepaspectratio]{figures/fig_training_panorama.png}
+\captionof{figure}{Panorama of hybrid-parallel LLM training and where silent errors
+strike: four parallelism dimensions, five hookpoints, and aligned hotspots.}
+\Description{Three-panel panorama of topology, hookpoints, and silent-error hotspots.}
+\label{fig:training-panorama}
+\end{center}
+
+\vspace{0.2em}
+\noindent
+\begin{minipage}{\linewidth}
+\captionof{table}{Real-SE diversity across descriptive subsystem labels (representative cases only).}
+\label{tab:realse-class-coverage}
+\vspace{0.15em}
+{\footnotesize
+\begin{tabularx}{\linewidth}{l X}
+\toprule
+\textbf{Primary label} & \textbf{Representative Real-SE case} \\
+\midrule
+Numerical      & OLMo-ce5f30d5 (\texttt{emb-init-std-sqrt-dmodel}) \\
+Control Flow   & OLMoC-2b6cf996 (\texttt{optim-step-counter-monotonic}) \\
+Grad Sync      & Megatron-3c637fc0d (\texttt{replica-cksum-equal}) \\
+Checkpoint     & OLMo-204ad53c (\texttt{checkpoint-preserve-rng}) \\
+MoE            & Megatron-e6d56d68 (\texttt{invocation-frequency-per-step}) \\
+Optim State    & Megatron-1505db4c (\texttt{chained-optimizer-param-groups-resync}) \\
+Data Loading   & OLMo-167a7ac8 (\texttt{data-loader-token-id-range}) \\
+Communication  & DS-8cbbbb53 (\texttt{process-group-size-correct}) \\
+Dtype          & DS-d56268f3 (\texttt{comm-dtype-matches-training}) \\
+Loss Comp.     & OLMo-a57f3803 (\texttt{zloss-mean-reduction}) \\
+Sharding       & Megatron-99f999a4 (\texttt{layer-count-strict}) \\
+LR Schedule    & OLMoC-6e330ba2 (\texttt{initial-lr-present}) \\
+Offload        & DS-e6e8c137 (\texttt{moe-cpu-offload grad-norm device}) \\
+\bottomrule
+\end{tabularx}
+}
+\end{minipage}
+
+{\footnotesize
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{main}
+}
+
+\end{document}

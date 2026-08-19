@@ -1,0 +1,459 @@
+{
+  "metadata": {
+    "experiment": "E2_tier",
+    "batch": 1,
+    "n_bugs": 90
+  },
+  "per_bug": {
+    "D-001": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "step"],
+      "rationale": "Gradients summed (not averaged) under PP+GAS produce grad_norm proportional to gradient_accumulation_steps; Tier 1 grad_norm directly captures the scaling anomaly."
+    },
+    "D-002": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "step"],
+      "rationale": "ZeRO-2 backward regression manifests as systematically lower grad_norm (4.7-6.0 -> 1.6-3.2); Tier 1 gradient stats sufficient."
+    },
+    "D-003": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "dp_rank", "step"],
+      "rationale": "Cross-DP-rank gradient checksum divergence on cross-partition params after reduce_scatter; Tier 1 grad checksum + DP rank coordinate suffice."
+    },
+    "D-004": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "step"],
+      "rationale": "DistributedAttention SeqAllToAll uneven-split error propagates to attention output and downstream gradients; grad_norm deviates from reference at Tier 1 (forward activations themselves are op-level)."
+    },
+    "D-005": {
+      "min_tier_required": 4,
+      "fields_required": ["optimizer_state_cksum", "param_name", "step"],
+      "rationale": "CPUAdam IncrementStep produces inconsistent bias_correction2 across subgroups within the same step — directly visible in Adam optimizer state checksum at Tier 4."
+    },
+    "D-006": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "Int32 overflow makes CUDA kernel skip updates; param checksum stays unchanged across steps for large tensors — pure Tier 0 detection."
+    },
+    "D-007": {
+      "min_tier_required": "5-6",
+      "fields_required": ["has_nan", "grad_cksum", "param_name", "step"],
+      "rationale": "loss_scale=inf produces NaN gradients; reliable detection requires has_nan flag (Tier 5-6). grad_norm becomes NaN but the canonical signal is the NaN flag."
+    },
+    "D-008": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "Dropout RNG mismatch under torch.compile causes loss to slowly diverge (6.09 vs 5.12 over 40k steps); Tier 2 loss trend captures this. Activation values are op-level."
+    },
+    "D-009": {
+      "min_tier_required": "5-6",
+      "fields_required": ["module_id", "param_name", "ep_rank"],
+      "rationale": "ZeRO-3 overwrites user-defined module.id attribute on MoE experts; module attribute snapshot is a Type-B hook output (Tier 5-6 per mapping)."
+    },
+    "D-010": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "Multiple-backward gradients dropped under CPU offload causes ~2x learning_rate parameter deviation vs reference; Tier 0 param checksum cross-config compare suffices."
+    },
+    "D-012": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "micro_step_id", "param_name", "step"],
+      "rationale": "Grad_norm fails to grow across microsteps under CPU offload; Tier 1 grad_norm trend across micro_step_id (Tier 3) — but grad_norm freeze itself observable as Tier 1 anomaly without strict need for micro_step_id."
+    },
+    "D-013": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "step"],
+      "rationale": "Two bugs both manifest in grad_norm: dynamic loss scale shrinks bf16 grads catastrophically AND grad zeroing skipped causes grad_norm to grow unboundedly — Tier 1."
+    },
+    "D-016": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "grad_cksum", "param_name", "step"],
+      "rationale": "Gradient clipping records norm inconsistent with actual clipped grad value; Tier 1 grad_norm + grad checksum mismatch."
+    },
+    "D-017": {
+      "min_tier_required": 3,
+      "fields_required": ["micro_step_id", "grad_norm", "param_name", "step"],
+      "rationale": "micro_step_id off-by-one causes gradient copy/accumulate condition errors at micro-batch boundaries; Tier 3 micro_step_id is the canonical signal (matches few-shot 4)."
+    },
+    "D-018": {
+      "min_tier_required": "5-6",
+      "fields_required": ["param_name", "module_attribute", "ep_rank"],
+      "rationale": "MoE param's _hp_mapping=None is a module attribute / structural fingerprint; Tier 5-6 (module attribute snapshot per mapping). Crash-on-save would be detectable but pre-crash invariant is attribute-level."
+    },
+    "D-019": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "ep_rank", "step"],
+      "rationale": "MoE EP grad_scale wrong by ep_size factor — directly visible in grad_norm of expert params at Tier 1 (ep_rank used to scope)."
+    },
+    "D-020": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "LayerNorm backward CUDA kernel uses wrong index for gamma — gamma gradient checksum diverges from reference at Tier 1."
+    },
+    "D-022": {
+      "min_tier_required": 4,
+      "fields_required": ["optimizer_state_cksum", "param_name"],
+      "rationale": "Wrong sort order during universal-checkpoint conversion silently corrupts optimizer state; Tier 4 optimizer state checksum mismatch vs original."
+    },
+    "D-023": {
+      "min_tier_required": 4,
+      "fields_required": ["optimizer_state_cksum", "param_name", "step"],
+      "rationale": "Adam bias correction inconsistent across subgroups within same step — Tier 4 optimizer state checksum (analogous to D-005)."
+    },
+    "D-024": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "ds_secondary_tensor stale after checkpoint load — its checksum mismatches ds_tensor; Tier 0 cross-buffer param checksum compare."
+    },
+    "D-028": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "BF16 gradient allreduced instead of FP32 buffer — dtype mismatch on the reduced tensor is observable at Tier 0 dtype field."
+    },
+    "D-030": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "ZeRO-3 ignores configured comm dtype; allgather/reduce-scatter tensor dtype mismatches config — Tier 0 dtype check."
+    },
+    "D-031": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "MoE gate.wg gradient never reduced — Tier 1 grad checksum across DP ranks shows gate.wg grads diverge while other params agree."
+    },
+    "D-032": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "Multi-machine stage3 universal checkpoint load corrupts state — loss spikes after resume; Tier 2 loss_value discontinuity at resume."
+    },
+    "D-033": {
+      "min_tier_required": 4,
+      "fields_required": ["optimizer_state_cksum", "param_name", "step"],
+      "rationale": "bf16+ZeRO0 checkpoint loses optimizer step counter, exp_avg, exp_avg_sq — directly visible in Adam state checksum (zero-valued) at Tier 4."
+    },
+    "D-034": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "tp_rank", "step"],
+      "rationale": "Sequence-parallel gradient scaling errors and bf16 SP-reduce precision loss show up as grad_norm trend (SP=2 lower than SP=1; growth over time) — Tier 1."
+    },
+    "D-035": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "dp_rank", "step"],
+      "rationale": "ZeRO-3 grad norm not allreduced across DP — different ranks observe different grad_norm; Tier 1 cross-DP grad_norm equality check."
+    },
+    "D-036": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "bf16 optimizer fails to convert grads to FP32 when accum dtype differs — gradient/buffer dtype mismatch observable at Tier 0."
+    },
+    "D-037": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "Gate linear-layer params silently cast to fp32 in forward (was fp16/bf16) — dtype-invariance violation at Tier 0 catches this; aux-loss formula bug also produces grad_norm ratio issue but dtype is lower-tier."
+    },
+    "D-039": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "reduce_bucket_size silently affects convergence — different bucket sizes yield different loss curves (extreme small => NaN). Tier 2 loss trend captures the divergence."
+    },
+    "D-041": {
+      "min_tier_required": 0,
+      "fields_required": ["step", "param_name"],
+      "rationale": "Checkpoint dir name's step != internal global_step counter — pure Tier 0 step counter consistency check."
+    },
+    "D-042": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "Coalesced all-gather under autocast contains parameters with mixed dtypes — Tier 0 dtype field directly captures the mixture."
+    },
+    "D-043": {
+      "min_tier_required": 0,
+      "fields_required": ["param_name", "dp_rank", "step"],
+      "rationale": "MiCS checkpoint missing data from non-first partition group — Tier 0 param_name enumeration across DP ranks shows missing params."
+    },
+    "D-044": {
+      "min_tier_required": 4,
+      "fields_required": ["optimizer_state_cksum", "param_name"],
+      "rationale": "Multi-process race in stage3 universal checkpoint write produces unstable optimizer state checksum across save attempts; Tier 4 detects via cksum non-determinism."
+    },
+    "D-045": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "Grad accumulation buffer forced to BF16 instead of FP32 — Tier 0 dtype field on grad_accum buffer catches it."
+    },
+    "D-046": {
+      "min_tier_required": 0,
+      "fields_required": ["param_name", "tp_rank", "step"],
+      "rationale": "MoE checkpoint only saves rank-0 model_states under TP>1; missing param_name entries on non-zero TP ranks at save time — Tier 0 enumeration."
+    },
+    "M-001": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "pp_rank", "dp_rank", "step"],
+      "rationale": "Embedding gradient cksum differs between PP[0] and PP[-1] within same DP group — Tier 1 grad checksum + rank coords."
+    },
+    "M-002": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "cp_rank", "step"],
+      "rationale": "CP attention backward produces dQ/dK/dV with relative error >1.0 vs single-card; grad_norm on attention params deviates significantly — Tier 1."
+    },
+    "M-003": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "cp_rank", "step"],
+      "rationale": "Loss multiplied by cp_size in backward scales gradients by cp_size factor — directly visible in grad_norm at Tier 1."
+    },
+    "M-004": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "step"],
+      "rationale": "MTP loss un-normalized causes gradient explosion; grad_norm spikes — Tier 1 (loss_value also spikes, but grad_norm is the more direct signal at lower tier)."
+    },
+    "M-006": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "Uneven vocab split under TP causes loss to diverge (abs error 47 after 2000 steps) — Tier 2 loss_value cross-config compare."
+    },
+    "M-007": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "Stale all-gather causes some ranks to use previous-iteration's weights; cur-step param checksum matches step-1 checksum — pure Tier 0."
+    },
+    "M-009": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "tp_rank", "step"],
+      "rationale": "SP+FlashAttn skips q/k/v all-gather causing attention only on local chunk; downstream gradient checksum on attention params diverges from non-SP reference at Tier 1 (raw activations are op-level)."
+    },
+    "M-011": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "RoPE buffer values for positions 0..N-1 are computed regardless of the configured reset behavior; the buffer tensor is an op-level intermediate not in the parameter/grad/loss/optstate trace schema."
+    },
+    "M-013": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "Aux load-balancing loss is constantly 1.0 instead of varying — Tier 2 loss_value (specifically aux loss component) reveals the constant pattern."
+    },
+    "M-015": {
+      "min_tier_required": 3,
+      "fields_required": ["learning_rate", "step"],
+      "rationale": "Override-opt_param-scheduler ignored; LR retains old checkpoint value — Tier 3 learning_rate field directly catches the mismatch."
+    },
+    "M-016": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "Optimizer offload + checkpoint resume causes loss to jump 0.31 -> 10 — Tier 2 loss_value discontinuity at resume."
+    },
+    "M-017": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "mcore-0.12 checkpoint resume can't reproduce pre-save loss — Tier 2 loss_value at first resumed step compared to pre-save."
+    },
+    "M-018": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "RNG state inconsistency across DP ranks affects dropout masks (op-level activation), not directly any param/grad/loss/optstate field; downstream gradient drift is too noisy/random. RNG state itself is not in trace schema."
+    },
+    "M-019": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "pp_rank", "step"],
+      "rationale": "Embedding wgrad finishes after all-reduce so gradient missing final embedding contribution — Tier 1 grad checksum on embedding param across PP ranks."
+    },
+    "M-022": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Wrong scale variable (mscale vs mscale_all_dim) in MLA softmax_factor is an op-level scalar inside the attention kernel; downstream loss/grad differ slightly but not distinguishably from numerical noise. Source-only."
+    },
+    "M-023": {
+      "min_tier_required": 0,
+      "fields_required": ["shape", "param_name", "pp_rank", "cp_rank"],
+      "rationale": "PP p2p tensor shape doesn't account for CP — Tier 0 shape field directly catches the mismatch (or causes immediate p2p error)."
+    },
+    "M-025": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "Master weight initialized via wrong dtype path causes precision-loss-tainted initial values — Tier 0 param checksum compare vs reference init."
+    },
+    "M-026": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "DDP buckets capture pre-init values due to stream sync miss — Tier 0 param checksum compare between source param and DDP bucket buffer."
+    },
+    "M-027": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "int32 overflow in dataloader sample_idx produces wrong document indices — dataloader internal state, explicitly listed unobservable per tier mapping."
+    },
+    "M-028": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "RoPE position-embedding values per CP rank — these are op-level forward-pass tensors not in parameter/grad/loss/optstate schema. Source-only."
+    },
+    "M-029": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "dp_rank", "step"],
+      "rationale": "torch.compile recompile breaks autograd graph in PPO loop, c10d::broadcast_ produces silently wrong gradients — Tier 1 cross-DP grad checksum divergence."
+    },
+    "M-030": {
+      "min_tier_required": 3,
+      "fields_required": ["learning_rate", "step"],
+      "rationale": "First step after resume uses old LR instead of new override — Tier 3 learning_rate value at resumed step (similar to M-015)."
+    },
+    "M-031": {
+      "min_tier_required": "5-6",
+      "fields_required": ["has_nan", "grad_cksum", "param_name", "step"],
+      "rationale": "MXFP8 grad buffer reuse race produces NaN loss — has_nan flag (Tier 5-6) is the canonical signal; grad_norm becomes NaN/inf indistinguishably."
+    },
+    "M-032": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "MLA implementation produces unexpected loss patterns — Tier 2 loss_value cross-version compare."
+    },
+    "M-034": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "dp_rank", "step"],
+      "rationale": "Stream-sync race between DDP post-hook and reduce-scatter — Tier 1 cross-DP grad checksum divergence."
+    },
+    "M-035": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "tp_rank", "step"],
+      "rationale": "TE fused attention backward produces dQ with relative error >1.0; grad_norm on attention params abnormally large — Tier 1."
+    },
+    "M-036": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "TE silently uses causal mask ignoring block-diagonal mask for packed sequences — attention output difference is op-level activation not in trace schema; gradient/loss differences are confounded with content. Source-only."
+    },
+    "M-037": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "YarnRoPE freq layout mismatch with rotary_interleaved=True — RoPE buffer values are op-level forward intermediates not in trace schema."
+    },
+    "M-038": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "cp_rank", "step"],
+      "rationale": "MTPLossAutoScaler under-scales MTP loss gradient by cp_size when CP enabled — Tier 1 grad_norm on MTP-related params deviates by cp_size factor."
+    },
+    "M-039": {
+      "min_tier_required": 0,
+      "fields_required": ["shape", "param_name", "tp_rank", "step"],
+      "rationale": "MoE gate not sliced across TP when kv_head<tp_size — gate weight shape identical across TP ranks (should differ); Tier 0 shape field on gate param."
+    },
+    "M-040": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "step"],
+      "rationale": "Grad buffer not zeroed on first iteration when forward_pre_hook disabled; pre-existing values pollute first-iter gradients — grad_norm abnormally large at step 0/1, Tier 1."
+    },
+    "M-041": {
+      "min_tier_required": "5-6",
+      "fields_required": ["module_attribute", "param_name", "step"],
+      "rationale": "FlashSelfAttention permanently sets dropout_p=0 after eval — module attribute (dropout_p) snapshot is Type-B hook output (Tier 5-6 per mapping)."
+    },
+    "M-042": {
+      "min_tier_required": 4,
+      "fields_required": ["optimizer_state_cksum", "param_name", "step"],
+      "rationale": "Optimizer state dict missing exp_avg key when save-interval=20 — Tier 4 optimizer state checksum (zero/missing) on first checkpoint."
+    },
+    "O-001": {
+      "min_tier_required": 0,
+      "fields_required": ["param_name", "step"],
+      "rationale": "Sequential block uses single shared LayerNorm (self.norm) instead of self.norm + self.norm2 — fewer LayerNorm param_names than expected; Tier 0 structural enumeration catches it (similar to M-020 silent layer drop)."
+    },
+    "O-004": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Output logit norm growth with FSDP bf16 reduce — output logits are op-level forward activation, not in parameter/grad/loss schema. Loss and grad_norm remain normal per the report. Source/offline-eval only."
+    },
+    "O-007": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "API param-name change makes ignore_index ineffective so padding tokens count toward loss — loss is systematically lower; Tier 2 loss_value scale mismatch."
+    },
+    "O-008": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "Unsharded checkpoint save bug causes resume-loss to be discontinuous — Tier 2 loss_value at resume vs pre-save."
+    },
+    "O-011": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "All transformer blocks reuse identical RoPE buffer under CP — buffer tensor checksums identical across blocks (should differ); Tier 0 cross-block param/buffer checksum equality check."
+    },
+    "O-012": {
+      "min_tier_required": 0,
+      "fields_required": ["param_name", "tp_rank", "dp_rank"],
+      "rationale": "w_out param distributed only across DP, other params across DP+TP — Tier 0 param_name enumeration across rank coords reveals inconsistent sharding fingerprint."
+    },
+    "O-013": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "Buggy fused CE loss produces consistently lower loss vs native PyTorch CE — Tier 2 loss_value cross-implementation compare."
+    },
+    "O-015": {
+      "min_tier_required": "5-6",
+      "fields_required": ["has_nan", "step"],
+      "rationale": "Instance mask all-zero leads to divide-by-zero NaN loss; has_nan flag (Tier 5-6) is the canonical detection signal."
+    },
+    "O-017": {
+      "min_tier_required": 3,
+      "fields_required": ["learning_rate", "step"],
+      "rationale": "CosWithWarmupAndLinearDecay scheduler init produces wrong LR schedule — Tier 3 learning_rate trajectory differs from configured schedule."
+    },
+    "O-018": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "ReorderedNorm + fine-grained FSDP + activation checkpointing combo produces inconsistent backward results — Tier 1 grad checksum cross-config compare."
+    },
+    "O-019": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Eval data-order drift due to dataloader bookkeeping not reset — dataloader internal state, explicitly listed unobservable per tier mapping."
+    },
+    "O-020": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "SourceMixtureDataset truncates instead of randomly sampling — dataloader internal sampling state, not in trace schema. Source-only."
+    },
+    "O-024": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "Self-equality check makes depth-scaled init never apply; all output projections share same scale (should vary by depth) — Tier 0 param checksum across layers reveals identical scales at init."
+    },
+    "O-026": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "FSDP silently ignores load_state_dict between forward and backward — Tier 0 param checksum unchanged after load_state_dict (should change)."
+    },
+    "O-027": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "torch.compile CSE eliminates expressions after fsdp.set_ — affects op-level forward-pass values; manifests in activations not parameter/grad/loss/optstate checksums distinguishably. Source-only."
+    },
+    "O-028": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "FSDP eval doesn't fully cast to fp32; SDPA receives mixed fp32/bf16 inputs — Tier 0 dtype field on attention input params catches inconsistency."
+    },
+    "O-029": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "FSDP grad-accum outside no_sync with CPU offload overwrites instead of accumulating — Tier 1 grad checksum after multiple backward calls fails to reflect accumulation."
+    },
+    "O-030": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "dp_rank", "step"],
+      "rationale": "FSDP+PP race between reduce-scatter and grad read produces non-deterministic grad values — Tier 1 grad checksum varies across runs / across ranks."
+    },
+    "O-031": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "BF16 grad accumulation unstable at >100 GPU scale — loss diverges/instability vs FP32-reduce reference at Tier 2."
+    },
+    "O-032": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "step"],
+      "rationale": "Per-rank epsilon addition makes clip_coef vary with world_size — observable as grad_norm post-clip differing across world sizes for same input gradients; Tier 1 grad_norm."
+    },
+    "O-033": {
+      "min_tier_required": 0,
+      "fields_required": ["param_name", "step"],
+      "rationale": "FSDP use_orig_params + FULL_SHARD: inner-module state_dict misses some param names — Tier 0 param_name enumeration shows inconsistency between inner and wrapped state_dicts."
+    }
+  }
+}

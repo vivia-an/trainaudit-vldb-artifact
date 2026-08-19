@@ -1,0 +1,705 @@
+{
+  "total": 128,
+  "reproduced": 37,
+  "failed": 3,
+  "commit_mismatch": 6,
+  "not_attempted": 80,
+  "bugs": {
+    "D-001": {
+      "status": "no_commit",
+      "framework": "DeepSpeed"
+    },
+    "D-002": {
+      "status": "no_commit",
+      "framework": "DeepSpeed"
+    },
+    "D-003": {
+      "status": "no_commit",
+      "framework": "DeepSpeed"
+    },
+    "D-004": {
+      "status": "no_commit",
+      "framework": "DeepSpeed"
+    },
+    "D-005": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-006": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-007": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-008": {
+      "status": "no_commit",
+      "framework": "DeepSpeed"
+    },
+    "D-009": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-010": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-011": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "microsoft/DeepSpeed",
+      "evidence": "GPU 2x: BF16+ZeRO-1, hook call order: buggy=allreduce\u2192epilogue, fixed=epilogue\u2192allreduce"
+    },
+    "D-012": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-013": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-014": {
+      "status": "tier3_needs_upgrade",
+      "framework": "microsoft/DeepSpeed",
+      "tier": 3
+    },
+    "D-015": {
+      "status": "reproduced",
+      "framework": "microsoft/DeepSpeed",
+      "tier": 1,
+      "evidence": "GPU DeepSpeed FP16 training: buggy=0/14 params changed, fixed=14/14 changed"
+    },
+    "D-016": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-017": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-018": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-019": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-020": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-021": {
+      "status": "tier3_needs_upgrade",
+      "framework": "microsoft/DeepSpeed",
+      "tier": 3
+    },
+    "D-022": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-023": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-024": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-025": {
+      "status": "tier3_needs_upgrade",
+      "framework": "microsoft/DeepSpeed",
+      "tier": 3
+    },
+    "D-026": {
+      "status": "tier3_needs_upgrade",
+      "framework": "microsoft/DeepSpeed",
+      "tier": 3
+    },
+    "D-027": {
+      "status": "reproduced",
+      "framework": "microsoft/DeepSpeed",
+      "tier": 1,
+      "evidence": "GPU: softmax(dim=1) on [2,64,2] \u2192 expert_sum=0.01~0.09 (should be 1.0)"
+    },
+    "D-028": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-029": {
+      "status": "tier3_needs_upgrade",
+      "framework": "microsoft/DeepSpeed",
+      "tier": 3
+    },
+    "D-030": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-031": {
+      "status": "no_commit",
+      "framework": "DeepSpeed"
+    },
+    "D-032": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-033": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-034": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-035": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-036": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-037": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-038": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "microsoft/DeepSpeed",
+      "evidence": "GPU 2x: ZeRO-1 BF16, inject inf grad \u2192 buggy norm=NaN (logical_or), fixed norm=-1.0"
+    },
+    "D-039": {
+      "status": "no_commit",
+      "framework": "DeepSpeed"
+    },
+    "D-040": {
+      "status": "tier3_needs_upgrade",
+      "framework": "microsoft/DeepSpeed",
+      "tier": 3
+    },
+    "D-041": {
+      "status": "no_commit",
+      "framework": "DeepSpeed"
+    },
+    "D-042": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-043": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-044": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-045": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "D-046": {
+      "status": "not_attempted",
+      "framework": "DeepSpeed"
+    },
+    "M-001": {
+      "status": "commit_mismatch",
+      "framework": "Megatron-LM"
+    },
+    "M-002": {
+      "status": "commit_mismatch",
+      "framework": "Megatron-LM"
+    },
+    "M-003": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-004": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-005": {
+      "status": "failed",
+      "reason": "default CUDA RNG synced across TP ranks, cross-rank divergence not observable",
+      "framework": "Megatron-LM"
+    },
+    "M-006": {
+      "status": "commit_mismatch",
+      "framework": "Megatron-LM"
+    },
+    "M-007": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-008": {
+      "status": "failed",
+      "reason": "crash bug (assertion), not silent error; FP16 overflow masks the crash",
+      "framework": "Megatron-LM"
+    },
+    "M-009": {
+      "status": "commit_mismatch",
+      "framework": "Megatron-LM"
+    },
+    "M-010": {
+      "status": "reproduced",
+      "framework": "Megatron-LM",
+      "tier": 1,
+      "evidence": "GPU training, hook save_to_aux_losses_tracker: 2x calls"
+    },
+    "M-011": {
+      "status": "commit_mismatch",
+      "framework": "Megatron-LM"
+    },
+    "M-012": {
+      "status": "reproduced",
+      "framework": "Megatron-LM",
+      "tier": 1,
+      "evidence": "GPU training, hook TopKRouter.forward: expert_bias dtype=bf16"
+    },
+    "M-013": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-014": {
+      "status": "reproduced",
+      "framework": "Megatron-LM",
+      "tier": 1,
+      "evidence": "GPU training, hook TopKRouter.routing: all probs=1.0"
+    },
+    "M-015": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-016": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-017": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-018": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-019": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-020": {
+      "status": "reproduced",
+      "framework": "Megatron-LM",
+      "tier": 1,
+      "evidence": "GPU training, all_gather layer counts: 4 layers (config 5)"
+    },
+    "M-021": {
+      "status": "failed",
+      "reason": "bug only affects memory efficiency, not training correctness",
+      "framework": "Megatron-LM"
+    },
+    "M-022": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-023": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-024": {
+      "status": "reproduced",
+      "framework": "Megatron-LM",
+      "tier": 1,
+      "evidence": "GPU training, hook apply_input_jitter: dtype bf16\u2192fp32"
+    },
+    "M-025": {
+      "status": "commit_mismatch",
+      "framework": "Megatron-LM"
+    },
+    "M-026": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-027": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-028": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-029": {
+      "status": "no_commit",
+      "framework": "Megatron-LM"
+    },
+    "M-030": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-031": {
+      "status": "no_commit",
+      "framework": "Megatron-LM"
+    },
+    "M-032": {
+      "status": "no_commit",
+      "framework": "Megatron-LM"
+    },
+    "M-033": {
+      "status": "reproduced",
+      "framework": "Megatron-LM",
+      "tier": 1,
+      "evidence": "4-GPU training, hook MoEAuxLossAutoScaler: aux_loss=0.025 (should 0.1)"
+    },
+    "M-034": {
+      "status": "no_commit",
+      "framework": "Megatron-LM"
+    },
+    "M-035": {
+      "status": "no_commit",
+      "framework": "Megatron-LM"
+    },
+    "M-036": {
+      "status": "no_commit",
+      "framework": "Megatron-LM"
+    },
+    "M-037": {
+      "status": "no_commit",
+      "framework": "Megatron-LM"
+    },
+    "M-038": {
+      "status": "no_commit",
+      "framework": "Megatron-LM"
+    },
+    "M-039": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-040": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-041": {
+      "status": "not_attempted",
+      "framework": "Megatron-LM"
+    },
+    "M-042": {
+      "status": "no_commit",
+      "framework": "Megatron-LM"
+    },
+    "O-001": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo"
+    },
+    "O-002": {
+      "status": "reproduced",
+      "framework": "allenai/OLMo",
+      "tier": 1,
+      "evidence": "GPU training (3 steps), hook residual: dist_to_normed=0.012 < dist_to_original=0.741"
+    },
+    "O-003": {
+      "status": "needs_runtime_upgrade",
+      "tier": 3,
+      "framework": "allenai/OLMo",
+      "evidence": "GPU: z_loss=117.75, 64x scaling difference between num_micro_batches(2) and batch_size_in_tokens(128)",
+      "note": "used inspect.getsource, must be upgraded to runtime detection"
+    },
+    "O-004": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo"
+    },
+    "O-005": {
+      "status": "reproduced",
+      "framework": "allenai/OLMo",
+      "tier": 1,
+      "evidence": "GPU training (3 steps), checked preserve_rng_state=False with dropout=0.1"
+    },
+    "O-006": {
+      "status": "needs_runtime_upgrade",
+      "tier": 3,
+      "framework": "allenai/OLMo",
+      "evidence": "GPU: Trainer source check: epoch=0 reset present but global_step=0 missing",
+      "note": "used inspect.getsource, must be upgraded to runtime detection"
+    },
+    "O-007": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo"
+    },
+    "O-008": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo"
+    },
+    "O-009": {
+      "status": "reproduced",
+      "framework": "allenai/OLMo",
+      "tier": 1,
+      "evidence": "GPU model construction + forward: k_norm=64 causes shape mismatch crash"
+    },
+    "O-010": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "allenai/OLMo-core",
+      "evidence": "GPU: Built optimizer, ran 3 steps: buggy step=0.0, fixed step=3.0"
+    },
+    "O-011": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo-core"
+    },
+    "O-012": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo-core"
+    },
+    "O-013": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo-core"
+    },
+    "O-014": {
+      "status": "needs_runtime_upgrade",
+      "tier": 3,
+      "framework": "allenai/OLMo-core",
+      "note": "used inspect.getsource, must be upgraded to runtime detection"
+    },
+    "O-015": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo-core"
+    },
+    "O-016": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "allenai/OLMo-core",
+      "evidence": "GPU: Built optimizer + ran training step: buggy missing initial_lr, fixed has it"
+    },
+    "O-017": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo-core"
+    },
+    "O-018": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo-core"
+    },
+    "O-019": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo-core"
+    },
+    "O-020": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo-core"
+    },
+    "O-021": {
+      "status": "needs_runtime_upgrade",
+      "tier": 3,
+      "framework": "allenai/OLMo-core",
+      "note": "used inspect.getsource, must be upgraded to runtime detection"
+    },
+    "O-022": {
+      "status": "needs_runtime_upgrade",
+      "tier": 3,
+      "framework": "allenai/OLMo-core",
+      "note": "used inspect.getsource, must be upgraded to runtime detection"
+    },
+    "O-023": {
+      "status": "reproduced",
+      "framework": "allenai/OLMo-core",
+      "tier": 1,
+      "evidence": "GPU: executed F.pad(ones_like(int_tensor),...) \u2192 dtype=int64, padding=50256"
+    },
+    "O-024": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo-core"
+    },
+    "O-025": {
+      "status": "needs_runtime_upgrade",
+      "tier": 3,
+      "framework": "allenai/OLMo-core",
+      "note": "used inspect.getsource, must be upgraded to runtime detection"
+    },
+    "O-026": {
+      "status": "no_commit",
+      "framework": "pytorch/pytorch"
+    },
+    "O-027": {
+      "status": "no_commit",
+      "framework": "pytorch/pytorch"
+    },
+    "O-028": {
+      "status": "no_commit",
+      "framework": "pytorch/pytorch"
+    },
+    "O-029": {
+      "status": "no_commit",
+      "framework": "pytorch/pytorch"
+    },
+    "O-030": {
+      "status": "no_commit",
+      "framework": "pytorch/pytorch"
+    },
+    "O-031": {
+      "status": "no_commit",
+      "framework": "pytorch/pytorch"
+    },
+    "O-032": {
+      "status": "no_commit",
+      "framework": "pytorch/pytorch"
+    },
+    "O-033": {
+      "status": "no_commit",
+      "framework": "pytorch/pytorch"
+    },
+    "O-034": {
+      "status": "no_commit",
+      "framework": "pytorch/pytorch"
+    },
+    "O-035": {
+      "status": "no_commit",
+      "framework": "pytorch/pytorch"
+    },
+    "O-036": {
+      "status": "no_commit",
+      "framework": "pytorch/pytorch"
+    },
+    "O-037": {
+      "status": "no_commit",
+      "framework": "pytorch/pytorch"
+    },
+    "O-038": {
+      "status": "not_attempted",
+      "framework": "pytorch/torchtune"
+    },
+    "O-039": {
+      "status": "not_attempted",
+      "framework": "allenai/OLMo-core"
+    },
+    "O-040": {
+      "status": "tier3_needs_upgrade",
+      "framework": "allenai/OLMo-core",
+      "tier": 3
+    },
+    "D-NEW-1": {
+      "status": "reproduced",
+      "framework": "microsoft/DeepSpeed",
+      "tier": 1,
+      "evidence": "GPU: topk(logits) \u2192 gate values [-0.26, 3.03] outside [0,1]"
+    },
+    "D-NEW-2": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "microsoft/DeepSpeed",
+      "evidence": "GPU: get_lr() returns [0.0] for 2 param groups (should be [0.0, 0.0])"
+    },
+    "D-NEW-3": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "microsoft/DeepSpeed",
+      "evidence": "GPU: 2 frozen params (requires_grad=False) in optimizer group"
+    },
+    "OC-NEW-1": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "allenai/OLMo-core",
+      "evidence": "GPU: as_tensor([0.3,0.7,0.1,0.9,0.5]) \u2192 [0,0,0,0,0] (int64) \u2014 all prob info lost!"
+    },
+    "D-NEW-8": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "microsoft/DeepSpeed",
+      "evidence": "Runtime: WarmupLR(optim(lr=0.005)), after 15 steps: buggy lr=0.001, fixed lr=0.005"
+    },
+    "M-NEW-1": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "NVIDIA/Megatron-LM",
+      "evidence": "GPU 2x: hooked compute_routing_scores sigmoid: buggy=2 bf16, fixed=0 bf16+2 fp32"
+    },
+    "OC-NEW-2": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "allenai/OLMo-core",
+      "evidence": "CPU: SkipStepAdamW 5 steps \u2192 buggy step=0.0, fixed step=5.0"
+    },
+    "OC-NEW-3": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "allenai/OLMo-core",
+      "evidence": "E2E training 20 steps, hook _sqrt_decay: buggy lr=0.000707 at p=0.5, fixed lr=0.000293"
+    },
+    "O-NEW-2": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "allenai/OLMo",
+      "evidence": "E2E forward: causal mask inverted, position 0 attends avg=4.50 (should 0.0)"
+    },
+    "O-NEW-4": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "allenai/OLMo",
+      "evidence": "E2E forward: RoPE pos_sin=fp32 vs q=bf16, missing type_as causes precision mismatch"
+    },
+    "M-NEW-5": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "NVIDIA/Megatron-LM",
+      "evidence": "GPU 2x MoE: buggy Router missing calculate_per_token_loss attr, fixed has it=True"
+    },
+    "D-NEW-15": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "microsoft/DeepSpeed",
+      "evidence": "GPU 2x: BF16+ZeRO-0, zero_grad never called (0/5 steps) \u2192 gradients accumulate"
+    },
+    "M-NEW-4": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "NVIDIA/Megatron-LM",
+      "evidence": "GPU 2x TP=2 fp32: buggy no .clone() on fp32 logits \u2192 inplace backward corruption"
+    },
+    "D-NEW-17": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "microsoft/DeepSpeed",
+      "evidence": "GPU 2x: ZeRO-1 ga=2, buggy scale_if_loss gets gas_scaled(3.57), fixed gets original(7.03)"
+    },
+    "O-NEW-8": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "allenai/OLMo",
+      "evidence": "E2E forward: residual=norm(x) (dist=0.0) instead of x, identity path destroyed"
+    },
+    "O-NEW-9": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "allenai/OLMo",
+      "evidence": "E2E data load: token IDs > 65535 truncated by %2^16: 65536\u21920, 70000\u21924464, 100000\u219234464"
+    },
+    "M-NEW-7": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "NVIDIA/Megatron-LM",
+      "evidence": "GPU 2x MoE: z_loss save_to_aux_losses_tracker missing avg_group parameter"
+    },
+    "D-NEW-18": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "microsoft/DeepSpeed",
+      "evidence": "GPU 2x: ZeRO-2 CPU-offload multi-backward, buggy params diverge, fixed matches reference (3e-5)"
+    },
+    "D-NEW-20": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "microsoft/DeepSpeed",
+      "evidence": "GPU 2x: bf16+ZeRO-0+fp32_grad_accum \u2192 buggy silently uses BF16_Optimizer, fixed raises NotImplementedError"
+    },
+    "O-NEW-1": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "allenai/OLMo",
+      "evidence": "E2E model forward: buggy RMSNorm output rms=0.0624 (L2 norm), fixed rms=1.0000"
+    },
+    "O-NEW-6": {
+      "status": "reproduced",
+      "tier": 1,
+      "framework": "allenai/OLMo",
+      "evidence": "E2E forward with mock: buggy q=(B,H=4,S=16,D) wrong layout, fixed q=(B,S=16,H=4,D)"
+    }
+  },
+  "tier2": 3,
+  "tier3": 17
+}

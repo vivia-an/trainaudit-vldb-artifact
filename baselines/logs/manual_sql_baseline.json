@@ -1,0 +1,754 @@
+{
+  "clean": {
+    "normal_db/dist_optimizer_normal": {
+      "cross_rank_cksum_eq": {
+        "fires": 4751,
+        "evals": 11489
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 172260
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 172260
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 21780
+      }
+    },
+    "normal_db/dp_normal": {
+      "cross_rank_cksum_eq": {
+        "fires": 4751,
+        "evals": 11489
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 172260
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 172260
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 21780
+      }
+    },
+    "normal_db/mixed_precision_normal": {
+      "cross_rank_cksum_eq": {
+        "fires": 4751,
+        "evals": 11489
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 172260
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 172260
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 21780
+      }
+    },
+    "normal_db/tp_normal": {
+      "cross_rank_cksum_eq": {
+        "fires": 8034,
+        "evals": 11489
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 172260
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 172260
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 21780
+      }
+    }
+  },
+  "buggy": {
+    "cksum_before_backward_bitwise_level_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 4440,
+        "evals": 8130
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "distribution_shape_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 4839,
+        "evals": 8530
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 10100
+      }
+    },
+    "dtype_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 111,
+        "evals": 708
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 0
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 0
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "grad_existence_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 205,
+        "evals": 656
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 1100
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 1100
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "higher_order_stats_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2030,
+        "evals": 4522
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 8400
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 8400
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "lr_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 4839,
+        "evals": 8530
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 10100
+      }
+    },
+    "main_grad_after_backward_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 4039,
+        "evals": 7230
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 0
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 0
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "main_grad_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 822,
+        "evals": 2316
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 0
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 0
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "optim_backward_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 3538,
+        "evals": 6730
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 0
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 0
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "optim_state_after_step_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 5333,
+        "evals": 9030
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 11110
+      }
+    },
+    "optim_state_before_backward_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 4433,
+        "evals": 8130
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 0
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 0
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "optim_state_before_optim_step_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 4839,
+        "evals": 8530
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "optimizer_state_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 822,
+        "evals": 2316
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 0
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 0
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "param_bitwise_after_backward_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 5339,
+        "evals": 9030
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 11110
+      }
+    },
+    "param_bitwise_before_optim_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 4839,
+        "evals": 8530
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 30000
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 10100
+      }
+    },
+    "quantile_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2030,
+        "evals": 4522
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 8400
+      },
+      "value_range": {
+        "fires": 12,
+        "evals": 8400
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "requires_grad_after_backward_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 212,
+        "evals": 908
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 2290
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 2290
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "requires_grad_before_backward_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 654,
+        "evals": 1755
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 0
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 0
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "requires_grad_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 315,
+        "evals": 1110
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 0
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 0
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "shape_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 205,
+        "evals": 506
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 600
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 600
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "sharded_same_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2030,
+        "evals": 4522
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 8400
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 8400
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_attn_proj_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2705,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_embedding_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2728,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_grad_boundary_jump_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2705,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_grad_distribution_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2705,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_grad_nan_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2705,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_grad_same_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2705,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_layernorm_bias_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 3280,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_layernorm_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 3855,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_main_grad_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2705,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_mlp_fc1_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2981,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_optim_state_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2705,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_qkv_boundary_jump_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2728,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_qkv_distribution_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2981,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_requires_grad_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 688,
+        "evals": 2515
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 3108
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 3108
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_router_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2705,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    },
+    "tp_shared_experts_same_test_db": {
+      "cross_rank_cksum_eq": {
+        "fires": 2705,
+        "evals": 9625
+      },
+      "no_nan_inf": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "value_range": {
+        "fires": 0,
+        "evals": 23680
+      },
+      "lr_nonneg": {
+        "fires": 0,
+        "evals": 0
+      }
+    }
+  },
+  "summary": {
+    "clean_total_fires": 22287,
+    "clean_total_evals": 1511156,
+    "clean_fp_per_million": 14748.3,
+    "clean_dbs": 4,
+    "buggy_dbs": 37,
+    "clean_crossrank_fp_per_million": 484963.9,
+    "clean_crossrank_fires": 22287,
+    "clean_crossrank_evals": 45956
+  }
+}

@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vtimeline"
+version = "0.0.1"
+requires-python = ">=3.7"
+license = {text = "MIT"}
+
+[project.optional-dependencies]
+megatron = [
+    "duckdb>=1.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+vtimeline = ["libvtimeline.so"]

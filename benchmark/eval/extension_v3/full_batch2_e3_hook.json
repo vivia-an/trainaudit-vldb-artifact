@@ -1,0 +1,752 @@
+{
+  "metadata": {
+    "experiment": "E3_hook",
+    "batch": 2,
+    "n_bugs": 90
+  },
+  "per_bug": {
+    "O-034": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": [
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "FSDPv2 _pre_forward dtype cast is skipped during recomputation; bf16/fp32 mismatch first manifests when activations are produced in forward and persists through the backward recomputation path."
+    },
+    "O-035": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": [
+        "before-forward",
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "param_init_fn + sync_module_states diverges parameter values across ranks at init; cross-rank param checksum at the first before-forward hook reveals the divergence."
+    },
+    "O-036": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": [
+        "before-forward",
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Meta-device init produces parameters that differ from direct GPU init; the discrepancy is present from before-forward of step 1 onward."
+    },
+    "O-037": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": [
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "Block-level FSDP wrapping introduces gradient precision loss inside backward; activation/grad numerical drift first appears at after-forward and grows during backward."
+    },
+    "O-038": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Grad-norm scaling uses world_size instead of DP size; the wrong scaling becomes visible only after backward when the global grad norm is computed."
+    },
+    "O-039": {
+      "earliest_observable": "checkpoint_save",
+      "hooks_observable": [
+        "checkpoint_save"
+      ],
+      "rationale": "Duplicate-final-checkpoint write happens during save; only the checkpoint.save tap can observe the duplicate write and overwrite."
+    },
+    "B1": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": [
+        "before-forward",
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Router weight is RNG-divergent across TP ranks at construction; cross-rank param hash at before-forward of step 1 reveals it and the divergence persists every hook."
+    },
+    "B10": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-optimizer"
+      ],
+      "rationale": "micro_step_id off-by-one is only diagnosable as a counter mismatch at the GAS boundary right before optimizer.step."
+    },
+    "B11": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "max-instead-of-min in clip_coef leaves grad norm unclipped; observable only after grad clipping runs (after-backward) by checking ||grad|| <= max_norm."
+    },
+    "B12": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-optimizer"
+      ],
+      "rationale": "Missing initial_lr key on param_groups is a structural property of the optimizer state, only checkable at before-optimizer."
+    },
+    "B13": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": [
+        "after-forward"
+      ],
+      "rationale": "attn_norm clobbering the residual stream changes forward outputs; activation-level invariant fails at after-forward."
+    },
+    "B14": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": [
+        "after-forward"
+      ],
+      "rationale": "Wrong masked-mean for z-loss is a forward-pass numerical bug; the loss formed in forward differs from reference at after-forward."
+    },
+    "B15": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": [
+        "after-forward"
+      ],
+      "rationale": "Dividing z-loss by num_micro_batches instead of token count corrupts the loss value formed in forward; observable at after-forward."
+    },
+    "B2": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "grad_input is missing TP all-reduce; magnitude check vs N*local_grad fails after the backward pass completes (i.e., after-backward)."
+    },
+    "B3": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "communication_data_type defaults to fp32 when only bf16 is enabled; the dtype anomaly first surfaces during backward grad reduction."
+    },
+    "B4": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Wrong DP src rank routes gradient broadcasts/all-reduces to the wrong root; the rank-mapping anomaly is first detectable when the collective fires during backward."
+    },
+    "B5": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "finish_grad_sync forgets to scale expert_grads by 1/dp; the missing divide is observable post-grad-sync, i.e. after-backward."
+    },
+    "B6": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-optimizer"
+      ],
+      "rationale": "param_sync_microbatch_id gate compares against wrong total; the counter mismatch (number of param_sync invocations) is checkable only at before-optimizer of the global step."
+    },
+    "B7": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": [
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "FlashSelfAttention.dropout_p is permanently mutated to 0 after a forward in eval mode; attribute drift is visible at the next after-forward and persists."
+    },
+    "B8": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build"
+      ],
+      "rationale": "EP group is constructed with num_experts instead of ep_size during InferenceEngine.__init__; the malformed group is observable at build/snapshot before any step."
+    },
+    "B9": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": [
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "Wrong all-to-all branch is taken on second all2all in sequence-parallel forward; the corrupted activation routing is first observable at after-forward."
+    },
+    "D-NEW-1": {
+      "earliest_observable": "unobservable",
+      "hooks_observable": [],
+      "rationale": "Topk on logits vs post-softmax gates: softmax is monotonic so topk indices are identical; only the gate weights differ subtly with no observable runtime hook signal."
+    },
+    "D-NEW-12": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build"
+      ],
+      "rationale": "Config-key typo causes the user-set seq_parallel_communication_data_type to be silently ignored; the wrong parsed config is observable at build snapshot."
+    },
+    "D-NEW-13": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "CPU offload only accumulates grads into the CPU buffer when ga_steps>1, so on micro-step boundaries the CPU grad buffer underestimates the norm; observable post-grad-sync."
+    },
+    "D-NEW-14": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-optimizer"
+      ],
+      "rationale": "WarmupCosineLR multi-group get_lr returns a wrong-length list; the schedule output mismatches param_groups, observable at before-optimizer."
+    },
+    "D-NEW-15": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": [
+        "before-forward",
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "BF16+ZeRO0 path skips zero_grad after each step; from step 2 onward, param.grad is non-zero at before-forward and remains visible every subsequent hook."
+    },
+    "D-NEW-16": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Wrong stream sync (default vs current) for reduce_and_partition_stream causes a race during grad reduction; the corrupted reduction shows up during/after backward."
+    },
+    "D-NEW-17": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Loss double-scaling applied to gas_scaled_loss inflates gradient magnitudes; observable as grad-norm anomaly post-backward."
+    },
+    "D-NEW-18": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "ZeRO-1/2 CPU-offload mishandles multiple backward() per step, dropping grad contributions; the missing accumulation is detectable post-grad-sync."
+    },
+    "D-NEW-19": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "extra_large_param uses param.dtype not comm_dtype, so its grad is silently dropped from reduction; absence of expected grad surfaces after grad-sync completes."
+    },
+    "D-NEW-2": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-optimizer"
+      ],
+      "rationale": "WarmupCosineLR returns a scalar not a per-group list; structural mismatch with optimizer.param_groups visible at before-optimizer."
+    },
+    "D-NEW-20": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build"
+      ],
+      "rationale": "Wrong optimizer class (BF16_Optimizer for bf16+fp32_grad_accum without ZeRO) selected at engine init; observable at build snapshot."
+    },
+    "D-NEW-21": {
+      "earliest_observable": "checkpoint_save",
+      "hooks_observable": [
+        "checkpoint_load",
+        "checkpoint_save"
+      ],
+      "rationale": "bf16-without-ZeRO path mistakenly writes ZeRO optimizer state into the checkpoint; observable at the checkpoint.save tap and again at load."
+    },
+    "D-NEW-22": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": [
+        "checkpoint_load",
+        "before-forward",
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "ZeRO 1/2 elastic checkpoint alignment mismatch: optimizer.state[p] after load != pre-save tensor; observable at checkpoint_load and persists."
+    },
+    "D-NEW-23": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "allreduce_bucket forces rank=None; the call uses dist.all_reduce instead of dist.reduce. Function-call counting at the all_reduce tap during backward catches it."
+    },
+    "D-NEW-24": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Off-by-one in contiguous IPG bucket comparison drops the gradient of a param exactly filling the bucket; missing reduced grad on the owning rank is visible post-grad-sync."
+    },
+    "D-NEW-25": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": [
+        "checkpoint_load",
+        "before-forward",
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "load_module_only with bf16 skips refresh_fp32_params; uninitialized fp32 master weights are observable at checkpoint_load and persist into every following hook."
+    },
+    "D-NEW-26": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build"
+      ],
+      "rationale": "Copy-paste typo writes config flag into wrong attribute during zero.Init; the attribute mismatch is observable at the build/init snapshot."
+    },
+    "D-NEW-27": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "Inverted dtype gate inside __avg_scatter_contiguous_grads sends the wrong-dtype tensor into reduce_scatter; the dtype invariant fires at the collective during backward."
+    },
+    "D-NEW-28": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Two-bug combo: wrong optimizer dispatch + extra_large_param uses raw param.grad. Both lead to grad-tensor mismatch detectable post-grad-sync."
+    },
+    "D-NEW-29": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-forward",
+        "before-optimizer"
+      ],
+      "rationale": "fp32->fp16 master copy uses outer-loop partition_id, writing to wrong rank's slice in MoE groups; cross-rank bit16 partition mismatch is observable right after step (before-optimizer of next step / before-forward)."
+    },
+    "D-NEW-3": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build"
+      ],
+      "rationale": "Frozen params accidentally included in optimizer.param_groups; structural invariant 'all params requires_grad=True' checkable at build snapshot."
+    },
+    "D-NEW-30": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-forward",
+        "before-optimizer"
+      ],
+      "rationale": "DeepSpeedCPUAdam fp32->fp16 partition_id wrong across groups; bit16 partitions mismatch their fp32 sources, visible right at/after the step boundary."
+    },
+    "D-NEW-31": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "param_to_partition_ids built from non-reordered group while reduction uses round_robin order; partition-owner mismatch is detectable when reduction completes (after-backward)."
+    },
+    "D-NEW-32": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build"
+      ],
+      "rationale": "partition_balanced returns degenerate boundaries assigning a PP stage zero layers; observable at module-construction time, i.e., build snapshot."
+    },
+    "D-NEW-33": {
+      "earliest_observable": "checkpoint_save",
+      "hooks_observable": [
+        "checkpoint_save"
+      ],
+      "rationale": "MiCS: every rank writes the non-ZeRO checkpoint, racing on the same file; observable only at checkpoint_save (function-call counting on save)."
+    },
+    "D-NEW-34": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "all_gather_coalesced hardcodes ds_tensor dtype, mixing dtypes silently truncates buffers; the corrupted allgather corrupts params just before forward use, surfacing through forward/backward use and the allgather byte-count check."
+    },
+    "D-NEW-35": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": [
+        "before-forward",
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Train and eval coordinators share an InflightParamRegistry; structural identity check (registry is not the same Python object) is visible at every hook starting from before-forward."
+    },
+    "D-NEW-36": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-optimizer"
+      ],
+      "rationale": "Unscale of grad norm uses post-decay loss_scale instead of prev_scale; mismatch (_global_grad_norm * prev_scale != scaled_global_grad_norm) is checkable at before-optimizer."
+    },
+    "D-NEW-38": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Sparse grad path rebinds local var instead of writing to param.grad; param.grad fails to reflect all-reduced values, observable post-grad-sync."
+    },
+    "D-NEW-39": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": [
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Pipeline _aggregate_total_loss broadcasts mixed-dtype loss; non-last PP stages receive wrong-dtype tensor when the aggregated loss is formed (after-forward)."
+    },
+    "D-NEW-40": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build",
+        "before-forward"
+      ],
+      "rationale": "zero_wrapper_for_fp_tensor_constructor reassigns Parameter to non-Parameter Tensor at construction; param identity/dtype invariants fail at build snapshot."
+    },
+    "D-NEW-42": {
+      "earliest_observable": "checkpoint_save",
+      "hooks_observable": [
+        "checkpoint_load",
+        "before-forward",
+        "checkpoint_save"
+      ],
+      "rationale": "ZeRO3 checkpoint omits frozen params from saved state; observable at checkpoint_save (save manifest missing entries) and again at load."
+    },
+    "D-NEW-43": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build",
+        "before-optimizer"
+      ],
+      "rationale": "fp16 partitions built from full param_groups including frozen params; structural invariant (frozen p.data unchanged across steps) and OOM-equivalent waste are visible from build onward."
+    },
+    "D-NEW-44": {
+      "earliest_observable": "checkpoint_save",
+      "hooks_observable": [
+        "checkpoint_load",
+        "checkpoint_save"
+      ],
+      "rationale": "MoE save_checkpoint with TP>1 only writes mp_rank_00 model_states.pt; missing files are observable via function-call counting on checkpoint_save."
+    },
+    "D-NEW-45": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Backward-hook closure captures stale group index `i`; gradients route to wrong reduction bucket as backward fires hooks (main-grad-in-backward)."
+    },
+    "D-NEW-46": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build"
+      ],
+      "rationale": "Inner optimizer.step() called once during init increments Adam state['step']; observable at build snapshot (state['step'] != 0 before any real backward)."
+    },
+    "D-NEW-47": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build",
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "Auto-selected fp32 grad_accum_dtype mismatches bf16 model under ZeRO; the engine config invariant (grad_accum_dtype == model_dtype when ZeRO) fails at build/init."
+    },
+    "D-NEW-48": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "GAS-boundary flag never propagated to ZeRO; ZeRO reduces every micro-step. Function-call counting on the all_reduce tap during backward catches the extra reductions."
+    },
+    "D-NEW-49": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build"
+      ],
+      "rationale": "DeepSpeedDataLoader.__len__ returns sample count not batch count; observable at build snapshot via len(dataloader) check."
+    },
+    "D-NEW-50": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build",
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "fp32_groups_gradients_flat allocated as fp32 ignoring grad_acc_dtype; dtype invariant fails at build snapshot, and bad reduction dtype manifests during backward."
+    },
+    "D-NEW-51": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": [
+        "before-forward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "extra_large_param_to_reduce reference leaks across steps when contiguous_gradients=False; structural invariant (must be None) checkable at before-forward of step 2 onward."
+    },
+    "D-NEW-53": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-forward",
+        "before-optimizer"
+      ],
+      "rationale": "AutoEP forgets ep_size loss scaling; expert grads under-scaled, observable as cross-config (DP=N,EP=1 vs DP=N/ep,EP=ep) post-step weight divergence at before-optimizer of the next step."
+    },
+    "D-NEW-54": {
+      "earliest_observable": "checkpoint_save",
+      "hooks_observable": [
+        "checkpoint_load",
+        "checkpoint_save"
+      ],
+      "rationale": "MoE checkpoint records dp_world_size instead of seq_dp_world_size; the wrong replication factor is written at save and breaks load."
+    },
+    "D-NEW-55": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "ZeRO-1/2 expert grads pre-divide by edp_world_size then skip bucket-final divide; net divisor wrong, observable as expert-grad ratio anomaly post-grad-sync."
+    },
+    "D-NEW-56": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": [
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "topkgating drop_tokens=False uses stale `locations` after capacity update; dispatch positions wrong inside forward, observable at after-forward."
+    },
+    "D-NEW-57": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": [
+        "checkpoint_load",
+        "before-forward",
+        "after-forward"
+      ],
+      "rationale": "ZeRO++ ds_secondary_tensor stale after load/resume; the dirty allgather corrupts the next forward — first observable at before-forward (post-load) and at after-forward."
+    },
+    "D-NEW-58": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": [
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "Asymmetric int8 dequantize hardcodes __half output; precision loss enters activations during forward and propagates."
+    },
+    "D-NEW-59": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "Hardcoded gpu_per_node=16 inside quantized_reduction; wrong intra-node split during grad reduction produces incorrect reduced grads in backward."
+    },
+    "D-NEW-60": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": [
+        "checkpoint_load",
+        "before-forward",
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "Universal checkpoint stage3 multi-machine load uses local_rank instead of global DP rank; wrong partition slice loaded at checkpoint_load and persists."
+    },
+    "D-NEW-61": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "ZeRO-1 fp16 overflow flag broadcast guarded by partition_gradients; ranks disagree on overflow/loss_scale, observable post-backward at the loss-scale-update point."
+    },
+    "D-NEW-62": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-optimizer"
+      ],
+      "rationale": "BF16_Optimizer skips fp32 cast of grad when grad_acc_dtype != fp32; dtype invariant (param_partition.grad dtype == fp32 inside step) fails right at before-optimizer."
+    },
+    "D-NEW-63": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-optimizer"
+      ],
+      "rationale": "CPUAdam IncrementStep non-idempotent across same-step subgroup updates; bias-correction drift between subgroups is visible at before-optimizer / inside the step."
+    },
+    "D-NEW-64": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "FP16 fused optimizer global_grad_norm undercounted by sqrt(tp_size); observable post-backward at the grad_norm computation point."
+    },
+    "D-NEW-65": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "PipelineEngine non-last-stage backward double-updates hp_grads with bf16 immediate-update; fp32 grad updated twice, magnitude anomaly visible after backward."
+    },
+    "D-NEW-66": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-optimizer"
+      ],
+      "rationale": "ZeRO-3 CPU offload set_local_grad doesn't refresh norm_for_param_grads; grad clipping uses stale norm, observable when grad_norm is recomputed at before-optimizer."
+    },
+    "D-NEW-67": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": [
+        "after-backward",
+        "before-optimizer"
+      ],
+      "rationale": "ZeRO-0 + autocast(fp16) without GradScaler: fp16 grads underflow to zero; observable as zero-grad anomaly post-backward."
+    },
+    "D-NEW-68": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "ZeRO-2 ipg double-buffer swap not stream-synchronized; race between current backward write and previous reduce read manifests during backward."
+    },
+    "D-NEW-69": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "current_stream does not wait_stream(reduction_stream) after async reduce; the IPG buffer rewrite races allreduce during overlapped comm/compute in backward."
+    },
+    "D-NEW-70": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "average_tensor passes the full pre-allocated IPG buffer (incl. garbage tail) instead of narrow(0, 0, elements_in_ipg_bucket); observable as wrong-tensor passed to the all_reduce tap during backward."
+    },
+    "D-NEW-71": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "ZeRO-3 partition padding allocated with torch.empty; uninitialized bytes get reduced into other ranks' partitions during reduce-scatter in backward."
+    },
+    "D-NEW-72": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": [
+        "after-forward",
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "Sequence-parallel single_all_to_all reshape collapses batch and seq dims, scrambling QKV; observable as activation-level identity-roundtrip failure at after-forward."
+    },
+    "D-NEW-73": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-forward",
+        "before-optimizer"
+      ],
+      "rationale": "AutoEP manual loss.backward path skips ep_size loss scaling; expert weights diverge from engine.backward path, observable after step (next before-forward / before-optimizer)."
+    },
+    "D-NEW-74": {
+      "earliest_observable": "checkpoint_save",
+      "hooks_observable": [
+        "checkpoint_load",
+        "checkpoint_save"
+      ],
+      "rationale": "ZeRO-3 NVMe optimizer offload writes all ranks' tensors into one shared dir; per-rank uniqueness invariant fails at checkpoint_save."
+    },
+    "D-NEW-75": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-forward",
+        "before-optimizer"
+      ],
+      "rationale": "CPU Adam/Adagrad uses params.size(0) instead of numel; only first row of multi-dim params updated, observable via post-step value-changed invariant at before-optimizer of next step / before-forward."
+    },
+    "D-NEW-76": {
+      "earliest_observable": "build",
+      "hooks_observable": [
+        "build",
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "_broadcast_model invokes dist.broadcast on a Tensor with requires_grad=True; the autograd-recorded sync op is a structural anomaly observable at build/init snapshot."
+    },
+    "D-NEW-77": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": [
+        "before-forward",
+        "after-forward",
+        "main-grad-in-backward"
+      ],
+      "rationale": "_partition_param_sec async copy not stream-synchronized; prefetch all-gather of ds_secondary_tensor reads garbage on next forward, manifesting at after-forward."
+    },
+    "D-NEW-78": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": [
+        "main-grad-in-backward",
+        "after-backward"
+      ],
+      "rationale": "allreduce_bucket hardcodes communication_data_type=fp16 default; bf16 grads silently downcast to fp16 for the all-reduce during backward."
+    },
+    "D-NEW-79": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-optimizer"
+      ],
+      "rationale": "WarmupLR/LRRangeTest/OneCycle don't write min_lr into optimizer.param_groups at __init__; first optimizer.step uses original lr — observable at before-optimizer of step 1."
+    },
+    "D-NEW-8": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": [
+        "before-optimizer"
+      ],
+      "rationale": "WarmupLR ignores optimizer LR and uses hardcoded 0.001; the wrong LR is written into param_groups at the first scheduler step, observable at before-optimizer."
+    }
+  }
+}

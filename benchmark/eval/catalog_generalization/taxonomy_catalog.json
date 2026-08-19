@@ -1,0 +1,177 @@
+[
+  {
+    "id": "T01",
+    "name": "cross-rank-replica-equality",
+    "relation_operator": "equality_across_ranks"
+  },
+  {
+    "id": "T02",
+    "name": "logged-metric-reduction-consistency",
+    "relation_operator": "equality_across_ranks"
+  },
+  {
+    "id": "T03",
+    "name": "config-invariant-execution-equivalence",
+    "relation_operator": "reference_equivalence"
+  },
+  {
+    "id": "T04",
+    "name": "spec-reference-conformance",
+    "relation_operator": "reference_equivalence"
+  },
+  {
+    "id": "T05",
+    "name": "designated-dtype-fidelity",
+    "relation_operator": "dtype_preservation"
+  },
+  {
+    "id": "T06",
+    "name": "storage-dtype-interpretation-match",
+    "relation_operator": "dtype_preservation"
+  },
+  {
+    "id": "T07",
+    "name": "gradient-accumulation-conservation",
+    "relation_operator": "conservation"
+  },
+  {
+    "id": "T08",
+    "name": "scale-factor-consistency",
+    "relation_operator": "value_scaling_consistency"
+  },
+  {
+    "id": "T09",
+    "name": "gradient-norm-computation-fidelity",
+    "relation_operator": "value_scaling_consistency"
+  },
+  {
+    "id": "T10",
+    "name": "producer-consumer-completion-ordering",
+    "relation_operator": "ordering"
+  },
+  {
+    "id": "T11",
+    "name": "checkpoint-restore-state-equality",
+    "relation_operator": "restoration_after_reload"
+  },
+  {
+    "id": "T12",
+    "name": "checkpoint-save-completeness",
+    "relation_operator": "count_frequency_match"
+  },
+  {
+    "id": "T13",
+    "name": "dataloader-bookkeeping-reset",
+    "relation_operator": "restoration_after_reload"
+  },
+  {
+    "id": "T14",
+    "name": "scaling-scalar-finiteness",
+    "relation_operator": "boundedness"
+  },
+  {
+    "id": "T15",
+    "name": "counter-monotonic-progress",
+    "relation_operator": "monotonicity"
+  },
+  {
+    "id": "T16",
+    "name": "positional-encoding-position-fidelity",
+    "relation_operator": "index_consistency"
+  },
+  {
+    "id": "T17",
+    "name": "loss-parameter-gradient-connectivity",
+    "relation_operator": "gradient_flow"
+  },
+  {
+    "id": "T18",
+    "name": "configured-value-effectiveness",
+    "relation_operator": "config_effectiveness"
+  },
+  {
+    "id": "T19",
+    "name": "packed-sequence-attention-isolation",
+    "relation_operator": "exclusivity"
+  },
+  {
+    "id": "T20",
+    "name": "padding-loss-exclusion",
+    "relation_operator": "exclusivity"
+  },
+  {
+    "id": "T21",
+    "name": "overflow-skip-step-validity",
+    "relation_operator": "count_frequency_match"
+  },
+  {
+    "id": "T22",
+    "name": "parameter-update-effectiveness",
+    "relation_operator": "update_effectiveness"
+  },
+  {
+    "id": "T23",
+    "name": "unrelated-operation-state-preservation",
+    "relation_operator": "state_preservation"
+  },
+  {
+    "id": "T24",
+    "name": "intra-run-recomputation-determinism",
+    "relation_operator": "determinism"
+  },
+  {
+    "id": "T25",
+    "name": "sharded-layout-conformance",
+    "relation_operator": "sharding_layout_consistency"
+  },
+  {
+    "id": "T26",
+    "name": "exactly-once-side-effect",
+    "relation_operator": "count_frequency_match"
+  },
+  {
+    "id": "T27",
+    "name": "init-distribution-conformance",
+    "relation_operator": "value_scaling_consistency"
+  },
+  {
+    "id": "T28",
+    "name": "master-working-weight-copy-fidelity",
+    "relation_operator": "copy_consistency"
+  },
+  {
+    "id": "T29",
+    "name": "router-gate-probability-range-validity",
+    "relation_operator": "boundedness"
+  },
+  {
+    "id": "T30",
+    "name": "static-attention-pattern-mass-exclusion",
+    "relation_operator": "exclusivity"
+  },
+  {
+    "id": "T31",
+    "name": "sort-key-order-conformance",
+    "relation_operator": "ordering"
+  },
+  {
+    "id": "T32",
+    "name": "pipeline-layer-partition-conformance",
+    "relation_operator": "structural_integrity"
+  },
+  {
+    "id": "T33",
+    "name": "supervision-label-index-range-validity",
+    "relation_operator": "boundedness"
+  },
+  {
+    "id": "T34",
+    "name": "training-step-budget-data-sufficiency",
+    "relation_operator": "count_frequency_match"
+  },
+  {
+    "id": "T35",
+    "name": "frozen-parameter-update-exclusion",
+    "relation_operator": "exclusivity"
+  }
+]

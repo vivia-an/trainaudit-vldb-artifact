@@ -1,0 +1,1596 @@
+{
+  "meta": {
+    "batch": 4,
+    "count": 90
+  },
+  "bugs": [
+    {
+      "bug_id": "O-NEW-38",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "DataConfig defaults memmap_dtype to uint16 silently, so vocab_size > 2^16 truncates token ids on load",
+      "category": "data_loading",
+      "root_cause": "Before this commit MemMapDataset was constructed without passing a memmap_dtype, defaulting to uint16. When the actual on-disk file was uint32 (because vocab_size > 2^16), reading two-byte chunks silently produced wrong token ids without any type error. Fix exposes effective_memmap_dtype on DataConfig and threads it through build_memmap_dataset.",
+      "invariant": "MemMapDataset(memmap_dtype) must equal np.uint32 (or wider) when train_config.model.vocab_size > 2**16",
+      "detection_method": "config_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "model.vocab_size > 65536 (e.g. 100k+ tokenizer)",
+        "MemMap dataset built from train_config without an explicit dtype"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-39",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "_do_adaptive_clipping/_do_global_fixed_clipping hardcode collect_param_metrics=True, forcing per-step host-device sync and ignoring metrics_log_interval",
+      "category": "control_flow",
+      "root_cause": "The clipping helpers were called with collect_param_metrics=True every step, regardless of the outer collect_param_metrics flag. This silently bypassed the metrics_log_interval gate (forcing host-device sync to compute clipping_rate every step) and produced metric values that did not match the requested logging cadence.",
+      "invariant": "when collect_param_metrics is False at the outer call, _do_adaptive_clipping/_do_global_fixed_clipping must also be invoked with collect_param_metrics=False and clipping_rate must not be added to all_metrics",
+      "detection_method": "function_call_counting",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "training with metrics_log_interval > 1",
+        "any clipping configuration (max_grad_norm or max_grad_norm_ratio)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-4",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "RoPE sin/cos missing type_as — dtype mismatch in mixed precision",
+      "category": "numerical",
+      "root_cause": "pos_sin/pos_cos cached in float32, not cast to match q_ dtype (bf16/fp16)",
+      "invariant": "In apply_rotary_pos_emb, pos_sin.dtype and pos_cos.dtype must match t.dtype",
+      "detection_method": "runtime_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-40",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Mitchell init hardcodes cutoff_factor=3.0, ignoring user-supplied init_cutoff_factor across blocks and embeddings",
+      "category": "numerical",
+      "root_cause": "Every Mitchell-init code path (OLMoBlock, OLMoSequentialBlock, OLMoLlamaBlock, and OLMo wte init) literally assigned cutoff_factor = 3.0, completely ignoring config.init_cutoff_factor. User configs that set a different cutoff (e.g. 4 or 6) silently produced narrower truncated-normal weight distributions than requested.",
+      "invariant": "for init_fn=mitchell, the cutoff_factor used by init_normal must equal config.init_cutoff_factor (falling back to 3.0 only when None)",
+      "detection_method": "config_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "init_fn = mitchell",
+        "user sets a non-default model.init_cutoff_factor"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-49",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Final linear-decay scheduler uses wrong start/end factors (decays from 1.0 to alpha_f instead of alpha_f to alpha_f^2)",
+      "category": "lr_schedule",
+      "root_cause": "The final linear decay segment is meant to take over after a cosine schedule has already decayed the LR to alpha_f * base_lr. The buggy version constructed `LinearLR(start_factor=1.0, end_factor=alpha_f)` which jumps the LR back up to the base learning rate at the handoff, and then decays only to alpha_f over the tail. The correct settings continue from `alpha_f` down to `alpha_f**2`. Result is a silent LR spike + wrong final LR.",
+      "invariant": "scheduler.get_last_lr() must be continuous across the cosine-to-linear handoff at step=t_max",
+      "detection_method": "lr_schedule_continuity_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "scheduler concatenates cosine-with-warmup followed by linear final decay",
+        "Training enters the post-cosine linear segment (global_step > t_max)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-5",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Embedding init std missing sqrt(d_model) factor — embeddings 16x too small",
+      "category": "control_flow",
+      "root_cause": "init_std used directly instead of init_std * sqrt(d_model) for embeddings",
+      "invariant": "embedding weight std should be init_std * sqrt(d_model)",
+      "detection_method": "runtime_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-51",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "IterableDataset leftover indices distributed wrongly across workers",
+      "category": "data_loading",
+      "root_cause": "When distributing the leftover (unaligned) indices across workers, the buggy code did `left_overs = indices[truncated_size + worker_info.id : truncated_size + worker_info.id + worker_info.num_workers]`, which gives each worker a contiguous slice of `num_workers` indices starting at its id (so workers overlap and miss other leftovers). The fix uses strided slicing `indices[truncated_size + worker_info.id :: worker_info.num_workers]` so each worker independently picks its share.",
+      "invariant": "Union of leftover indices across all workers must equal the full set of leftover indices, with no overlap",
+      "detection_method": "data_distribution_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "drop_last=False with device_batch_size set",
+        "DataLoader num_workers > 1",
+        "Total indices not divisible by device_batch_size"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-53",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Dataset start_index not reset when starting a new epoch",
+      "category": "data_loading",
+      "root_cause": "On epoch rollover the trainer set `self.epoch = epoch + 1` and reset `global_train_examples_seen_this_epoch = 0`, called `dataset.reshuffle()`, but forgot to reset `self.dataset.start_index = 0`. The IterableDataset therefore continued slicing the new (reshuffled) global indices starting from the previous epoch's offset, dropping that prefix of the new epoch and shortening it by the same amount.",
+      "invariant": "At the start of every epoch the dataset must yield exactly len(dataset) examples in that epoch",
+      "detection_method": "epoch_data_completeness_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "max_epochs > 1",
+        "Crossing an epoch boundary mid-training"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-55",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Block readout init unconditionally re-initializes ff_proj, overwriting muP zero-init",
+      "category": "control_flow",
+      "root_cause": "OLMoSequentialBlock.reset_parameters unconditionally called `init_normal(self.ff_proj, std, cutoff_factor, ...)`. When `use_mup=True`, ff_proj is a `MuReadout` module whose readout weights must remain at the muP zero/special initialization; the unconditional re-init overwrites that with a regular truncated-normal, silently breaking the muP coordinate-check guarantee that activation magnitudes are width-independent.",
+      "invariant": "If use_mup=True, ff_proj.weight at end of init must remain at MuReadout's zero/scaled init (not truncated-normal with std=init_std)",
+      "detection_method": "weight_init_distribution_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "OLMoSequentialBlock used and reset_parameters() called",
+        "use_mup enabled OR full_megatron init_fn (where ff_proj should keep MuReadout's zero init)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-56",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "q_norm forced to elementwise_affine=True regardless of attention_layer_norm_with_affine",
+      "category": "control_flow",
+      "root_cause": "When constructing QK normalization layers, `k_norm` correctly used `elementwise_affine=config.attention_layer_norm_with_affine` but `q_norm` was hard-coded to `elementwise_affine=True`. With `attention_layer_norm_with_affine=False` the model silently normalizes q with learnable scale/bias but k without, breaking symmetry between q and k and adding parameters that the user did not request.",
+      "invariant": "q_norm.weight.requires_grad == k_norm.weight.requires_grad; both must follow attention_layer_norm_with_affine",
+      "detection_method": "model_param_count_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "attention_layer_norm=True (QK norm enabled)",
+        "attention_layer_norm_with_affine=False (asymmetric config)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-57",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Token embedding sized by vocab_size instead of embedding_size, mismatching ff_out width",
+      "category": "control_flow",
+      "root_cause": "wte was constructed with `nn.Embedding(config.vocab_size, ...)` but the output projection `ff_out` was sized for `config.embedding_size or config.vocab_size`. When embedding_size > vocab_size, ff_out has more output classes than the embedding table has rows, so the extra logits backprop into nothing on the embedding side and the loss is computed over rows that have no corresponding learnable embedding. Logits for ids in [vocab_size, embedding_size) silently bias the softmax denominator.",
+      "invariant": "wte.num_embeddings must equal ff_out.out_features (= embedding_size or vocab_size)",
+      "detection_method": "shape_consistency_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "embedding_size set distinct from vocab_size (e.g. embedding_size=50304, vocab_size=50257—padded for hardware alignment)",
+        "weight_tying=False"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-6",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Flash attention input layout wrong — head and sequence dims swapped",
+      "category": "numerical",
+      "root_cause": "flash_attn expects (B,S,H,D) but receives (B,H,S,D) without transpose",
+      "invariant": "flash_attn input dim1 must be seq_len, not num_heads",
+      "detection_method": "runtime_hook",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-60",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Missing reset_parameters() after FSDP wrap on torch>=2.1 leaves model with default-initialized weights",
+      "category": "control_flow",
+      "root_cause": "Starting in torch 2.1, FSDP no longer triggers the user's reset_parameters() automatically when materializing meta-device parameters. The buggy script created the OLMo model with init_device='meta', wrapped with FSDP, and never explicitly called `olmo_model.reset_parameters()` afterwards. Parameters are therefore left with whatever default contents FSDP produces (effectively uninitialized/zero-filled), silently destroying the carefully designed init scheme.",
+      "invariant": "After FSDP wrap, summary stats of every parameter must match the init_fn's expected mean/std",
+      "detection_method": "weight_init_distribution_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "torch >= 2.1",
+        "FSDP wrapping with init_device='meta'"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-61",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "ff_out nn.Linear constructed without device=init_device, breaking meta-init flow",
+      "category": "control_flow",
+      "root_cause": "When building the readout `ff_out`, every other Linear in the model passed `device=config.init_device` so it could be created on the meta device and later materialized by FSDP with the configured init. The buggy version omitted this kwarg for `ff_out`, so it was always built on the default device with default kaiming init, escaping the init pipeline. The readout therefore carries the wrong init scale and lives on the wrong device until FSDP later moves it.",
+      "invariant": "After model construction, every learnable parameter's device must equal config.init_device",
+      "detection_method": "module_device_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "init_device='meta'",
+        "FSDP enabled (lazy materialization expected)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-62",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "load_model in mup coord-check skips reset_parameters when infshapes is None",
+      "category": "control_flow",
+      "root_cause": "`reset_parameters()` was nested inside `if infshapes is not None:` together with `apply_infshapes`. For the standard-parametrization baseline (`infshapes=None`) the code therefore skipped reset_parameters entirely, leaving FSDP-materialized parameters with their default (often near-zero) values. Comparison curves and any downstream training look completely off without raising an error.",
+      "invariant": "olmo_model.reset_parameters() must be called whenever the model is freshly built, regardless of mup mode",
+      "detection_method": "weight_init_distribution_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "mup_olmo coord-check load_model path used for SP (standard-param) baseline",
+        "infshapes argument is None (i.e. running the SP comparison rather than a muP run)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-63",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "DeepSpeed scheduler set to WarmupLR instead of WarmupDecayLR (no decay phase)",
+      "category": "lr_schedule",
+      "root_cause": "DeepSpeedTrainer built its DeepSpeed config with `\"scheduler\": {\"type\": \"WarmupLR\", ...}`. WarmupLR only ramps up to the max LR and then holds it constant—it never decays. The intended schedule was WarmupDecayLR which ramps then linearly decays. Buggy training therefore runs at peak LR for the entire post-warmup duration, silently overshooting the planned schedule.",
+      "invariant": "After warmup, learning rate must be monotonically decreasing toward warmup_min_lr; not constant",
+      "detection_method": "lr_schedule_shape_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "DeepSpeedTrainer in use (configs ending in -lumi-deepspeed.yaml etc.)",
+        "Long enough training that decay matters"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-64",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "DeepSpeed warmup_min_lr=0 instead of base_lr*0.1, also missing warmup_type=linear",
+      "category": "lr_schedule",
+      "root_cause": "DeepSpeedTrainer hard-coded `warmup_min_lr=0.0` and omitted `warmup_type='linear'`. Combined, the warmup ramp starts from exactly 0 (rather than 10% of base lr) and uses DeepSpeed's default warmup interpolation, producing a different shape than the OLMo trainer for the equivalent config. Training runs to completion but with a silently mismatched warmup schedule.",
+      "invariant": "DeepSpeed warmup LR profile must match the OLMo trainer's warmup profile for an equivalent configuration",
+      "detection_method": "lr_schedule_shape_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "DeepSpeedTrainer used",
+        "Warmup steps > 0"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-65",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Newest checkpoint deleted by retention policy because it is appended after pruning",
+      "category": "checkpoint",
+      "root_cause": "Both `save_checkpoint` and `save_unsharded_checkpoint` appended the freshly-saved directory to `self.checkpoints`/`self.unsharded_checkpoints` *after* the deletion loop. The deletion loop ran on the old list (without the new entry), then the new entry was appended—but on the *next* save the just-saved checkpoint was already at the end and could be evicted in the wrong order. The fix appends before the dist.barrier so retention always sees the new entry.",
+      "invariant": "After save_checkpoint(N), the directory step{N} must remain on disk and self.checkpoints must reflect the actual contents of save_folder",
+      "detection_method": "checkpoint_consistency_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "save_num_checkpoints_to_keep > 0 (or save_num_unsharded_checkpoints_to_keep > 0)",
+        "List already contains save_num_checkpoints_to_keep entries when a new save fires"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-66",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Train DataLoader max_steps not multiplied by device_train_batch_size",
+      "category": "data_loading",
+      "root_cause": "`build_train_dataloader` passed `max_steps=train_config.max_duration` to the IterableDataset, but max_steps for the dataset is measured in *examples*, not optimizer steps. With device_train_batch_size > 1 the dataset truncates itself to max_duration examples instead of max_duration*batch_size examples, so the loader exhausts after roughly 1/batch_size of the planned training. Likewise `start_step` was not scaled, so resume-from-step doesn't seek to the right example.",
+      "invariant": "Total examples yielded by train loader = max_duration * device_train_batch_size",
+      "detection_method": "data_volume_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "IterableDataset wrapper with max_steps parameter",
+        "device_train_batch_size > 1"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-67",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Ladder 150M model uses max_sequence_length=1024 instead of 2048",
+      "category": "control_flow",
+      "root_cause": "MODEL_CONFIG_150M in scripts/ladder.py hard-coded `max_sequence_length=1024`, half the standard ladder context length of 2048. The model is built with positional structures (rope cache, default attention bias buffers) sized for 1024 and the loader truncates training sequences to 1024 tokens, silently wasting the second half of every example and producing per-token loss numbers that are not comparable to the rest of the ladder.",
+      "invariant": "Each tier in the ladder must use the same max_sequence_length (2048) so token-loss curves are comparable",
+      "detection_method": "config_value_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "scripts/ladder.py used to launch the 150M tier",
+        "Data tokenized at 2048 sequence length"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-68",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Fused cross_entropy path passes lse_square_scale=0 so z-loss term is silently dropped",
+      "category": "loss_computation",
+      "root_cause": "In `fused_loss_fn` the call to FlashAttention's CrossEntropyLoss hard-coded `lse_square_scale=0.0`. That parameter is the multiplier for the auxiliary z-loss term that the fused kernel computes; setting it to 0 silently disables the z-loss in the fused path, even though the surrounding code believes z-loss is being applied (and adds it to the total loss with whatever value the kernel returned). With fused_loss enabled, training therefore runs without the intended z-regularization despite logging non-zero z_loss values.",
+      "invariant": "z_loss returned by fused_loss_fn must have the same magnitude as z_loss returned by the python reference cross_entropy_loss for the same inputs",
+      "detection_method": "loss_component_magnitude_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "softmax_auxiliary_loss=True (z-loss enabled)",
+        "fused_loss=True (FlashAttention CrossEntropyLoss path)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-69",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Ladder script uses eos_token_id=0 instead of dolma tokenizer's 50279",
+      "category": "data_loading",
+      "root_cause": "`MODEL_CONFIG_150M` hard-coded `eos_token_id=0` even though the dolma GPT-NeoX tokenizer uses 50279 for end-of-document. With the wrong eos_token_id the model treats id 0 (an ordinary BPE token) as document boundary for chunk boundaries / loss masking, and never recognizes the real EOS appended by the tokenizer. Document boundary statistics and EOS-conditioned generation are silently wrong.",
+      "invariant": "model.eos_token_id must equal tokenizer.eos_token_id (50279 for dolma GPT-NeoX)",
+      "detection_method": "config_value_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "scripts/ladder.py used to build the 150M model config",
+        "Dolma/GPT-NeoX tokenizer (eos_token_id=50279)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-7",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Wrong layer initialized — ff_out instead of ff_proj (variable name typo)",
+      "category": "control_flow",
+      "root_cause": "",
+      "invariant": null,
+      "detection_method": null,
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-70",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "MoE load-balancing loss not divided by num_micro_batches in gradient accumulation loop",
+      "category": "loss_computation",
+      "root_cause": "Inside the per-micro-batch loop the buggy code added the full `batched_load_balancing_loss(self.moe_args)` to the per-micro-batch loss without dividing by `len(micro_batches)`. Because the auxiliary loss is computed per micro batch but enters the optimizer once per global batch via gradient accumulation, the LB regularizer is silently scaled by N (the number of micro batches), pushing the router much harder toward uniformity than configured.",
+      "invariant": "Sum of LB-loss contributions over a global batch must equal `batched_load_balancing_loss` evaluated once on the global batch (independent of micro-batch count)",
+      "detection_method": "loss_component_magnitude_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "block_type=moe (MegaBlocks-based MoE block)",
+        "moe_expert_choice=False (load-balancing loss path active)",
+        "Gradient accumulation with num_micro_batches > 1"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-8",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Attention norm overwrites residual input — destroys identity path",
+      "category": "numerical",
+      "root_cause": "",
+      "invariant": null,
+      "detection_method": null,
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "O-NEW-9",
+      "framework": "olmo",
+      "source_pool": "295_only",
+      "title": "Token IDs silently truncated to 16-bit by modulo 2^16",
+      "category": "data_loading",
+      "root_cause": "",
+      "invariant": null,
+      "detection_method": null,
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-1",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "soft_target_probs silently truncated from float to int by as_tensor()",
+      "category": "data_loading",
+      "root_cause": "Local as_tensor() casts non-bool numpy arrays via astype(np.int_), destroying float probabilities",
+      "invariant": "as_tensor(float_array) must preserve float dtype, not truncate to int",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-10",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Qwen3 transformer config defaults rope_full_precision=True, diverging from HF that applies RoPE in bf16",
+      "category": "dtype",
+      "root_cause": "TransformerConfig.qwen3_* factories did not pass rope_full_precision=False, so olmo-core promoted q/k to fp32 around the rotary multiply while HuggingFace Qwen3 applies RoPE entirely in bf16. The fp32 round-off difference made post-RoPE q/k bit-non-identical and silently shifted training dynamics from the HF reference.",
+      "invariant": "When matching HF Qwen3, the dtype of the tensor entering the rotary multiplication must equal the input attention dtype (bf16), not fp32.",
+      "detection_method": "dtype_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Qwen3 model factory used (qwen3_*B family)",
+        "Mixed-precision (bf16) training",
+        "Comparison or weight transfer with HuggingFace Qwen3 reference"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-11",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Attention claude-init uses d_model**-0.5 instead of actual w.in_features**-0.5 — wrong std for GQA Q/K/V and w_out",
+      "category": "numerical",
+      "root_cause": "InitMethod.attention used a single std = d_model**-0.5 for Q/K/V and w_out. Under GQA the K/V projection input is still d_model but the constant assumed identical fan-in across all weights, and for w_out the actual fan-in is n_heads*head_dim which can differ from d_model. Initialization was therefore silently scaled wrong on these layers.",
+      "invariant": "Init std for each linear layer w must equal w.in_features**-0.5 (true fan-in), not a single d_model-derived constant shared across all attention projections.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "InitMethod.claude initialization selected",
+        "Attention has separated w_q/w_k/w_v with GQA (n_kv_heads != n_heads) so projections have different output dims",
+        "FusedAttention or w_out where in_features differs from d_model"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-12",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Per-document RoPE positions not propagated when cu_doc_lens is provided in packed mode",
+      "category": "numerical",
+      "root_cause": "Attention.forward called self.rope(...) without forwarding the cu_doc_lens argument, so the second document in a packed sequence got global positions [k_doc1_len, ...] instead of restarting at 0. Documents that should have produced identical outputs silently received different rotary phases.",
+      "invariant": "For two identical documents packed back-to-back, the post-RoPE q/k for both segments must match (intra-doc positions reset at each cu_doc_lens boundary).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Multiple documents packed into one sequence (intra-document masking)",
+        "cu_doc_lens is provided to attention forward",
+        "RotaryEmbedding (non-Fused) attention path"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-13",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "RotaryEmbedding cu_doc_lens path miscomputes positions for B>1 — second batch element reuses batch-0 doc layout",
+      "category": "numerical",
+      "root_cause": "The cu_doc_lens code path built positions = arange(k_len) without adding any per-batch offset, then ran searchsorted against the flat cumulative-doc-lens list. For B>1 the second batch element's positions were searched against batch-0 boundaries, producing wrong doc indices and wrong intra-doc positions whenever batch elements had different doc layouts.",
+      "invariant": "Local positions computed for each (batch, token) must equal token_index minus the start of that token's document; batch elements with identical doc structure must give identical local_positions.",
+      "detection_method": "cross_rank_equality",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Packed-document training with cu_doc_lens",
+        "Batch size > 1 with different document boundaries per batch element",
+        "RotaryEmbedding or ComplexRotaryEmbedding"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-14",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "GatedDeltaNet A_log/dt_bias initialized as empty (uninit memory) and miss the GDN-prescribed init",
+      "category": "numerical",
+      "root_cause": "GatedDeltaNet's A_log was initialized via torch.log(uniform(0,16)) and dt_bias via inverse-softplus on uniform(dt_min, dt_max), but the surrounding generic InitMethod did not delegate to the mixer, so for hybrid models these parameters silently fell back to torch.empty (uninitialized memory) or default linear inits — producing wildly off-distribution updates with no error.",
+      "invariant": "After init, GDN A_log lies in log(uniform(0,16)) and dt_bias is the inverse-softplus of dt sampled in [dt_min, dt_max]; their distribution must be checkable against this prescription.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Hybrid model includes GatedDeltaNet sequence mixer",
+        "Block init relied on the generic InitMethod path"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-15",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "MoE load-balancing aux loss accumulated to metrics twice when activation checkpointing recomputes the block",
+      "category": "control_flow",
+      "root_cause": "compute_aux_loss accumulated the load-balancing scalar into the per-step metric on every forward call. Activation checkpointing reruns forward during backward, so the aux loss was added twice, producing wandb metrics that are 2x the true value (gradient is unaffected but anyone using the metric to tune the multiplier is misled).",
+      "invariant": "Metric accumulation inside the MoE router must occur exactly once per global forward — recompute calls must skip the metrics side-effect.",
+      "detection_method": "function_call_counting",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "MoEFusedV2TransformerBlock with routed_experts_router",
+        "Activation checkpointing enabled around the MoE block"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-16",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Idealized-overlap ladder reads dolma2 (uint32) tokens with default uint16 dtype — silently produces garbage token ids",
+      "category": "data_loading",
+      "root_cause": "PerFileChunkedInstanceSourceConfig defaulted token_dtype to uint16. dolma2 stores token IDs as uint32 because the vocab exceeds 65535. Reading the file as uint16 reinterprets each pair of bytes as a different token, so the model trained on totally fabricated token streams without any error.",
+      "invariant": "Configured token_dtype must accommodate tokenizer.vocab_size (uint16 only when vocab <= 65535).",
+      "detection_method": "dtype_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Dolma2 tokenizer (vocab > 65535)",
+        "PerFileChunkedInstanceSourceConfig without explicit token_dtype"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-17",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "OLMo midtraining mix key references the wrong file — '0625' name maps to '0725' path",
+      "category": "data_loading",
+      "root_cause": "The DataMix enum had OLMo_midtraining_mix_0625_100B = 'OLMo-midtraining-mix-0725-100B'. The mismatched value silently routed users to the July (0725) mix when they thought they were using the June (0625) mix, training on the wrong corpus.",
+      "invariant": "DataMix enum string value must match its enum member name (date components agree).",
+      "detection_method": "config_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "User selects DataMix.OLMo_midtraining_mix_0625_100B"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-18",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "QwenRMSNorm absent from olmo-core — RMSNorm casts back to og_dtype after weight multiply, diverging from HF Qwen3",
+      "category": "numerical",
+      "root_cause": "olmo-core's RMSNorm computed normalize -> weight-multiply -> cast(og_dtype), which performs the affine multiply in fp32. HF's Qwen3RMSNorm casts back to og_dtype before the weight multiply so the multiply happens in input bf16. Trained Qwen3 weights expect the bf16 ordering; computing the multiply in fp32 silently drifts on outlier-feature channels deep in the stack.",
+      "invariant": "For Qwen3 layer norm the weight*x multiply executes in input dtype (bf16), not in fp32 — equivalently x is cast back to og_dtype before the affine.",
+      "detection_method": "dtype_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Qwen3 model factory used (qwen3_*B family)",
+        "Mixed-precision (bf16) inputs"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-19",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Activation checkpointing skips RNG state preservation even when dropout is active — backward recomputes a different mask",
+      "category": "control_flow",
+      "root_cause": "Transformer.apply_activation_checkpointing hard-coded preserve_rng_state=False with a TODO. With dropout active, the recomputed forward in backward used a fresh random mask, so backward gradients corresponded to a different forward graph than the one used to produce the loss — silently wrong gradients and degraded convergence.",
+      "invariant": "If any nn.Dropout module exists, the forward run during backward recompute must use the same RNG state as the original forward (preserve_rng_state=True).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Transformer activation checkpointing enabled",
+        "nn.Dropout module present in the model graph (dropout > 0)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-2",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Adam step counter not incremented — bias correction permanently wrong",
+      "category": "optimizer_state",
+      "root_cause": "step.add_(step_factor) was commented out in adamw_step",
+      "invariant": "optimizer state step must increment each training step",
+      "detection_method": "runtime_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-20",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Expert/router gradients zeroed unconditionally in train_batch — first-half mask applied even when freeze_experts is off",
+      "category": "moe",
+      "root_cause": "The base TransformerTrainModule.train_batch unconditionally walked named_parameters and zeroed the first half of expert and router gradients. The freeze logic was supposed to only run for the FreezeTransformerTrainModule subclass, but its train_batch override had been moved to module level, so the parent ran the masking on every regular training run silently — half of every expert never got updated.",
+      "invariant": "When freeze_experts is unset/'none', no expert or router parameter gradient may be force-zeroed by the train module.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "TransformerTrainModule (parent class) used directly without FreezeTransformerTrainModule",
+        "Model contains parameters whose names contain 'experts' or 'router'"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-21",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Config encoding ignores field.init=False — non-init dataclass fields silently round-trip with stale values",
+      "category": "checkpoint",
+      "root_cause": "Config.as_dict iterated dataclasses.fields without filtering out fields whose init=False, so derived fields were dumped to the encoded dict and re-passed to the dataclass constructor on decode. Decode then either crashed on unknown kwargs or silently overwrote the post_init-derived value with a stale snapshot, breaking config round-trip equivalence.",
+      "invariant": "Encoded Config dict must contain only fields whose .init is True; decoding then re-encoding must be a fixed point.",
+      "detection_method": "structural_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Config dataclass uses @dataclass with field(init=False) for derived fields",
+        "Config is serialized via Config.as_dict and re-decoded"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-22",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "RoPE positions use global token index in packed mode — second document gets [k_doc1_len, ...] instead of [0, ...]",
+      "category": "numerical",
+      "root_cause": "RotaryEmbedding.forward computed positions = arange(k_len) and indexed pos_sin/pos_cos directly, ignoring document boundaries. Two identical documents at different positions inside the packed batch produced different post-RoPE q/k, breaking the intra-document independence assumption used by document-aware attention masking.",
+      "invariant": "Two identical documents packed back-to-back must yield identical post-RoPE q/k values (per-document positions reset at each cu_doc_lens boundary).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Multiple documents packed into one sequence",
+        "cu_doc_lens describes intra-document boundaries",
+        "RotaryEmbedding (non-Fused)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-23",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "PerFileChunkedInstanceSourceConfig defaults token_dtype to uint16 — silent token-id corruption for vocab > 65535",
+      "category": "data_loading",
+      "root_cause": "PerFileChunkedInstanceSourceConfig.token_dtype defaulted to uint16. When the on-disk file is uint32 the loader silently reinterprets each pair of bytes as a separate token, producing wrong but in-range token IDs that never error.",
+      "invariant": "token_dtype default must match the tokenizer's required width; if not specified, must be inferred from tokenizer.vocab_size or the constructor must error.",
+      "detection_method": "dtype_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Tokenizer with vocab_size > 65535 (e.g., dolma2)",
+        "PerFileChunkedInstanceSourceConfig used without explicit token_dtype"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-24",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "MoEFusedV2Optimizer reduces PP grad norm with _combine_norm (sum-of-norms) instead of _reduce_norm — over-counts gradient magnitude",
+      "category": "gradient_sync",
+      "root_cause": "When reducing total_grad_norm across the PP group, the code called self._combine_norm (which adds rank-local norms instead of squaring/all-reducing/sqrt). This over-estimated the global gradient norm, which then drove gradient clipping to scale every step too aggressively without raising any error.",
+      "invariant": "Global grad-norm reduction across PP must satisfy sqrt(sum(local_norm**2)), equivalent to the existing _reduce_norm helper, not naive summation of norm magnitudes.",
+      "detection_method": "cross_rank_equality",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Pipeline parallelism (mesh dim 'pp')",
+        "MoEFusedV2Optimizer in use"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-25",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "SamplingInstanceSource cache write race — concurrent ladder runs overwrite each other's index files",
+      "category": "data_loading",
+      "root_cause": "Local rank-0 always rewrote the indices file at startup. Concurrent jobs sharing the work directory raced via tmp_path.replace, leaving training reading partially-written or shuffled indices. Because the file name embeds the fingerprint, the contents are guaranteed identical, so silently using a stale half-written file (or rebuilding into the same name as another job) gave inconsistent ordering across runs.",
+      "invariant": "If the deterministic-fingerprint indices file already exists, the rank must not rewrite it; cross-rank reads of the file must agree.",
+      "detection_method": "runtime_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Multiple training jobs share the same work_dir",
+        "SamplingInstanceSource used; rank-0 builds the cached indices file"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-26",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "memmap_to_write tmp filename uses seeded random — concurrent writers collide on identical path under the same RNG seed",
+      "category": "data_loading",
+      "root_cause": "memmap_to_write picked the temp filename via random.randint(0, 2**32) seeded by the global Python RNG. With identical seeds across ranks, each rank generated the same tmp_path; one rank's tmp_path.replace removed the file another rank was about to read, causing FileNotFoundError-style silent data shadowing or partial-content reads when a fallback masked the error.",
+      "invariant": "Concurrent writers of the same file must use unique temp paths (entropy independent of the deterministic seed) and a missing tmp_path due to a concurrent rename must succeed if the destination exists.",
+      "detection_method": "runtime_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Multiple ranks/processes preprocess the same path with the same global random seed",
+        "memmap_to_write/write_array_to_disk used for index/cache materialization"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-27",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "MultiGroupDistributedDataParallel falls back to default group when dist is unavailable but never wires per-bucket grad reduce",
+      "category": "gradient_sync",
+      "root_cause": "MoE-style parameters were reduced one-by-one through the existing DDP path, missing the view-based bucket optimization that batches grads of the same dtype/process_group into a single all-reduce. Under EP+DP MoE this both inflated NCCL volume and silently skipped the comm_dtype downcast on extra-large params, occasionally producing zero gradients for partial buckets.",
+      "invariant": "Under MoE DDP each parameter's gradient must participate in exactly one all-reduce per step, with comm_dtype matching the configured bucket dtype.",
+      "detection_method": "function_call_counting",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "MoE training with MultiGroupDistributedDataParallel",
+        "MoE-shaped parameters require per-bucket grad reduction with view-based storage"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-28",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Mamba.forward casts inputs using cached self.dtype — wrong dtype after FSDP wraps the conv1d weight",
+      "category": "dtype",
+      "root_cause": "Mamba.forward used self.dtype (snapshot at construction time) to cast x. After FSDP wrapped the inner conv1d, the actual parameter dtype changed but self.dtype was stale, so x flowed into the kernel in the wrong precision. The MambaSSM kernel still ran but produced silently wrong values.",
+      "invariant": "Activation dtype entering Mamba.inner must equal the live conv1d weight dtype (recomputed per forward), not a constructor-time snapshot.",
+      "detection_method": "dtype_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Mamba sequence mixer wrapped in FSDP / FSDP2",
+        "Mixed-precision params (e.g., bf16 weights, fp32 cast targets)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-29",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "DTPBoundaryPredictor calls F.silu with two arguments — silu treats w3(h) as inplace flag, drops gating",
+      "category": "loss_computation",
+      "root_cause": "The expression F.silu(self.w1(h), self.w3(h)) passed self.w3(h) as the inplace argument of F.silu (PyTorch interprets the second positional as a bool-coerced inplace flag). The intended SwiGLU gate (silu(w1(h)) * w3(h)) never executed, so the FFN computed silu(w1(h)) alone and the boundary predictor produced silently degraded outputs.",
+      "invariant": "FFN must implement gated SwiGLU: out = w2(silu(w1(h)) * w3(h)); silu must be called with exactly one tensor argument.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "BLT DTPBoundaryPredictor used for byte-level training",
+        "Standard SwiGLU FFN expected"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-3",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "sqrt decay LR schedule uses wrong formula — decay curve inverted",
+      "category": "lr_schedule",
+      "root_cause": "sqrt(progress) instead of 1-sqrt(1-progress) — wrong decay curve shape",
+      "invariant": "sqrt decay should decay fast initially, slow at end",
+      "detection_method": "runtime_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-30",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "MoE sigmoid router gives F.sigmoid(logits) without epsilon — exact-zero scores propagate as NaN through downstream log",
+      "category": "moe",
+      "root_cause": "scores = F.sigmoid(logits) could underflow to exactly 0.0 under low precision, and downstream load-balancing or aux-loss code took log/divide of the score, producing -inf/NaN that silently propagated into the final loss without any explicit error.",
+      "invariant": "Router score for gating_function=sigmoid must be strictly positive (>= eps) so subsequent log/divide operations are finite.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "MoERouter with gating_function = sigmoid",
+        "Highly negative logits causing sigmoid output ~ 0 in bf16/fp16"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-31",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "fused_linear_cross_entropy_loss accumulates gradient in bf16 by default — silently noisier than fp32 accumulation",
+      "category": "dtype",
+      "root_cause": "The liger-kernel fused linear+CE call defaulted accum_grad to bf16, which silently degraded gradient precision on the LM head. The numerical noise was small enough that training continued, but it shifted loss curves vs the unfused baseline.",
+      "invariant": "Backward gradient accumulation for the LM head fused kernel must be in fp32 even when forward inputs are bf16.",
+      "detection_method": "dtype_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "LMHead loss_implementation uses liger fused_linear_cross_entropy_loss",
+        "Mixed-precision (bf16) training"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-32",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "fan_in init for embeddings ignores embed_scale — embeddings remain std=1.0 and become huge after scaling",
+      "category": "numerical",
+      "root_cause": "init_embeddings under fan_in always used std=1.0. The transformer then multiplied embeddings by embed_scale (e.g., sqrt(d_model)) at the input, producing embeddings several orders of magnitude larger than intended. Training did not error but the input magnitude scrambled the early-layer dynamics.",
+      "invariant": "After init_embeddings followed by the embed_scale multiply, the embedding output std must stay near 1.0 (compensating the fan-in init by 1/embed_scale).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "InitMethod.fan_in selected",
+        "Transformer config sets embed_scale (e.g., Gemma-like models)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-33",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "NumpyDataLoaderBase double-counts tokens_processed — counter advances both inside and outside the iterator",
+      "category": "control_flow",
+      "root_cause": "NumpyDataLoaderBase incremented self.tokens_processed += self.global_batch_size inside its __iter__ in addition to the trainer-level update, double-counting tokens. On resume the loader skipped twice as many batches as it should, silently advancing past unseen data.",
+      "invariant": "tokens_processed must increase by exactly global_batch_size per yielded batch, not 2x.",
+      "detection_method": "function_call_counting",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Resume from checkpoint that used the same data loader",
+        "Trainer also increments tokens_processed externally"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-34",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "ComplexRotaryEmbedding ignores cu_doc_lens — packed-document positions never reset for complex-RoPE blocks",
+      "category": "numerical",
+      "root_cause": "ComplexRotaryEmbedding.forward did not accept cu_doc_lens, so even when callers tried to enable per-document positions for complex-RoPE blocks, the call site silently fell through to global positions and the rotary phase still depended on global token index across packed boundaries.",
+      "invariant": "Per-document positions used by complex-RoPE must reset at each cu_doc_lens boundary; identical packed documents must yield identical post-RoPE q/k.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Model uses ComplexRotaryEmbedding (complex-number RoPE) instead of standard RotaryEmbedding",
+        "Packed-document training with cu_doc_lens"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-35",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Evaluator iterates with stale data-loader state — second eval pass starts mid-stream, evaluating a different subset",
+      "category": "control_flow",
+      "root_cause": "Evaluator.__iter__ called reshuffle() but did not reset() the data loader. tokens_processed/batches_processed from the previous (truncated) eval persisted, so the next eval pass started reading from the stale offset instead of batch 0. Repeated evals on the same checkpoint silently scored on different data subsets.",
+      "invariant": "Two consecutive Evaluator passes over the same checkpoint must read the same first-N batches when deterministic=True (epoch pinned).",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "LM evaluator runs multiple passes with eval_duration truncating each pass",
+        "DataLoaderBase carried over batches_processed from the previous pass"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-36",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Trainer async bookkeeping callback fires after future is FINISHED — state_dict snapshot can capture pre-callback state",
+      "category": "control_flow",
+      "root_cause": "_run_bookkeeping_op attached cb via future.add_done_callback. add_done_callback runs after the future is marked FINISHED, so _join_bookkeeping_ops returned before cb ran, and a state_dict() capture immediately after could observe stale callback state (e.g., un-rotated checkpoint indexes).",
+      "invariant": "All bookkeeping callbacks for a future must complete before that future transitions to FINISHED so _join_bookkeeping_ops waits on them too.",
+      "detection_method": "function_call_counting",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Trainer launches a bookkeeping op (e.g., async checkpoint save) that has a completion cb",
+        "_join_bookkeeping_ops races with state_dict() capture"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-38",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Grad clipper recorded grad_norm DTensor — record_metric saw distributed value",
+      "category": "control_flow",
+      "root_cause": "GradClipperCallback recorded the raw grad_norm output from torch.nn.utils.clip_grad_norm_ without unwrapping it. With TP, this returned a DTensor; the metric system then operated on the DTensor across ranks, producing a wrongly reduced grad-norm value while clipping itself was already applied locally.",
+      "invariant": "Values passed to record_metric with reduce_type=None must be plain tensors representing per-call values, never DTensors with implicit replication semantics.",
+      "detection_method": "constraint:metric_local_tensor",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "TP enabled",
+        "GradClipperCallback active",
+        "max_grad_norm set"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-39",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "PP grad-norm clip used per-PP-stage local norm without all-reducing across PP ranks",
+      "category": "optimizer_state",
+      "root_cause": "TransformerTrainModule.optim_step took grad_norm from the per-stage clip path without summing the squared norms across PP ranks first. Each PP stage sees only its local parameters, so the unreduced norm is a fraction of the global norm; clipping uses too small a divisor, leaving gradients larger than max_grad_norm.",
+      "invariant": "When PP is enabled, the gradient norm used for clip_grad_norm_ must be reduced across the PP mesh (sum-of-squares with sqrt) before applying max_norm.",
+      "detection_method": "constraint:cross_pp_grad_norm_reduction",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "pipeline parallelism enabled",
+        "max_grad_norm set"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-4",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "NaN loss when all instances on a rank are masked — division by zero",
+      "category": "loss_computation",
+      "root_cause": "batch_num_tokens_for_loss = 0 when all instances masked, causing loss / 0 = NaN",
+      "invariant": "batch_num_tokens_for_loss must be > 0 to avoid NaN in loss computation",
+      "detection_method": "runtime_check",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-41",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Instance filter loss divisor missed masked-out instance tokens — wrong gradient scale",
+      "category": "loss_computation",
+      "root_cause": "When the instance filter dropped instances on some ranks the loss divisor (batch_num_tokens_for_loss) only counted unmasked tokens. With per-rank sum-then-allreduce, ranks with fewer kept tokens contributed an artificially large per-token loss, producing an unfair weighted average across the data-parallel group and a wrong gradient magnitude.",
+      "invariant": "Across DP ranks the loss divisor must equal the global batch token count (including masked-instance tokens accounted as zero loss) so each rank contributes proportionally.",
+      "detection_method": "constraint:loss_normalization_consistency",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "instance_mask present in batch",
+        "any rank has masked instances"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-42",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "BLT distill metric not divided by num_micro_batches when grad_accum_steps>1",
+      "category": "control_flow",
+      "root_cause": "batch_metrics accumulated detached metric tensors across micro-batches without dividing by num_micro_batches, so logged BLT decoder losses were inflated by the gradient accumulation factor while training itself proceeded normally.",
+      "invariant": "Per-batch logged metrics should equal the average over micro-batches, not the sum.",
+      "detection_method": "constraint:metric_normalization",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "TransformerBLTTrainModule",
+        "grad_accum_steps > 1"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-43",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "SkipStepOptimizer fed unreduced ce_batch_loss — skip decisions on per-rank values",
+      "category": "optimizer_state",
+      "root_cause": "SkipStepOptimizer.latest_loss was set from the local per-rank ce_batch_loss before the all-reduce that produced the global mean. The rolling-window statistics for outlier detection were thus computed on per-rank loss values, and skip-step decisions diverged across ranks, producing inconsistent optimizer behavior.",
+      "invariant": "SkipStepOptimizer.latest_loss must be the globally reduced loss; all DP ranks must agree on whether to skip or not.",
+      "detection_method": "constraint:cross_rank_consistency",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "SkipStepOptimizer in use",
+        "world_size > 1"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-44",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "FlashAttn sliding-window off-by-one — window included one too many tokens",
+      "category": "numerical",
+      "root_cause": "Attention.__init__ stored self.window_size = (window_size, 0) when configuring sliding-window attention. Flash-attention's window is closed-interval [i - window_size[0], i + window_size[1]], so passing window_size directly let token i attend to window_size + 1 past tokens instead of window_size.",
+      "invariant": "After configuration, the actual receptive window of each token under sliding attention must equal exactly the configured window_size positions.",
+      "detection_method": "constraint:sliding_window_size_semantics",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Attention with sliding_window > 0",
+        "FlashAttn backend"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-45",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Mamba2 ladder hard-coded head_dim from d_model/n_heads — wrong with FLA defaults",
+      "category": "control_flow",
+      "root_cause": "The ladder configurators forced fla_layer_kwargs={'head_dim': ensure_multiple_of(d_model/n_heads, 128)}. FLA's Mamba2 already derives head_dim from its own internal layout, so injecting an externally-rounded value made the constructed Mamba2 layer disagree with the configured d_model/n_heads, producing a model whose effective head dimension differed from what other code assumed.",
+      "invariant": "When using a third-party layer factory (FLA Mamba2), head_dim must be derived by that library, not externally rounded and re-injected.",
+      "detection_method": "constraint:layer_config_consistency",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "pure-mamba-ladder or hybrid-mamba-ladder script",
+        "Mamba2 sequence mixer"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-46",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "BLT byte embeddings never initialized to teacher-embedding stats — kept default kaiming",
+      "category": "control_flow",
+      "root_cause": "fix_init computed te_mean and te_std of the target embeddings but used them only when initializing hash_embeddings; the main self.embedding.weight (byte embeddings) was never assigned the te-scaled init, leaving it at nn.Embedding's default initialization. The encoder therefore started training with byte embeddings whose distribution did not match the teacher's vocabulary embeddings.",
+      "invariant": "When a teacher embedding source is provided, the byte embedding must be sampled from a distribution with the same per-channel mean/std as the teacher embeddings.",
+      "detection_method": "constraint:embedding_init_distribution",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "LocalEncoder.fix_init called",
+        "BLT distill training with target_embeddings provided"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-47",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "TE attention backend silently ignored cu_doc_lens — intra-doc masking not applied",
+      "category": "numerical",
+      "root_cause": "TEAttentionBackend.forward accepted cu_doc_lens / max_doc_len arguments but did not pass them to TransformerEngine's attn kernel. Documents packed into a single sequence cross-attended each other instead of being masked at boundaries — full attention across all packed docs.",
+      "invariant": "When cu_doc_lens is supplied, attention from token i must be limited to its own document; the TE backend must either honor cu_doc_lens or refuse the call.",
+      "detection_method": "constraint:intra_doc_attention_isolation",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "TEAttentionBackend selected",
+        "sequence packing with cu_doc_lens"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-48",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Flex-attention sliding-window mask used Python `and` on tensors — short-circuit returned wrong mask",
+      "category": "numerical",
+      "root_cause": "_get_flex_attn_mask_mod._sliding_window_mask_mod returned `q_idx - kv_idx <= window_size[0] and kv_idx - q_idx <= window_size[1]`. Python's `and` calls bool() on the first operand and short-circuits — for scalar bool tensors this returns the second operand whenever the first is truthy and the first when falsy, never producing the intended logical AND. The mask was therefore computed as a single one-sided comparison.",
+      "invariant": "Mask-mod functions for flex_attention must use torch.logical_and / & on tensors, never Python's `and`/`or`.",
+      "detection_method": "constraint:logical_and_on_tensors",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "flex_attention backend selected",
+        "Attention configured with sliding window"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-49",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "BLT stage1 froze only teacher.* — student blocks updated against teacher gradient",
+      "category": "control_flow",
+      "root_cause": "freeze_params=['teacher.*'] only matched submodules named 'teacher.*'. Because share_blocks_between_teacher_and_student=True, the actual block parameters live under 'blocks.*' (shared with teacher); those weren't matched by the freeze pattern, so blocks were unfrozen and trained against gradients that included contributions from the teacher path.",
+      "invariant": "freeze_params patterns must match every parameter that should remain frozen, including shared submodule names.",
+      "detection_method": "constraint:freeze_pattern_completeness",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "BLT stage1 training script",
+        "shared blocks between teacher and student"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-5",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Document packing sort overflow — uint32 * -1 wraps to huge positive",
+      "category": "data_loading",
+      "root_cause": "",
+      "invariant": null,
+      "detection_method": null,
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-50",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "freeze_experts assigned in __init__ instead of dataclass field — OmegaConf merge dropped it",
+      "category": "control_flow",
+      "root_cause": "FreezeTransformerTrainModuleConfig set self.freeze_experts via kwargs.pop in __init__ rather than declaring it as a dataclass field. Config.merge serializes/reconstructs through OmegaConf, which drops fields that aren't declared dataclass attributes; freeze_experts always reverted to the default 'first_half' regardless of the user's configured value, silently zeroing the first half of router gradients.",
+      "invariant": "Every user-tunable Config attribute must be a dataclass field so OmegaConf serialization preserves it through merge/dump.",
+      "detection_method": "constraint:config_roundtrip_preservation",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "FreezeTransformerTrainModuleConfig used",
+        "any CLI override applied via Config.merge"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-51",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "MultiHeadLatentAttention init dispatched to Attention branch — wrong layers initialized",
+      "category": "control_flow",
+      "root_cause": "InitMethod.init_attention dispatched on isinstance(m, Attention) before isinstance hasattr(m, 'wq_a'). Because MultiHeadLatentAttention inherits from Attention and exposes w_q, the MLA branch was never reached; the projections wq_a, wkv_a, wkv_b were never initialized while only w_q was, leaving the rest at the dtype-empty allocation values.",
+      "invariant": "Every nn.Linear weight in attention sub-modules must be initialized exactly once via the appropriate init_attention branch before training starts.",
+      "detection_method": "constraint:full_module_initialization",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "MultiHeadLatentAttention (DeepSeek-style MLA) module"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-52",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Instance packing ladder set source_group_size on both Packing source and parent — double counting",
+      "category": "data_loading",
+      "root_cause": "instance_packing_ladder set source_group_size=8 on both the inner NumpyDocumentSourceMixConfig and the outer PackingInstanceSourceConfig. The two interact multiplicatively in the source-permutation logic, so the effective grouping was 64 documents per group instead of the intended 8, changing the packing distribution silently.",
+      "invariant": "source_group_size must be specified at exactly one layer of the source pipeline; duplicating it across nested configs changes the actual grouping by a multiplicative factor.",
+      "detection_method": "constraint:source_group_size_single_authority",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "instance_packing_ladder script",
+        "PackingInstanceSourceConfig with source_group_size set on parent"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-53",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Qwen3Clone-8B script forgot use_head_qk_norm — used per-channel QK norm instead of per-head",
+      "category": "control_flow",
+      "root_cause": "build_model_config for Qwen3Clone-8B configured the Qwen3 model but did not set config.block.attention.use_head_qk_norm = True. Qwen3 uses per-head QK norm; the default per-channel QK norm was applied instead, normalizing across the wrong axis and producing different attention scores from the reference Qwen3.",
+      "invariant": "Model factories that clone HF reference models must set every option that affects forward semantics to match the reference, including use_head_qk_norm for Qwen3.",
+      "detection_method": "constraint:hf_model_clone_parity",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Qwen3Clone-8B training script"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-54",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "BLT debias used log(sum(exp(logprobs))) — silent underflow on small probabilities",
+      "category": "loss_computation",
+      "root_cause": "y_space_hat_all = log(einsum(exp(logprobs), space_mask).float()). exp() of low logprobs underflows to 0 in fp32, the masked sum collapses to 0, and log(0) = -inf is added into y_hat in-place. Subsequent loss terms silently propagate -inf values rather than failing.",
+      "invariant": "All log-domain reductions should be performed via torch.logsumexp on a where-masked tensor instead of log(sum(exp(...))) over a multiplicative mask.",
+      "detection_method": "constraint:numerically_stable_logsumexp",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "BLTDistillTransformer with debias enabled",
+        "logprobs with low-probability tail"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-55",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "H-Net ratio loss averaged over padded positions — wrong target ratio under variable-length batches",
+      "category": "loss_computation",
+      "root_cause": "true_ratio = boundary_mask.float().mean() and average_prob = exp(boundary_logprobs).mean() averaged over the full padded byte tensor instead of over byte_mask-valid positions. Padded zero entries shrank both quantities toward 0, biasing the ratio loss target away from the true content ratio.",
+      "invariant": "Any loss-target statistic over a variable-length sequence must be (x*mask).mean() / mask.mean(), not x.mean().",
+      "detection_method": "constraint:masked_mean",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "BLTDistillTransformer with H-Net ratio loss",
+        "batches containing padded byte positions"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-56",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "H-Net embed loss never normalized by loss_div_factor — wrong loss weighting",
+      "category": "loss_computation",
+      "root_cause": "The BLTDistillTransformer finalize block called self._finalize_loss on local_encoder_loss and local_decoder_loss but omitted the call for hnet_embed_loss. The component was added to the weighted-sum loss as a raw sum (not divided by token count), so its effective weight was inflated by approximately seq_len * batch_size relative to the configured loss_weights entry.",
+      "invariant": "All loss components that appear in the weighted combination must be passed through _finalize_loss with the appropriate loss_div_factor.",
+      "detection_method": "constraint:loss_normalization_consistency",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "BLTDistillTransformer",
+        "hnet_embed loss component active"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-58",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "BLTDistill patch loss div factor used input_ids.numel() — wrong scaling for byte-level losses",
+      "category": "loss_computation",
+      "root_cause": "The byte-level loss div factor was computed as loss_div_factor / input_ids.numel(), but loss_div_factor passed in is at the byte sequence level not the patch level. The correct denominator is h_byte.shape[0] * h_byte.shape[1] (number of byte positions), and the patch loss needs an analogous division by patch positions. The mismatch silently mis-weighted byte vs patch loss components.",
+      "invariant": "Each loss component must be divided by the number of valid positions of that component's granularity (bytes vs patches), not by input_ids.numel().",
+      "detection_method": "constraint:loss_normalization_consistency",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "BLTDistillTransformer",
+        "patch_loss_div_factor configured"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-59",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Flex attention not upcast to fp32 — precision mismatch with SDPA backend",
+      "category": "numerical",
+      "root_cause": "Flex attention was called directly on bf16 q/k/v while SDPA's reference path runs the matmul/softmax in fp32. The bf16-only flex path silently produced lower-precision attention outputs that diverge from the SDPA path used by tests, causing different loss trajectories between the two backends.",
+      "invariant": "When flex_attention is the chosen backend, q/k/v must be upcast to fp32 inside an autocast(disabled) block to match SDPA's full-precision behavior, then the result cast back to og_dtype.",
+      "detection_method": "constraint:attention_backend_parity",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "AttentionBackend = flex_attn",
+        "bf16 training"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-6",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Sliding window size off-by-one — window 1 token too small",
+      "category": "numerical",
+      "root_cause": "",
+      "invariant": null,
+      "detection_method": null,
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-60",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "BLT distill missed first-call label_offsets when fuse_boundaries enabled",
+      "category": "loss_computation",
+      "root_cause": "The label-offset application path that conditionally adds vocab_size_blt to boundary positions was duplicated for the alternate boundary computation but missed in the first forward branch. Boundary positions did not get their offsets applied to labels, so the cross-entropy compared against the wrong target indices for boundary tokens.",
+      "invariant": "When fuse_boundaries is enabled, every boundary position in labels must receive the +vocab_size_blt offset before being compared against the joint vocab logits.",
+      "detection_method": "constraint:label_offset_consistency",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "BLTDistillTransformer with local_decoder.fuse_boundaries=True"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-61",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "BLT shift_boundary_mask did not AND with byte_mask — pad positions polluted label offsets",
+      "category": "loss_computation",
+      "root_cause": "shift_boundary_mask was computed as boundary_mask[:, 1:] without AND-ing with byte_mask[:, 1:]. Padded positions where boundary_mask happened to be True (left-over from a previous batch slot) added vocab_size_blt//2 to label entries that should have remained at the ignore_index, distorting CE on padded positions.",
+      "invariant": "Any operation that mutates labels at boundary positions must restrict its mask via AND with the active byte_mask so padded positions are untouched.",
+      "detection_method": "constraint:padding_invariance",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "BLTDistillTransformer with fused boundaries",
+        "padded byte positions present in batch"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-63",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "SourceMixtureDataset rounded down per-source instances — dataset shorter than expected",
+      "category": "data_loading",
+      "root_cause": "tokens_requested_per_path = ceil(target_ratio * num_tokens_in_path) and instances_requested_per_path = tokens_requested_per_path // sequence_length. The integer-floor in the second step dropped the per-path remainder, so total instances < training_steps * batch_size. The trainer ran past the end of the dataset into epoch 2 with no warning — visible only as an unexpected loss drop near end of run.",
+      "invariant": "sum(instances_per_path) must equal training_steps * batch_size; any rounding-down must be redistributed (e.g. via Hamilton's largest-remainder method) so the trainer never wraps to epoch 2.",
+      "detection_method": "constraint:dataset_size_matches_steps",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "SourceMixtureDataset / NumpyFSLDatasetMixture",
+        "training_steps near dataset boundary (mid-training anneal)"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-64",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "FSLDataset fingerprint missed sequence_length / bos_token_id — wrong cache reused",
+      "category": "data_loading",
+      "root_cause": "fingerprint_fields for several FSLDataset variants did not include sequence_length, bos_token_id, max_target_sequence_length. Cached instance offsets / packed indices computed under the previous values were reused when those settings changed, so the dataset returned instances whose actual layout no longer matched the configured sequence_length.",
+      "invariant": "Every dataset attribute that influences the on-disk cache layout must appear in fingerprint_fields so a config change invalidates the cache.",
+      "detection_method": "constraint:cache_fingerprint_completeness",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "NumpyPaddedFSLDataset / NumpyPackedFSLDataset / NumpyInterleavedFSLDataset cached on disk",
+        "subsequent run with different sequence_length/bos_token_id but matching pre-existing fingerprint"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-65",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "DataCollator routed academic/technical sources to a non-existent 4th expert label",
+      "category": "data_loading",
+      "root_cause": "_source_name_to_expert_label produced a one-hot at index 3 for academic/technical sources, but the deployed model only had 3 active experts (indices 0..2 plus a masked duplicate). The label tensor pointed to an unused expert slot, so router supervision was silently directed to a slot the router never produced gradient for.",
+      "invariant": "Expert label one-hot indices must lie within the active expert range of the model; 'general' must subsume any source not assigned to a specialized expert.",
+      "detection_method": "constraint:expert_label_range",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "FlexOLMo SFT with expert routing labels",
+        "data sources containing 'academic'/'technical_writing'/'tutorial'/'nonfiction'/'faq'"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-66",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "Attention gate w_g never initialized — uses uninitialized memory",
+      "category": "control_flow",
+      "root_cause": "init_attention initialized w_q/w_k/w_v (and w_qkv for FusedAttention) but never touched the optional gate projection w_g. When constructed via nn.Linear with init_device='meta'/'cpu', w_g.weight held whatever values reset_parameters or torch.empty produced rather than the intended trunc-normal distribution.",
+      "invariant": "Every learnable Linear weight in attention (including the optional gate projection) must be initialized exactly once via _init_linear before training starts.",
+      "detection_method": "constraint:full_module_initialization",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Attention with attention gating (w_g not None)",
+        "init_method.init_attention runs"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-67",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "InvSqrt LR schedule wrong scheduler chosen for OLMoE3 — Cos used where WSD intended",
+      "category": "lr_schedule",
+      "root_cause": "OLMoE3-3B-27B used CosWithWarmup with only warmup_steps configured. Without an explicit decay schedule the optimizer ran cosine decay from peak lr to alpha_f over the full training horizon, instead of the WSD (warmup-stable-decay) schedule the recipe intended. The lr trajectory was silently cosine-shaped instead of WSD-shaped.",
+      "invariant": "WSD-style training recipes must use the WSD scheduler with explicit warmup, decay step counts, and decay_fraction=None — not CosWithWarmup, even though both yield monotonic lr curves.",
+      "detection_method": "constraint:scheduler_intent_match",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "OLMoE3-3B-27B training script",
+        "scheduler determined by config"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-7",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "soft_target_probs silently truncated to int by custom as_tensor",
+      "category": "data_loading",
+      "root_cause": "",
+      "invariant": null,
+      "detection_method": null,
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-8",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "PoE z_loss combined into combined_loss is detached, contributing value but no gradient",
+      "category": "loss_computation",
+      "root_cause": "In TransformerTrainModule.train_batch the PoE branch added output.z_loss to combined_loss, but LMHead emits output.z_loss as a detached metric tensor. The optimizer therefore saw the z_loss value in the printed metric while backprop applied zero z_loss gradient, so logit-norm regularization never actually constrained the weights.",
+      "invariant": "Any tensor summed into combined_loss prior to backward() must have requires_grad=True so the regularizer reaches the parameters.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Product-of-experts (PoE) training path active",
+        "z_loss_multiplier is set",
+        "return_logits=True from LMHead"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "OC-NEW-9",
+      "framework": "olmo-core",
+      "source_pool": "295_only",
+      "title": "soft_ce branch backprops only alpha*soft_ce — hard_ce gradient zeroed because output.ce_loss is detached",
+      "category": "loss_computation",
+      "root_cause": "The soft-CE branch built combined_loss = (1-alpha)*hard_ce_loss + alpha*soft_ce_loss + z_loss using output.ce_loss and output.z_loss, both of which LMHead returns as .detach()'d copies. Only output.loss carries gradient. As soon as alpha decayed to 0 the entire backward() saw zero gradient and grad_norm collapsed.",
+      "invariant": "grad_norm must remain positive when (1-alpha) > 0; the (1-alpha) coefficient on hard CE must contribute non-zero parameter gradient.",
+      "detection_method": "value_invariant",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "soft_ce_alpha_start is set so soft-CE branch executes",
+        "LMHead returns ce_loss/z_loss as detached tensors via return_logits=True"
+      ],
+      "parallel_dimension": null
+    },
+    {
+      "bug_id": "M-NEW-MUON-MTP",
+      "framework": "megatron-lm",
+      "source_pool": "295_orphan",
+      "title": "Muon + PP + MTP: tied word_embeddings on MTP-only last PP stage routed to Muon instead of Adam",
+      "category": "optimizer_state",
+      "root_cause": "language_module.py setup_embeddings_and_output_layer() only sets is_embedding_or_output_parameter=True when self.pre_process is True. On MTP-only final PP stages where pre_process=False but the MTP module owns a tied word_embeddings replica, the parameter stays untagged. Muon's routing exclusion (skip params tagged is_embedding_or_output_parameter) overlooks the MTP replica and routes it to Muon, while PP rank 0's replica stays in AdamW. After every gradient all-reduce the two tied copies receive different optimizer updates (AdamW vs Muon Newton-Schulz), causing silent divergence and corrupted training.",
+      "invariant": "Every word_embeddings.weight tensor across all PP stages MUST carry is_embedding_or_output_parameter=True (so Muon's exclusion rule routes it to AdamW).",
+      "detection_method": "param_optimizer_routing",
+      "detection_signal": null,
+      "check_stage": null,
+      "invariant_type": null,
+      "trigger_conditions": [
+        "Muon optimizer enabled",
+        "Pipeline parallelism PP >= 2",
+        "Multi-Token Prediction (MTP) enabled with last PP stage as MTP-only",
+        "Tied word_embeddings (--share-embeddings-and-output-weights or default)"
+      ],
+      "parallel_dimension": "PP"
+    }
+  ]
+}

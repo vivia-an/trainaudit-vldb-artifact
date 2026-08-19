@@ -1,0 +1,92 @@
+{
+  "__doc__": "Case ID 双命名映射。论文 Table 4 用 '框架简写 + fixed commit 短哈希'，artifact 内部用紧凑别名（B*, M-*, O-*, OC-*）。本映射基于 results_gpu.csv 的 commit 字段推导，标记 'verified=true' 的条目已交叉验证，'verified=false' 的需要进一步对齐。",
+  "__source__": "benchmark/eval/results_gpu.csv (commit column) + benchmark/eval/paper_table_baseline_3way.md + main_cn.tex Table 4",
+  "__schema__": {
+    "internal_id": "artifact 内部别名（raw CSV bug_id）",
+    "paper_id":    "论文 Table 4 使用的引用 ID",
+    "framework":   "训练框架",
+    "fixed_commit": "对应 fix commit 短哈希",
+    "rule_fired":  "TrainAudit 触发的规则 id",
+    "category":    "故障语义类别",
+    "verified":    "是否已交叉验证 internal↔paper 对应"
+  },
+  "mappings": [
+    {
+      "internal_id": "B11",
+      "paper_id":    "DS-005afe12",
+      "framework":   "deepspeed",
+      "fixed_commit": "005afe12",
+      "rule_fired":  "T0-clip-grad-bounded",
+      "category":    "gradient_clipping",
+      "verified":    true
+    },
+    {
+      "internal_id": "B12",
+      "paper_id":    "OLMoC-6e330ba2",
+      "framework":   "olmo-core",
+      "fixed_commit": "6e330ba2",
+      "rule_fired":  "T0-initial-lr-present",
+      "category":    "lr_schedule",
+      "verified":    true
+    },
+    {
+      "internal_id": "B13",
+      "paper_id":    "OLMo-562c0fe0",
+      "framework":   "olmo",
+      "fixed_commit": "562c0fe0",
+      "rule_fired":  "T1-residual-stream-preserved",
+      "category":    "residual_connection",
+      "verified":    true
+    },
+    {
+      "internal_id": "M-012",
+      "paper_id":    "Megatron-db439037",
+      "framework":   "megatron-lm",
+      "fixed_commit": "db439037",
+      "rule_fired":  "T1-expert-bias-fp32",
+      "category":    "dtype",
+      "verified":    true
+    },
+    {
+      "internal_id": "M-014",
+      "paper_id":    "Megatron-99f999a4",
+      "framework":   "megatron-lm",
+      "rule_fired":  "T0-softmax-degenerate",
+      "category":    "numerical",
+      "verified":    false,
+      "note": "paper Table 4 Megatron-99f999a4 lists rule layer-count-strict; reconcile against fixed_commit"
+    },
+    {
+      "internal_id": "O-005",
+      "paper_id":    "OLMo-204ad53c",
+      "framework":   "olmo",
+      "fixed_commit": "204ad53c",
+      "rule_fired":  "T0-checkpoint-preserve-rng",
+      "category":    "control_flow",
+      "verified":    true
+    },
+    {
+      "internal_id": "OC-NEW-2",
+      "paper_id":    "OLMoC-2b6cf996",
+      "framework":   "olmo-core",
+      "fixed_commit": "2b6cf996",
+      "rule_fired":  "T0-optim-step-counter-monotonic",
+      "category":    "optimizer",
+      "verified":    true
+    },
+    {
+      "internal_id": "OC-NEW-3",
+      "paper_id":    "OLMoC-OC-NEW-3",
+      "framework":   "olmo-core",
+      "rule_fired":  "T1-sqrt-decay-front-loaded",
+      "category":    "lr_schedule",
+      "verified":    false,
+      "note": "唯一 surrogate-only FP 源；fixed_commit 待确认"
+    }
+  ],
+  "__todo__": [
+    "完成剩余 internal↔paper 对应：B1, B2, B3, B8, M-020, M-024, M-NEW-5, O-NEW-1, O-NEW-9",
+    "对每条 verified=false 条目交叉验证 fixed_commit 与 rule_fired",
+    "Table 4 中 9 个 paper_id（Megatron-3c637fc0d / Megatron-1505db4c / DS-d56268f3 / DS-8cbbbb53 / DS-e6e8c137 / DS-40009eb1 / OLMo-167a7ac8 / OLMo-ce5f30d5 / OLMo-a57f3803 / OLMoC-db2b6eff / OLMoC-df72f4ee / OLMo-d7994c86 / OLMoC-O-022）需要补全 internal_id"
+  ]
+}

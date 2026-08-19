@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: Anonymous artifact — cite the paper title only during double-blind review.
+title: "TrainAudit Core: Verified Constraint Mining for Silent Training Errors"
+type: software
+authors:
+  - name: Anonymous
+license: MIT
+repository-code: ""
+keywords:
+  - silent errors
+  - distributed training
+  - invariant mining
+  - data quality
+preferred-citation:
+  type: article
+  title: "TrainAudit: Verified Constraint Mining for Silent Errors in Distributed LLM Training"
+  authors:
+    - name: Anonymous
+  year: 2026
+  notes: "Under double-blind review. Add venue, DOI, authors, and repository URL at camera-ready."

@@ -1,0 +1,504 @@
+{
+  "meta": {
+    "version": "v0_draft",
+    "date": "2026-05-17",
+    "purpose": "Real-only SDC main set per docs/v2_semantic_guided/34_real_sdc22_experiment_requirements.md",
+    "status": "v5 \u2014 LC1 boundary smoke confirms MISS for all three methods. N_real=17 + N_boundary=1 locked.",
+    "policy": [
+      "Every case must trace back to an upstream issue/PR/commit pair.",
+      "source_analysis-only bugs are NOT counted in the main detection rate.",
+      "Surrogates (ID1..LN1, CF1/CM1/OF1) are NOT in this manifest; they go to the appendix sanity set."
+    ],
+    "n_real_confirmed": 17,
+    "n_pending_e1": 0,
+    "n_pending_e2": 0,
+    "n_boundary": 1
+  },
+  "cases_confirmed_real": [
+    {
+      "case_id": "B1",
+      "original_bug_id": "B1",
+      "framework": "megatron-lm",
+      "repo": "NVIDIA/Megatron-LM",
+      "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/599",
+      "buggy_commit": "3c637fc0d~1",
+      "fixed_commit": "3c637fc0d",
+      "source_kind": "real_commit_pair",
+      "category": "moe_router_init",
+      "pattern_id": null,
+      "tier": "T1",
+      "trigger_condition": "MoE + TP",
+      "buggy_script": "benchmark/bugs/B1/reproduce.sh",
+      "fixed_script": "benchmark/bugs/B1/reproduce.sh",
+      "trainaudit_rule": "replica-cksum-equal",
+      "selection_reason": "Existing reproducible bug; matches main table row 1.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/B1/config.json",
+        "benchmark/bugs/B1/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "B3",
+      "original_bug_id": "B3",
+      "framework": "deepspeed",
+      "repo": "microsoft/DeepSpeed",
+      "issue_url": "https://github.com/microsoft/DeepSpeed/issues/2071",
+      "buggy_commit": "d56268f3~1",
+      "fixed_commit": "d56268f3",
+      "source_kind": "real_commit_pair",
+      "category": "communication_dtype",
+      "pattern_id": null,
+      "tier": "T1",
+      "trigger_condition": "BF16/FP16 mixed comms",
+      "buggy_script": "benchmark/bugs/B3/reproduce.sh",
+      "fixed_script": "benchmark/bugs/B3/reproduce.sh",
+      "trainaudit_rule": "comm-dtype-matches-training",
+      "selection_reason": "Existing reproducible bug; matches main table row 2.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/B3/config.json",
+        "benchmark/bugs/B3/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "B8",
+      "original_bug_id": "B8",
+      "framework": "deepspeed",
+      "repo": "deepspeedai/DeepSpeed",
+      "issue_url": "https://github.com/deepspeedai/DeepSpeed/pull/7551",
+      "buggy_commit": "8cbbbb53~1",
+      "fixed_commit": "8cbbbb53",
+      "source_kind": "real_commit_pair",
+      "category": "moe_parallel_grouping",
+      "pattern_id": null,
+      "tier": "T1",
+      "trigger_condition": "EP > 1",
+      "buggy_script": "benchmark/bugs/B8/reproduce.sh",
+      "fixed_script": "benchmark/bugs/B8/reproduce.sh",
+      "trainaudit_rule": "process-group-size-correct",
+      "selection_reason": "Existing reproducible bug.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/B8/config.json",
+        "benchmark/bugs/B8/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "B11",
+      "original_bug_id": "B11",
+      "framework": "deepspeed",
+      "repo": "deepspeedai/DeepSpeed",
+      "issue_url": "https://github.com/deepspeedai/DeepSpeed/pull/5150",
+      "buggy_commit": "005afe12~1",
+      "fixed_commit": "005afe12",
+      "source_kind": "real_commit_pair",
+      "category": "gradient_clipping",
+      "pattern_id": "P12_implicit",
+      "tier": "T0",
+      "trigger_condition": "gradient clipping path",
+      "buggy_script": "benchmark/bugs/B11/reproduce.sh",
+      "fixed_script": "benchmark/bugs/B11/reproduce.sh",
+      "trainaudit_rule": "clip-grad-bounded",
+      "selection_reason": "Existing reproducible bug; implicitly covers P12 algorithm variant.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/B11/config.json",
+        "benchmark/bugs/B11/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "B12",
+      "original_bug_id": "B12",
+      "framework": "olmo-core",
+      "repo": "allenai/OLMo-core",
+      "issue_url": "https://github.com/allenai/OLMo-core/pull/27",
+      "buggy_commit": "6e330ba2~1",
+      "fixed_commit": "6e330ba2",
+      "source_kind": "real_commit_pair",
+      "category": "lr_schedule",
+      "pattern_id": "P10_implicit",
+      "tier": "T0",
+      "trigger_condition": "lr scheduler at step 0",
+      "buggy_script": "benchmark/bugs/B12/reproduce.sh",
+      "fixed_script": "benchmark/bugs/B12/reproduce.sh",
+      "trainaudit_rule": "initial-lr-present",
+      "selection_reason": "Existing reproducible bug; implicitly covers P10 config-implied coupling.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/B12/config.json",
+        "benchmark/bugs/B12/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "M-020",
+      "original_bug_id": "M-020",
+      "framework": "megatron-lm",
+      "repo": "NVIDIA/Megatron-LM",
+      "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/468",
+      "buggy_commit": "64d816a39c41c17628eee49838a59c9693b6b036",
+      "fixed_commit": "99f999a46670359ecbba4ad82265901009722d8c",
+      "source_kind": "real_commit_pair",
+      "category": "configuration_validation",
+      "pattern_id": null,
+      "tier": "T1",
+      "trigger_condition": "PP>1, num_layers not divisible",
+      "buggy_script": "benchmark/bugs/M-020/reproduce.sh",
+      "fixed_script": "benchmark/bugs/M-020/reproduce.sh",
+      "trainaudit_rule": "layer-count-strict",
+      "selection_reason": "Existing reproducible bug; fixed = assert (acceptable hard fix).",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/M-020/config.json",
+        "benchmark/bugs/M-020/detect.py"
+      ]
+    },
+    {
+      "case_id": "O-005",
+      "original_bug_id": "O-005",
+      "framework": "olmo",
+      "repo": "allenai/OLMo",
+      "issue_url": "https://github.com/allenai/OLMo/commit/204ad53c",
+      "buggy_commit": "0bc7f6c7",
+      "fixed_commit": "204ad53c",
+      "source_kind": "real_commit_pair",
+      "category": "checkpoint",
+      "pattern_id": "P10_implicit",
+      "tier": "T0",
+      "trigger_condition": "checkpoint resume RNG",
+      "buggy_script": "benchmark/bugs/O-005/trainaudit_run.sh",
+      "fixed_script": "benchmark/bugs/O-005/trainaudit_run.sh",
+      "trainaudit_rule": "checkpoint-preserve-rng",
+      "selection_reason": "Existing reproducible bug; reproduction_status=reproduced.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/O-005/config.json",
+        "benchmark/bugs/O-005/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "O-NEW-9",
+      "original_bug_id": "O-NEW-9",
+      "framework": "olmo",
+      "repo": "allenai/OLMo",
+      "issue_url": "https://github.com/allenai/OLMo/pull/795",
+      "buggy_commit": "167a7ac8~1",
+      "fixed_commit": "167a7ac8",
+      "source_kind": "real_commit_pair",
+      "category": "data_processing",
+      "pattern_id": null,
+      "tier": "T0",
+      "trigger_condition": "data loader path",
+      "buggy_script": "benchmark/bugs/O-NEW-9/trainaudit_run.sh",
+      "fixed_script": "benchmark/bugs/O-NEW-9/trainaudit_run.sh",
+      "trainaudit_rule": "data-loader-token-id-range",
+      "selection_reason": "Real commit pair; issue_url to be backfilled.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/O-NEW-9/config.json",
+        "benchmark/bugs/O-NEW-9/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "OC-NEW-2",
+      "original_bug_id": "OC-NEW-2",
+      "framework": "olmo-core",
+      "repo": "allenai/OLMo-core",
+      "issue_url": "https://github.com/allenai/OLMo-core/commit/2b6cf99651cda51d7d1323ae3c0a01abdcbb9fde",
+      "buggy_commit": "2b6cf996~1",
+      "fixed_commit": "2b6cf996",
+      "source_kind": "real_commit_pair",
+      "category": "optimizer_state",
+      "pattern_id": null,
+      "tier": "T0",
+      "trigger_condition": "optimizer step counter path",
+      "buggy_script": "benchmark/bugs/OC-NEW-2/trainaudit_run.sh",
+      "fixed_script": "benchmark/bugs/OC-NEW-2/trainaudit_run.sh",
+      "trainaudit_rule": "optim-step-counter-monotonic",
+      "selection_reason": "Real commit pair; issue_url to be backfilled.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/OC-NEW-2/config.json",
+        "benchmark/bugs/OC-NEW-2/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "D-NEW-9",
+      "original_bug_id": "D-NEW-9",
+      "framework": "deepspeed",
+      "repo": "microsoft/DeepSpeed",
+      "issue_url": "https://github.com/microsoft/DeepSpeed/pull/5328",
+      "buggy_commit": "40009eb1~1",
+      "fixed_commit": "40009eb1c7a4ef27d00f36fe4f97aeae2e315c0e",
+      "source_kind": "real_commit_pair",
+      "category": "optimizer_state",
+      "pattern_id": "P13_tensor_aliasing",
+      "tier": "T1",
+      "trigger_condition": "BF16_Optimizer.accumulate_hp_grads_and_remove_lp",
+      "buggy_script": "benchmark/bugs/D-NEW-9/trainaudit_run.sh",
+      "fixed_script": "benchmark/bugs/D-NEW-9/trainaudit_run.sh",
+      "trainaudit_rule": "bf16_lp_grad_clear_invariant",
+      "selection_reason": "E2 replacement for TA1/P13. driver rewritten 2026-05-17 to hook _update_hp_grad.clear_lp_grads.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/D-NEW-9/config.json",
+        "benchmark/bugs/D-NEW-9/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "O-NEW-5",
+      "original_bug_id": "O-NEW-5",
+      "framework": "olmo",
+      "repo": "allenai/OLMo",
+      "issue_url": "https://github.com/allenai/OLMo/commit/ce5f30d56e90f85d87e2fc8b9158dffe442c0fbd",
+      "buggy_commit": "ce5f30d5~1",
+      "fixed_commit": "ce5f30d56e90f85d87e2fc8b9158dffe442c0fbd",
+      "source_kind": "real_commit_pair",
+      "category": "initialization",
+      "pattern_id": "P9_init_distribution",
+      "tier": "T0",
+      "trigger_condition": "olmo.initialization.init_weights with ModuleType.emb + full_megatron init",
+      "buggy_script": "benchmark/bugs/O-NEW-5/trainaudit_run.sh",
+      "fixed_script": "benchmark/bugs/O-NEW-5/trainaudit_run.sh",
+      "trainaudit_rule": "olmo_emb_init_std_sqrt_dmodel_invariant",
+      "selection_reason": "E2 replacement for ID1/P9. driver rewritten 2026-05-17 to call init_weights directly.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/O-NEW-5/config.json",
+        "benchmark/bugs/O-NEW-5/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "O-NEW-3",
+      "original_bug_id": "O-NEW-3",
+      "framework": "olmo",
+      "repo": "allenai/OLMo",
+      "issue_url": "https://github.com/allenai/OLMo/commit/a57f380332e7021755d0a36cf79406b4423cf361",
+      "buggy_commit": "a57f3803~1",
+      "fixed_commit": "a57f380332e7021755d0a36cf79406b4423cf361",
+      "source_kind": "real_commit_pair",
+      "category": "loss_computation",
+      "pattern_id": "P16_loss_normalization",
+      "tier": "T0",
+      "trigger_condition": "olmo.train.cross_entropy_loss reduction='mean' + compute_z_loss=True",
+      "buggy_script": "benchmark/bugs/O-NEW-3/trainaudit_run.sh",
+      "fixed_script": "benchmark/bugs/O-NEW-3/trainaudit_run.sh",
+      "trainaudit_rule": "olmo_zloss_mean_reduction_invariant",
+      "selection_reason": "E2 replacement for LN1/P16. driver rewritten 2026-05-17 to invoke cross_entropy_loss directly.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/O-NEW-3/config.json",
+        "benchmark/bugs/O-NEW-3/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "M-010",
+      "original_bug_id": "M-010",
+      "framework": "megatron-lm",
+      "repo": "NVIDIA/Megatron-LM",
+      "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/784",
+      "buggy_commit": "892c4c85448c6f81ee8bf8347c430ecba528d634",
+      "fixed_commit": "e6d56d6828c0773f55772b92b2ec0eed5639665e",
+      "source_kind": "real_commit_pair",
+      "category": "control_flow",
+      "pattern_id": "P4_invocation_frequency",
+      "tier": "T1",
+      "trigger_condition": "MoE aux_loss + activation checkpointing",
+      "buggy_script": "benchmark/bugs/M-010/reproduce.sh",
+      "fixed_script": "benchmark/bugs/M-010/reproduce.sh",
+      "trainaudit_rule": "invocation-frequency-per-step",
+      "selection_reason": "E1 replacement for CF1. End-to-end Megatron + MoE recompute reproduction.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/M-010/config.json",
+        "benchmark/bugs/M-010/detect.py",
+        "benchmark/bugs/M-010/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "D-029",
+      "original_bug_id": "D-029",
+      "framework": "deepspeed",
+      "repo": "microsoft/DeepSpeed",
+      "issue_url": "https://github.com/microsoft/DeepSpeed/pull/5220",
+      "buggy_commit": "3e06a154b4d6a2f93c2c5504f52a932184def112",
+      "fixed_commit": "e6e8c1378de035df59034d09373b44af3319b6d7",
+      "source_kind": "real_commit_pair",
+      "category": "communication",
+      "pattern_id": "P1_dtype_preserve",
+      "tier": "T1",
+      "trigger_condition": "ZeRO + MoE + CPU offload",
+      "buggy_script": "benchmark/bugs/D-029/trainaudit_run.sh",
+      "fixed_script": "benchmark/bugs/D-029/trainaudit_run.sh",
+      "trainaudit_rule": "moe_cpu_offload_grad_norm_device_invariant",
+      "selection_reason": "E1 replacement for OF1. driver rewritten 2026-05-17 to hook _average_expert_grad_norms.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/D-029/config.json",
+        "benchmark/bugs/D-029/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "O-040",
+      "original_bug_id": "O-040",
+      "framework": "olmo-core",
+      "repo": "allenai/OLMo-core",
+      "issue_url": "https://github.com/allenai/OLMo-core/pull/614",
+      "buggy_commit": "f49e7559",
+      "fixed_commit": "db2b6eff2b8099e30ae43a934aa33725814dfb9a",
+      "source_kind": "real_commit_pair",
+      "category": "metrics",
+      "pattern_id": "P15_counter_width",
+      "tier": "T1",
+      "trigger_condition": "SpeedMonitorCallback.pre_train under non-{H100,B200} GPU",
+      "buggy_script": "benchmark/bugs/O-040/trainaudit_run.sh",
+      "fixed_script": "benchmark/bugs/O-040/trainaudit_run.sh",
+      "trainaudit_rule": "olmo_core_a100_peak_flops_2x_invariant",
+      "selection_reason": "E2 expansion for P15 counter-width. driver rewritten 2026-05-17 to hook SpeedMonitorCallback.pre_train + mock TransformerTrainModule.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/O-040/config.json",
+        "benchmark/bugs/O-040/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "M-NEW-33",
+      "original_bug_id": "M-NEW-33",
+      "framework": "megatron-lm",
+      "repo": "NVIDIA/Megatron-LM",
+      "issue_url": "https://github.com/NVIDIA/Megatron-LM/commit/1505db4cc4e9e94ee22583c76f7e425ea34f5aea",
+      "buggy_commit": "1505db4cc~1",
+      "fixed_commit": "1505db4cc4e9e94ee22583c76f7e425ea34f5aea",
+      "source_kind": "real_commit_pair",
+      "category": "optimizer_state",
+      "pattern_id": "P14_sharded_state",
+      "tier": "T1",
+      "trigger_condition": "ChainedOptimizer.load_state_dict (EP > 1 checkpoint resume)",
+      "buggy_script": "benchmark/bugs/M-NEW-33/trainaudit_run.sh",
+      "fixed_script": "benchmark/bugs/M-NEW-33/trainaudit_run.sh",
+      "trainaudit_rule": "chained_optimizer_param_groups_resync_invariant",
+      "selection_reason": "E2 round 3: P14 sharded-state covered via ChainedOptimizer.load_state_dict method hook.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/M-NEW-33/config.json",
+        "benchmark/bugs/M-NEW-33/trainaudit_driver.py"
+      ]
+    },
+    {
+      "case_id": "OC-NEW-22",
+      "original_bug_id": "OC-NEW-22",
+      "framework": "olmo-core",
+      "repo": "allenai/OLMo-core",
+      "issue_url": "https://github.com/allenai/OLMo-core/commit/df72f4eeb79066aef19ccc4989e94c8ed1897052",
+      "buggy_commit": "df72f4ee~1",
+      "fixed_commit": "df72f4eeb79066aef19ccc4989e94c8ed1897052",
+      "source_kind": "real_commit_pair",
+      "category": "model_layer",
+      "pattern_id": "P11_pos_encoding",
+      "tier": "T0",
+      "trigger_condition": "RotaryEmbedding.forward with packed docs (cu_doc_lens)",
+      "buggy_script": "benchmark/bugs/OC-NEW-22/trainaudit_run.sh",
+      "fixed_script": "benchmark/bugs/OC-NEW-22/trainaudit_run.sh",
+      "trainaudit_rule": "rope_packed_doc_position_reset_invariant",
+      "selection_reason": "E2 round 3: P11 position-encoding covered via RotaryEmbedding.forward signature + behavioral check.",
+      "boundary_type": null,
+      "evidence_paths": [
+        "benchmark/bugs/OC-NEW-22/config.json",
+        "benchmark/bugs/OC-NEW-22/trainaudit_driver.py"
+      ]
+    }
+  ],
+  "cases_pending_e1_replacement": [],
+  "cases_pending_e2_replacement_candidates": [
+    {
+      "surrogate": "PE1",
+      "pattern": "P11_pos_encoding",
+      "top_candidate": "O-NEW-2",
+      "alt": null,
+      "framework": "olmo",
+      "decision": "FAILED_DETECT_PY_UNAVAILABLE_IN_BUGGY_COMMIT_demoted_to_survey_only"
+    },
+    {
+      "surrogate": "CW1",
+      "pattern": "P15_counter_width",
+      "top_candidate": "OC-NEW-6",
+      "alt": null,
+      "framework": "olmo-core",
+      "decision": "FAILED_API_INCOMPAT_BUGGY_VS_DETECT_PY_demoted_to_survey_only"
+    }
+  ],
+  "cases_implicitly_covered_no_new_row": [
+    {
+      "pattern_id": "P10_config_coupling",
+      "covered_by": [
+        "B12",
+        "O-005"
+      ],
+      "decision": "no new row; pattern claim grounded by these two main-table real bugs"
+    },
+    {
+      "pattern_id": "P12_algorithm_variant",
+      "covered_by": [
+        "B11"
+      ],
+      "decision": "no new row; B11 grounds the pattern"
+    }
+  ],
+  "cases_demoted_to_survey_only": [
+    {
+      "surrogate": "CC1",
+      "pattern": "P10_config_coupling",
+      "reason": "P10 already covered by B12+O-005, no new replay needed"
+    },
+    {
+      "surrogate": "AV1",
+      "pattern": "P12_algorithm_variant",
+      "reason": "P12 already covered by B11"
+    },
+    {
+      "surrogate": "SC1",
+      "pattern": "P14_sharded_state",
+      "reason": "all 8 axial_clusters candidates are T_BLUE_config_only; no driver exists; demote to survey-only"
+    },
+    {
+      "surrogate": "CM1",
+      "pattern": "communication",
+      "reason": "O-014 source_analysis_only, no commit pair (user decision 2026-05-17)"
+    },
+    {
+      "surrogate": "DL2",
+      "pattern": "data_loading",
+      "reason": "O-022 has no commit pair + source_analysis. User decision 2026-05-17."
+    },
+    {
+      "surrogate": "PE1",
+      "pattern": "P11_pos_encoding",
+      "reason": "O-NEW-2 detect.py imports OlmoLlamaBlock which is not in the buggy commit; demoted 2026-05-17"
+    },
+    {
+      "surrogate": "CW1",
+      "pattern": "P15_counter_width",
+      "reason": "OC-NEW-6 detect.py uses AttentionConfig(head_dim=...) API not present in buggy commit; demoted 2026-05-17"
+    }
+  ],
+  "cases_boundary": [
+    {
+      "case_id": "LC1",
+      "original_bug_id": "O-003",
+      "framework": "olmo",
+      "issue_url": null,
+      "buggy_commit": "a5539f42",
+      "fixed_commit": "d7994c86",
+      "source_kind": "real_boundary",
+      "category": "loss_computation",
+      "boundary_type": "subthreshold_drift",
+      "selection_reason": "Real commit pair, sub-percent drift; not detectable by any tool \u2014 keep as boundary.",
+      "verdict": {
+        "trainaudit": "MISS",
+        "traincheck": "MISS",
+        "naive": "MISS"
+      },
+      "note": "All three methods miss by design \u2014 sub-percent drift below runtime observability threshold."
+    }
+  ]
+}

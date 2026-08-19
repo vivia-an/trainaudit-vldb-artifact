@@ -1,0 +1,35 @@
+bug_id,framework,category,phase,set,verdict,trigger_signal,trigger_step,duration_s,note
+B1,megatron-lm,moe_router_init,buggy,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+B1,megatron-lm,moe_router_init,fixed,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+B2,megatron-lm,tensor_parallel_grad,buggy,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+B2,megatron-lm,tensor_parallel_grad,fixed,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+B3,deepspeed,communication_dtype,buggy,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+B3,deepspeed,communication_dtype,fixed,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+B8,deepspeed,moe_parallel_grouping,buggy,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+B8,deepspeed,moe_parallel_grouping,fixed,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+B11,deepspeed,gradient_clipping,buggy,D1,CLEAN,,-1,2.52,steps=25; loss[0]=2.24e+05 loss[-1]=1.93e+05 max_gn=5.67e+06
+B11,deepspeed,gradient_clipping,fixed,D1,CLEAN,,-1,0.10,steps=25; loss[0]=2.24e+05 loss[-1]=1.92e+05 max_gn=0.1
+B12,olmo-core,lr_schedule,buggy,D1,CLEAN,,-1,0.01,steps=25; loss[0]=0.466 loss[-1]=0.467 max_gn=10.2
+B12,olmo-core,lr_schedule,fixed,D1,CLEAN,,-1,0.01,steps=25; loss[0]=0.466 loss[-1]=0.493 max_gn=10.3
+B13,olmo,residual_connection,buggy,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+B13,olmo,residual_connection,fixed,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+M-012,megatron-lm,dtype,buggy,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+M-012,megatron-lm,dtype,fixed,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+M-014,megatron-lm,numerical,buggy,D1,CLEAN,,-1,0.08,steps=25; loss[0]=2 loss[-1]=2 max_gn=0
+M-014,megatron-lm,numerical,fixed,D1,CLEAN,,-1,0.09,steps=25; loss[0]=0.518 loss[-1]=0.509 max_gn=0.597
+M-020,megatron-lm,configuration_validation,buggy,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+M-020,megatron-lm,configuration_validation,fixed,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+M-024,megatron-lm,dtype,buggy,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+M-024,megatron-lm,dtype,fixed,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+M-NEW-5,megatron-lm,loss_scaling,buggy,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+M-NEW-5,megatron-lm,loss_scaling,fixed,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+O-005,olmo,control_flow,buggy,D1,CLEAN,,-1,0.03,steps=25; loss[0]=2.43 loss[-1]=0.916 max_gn=23.6
+O-005,olmo,control_flow,fixed,D1,CLEAN,,-1,0.02,steps=25; loss[0]=2.43 loss[-1]=0.206 max_gn=24.4
+O-NEW-1,olmo,normalization,buggy,D1,CLEAN,,-1,0.06,steps=25; loss[0]=0.0716 loss[-1]=0.0445 max_gn=1.05
+O-NEW-1,olmo,normalization,fixed,D1,CLEAN,,-1,0.10,steps=25; loss[0]=0.757 loss[-1]=0.667 max_gn=9.16
+O-NEW-9,olmo,data_processing,buggy,D1,CLEAN,,-1,0.10,steps=12; loss[0]=306 loss[-1]=301 max_gn=198
+O-NEW-9,olmo,data_processing,fixed,D1,CLEAN,,-1,0.09,steps=12; loss[0]=252 loss[-1]=259 max_gn=35.6
+OC-NEW-2,olmo-core,optimizer,buggy,D1,CLEAN,,-1,0.10,steps=25; loss[0]=0.224 loss[-1]=0.228 max_gn=6.36
+OC-NEW-2,olmo-core,optimizer,fixed,D1,CLEAN,,-1,0.09,steps=25; loss[0]=0.224 loss[-1]=0.193 max_gn=5.67
+OC-NEW-3,olmo-core,lr_schedule,buggy,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"
+OC-NEW-3,olmo-core,lr_schedule,fixed,D1,CLEAN,,-1,0.00,"T1-tier surrogate emits framework metadata events, not metric stream — naive monitor has nothing to observe"

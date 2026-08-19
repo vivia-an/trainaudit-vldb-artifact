@@ -1,0 +1,27 @@
+total tasks 1120 | already done 47 | to run 1073
+model=deepseek-v4-flash temperature=1.0 max_tokens=32768
+  50/1073 done, 0 errors, tokens in/out 159494/114504
+  100/1073 done, 0 errors, tokens in/out 298964/221166
+  150/1073 done, 0 errors, tokens in/out 481764/368317
+  200/1073 done, 0 errors, tokens in/out 586754/450416
+  250/1073 done, 0 errors, tokens in/out 748484/569220
+  300/1073 done, 0 errors, tokens in/out 858603/653368
+  350/1073 done, 0 errors, tokens in/out 991079/753225
+  400/1073 done, 0 errors, tokens in/out 1130212/855500
+  450/1073 done, 0 errors, tokens in/out 1258347/953860
+  500/1073 done, 0 errors, tokens in/out 1378258/1043294
+  550/1073 done, 0 errors, tokens in/out 1560706/1186926
+  600/1073 done, 0 errors, tokens in/out 1624529/1237049
+  650/1073 done, 0 errors, tokens in/out 1747901/1339241
+  700/1073 done, 0 errors, tokens in/out 1831297/1397310
+  750/1073 done, 0 errors, tokens in/out 1894315/1445140
+  800/1073 done, 0 errors, tokens in/out 2053495/1563761
+  850/1073 done, 0 errors, tokens in/out 2178735/1673187
+  900/1073 done, 0 errors, tokens in/out 2285783/1756841
+  950/1073 done, 0 errors, tokens in/out 2331702/1789119
+  1000/1073 done, 0 errors, tokens in/out 2444908/1873331
+  1050/1073 done, 0 errors, tokens in/out 2528319/1933617
+  1073/1073 done, 0 errors, tokens in/out 2545982/1948748
+
+Saved /volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/eval/catalog_ablation/l1_raw.jsonl
+calls=1073 errors=0 prompt_tokens=2545982 completion_tokens=1948748

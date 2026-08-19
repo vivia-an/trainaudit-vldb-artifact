@@ -1,0 +1,406 @@
+[
+ {
+  "bug_id": "B4",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "get_data_parallel_src_rank uses global_rank % num_dp_groups instead of looking up first global rank in the DP group",
+  "description": "",
+  "root_cause": "Buggy formula `global_rank % num_data_parallel_groups` only matches the true DP src rank when DP groups are contiguous global ranks; with PP > 1 or other interleavings, the formula returns the wrong rank.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "world_size >= 4",
+   "non-trivial parallel layout (e.g. PP=2, DP=2)"
+  ],
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/commit/9ad1944d"
+ },
+ {
+  "bug_id": "D-NEW-1",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "TopKGate applies topk to logits instead of post-softmax gates",
+  "description": "",
+  "root_cause": "torch.topk(logits, k) selects experts from raw logits, not softmax probabilities",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-35",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO3 InflightParamRegistry shared between train and eval coordinators causes stale handles on mode switch",
+  "description": "",
+  "root_cause": "The training and eval PartitionedParameterCoordinators were both constructed with the same shared InflightParamRegistry. When the engine switched modes, in-flight allgather handles registered under one coordinator were observed by the other, which would either re-issue allgather on a still-inflight param or wait on a handle that was never going to fire — leading to silently-stale parameter values during the first iteration after the switch.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "ZeRO stage 3",
+   "alternating model.train()/model.eval() inside a step",
+   "overlap_comm or prefetch enabled"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-39",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "Pipeline parallel _aggregate_total_loss broadcasts torch.stack of mixed-dtype losses, non-last stages receive wrong dtype",
+  "description": "",
+  "root_cause": "In _aggregate_total_loss the last stage built `losses = torch.stack([self.dp_group_loss, agg_loss])` and broadcast it to other PP stages. When the source tensors were bf16 the broadcast tensor was bf16 too, but other ranks initialised their receive buffer as fp32 (default Tensor()), so dist.broadcast wrote bf16 bytes into an fp32 tensor and other PP stages saw garbage scalar losses.",
+  "category": "communication",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "pipeline parallel num_stages > 1",
+   "bf16 model loss tensor"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-63",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "CPUAdam IncrementStep non-idempotent across same-step subgroup updates — bias-correction drifts between subgroups",
+  "description": "",
+  "root_cause": "Adam_Optimizer::IncrementStep first did `_step++; if (_step != step) { recompute betta1_t/betta2_t with pow }` else `_betta1_t *= _betta1`. ZeRO-3 calls IncrementStep once per subgroup with the SAME logical `step` value. The first subgroup call increments _step to match, takes the multiplicative branch (betta_t *= betta). The second subgroup call also increments _step (now _step != step), so it falls through to the pow-recompute branch which computes pow(betta, step) — a different floating-point value than the just-multiplied one (catastrophic cancellation in pow vs repeated multiply). So subgroup 0 and subgroup 1 see different betta1_t when applying the same logical Adam step → updated weights drift apart between subgroups.",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "DeepSpeedCPUAdam (cpu_offload optimizer)",
+   "ZeRO-3 with sub_group_size > 0 OR SuperOffload (multiple subgroup optimizer calls per logical step)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-76",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO-3 init broadcast tracked through autograd — backward through synchronization op silently corrupts gradients",
+  "description": "",
+  "root_cause": "In DeepSpeedEngine._broadcast_model, dist.broadcast(p, ...) was invoked on the parameter Tensor itself (which has requires_grad=True). c10d::broadcast_ has no registered autograd kernel; PyTorch falls through with a warning that explicitly states 'may lead to silently incorrect behavior'. When the user later calls loss.backward(), autograd traverses the broadcast op as part of the computation graph and computes incorrect gradients (silently — no exception, just wrong numbers).",
+  "category": "communication",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "DeepSpeed engine init with ZeRO 1/2 (broadcast model path)",
+   "any param requires_grad=True (almost always)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-78",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO-1/2/3 allreduce_bucket hard-codes communication_data_type=fp16 — bf16 grads silently downcast for reduction",
+  "description": "",
+  "root_cause": "DeepSpeedZeroOptimizer.allreduce_bucket and DeepSpeedZeroOptimizer_Stage3.allreduce_bucket had a default-valued kwarg `communication_data_type=torch.float16`. The caller never passed self.communication_data_type, so all reductions converted bf16 grads to fp16 before the all-reduce. fp16 has 1 bit less mantissa than bf16 and a 5-bit exponent vs bf16's 8 — values outside fp16's range (>~65k or <~6e-5) become Inf/0, the rest lose ~half their relative precision. Reduced gradients are therefore systematically degraded relative to the user-configured comm dtype.",
+  "category": "communication",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "bf16 model with ZeRO 1/2/3",
+   "user explicitly sets communication_data_type to bfloat16 (or relies on the engine to match it to the model dtype)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-13",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MoE permute pads tokens unnecessarily for non-quantized dispatch",
+  "description": "",
+  "root_cause": "get_align_size_for_quantization defaulted to 16 even for non-quantized models, and permute() default align_size was -1. The fused_permute_and_pad_with_probs path was always taken when tokens_per_expert was set, padding tokens to multiples of 16 even when no quantization was needed, leading to extra zero tokens entering experts and slightly different expert outputs.",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "MoE token permute path (fused=True)",
+   "non-quantized model (no FP8/FP4)",
+   "tokens_per_expert provided"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-32",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MoE input jitter applied AFTER gating instead of before, jittering gradients not inputs",
+  "description": "",
+  "root_cause": "TopKRouter.routing called self.apply_input_jitter(logits) AFTER computing logits = self.gating(input). The intent of input jitter is to perturb the router input, not the logits; jittering logits instead changes Z-loss reference and z-loss gradient direction, silently degrading load balancing.",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "moe_input_jitter_eps > 0",
+   "MoE TopKRouter training=True"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-41",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "GPTDataset returns aliased cached_loss_mask, downstream in-place padding mutates the shared cache and corrupts later samples",
+  "description": "",
+  "root_cause": "In the cached-mask branch, GPTDataset assigned loss_mask = self.cached_loss_mask, returning the cached tensor by reference instead of a clone. Downstream code in the same __getitem__ path applies in-place modifications (e.g. zeroing the loss for pad tokens). The first sample with padding silently mutates the shared cache, so every subsequent sample served from the cache starts from a polluted mask.",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "create_attention_mask=False so the cached-mask branch is taken",
+   "Sequences with padding so loss_mask is mutated per-sample by mask_loss_or_position fill",
+   "Multiple steps with same dataset"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-42",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "Megatron-FSDP GradReducePipeline scales gbuf.data instead of bucket.data, applying gradient scaling to the wrong tensor span",
+  "description": "",
+  "root_cause": "GradReducePipeline.gradient_reduce_preprocessing was passed gbuf.data (the entire buffer) instead of bucket.data (the per-bucket slice). gradient_scaling preprocessing therefore divided every byte of the joint gradient buffer once per bucket, yielding cumulative scaling factor of (1/dp_size)**num_buckets on the affected ranges instead of (1/dp_size). All-reduce/reduce-scatter then communicated wrongly scaled gradients with no shape mismatch.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "Megatron-FSDP enabled (use_megatron_fsdp=True)",
+   "Multiple buckets per gradient buffer",
+   "Gradient scaling factor != 1.0 (e.g. DP > 1)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-51",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "tensor_parallel.checkpoint runs CheckpointFunction during CUDA graph warmup, causing graph capture to record stale recomputed activations",
+  "description": "",
+  "root_cause": "tensor_parallel.checkpoint always dispatched to CheckpointFunction.apply, even during graph warmup or capture. CheckpointFunction tries to recompute the saved forward inside the graph context, which corrupts the captured graph because random states and saved tensors get rewritten between warmup and capture passes. The result is a captured graph that on replay produces values that do not match the eager reference.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Activation recompute via tensor_parallel.checkpoint enabled",
+   "CUDA graph capture for the same module (cuda_graph_modules)",
+   "Warmup or capture phase active"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-56",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "Latent MoE backward_dw never calls fc1_latent_proj/fc2_latent_proj.backward_dw, so gradient for the latent projection weights is silently zero",
+  "description": "",
+  "root_cause": "MoELayer.backward_dw only invoked self.experts.backward_dw() and (when shared_experts requested) self.shared_experts.backward_dw(). The new latent projection layers fc1_latent_proj/fc2_latent_proj were never asked to compute their weight gradients, so their main_grad stayed at zero across every microbatch. The optimizer happily applied (lr * 0) to those parameters every step, freezing them at their initialization.",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "MoE layer with config.moe_latent_size set (latent MoE / DeepSeek-style projection)",
+   "Fine-grained backward_dw scheduling (separate routed_experts and shared_experts paths)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-58",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "_CudaGraphRunner enables FP8 capture for keep-mamba-stack-attention-linear-in-bf16 layers, casting frozen-bf16 attention linears into FP8 inside the captured graph",
+  "description": "",
+  "root_cause": "_CudaGraphRunner.__init__ set self.fp8_enabled = config.fp8 is not None / self.fp4_enabled = config.fp4 is not None unconditionally. The mamba-stack attention linears, however, are kept in bf16 to preserve numerics. Capturing those layers with FP8 enabled wrapped their GEMMs in FP8 cast paths, silently quantizing weights that were intentionally meant to stay in bf16.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Mamba/hybrid model with --keep-mamba-stack-attention-linear-in-bf16",
+   "config.fp8 or config.fp4 enabled",
+   "CUDA graph capture enabled for transformer layers"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-17",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "muP set_base_shapes rescales parameters again when loading from a checkpoint, doubling the muP scaling",
+  "description": "",
+  "root_cause": "OLMo.__init__ unconditionally invoked set_base_shapes(self, mup_base_shapes) which applies muP rescaling to the parameters. When loading a checkpoint, parameters are already in muP-scaled space, so the rescale fires a second time and silently shrinks/grows weights by the muP factor. Fix adds a mup_rescale_params=False kwarg and passes it from from_checkpoint.",
+  "category": "checkpoint",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "model.use_mup=true",
+   "OLMo.from_checkpoint() (sharded or unsharded) called to resume training"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-20",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "ff_out readout reset overwrites muP zero-init weights with normal-distribution values",
+  "description": "",
+  "root_cause": "OLMo.reset_parameters always called init_normal on transformer.ff_out, including under muP where ff_out is a MuReadout that must be initialized to zero. The non-zero initialization breaks the muP coordinate-check property and changes the model's effective output scale at initialization. Fix skips init_normal on ff_out when use_mup is True.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "model.use_mup=true",
+   "OLMo.reset_parameters() invoked (always called from __init__)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-51",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "IterableDataset leftover indices distributed wrongly across workers",
+  "description": "",
+  "root_cause": "When distributing the leftover (unaligned) indices across workers, the buggy code did `left_overs = indices[truncated_size + worker_info.id : truncated_size + worker_info.id + worker_info.num_workers]`, which gives each worker a contiguous slice of `num_workers` indices starting at its id (so workers overlap and miss other leftovers). The fix uses strided slicing `indices[truncated_size + worker_info.id :: worker_info.num_workers]` so each worker independently picks its share.",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "drop_last=False with device_batch_size set",
+   "DataLoader num_workers > 1",
+   "Total indices not divisible by device_batch_size"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-56",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "q_norm forced to elementwise_affine=True regardless of attention_layer_norm_with_affine",
+  "description": "",
+  "root_cause": "When constructing QK normalization layers, `k_norm` correctly used `elementwise_affine=config.attention_layer_norm_with_affine` but `q_norm` was hard-coded to `elementwise_affine=True`. With `attention_layer_norm_with_affine=False` the model silently normalizes q with learnable scale/bias but k without, breaking symmetry between q and k and adding parameters that the user did not request.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "attention_layer_norm=True (QK norm enabled)",
+   "attention_layer_norm_with_affine=False (asymmetric config)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-60",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Missing reset_parameters() after FSDP wrap on torch>=2.1 leaves model with default-initialized weights",
+  "description": "",
+  "root_cause": "Starting in torch 2.1, FSDP no longer triggers the user's reset_parameters() automatically when materializing meta-device parameters. The buggy script created the OLMo model with init_device='meta', wrapped with FSDP, and never explicitly called `olmo_model.reset_parameters()` afterwards. Parameters are therefore left with whatever default contents FSDP produces (effectively uninitialized/zero-filled), silently destroying the carefully designed init scheme.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "torch >= 2.1",
+   "FSDP wrapping with init_device='meta'"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-65",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Newest checkpoint deleted by retention policy because it is appended after pruning",
+  "description": "",
+  "root_cause": "Both `save_checkpoint` and `save_unsharded_checkpoint` appended the freshly-saved directory to `self.checkpoints`/`self.unsharded_checkpoints` *after* the deletion loop. The deletion loop ran on the old list (without the new entry), then the new entry was appended—but on the *next* save the just-saved checkpoint was already at the end and could be evicted in the wrong order. The fix appends before the dist.barrier so retention always sees the new entry.",
+  "category": "checkpoint",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "save_num_checkpoints_to_keep > 0 (or save_num_unsharded_checkpoints_to_keep > 0)",
+   "List already contains save_num_checkpoints_to_keep entries when a new save fires"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-14",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "GatedDeltaNet A_log/dt_bias initialized as empty (uninit memory) and miss the GDN-prescribed init",
+  "description": "",
+  "root_cause": "GatedDeltaNet's A_log was initialized via torch.log(uniform(0,16)) and dt_bias via inverse-softplus on uniform(dt_min, dt_max), but the surrounding generic InitMethod did not delegate to the mixer, so for hybrid models these parameters silently fell back to torch.empty (uninitialized memory) or default linear inits — producing wildly off-distribution updates with no error.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Hybrid model includes GatedDeltaNet sequence mixer",
+   "Block init relied on the generic InitMethod path"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-24",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "MoEFusedV2Optimizer reduces PP grad norm with _combine_norm (sum-of-norms) instead of _reduce_norm — over-counts gradient magnitude",
+  "description": "",
+  "root_cause": "When reducing total_grad_norm across the PP group, the code called self._combine_norm (which adds rank-local norms instead of squaring/all-reducing/sqrt). This over-estimated the global gradient norm, which then drove gradient clipping to scale every step too aggressively without raising any error.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Pipeline parallelism (mesh dim 'pp')",
+   "MoEFusedV2Optimizer in use"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-25",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "SamplingInstanceSource cache write race — concurrent ladder runs overwrite each other's index files",
+  "description": "",
+  "root_cause": "Local rank-0 always rewrote the indices file at startup. Concurrent jobs sharing the work directory raced via tmp_path.replace, leaving training reading partially-written or shuffled indices. Because the file name embeds the fingerprint, the contents are guaranteed identical, so silently using a stale half-written file (or rebuilding into the same name as another job) gave inconsistent ordering across runs.",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Multiple training jobs share the same work_dir",
+   "SamplingInstanceSource used; rank-0 builds the cached indices file"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-29",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "DTPBoundaryPredictor calls F.silu with two arguments — silu treats w3(h) as inplace flag, drops gating",
+  "description": "",
+  "root_cause": "The expression F.silu(self.w1(h), self.w3(h)) passed self.w3(h) as the inplace argument of F.silu (PyTorch interprets the second positional as a bool-coerced inplace flag). The intended SwiGLU gate (silu(w1(h)) * w3(h)) never executed, so the FFN computed silu(w1(h)) alone and the boundary predictor produced silently degraded outputs.",
+  "category": "loss_computation",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "BLT DTPBoundaryPredictor used for byte-level training",
+   "Standard SwiGLU FFN expected"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-55",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "H-Net ratio loss averaged over padded positions — wrong target ratio under variable-length batches",
+  "description": "",
+  "root_cause": "true_ratio = boundary_mask.float().mean() and average_prob = exp(boundary_logprobs).mean() averaged over the full padded byte tensor instead of over byte_mask-valid positions. Padded zero entries shrank both quantities toward 0, biasing the ratio loss target away from the true content ratio.",
+  "category": "loss_computation",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "BLTDistillTransformer with H-Net ratio loss",
+   "batches containing padded byte positions"
+  ],
+  "issue_url": ""
+ }
+]

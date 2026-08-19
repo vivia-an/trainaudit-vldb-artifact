@@ -1,0 +1,187 @@
+{
+  "meta": {
+    "date": "2026-05-10",
+    "n": 50,
+    "sampling": "stratified by framework, balanced by category"
+  },
+  "metrics": {
+    "raw_agreement": 0.6,
+    "p_observed": 0.6,
+    "p_expected": 0.078,
+    "cohens_kappa": 0.5661605206073753,
+    "kappa_interpretation": "Moderate"
+  },
+  "agreements": 30,
+  "disagreements": [
+    {
+      "bug_id": "M-015",
+      "gt": "control_flow",
+      "llm": "lr_schedule",
+      "confidence": "high",
+      "rationale": "override flag ignored, LR scheduler reads stale param_group"
+    },
+    {
+      "bug_id": "M-008",
+      "gt": "optimizer_state",
+      "llm": "control_flow",
+      "confidence": "low",
+      "rationale": "all-gather handle list not initialized, init order bug"
+    },
+    {
+      "bug_id": "M-016",
+      "gt": "checkpoint",
+      "llm": "offload",
+      "confidence": "medium",
+      "rationale": "optimizer CPU offload ckpt serialization corrupts state"
+    },
+    {
+      "bug_id": "M-002",
+      "gt": "gradient_sync",
+      "llm": "numerical",
+      "confidence": "high",
+      "rationale": "attention backward impl wrong under CP"
+    },
+    {
+      "bug_id": "M-023",
+      "gt": "sharding",
+      "llm": "communication",
+      "confidence": "high",
+      "rationale": "p2p tensor shape mismatch under CP"
+    },
+    {
+      "bug_id": "D-010",
+      "gt": "offload",
+      "llm": "gradient_sync",
+      "confidence": "high",
+      "rationale": "gradient accumulation skipped when ga_steps=1"
+    },
+    {
+      "bug_id": "D-009",
+      "gt": "sharding",
+      "llm": "moe",
+      "confidence": "high",
+      "rationale": "ZeRO-3 overwrites expert id, breaks routing"
+    },
+    {
+      "bug_id": "D-NEW-38",
+      "gt": "data_loading",
+      "llm": "gradient_sync",
+      "confidence": "medium",
+      "rationale": "sparse grad reduction not written back to param.grad"
+    },
+    {
+      "bug_id": "D-017",
+      "gt": "control_flow",
+      "llm": "gradient_sync",
+      "confidence": "high",
+      "rationale": "micro_step_id init bug breaks grad accumulation"
+    },
+    {
+      "bug_id": "D-006",
+      "gt": "numerical",
+      "llm": "optimizer_state",
+      "confidence": "medium",
+      "rationale": "FusedAdam int32 overflow skips param/optstate update"
+    },
+    {
+      "bug_id": "D-028",
+      "gt": "dtype",
+      "llm": "gradient_sync",
+      "confidence": "medium",
+      "rationale": "allreduce on bf16 instead of fp32 buffer"
+    },
+    {
+      "bug_id": "O-004",
+      "gt": "numerical",
+      "llm": "dtype",
+      "confidence": "medium",
+      "rationale": "reduce_dtype=bf16 precision; dtype config root"
+    },
+    {
+      "bug_id": "O-001",
+      "gt": "control_flow",
+      "llm": "numerical",
+      "confidence": "high",
+      "rationale": "shared layernorm wrong; normalization math"
+    },
+    {
+      "bug_id": "O-006",
+      "gt": "data_loading",
+      "llm": "control_flow",
+      "confidence": "high",
+      "rationale": "global_step/start_index not reset on restore"
+    },
+    {
+      "bug_id": "O-NEW-10",
+      "gt": "optimizer_state",
+      "llm": "gradient_sync",
+      "confidence": "medium",
+      "rationale": "adaptive grad clipping EMA broken"
+    },
+    {
+      "bug_id": "O-030",
+      "gt": "communication",
+      "llm": "gradient_sync",
+      "confidence": "high",
+      "rationale": "FSDP+PP reduce-scatter race condition"
+    },
+    {
+      "bug_id": "O-029",
+      "gt": "gradient_sync",
+      "llm": "offload",
+      "confidence": "medium",
+      "rationale": "FSDP CPU offload grad accum replace not add"
+    },
+    {
+      "bug_id": "OC-NEW-20",
+      "gt": "moe",
+      "llm": "control_flow",
+      "confidence": "high",
+      "rationale": "freeze override moved to wrong class scope"
+    },
+    {
+      "bug_id": "O-011",
+      "gt": "communication",
+      "llm": "numerical",
+      "confidence": "medium",
+      "rationale": "shared RoPE buffer breaks position encoding under CP"
+    },
+    {
+      "bug_id": "OC-NEW-15",
+      "gt": "control_flow",
+      "llm": "moe",
+      "confidence": "high",
+      "rationale": "MoE aux loss double-counted by recompute"
+    }
+  ],
+  "gt_distribution": {
+    "gradient_sync": 4,
+    "dtype": 5,
+    "sharding": 6,
+    "communication": 4,
+    "loss_computation": 3,
+    "control_flow": 4,
+    "moe": 3,
+    "data_loading": 5,
+    "optimizer_state": 4,
+    "checkpoint": 4,
+    "numerical": 3,
+    "offload": 2,
+    "lr_schedule": 3
+  },
+  "llm_distribution": {
+    "gradient_sync": 8,
+    "dtype": 5,
+    "sharding": 4,
+    "communication": 3,
+    "loss_computation": 3,
+    "lr_schedule": 4,
+    "moe": 4,
+    "data_loading": 3,
+    "control_flow": 3,
+    "offload": 3,
+    "numerical": 4,
+    "optimizer_state": 3,
+    "checkpoint": 3
+  }
+}

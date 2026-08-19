@@ -1,0 +1,22 @@
+Warning: Permanently added '[183.242.150.6]:32462' (ED25519) to the list of known hosts.
+===== BUGGY (6e330ba2~1) =====
+[DETECT] num_param_groups = 1
+[DETECT] num_with_initial_lr = 0
+[DETECT] restart_scheduler_error = KeyError: "param 'initial_lr' is not specified in param_groups[0] when resuming an optimizer"
+[DETECT] sample group keys = ['amsgrad', 'betas', 'capturable', 'decoupled_weight_decay', 'differentiable', 'eps', 'foreach', 'fused', 'lr', 'maximize', 'params', 'weight_decay']
+[BUG] AdamWConfig.build did not set initial_lr on 1/1 groups
+[RESULT] BUG DETECTED
+/opt/conda/lib/python3.11/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank0]:[W517 23:10:19.754432190 ProcessGroupNCCL.cpp:4718] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+
+===== FIXED (6e330ba2) =====
+[DETECT] num_param_groups = 1
+[DETECT] num_with_initial_lr = 1
+[DETECT] restart_scheduler_error = None
+[DETECT] sample group keys = ['amsgrad', 'betas', 'capturable', 'decoupled_weight_decay', 'differentiable', 'eps', 'foreach', 'fused', 'initial_lr', 'lr', 'maximize', 'params', 'weight_decay']
+[RESULT] CLEAN: all param_groups carry initial_lr
+/opt/conda/lib/python3.11/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank0]:[W517 23:10:25.260388756 ProcessGroupNCCL.cpp:4718] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+

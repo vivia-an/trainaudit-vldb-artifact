@@ -1,0 +1,15 @@
+>>> B1
+[B1] CLEAN: traincheck:0/315 failed
+>>> B13
+[B13] BUG DETECTED: traincheck:2/741 failed invariants
+>>> M-012
+[M-012] CLEAN: traincheck:0/431 failed
+>>> M-NEW-5
+[M-NEW-5] CLEAN: traincheck:0/432 failed
+>>> M-024
+[M-024] BUG DETECTED: traincheck:1/430 failed invariants
+>>> M-020
+[M-020] BUG DETECTED: traincheck:1/758 failed invariants
+>>> OC-NEW-3
+[OC-NEW-3] CLEAN: traincheck:0/381 failed
+DONE batch t1; results in /volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/eval/traincheck_surrogates/batch_t1_results.txt

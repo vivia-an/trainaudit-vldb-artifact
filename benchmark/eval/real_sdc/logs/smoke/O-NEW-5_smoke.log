@@ -1,0 +1,7 @@
+Warning: Permanently added '[183.242.150.6]:32462' (ED25519) to the list of known hosts.
+===== TrainAudit on O-NEW-5 BUGGY (ce5f30d5~1) =====
+[O-NEW-5] BUG DETECTED: olmo_emb_init_std_sqrt_dmodel_invariant: d_model=256, init_std=0.02, actual_emb_std=0.0197, target_buggy=0.0200, target_fixed=0.3200 — emb std 16x smaller than spec
+
+===== TrainAudit on O-NEW-5 FIXED (ce5f30d5) =====
+[O-NEW-5] CLEAN: init_weights for ModuleType.emb scaled by sqrt(d_model): d_model=256, init_std=0.02, actual_emb_std=0.3156, target_buggy=0.0200, target_fixed=0.3200
+

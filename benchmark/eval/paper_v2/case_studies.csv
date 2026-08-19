@@ -1,0 +1,4 @@
+case_id,stage,fault,silent_signal,rule,trigger_point,external_impact
+Case 1,SFT,tokenizer prompt-format mismatch,loss overlaps with fixed run; downstream SWE-bench gap 28.8% vs 44.5%,SFT_CHAT_TEMPLATE_VOCAB_INTEGRITY,post-tokenize / before first forward,15.7 point SWE-bench pass-rate gap
+Case 2,Pretrain,Megatron-LM #4641 tied embedding optimizer routing,tied embeddings routed to AdamW on one PP stage and Muon on another,MEGATRON_TIED_EMBED_OPT_ROUTING,param-group registration,confirmed upstream issue #4641 / PR #4642
+Case 3,RLHF/RL,ZeRO offload multi-backward gradient loss,optimizer update follows last-only gradient rather than sum of four gradients,T1-multi-backward-per-step-fragile-config,before first RL optimizer step,bug-path update 2.479887 vs all-4-gradient oracle 7.146901

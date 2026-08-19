@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-21",
+  "framework": "deepspeed",
+  "category": "checkpoint",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["has_zero_optimizer_state", "zero_stage", "bf16_enabled", "step"],
+  "check_stage": "init",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P7",
+  "tier_field": "Tier 6",
+  "rationale": "Engine sets has_zero_optimizer_state = zero_optimization() or bfloat16_enabled(); when bf16+ZeRO0 the flag is True but no ZeRO state actually exists, causing wrong checkpoint save/load path. Detection reads engine state flag and asserts it matches zero_optimization() (single-value, anti-example 12: value_equality not completeness). Layer is schema_topo_precond — single rank but precond guard is 'bf16 enabled with zero_stage=0'. P7 (module/engine state flag) over P4 (dtype/shape). check_stage=init: the wrong flag is set during deepspeed.initialize before step 0 (anti-example 10). Tier 6 because zero_stage flag is in Tier 6 supplements.",
+  "borderline_flags": ["INFERRED_FROM_SPARSE_CONFIG", "PATTERN_AMBIGUOUS_P7_P4"]
+}

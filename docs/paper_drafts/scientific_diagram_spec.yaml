@@ -1,0 +1,95 @@
+title: TrainAudit pipeline
+diagram_type: architecture
+audience: paper
+direction: left_to_right
+nodes:
+  - id: input_training
+    text: Distributed training run
+    type: data
+    group: training
+    priority: high
+  - id: miner
+    text: Invariant Miner
+    type: model
+    group: mining
+    priority: high
+  - id: collector
+    text: Data Collector
+    type: process
+    group: collection
+    priority: high
+  - id: verifier
+    text: Verifier
+    type: model
+    group: verification
+    priority: high
+  - id: output_alert
+    text: SDC alerts
+    type: result
+    group: output
+    priority: medium
+  - id: output_report
+    text: Diagnosis report
+    type: result
+    group: output
+    priority: medium
+edges:
+  - from: input_training
+    to: collector
+    label: runtime states
+    style: solid
+  - from: input_training
+    to: miner
+    label: training semantics
+    style: solid
+  - from: miner
+    to: verifier
+    label: invariants
+    style: solid
+  - from: collector
+    to: verifier
+    label: snapshots
+    style: solid
+  - from: verifier
+    to: output_alert
+    label: detect
+    style: solid
+  - from: verifier
+    to: output_report
+    label: analyze
+    style: dashed
+groups:
+  - id: training
+    name: Training System
+    purpose: Source of runtime behavior
+  - id: mining
+    name: Invariant Mining
+    purpose: Derive semantic constraints
+  - id: collection
+    name: Data Collection
+    purpose: Persist execution snapshots
+  - id: verification
+    name: Verification
+    purpose: Check constraints and diagnose faults
+  - id: output
+    name: Outputs
+    purpose: Present alarms and explanations
+annotations:
+  - target: miner
+    text: multi-agent funnel
+  - target: collector
+    text: hooks + DuckDB
+  - target: verifier
+    text: SQL agent + analysis agent
+style:
+  theme: clean_scientific
+  palette: blue_gray
+  line_style: orthogonal
+  emphasis_rule: highlight core modules with light fill
+review_checklist:
+  - Main flow should be readable from left to right
+  - Node texts should remain short
+  - Avoid edge crossings when possible
+  - Keep group boundaries visually clear
+  - Separate core modules from annotations
+  - Use dashed edges only for secondary outputs

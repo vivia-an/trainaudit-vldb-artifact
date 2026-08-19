@@ -1,0 +1,359 @@
+{
+  "metadata": {
+    "batch": 1,
+    "n_bugs": 31,
+    "phase": "2.1 open coding"
+  },
+  "per_bug": {
+    "D-015": {
+      "labels": [
+        "control-flow-indent-bug",
+        "early-return-misplaced",
+        "optimizer-step-skipped",
+        "branch-guard-stale",
+        "step-progress-stalled",
+        "param-update-zero",
+        "config-attr-routing-mismatch"
+      ],
+      "rationale_30c": "indent error short-circuits optimizer step; param-update should not be skipped under non-overflow"
+    },
+    "M-008": {
+      "labels": [
+        "handle-list-uninit",
+        "stale-comm-handle",
+        "loss-scaler-inf-stuck",
+        "lr-pinned-zero",
+        "loss-monotonic-violation",
+        "param-update-zero",
+        "warmup-postcond-violation",
+        "overlap-flag-state-stale"
+      ],
+      "rationale_30c": "uninitialized AG handles cause perpetual inf detection; LR=0 and loss-trend invariants violated"
+    },
+    "M-014": {
+      "labels": [
+        "router-prob-degenerate",
+        "topk-softmax-order",
+        "router-grad-zero",
+        "router-entropy-bound",
+        "trivial-distribution",
+        "moe-routing-collapse",
+        "axis-order-bug"
+      ],
+      "rationale_30c": "k=1 post-softmax collapses to constant 1.0; router gradient and entropy must be non-trivial"
+    },
+    "O-005": {
+      "labels": [
+        "config-bool-inverted",
+        "rng-state-preserve-flag",
+        "dropout-rng-mismatch",
+        "checkpoint-recompute-divergence",
+        "config-attr-conditional",
+        "fwd-bwd-rng-mismatch"
+      ],
+      "rationale_30c": "inverted boolean disables RNG preservation; recomputed dropout differs from forward"
+    },
+    "O-025": {
+      "labels": [
+        "int-overflow-counter",
+        "monotonic-counter-wrap",
+        "dtype-too-narrow",
+        "global-stat-overflow",
+        "long-horizon-overflow",
+        "telemetry-counter-corruption"
+      ],
+      "rationale_30c": "int counter wraps after 107K steps; monotonic flop counter must be float-safe"
+    },
+    "O-040": {
+      "labels": [
+        "hw-spec-constant-wrong",
+        "config-constant-stale",
+        "mfu-denominator-error",
+        "telemetry-baseline-bug",
+        "device-peak-flops-mismatch",
+        "value-equality-vs-spec"
+      ],
+      "rationale_30c": "hard-coded peak TFLOPS half of true value; MFU divisor must match device spec"
+    },
+    "D-006": {
+      "labels": [
+        "int32-element-overflow",
+        "kernel-loop-skipped",
+        "param-checksum-stuck",
+        "large-tensor-update-zero",
+        "metadata-dtype-too-narrow",
+        "silent-no-op-update",
+        "fused-kernel-precond-violation"
+      ],
+      "rationale_30c": "int32 size field overflows for >=2^31 element tensor; kernel skips loop, params unchanged"
+    },
+    "D-007": {
+      "labels": [
+        "config-value-out-of-range",
+        "loss-scale-inf-accepted",
+        "missing-input-validation",
+        "grad-nan-from-inf-scale",
+        "init-config-bound-missing",
+        "fp16-scaler-misconfig"
+      ],
+      "rationale_30c": "loss_scale=inf bypasses validation; gradients silently become NaN after scaling"
+    },
+    "D-010": {
+      "labels": [
+        "grad-accumulation-dropped",
+        "offload-precond-mismatch",
+        "ga-steps-condition-too-strict",
+        "multi-backward-precond",
+        "param-divergence-from-ref",
+        "intermediate-grad-discarded"
+      ],
+      "rationale_30c": "ga_steps>1 guard discards backward grads when ga_steps=1; offload path drops accumulation"
+    },
+    "D-012": {
+      "labels": [
+        "grad-accumulation-dropped",
+        "grad-norm-frozen",
+        "monotonic-norm-violation",
+        "offload-precond-mismatch",
+        "microstep-state-stale",
+        "norm-underestimate"
+      ],
+      "rationale_30c": "offload path discards micro_step>0 grads; grad-norm must grow with microstep accumulation"
+    },
+    "D-016": {
+      "labels": [
+        "post-clip-state-stale",
+        "grad-norm-vs-actual-mismatch",
+        "offload-data-structure-stale",
+        "shadow-state-divergence",
+        "clipping-effect-lost",
+        "telemetry-vs-truth-mismatch"
+      ],
+      "rationale_30c": "norm cache not refreshed after clipping in offload path; recorded vs actual grad diverge"
+    },
+    "D-022": {
+      "labels": [
+        "shard-sort-lexicographic",
+        "shard-merge-order-wrong",
+        "checkpoint-numeric-sort-missing",
+        "optimizer-state-corruption",
+        "checksum-mismatch-checkpoint",
+        "filename-natural-order"
+      ],
+      "rationale_30c": "alphabetic file sort orders shard 10<9; merged optimizer state silently corrupted"
+    },
+    "D-043": {
+      "labels": [
+        "checkpoint-partition-incomplete",
+        "mics-shard-coverage-gap",
+        "rank0-only-save",
+        "save-load-asymmetry",
+        "shard-completeness-violation",
+        "topology-coverage-missing"
+      ],
+      "rationale_30c": "only first MiCS partition group saves; checkpoint missing data from other groups"
+    },
+    "D-046": {
+      "labels": [
+        "tp-shard-coverage-gap",
+        "rank0-only-save",
+        "moe-checkpoint-incomplete",
+        "topology-coverage-missing",
+        "expert-shard-missing",
+        "save-rank-set-wrong"
+      ],
+      "rationale_30c": "MoE save keeps only rank0 model_states; TP>1 ranks missing from checkpoint"
+    },
+    "M-013": {
+      "labels": [
+        "padding-token-leak",
+        "routing-map-corruption",
+        "aux-loss-degenerate",
+        "loss-constant-bound",
+        "moe-load-balance-frozen",
+        "mask-vs-payload-mismatch",
+        "padded-vs-real-token-confusion"
+      ],
+      "rationale_30c": "pad-to-capacity dummy tokens pollute routing_map; aux loss pinned at 1.0 constant"
+    },
+    "M-022": {
+      "labels": [
+        "scale-variable-misnamed",
+        "softmax-factor-wrong",
+        "mla-mscale-mismatch",
+        "value-equality-vs-spec",
+        "attention-scale-divergence",
+        "reference-impl-divergence"
+      ],
+      "rationale_30c": "MLA uses mscale instead of mscale_all_dim; softmax_factor diverges from spec"
+    },
+    "M-027": {
+      "labels": [
+        "int32-overflow-index",
+        "dtype-too-narrow",
+        "data-index-wrap",
+        "monotonic-index-violation",
+        "data-loader-corruption",
+        "long-horizon-overflow",
+        "sample-idx-mismatch"
+      ],
+      "rationale_30c": "int64 doc_idx assigned to int32 sample_idx wraps; data loader serves wrong samples"
+    },
+    "M-031": {
+      "labels": [
+        "buffer-reuse-race",
+        "comm-overlap-precond-missing",
+        "grad-buf-corruption",
+        "fp8-param-gather-precond",
+        "loss-nan-from-comm-race",
+        "flag-combination-incompatible",
+        "premature-buffer-reuse"
+      ],
+      "rationale_30c": "fp8 reuse-grad-buf without overlap flags races NCCL; gradient buffer trampled"
+    },
+    "M-040": {
+      "labels": [
+        "buffer-zero-init-missing",
+        "first-iter-init-skipped",
+        "hook-disabled-precond-violation",
+        "stale-init-pollution",
+        "grad-norm-spike-first-step",
+        "finish-sync-not-called"
+      ],
+      "rationale_30c": "no forward_pre_hook means finish_param_sync never zeros grad buffer on first iter"
+    },
+    "M-042": {
+      "labels": [
+        "checkpoint-key-missing",
+        "early-save-state-empty",
+        "optimizer-state-incomplete",
+        "exp-avg-key-absent",
+        "save-precond-violation",
+        "resume-keyerror"
+      ],
+      "rationale_30c": "saving at iter 20 before optimizer populated; exp_avg missing, resume KeyError"
+    },
+    "O-001": {
+      "labels": [
+        "module-aliasing-bug",
+        "shared-module-should-be-distinct",
+        "norm-aliased-across-paths",
+        "structural-tying-wrong",
+        "duplicate-module-reference",
+        "param-tying-unintended"
+      ],
+      "rationale_30c": "attn and FFN paths reference same self.norm; LayerNorm should be distinct per path"
+    },
+    "O-007": {
+      "labels": [
+        "api-kwarg-renamed",
+        "kwarg-silently-ignored",
+        "padding-included-in-loss",
+        "ignore-index-not-applied",
+        "version-skew-api",
+        "loss-denominator-wrong"
+      ],
+      "rationale_30c": "flash-attn renamed ignored_index to ignore_index; padding tokens leak into loss"
+    },
+    "O-008": {
+      "labels": [
+        "checkpoint-incomplete",
+        "unsharded-save-buggy",
+        "loss-discontinuity-on-resume",
+        "resume-state-mismatch",
+        "save-load-asymmetry"
+      ],
+      "rationale_30c": "unsharded checkpoint save corrupt; loss not continuous on resume"
+    },
+    "O-015": {
+      "labels": [
+        "div-by-zero-mask",
+        "all-mask-edge-case",
+        "loss-nan-from-mask",
+        "instance-mask-empty",
+        "denominator-zero-precond",
+        "value-range-violation"
+      ],
+      "rationale_30c": "all-zero instance mask divides by zero; loss NaN on edge-case batches"
+    },
+    "O-017": {
+      "labels": [
+        "lr-schedule-impl-bug",
+        "schedule-vs-spec-mismatch",
+        "warmup-cosine-linear-wrong",
+        "implementation-equivalence-fail",
+        "lr-curve-divergence",
+        "scheduler-init-state-bad"
+      ],
+      "rationale_30c": "scheduler init wrong; observed LR curve diverges from cosine+warmup+linear spec"
+    },
+    "O-019": {
+      "labels": [
+        "loader-state-not-reset",
+        "data-order-drift",
+        "eval-nondeterminism",
+        "bookkeeping-state-stale",
+        "rerun-equality-violation",
+        "iterator-state-leakage"
+      ],
+      "rationale_30c": "loader bookkeeping not reset between eval runs; data order drifts across reruns"
+    },
+    "O-024": {
+      "labels": [
+        "self-comparison-typo",
+        "init-branch-never-taken",
+        "depth-scaled-init-skipped",
+        "init-fan-mode-mismatch",
+        "weight-stat-bound-violation",
+        "init-equality-typo",
+        "per-layer-scale-uniform"
+      ],
+      "rationale_30c": "self-equality typo makes depth-scaled init branch never fire; output proj scale uniform"
+    },
+    "O-029": {
+      "labels": [
+        "grad-accumulation-overwrite",
+        "no-sync-precond-violation",
+        "fsdp-offload-accumulation-bug",
+        "reduce-replaces-instead-of-adds",
+        "accumulation-semantics-wrong",
+        "value-equality-vs-ref"
+      ],
+      "rationale_30c": "FSDP+offload outside no_sync overwrites accumulated grads with newly reduced ones"
+    },
+    "O-033": {
+      "labels": [
+        "state-dict-keyset-mismatch",
+        "fsdp-orig-params-bug",
+        "checkpoint-key-missing",
+        "inner-vs-wrapper-divergence",
+        "shard-coverage-gap",
+        "param-set-completeness-violation"
+      ],
+      "rationale_30c": "FSDP use_orig_params+FULL_SHARD inner state_dict missing keys vs wrapped model"
+    },
+    "O-035": {
+      "labels": [
+        "init-rng-divergence",
+        "shape-after-shard-mismatch",
+        "param-init-fn-precond",
+        "cross-rank-init-mismatch",
+        "sync-module-states-broken",
+        "model-not-learning",
+        "rng-sequence-divergence"
+      ],
+      "rationale_30c": "param_init_fn after flatten/shard sees different shape; RNG diverges, sync_module_states fails"
+    },
+    "O-039": {
+      "labels": [
+        "duplicate-checkpoint-save",
+        "resume-final-save-bug",
+        "checkpoint-overwrite",
+        "save-once-violation",
+        "trainer-state-stale-on-resume",
+        "idempotent-save-violation"
+      ],
+      "rationale_30c": "post-resume final save fires again, overwriting good checkpoint with duplicate"
+    }
+  }
+}

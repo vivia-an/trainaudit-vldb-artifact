@@ -1,0 +1,9 @@
+{
+  "pattern_agreement_pct": 19.6,
+  "v2_pattern_in_28_set": 77,
+  "v2_yes_28_no": 154,
+  "v2_no_28_yes": 19,
+  "tier_exact_match_pct": 39.3,
+  "tier_within1_pct": 49.2,
+  "stage_agreement_pct": 61.2
+}

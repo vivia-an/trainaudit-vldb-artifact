@@ -1,0 +1,313 @@
+{
+  "version": "paper-frozen-2026-07-16",
+  "note": "Optional per-template mining focus for dynamic tasks. Derived from pattern_catalog_snapshot.",
+  "frozen_sha256": "cfa30e182a4aa5c6637423dcbd95f15cb20c2b34a1da80000f5df6c6b8176734",
+  "phase1_templates": [
+    {
+      "id": "T01",
+      "name": "cross-rank-replica-equality",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL x in replicated_state, FORALL r1,r2 in replica_group(x): checksum(x, r1, step) == checksum(x, r2, step)",
+      "counterexample": "TP/EP-sharded tensors that are intentionally different per rank must not be compared as replicas; Local per-rank gradients inspected before the reduction collective has run",
+      "fields": [
+        "replicated training state",
+        "replication group"
+      ]
+    },
+    {
+      "id": "T02",
+      "name": "logged-metric-reduction-consistency",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL r1,r2: logged_metric(m, r1, step) == logged_metric(m, r2, step) AND logged_metric(m, r, step) == designated_reduce({local_metric(m, r', step) : r' in world})",
+      "counterexample": "Per-rank local metric values differing before the explicit all-reduce point; Deliberately rank-local diagnostics documented as unreduced",
+      "fields": [
+        "logged metric",
+        "cross-rank reduction result"
+      ]
+    },
+    {
+      "id": "T03",
+      "name": "config-invariant-execution-equivalence",
+      "category": "model_integrity",
+      "prompt_focus": "max_abs_diff(output(cfg, x, w), output(cfg_ref, x, w)) <= tol, for identical inputs x and weights w, where cfg and cfg_ref differ only in a performance-neutral knob (CP/SP degree, torch.compile on/off, recompute on/off, sharding/wrapping la",
+      "counterexample": "Bitwise differences within numerical tolerance caused by legitimate reduction reordering across configurations; Loss-curve differences caused by knobs that are documented to change semantics (e.g. different global batch size)",
+      "fields": [
+        "computation output under active configuration",
+        "same computation under reference configuration"
+      ]
+    },
+    {
+      "id": "T04",
+      "name": "spec-reference-conformance",
+      "category": "model_integrity",
+      "prompt_focus": "|computed(q, x) - spec_reference(q, x)| <= tol, where spec_reference is an analytic formula or an independent reference implementation evaluated on identical inputs/weights",
+      "counterexample": "Implementations that intentionally deviate from a reference with documented semantics (e.g. a configured non-standard softmax scale); Tolerance-level numeric differences between fused and unfused kernels",
+      "fields": [
+        "computed value",
+        "authoritative spec or reference-implementation value"
+      ]
+    },
+    {
+      "id": "T05",
+      "name": "designated-dtype-fidelity",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL (t, site) in dtype_constrained_uses: dtype(t, site) == designated_dtype(t, mixed_precision_recipe)  -- e.g. dtype(allreduce_operand)==fp32, dtype(grad at optimizer.step)==fp32, dtype(expert_bias at forward)==fp32, dtype(router_input ",
+      "counterexample": "Intentional low-precision reduction explicitly configured and documented by the recipe; Autocast-driven downcasts at sites the recipe designates as low-precision",
+      "fields": [
+        "tensor at use point",
+        "designated dtype"
+      ]
+    },
+    {
+      "id": "T06",
+      "name": "storage-dtype-interpretation-match",
+      "category": "model_integrity",
+      "prompt_focus": "itemsize(configured_reader_dtype) == file_size_bytes / token_count AND max(observed_token_id) consistent with tokenizer vocab_size (vocab_size > 2^16 implies itemsize >= 4)",
+      "counterexample": "Datasets legitimately stored as uint16 for vocabularies below 65536; Files whose header/metadata declares the dtype and matches the reader",
+      "fields": [
+        "dataset reader dtype configuration",
+        "on-disk token storage dtype"
+      ]
+    },
+    {
+      "id": "T07",
+      "name": "gradient-accumulation-conservation",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL p: accum_grad(p, after N micro_steps) == SUM_{i=1..N} grad_i(p), with accum_grad(p, 0) == 0, each grad_i added exactly once to the designated buffer of p's partition owner, and padding_region(comm_buffer) == 0",
+      "counterexample": "A configured averaging (not summing) accumulation mode where the divisor is documented; Gradients legitimately reset to zero at accumulation-boundary steps",
+      "fields": [
+        "gradient accumulation buffer",
+        "per-micro-batch gradient contributions"
+      ]
+    },
+    {
+      "id": "T08",
+      "name": "scale-factor-consistency",
+      "category": "model_integrity",
+      "prompt_focus": "applied_scale(q, step) == spec_scale(q; dp_size, cp_size, sp_size, edp_size, num_tokens, num_micro_batches, loss_scale, sample_counts, mask_valid_counts), and the factor is applied exactly once (magnitude_ratio(q, reference) == 1)",
+      "counterexample": "A documented change of normalization convention (e.g. per-token vs per-sequence loss) reflected consistently in config; Loss-scale growth/decay behaving per the dynamic loss-scaling policy",
+      "fields": [
+        "scaled quantity (loss",
+        "gradient",
+        "or accumulated metric)",
+        "specified normalization factor"
+      ]
+    },
+    {
+      "id": "T09",
+      "name": "gradient-norm-computation-fidelity",
+      "category": "model_integrity",
+      "prompt_focus": "|reported_grad_norm(step) - norm(actual_grads(step))| / norm(actual_grads(step)) <= tol AND clip_coef(step) == max_norm / (global_norm(step) + eps) with eps added exactly once globally and normalization by dp_size/replica_count (not world_s",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T10",
+      "name": "producer-consumer-completion-ordering",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL (prod, cons, buf) in hazard_pairs: happens_before(complete(prod(buf)), start(cons(buf)))  -- includes: grad write before reduce-scatter, param all-gather before forward read, wgrad before all-reduce, init before DDP bucket copy, asyn",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T11",
+      "name": "checkpoint-restore-state-equality",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL k in state_keys: value_after_load(k) == value_at_save(k), with key mapping preserved under renames, derived caches (e.g. secondary param shards) refreshed to match restored primaries, and no re-applied transformation on load (idempot",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T12",
+      "name": "checkpoint-save-completeness",
+      "category": "model_integrity",
+      "prompt_focus": "set(keys(saved_state_dict)) == set(keys(expected_state)) AND count(saved_shard_files) == expected_shard_count(topology) AND FORALL g in partition_groups: saved(g) exists",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T13",
+      "name": "dataloader-bookkeeping-reset",
+      "category": "model_integrity",
+      "prompt_focus": "at each boundary b: loader_position(after b) == defined_initial(b)  -- start_index == 0 at a new epoch; bookkeeping reset between repeated runs so sample_order(run_i) == sample_order(run_j)",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T14",
+      "name": "scaling-scalar-finiteness",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL s in scaling_scalars(step): isfinite(s) AND (s used as denominator IMPLIES s > 0)",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T15",
+      "name": "counter-monotonic-progress",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL steps t: counter(t+1) >= counter(t) AND counter(t+1) - counter(t) == defined_increment(t) (no stall at 0, no per-step reset/overwrite, no negative wrap)",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T16",
+      "name": "positional-encoding-position-fidelity",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL tokens t on rank r: applied_rope(t, r) == rope_spec(intended_position(t), layout_cfg)  -- intended_position honors supplied position_ids, each batch element's own document boundaries, and CP shard-to-position mapping; layout_cfg hono",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T17",
+      "name": "loss-parameter-gradient-connectivity",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL p in trainable_params_on_active_loss_path: grad_norm(p, step) > 0 (over a window of steps), AND requires_grad_graph(loss) reaches p, AND no post-backward mask zeroes grad(p) unless its freeze/mask mode is active",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T18",
+      "name": "configured-value-effectiveness",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL knob k in accepted_config: effective(k, runtime) == configured(k)  -- e.g. lr_used(first_step_after_load) == scheduler(new_config), applied_softmax_scale == config.softmax_scale, checkpoint_optimizer_layout == layout(configured_optim",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T19",
+      "name": "packed-sequence-attention-isolation",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL token pairs (i, j) with doc(i) != doc(j): attention(i, j) == 0; equivalently output(doc_d) invariant to co-packed documents",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T20",
+      "name": "padding-loss-exclusion",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL positions t with token(t) == pad: loss_mask(t) == 0; equivalently count(loss_mask == 0) == count(padding_tokens) per batch",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T21",
+      "name": "overflow-skip-step-validity",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL steps t: skipped(t) <=> EXISTS g in grads(t): !isfinite(g); over a window: count(skipped) == count(overflow_events)",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T22",
+      "name": "parameter-update-effectiveness",
+      "category": "model_integrity",
+      "prompt_focus": "NOT skipped(t) AND grad_norm(p, t) > 0 IMPLIES checksum(p, t+1) != checksum(p, t); AND id(forward_used_tensor(p)) == id(optimizer_registered_param(p))",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T23",
+      "name": "unrelated-operation-state-preservation",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL (x, op) with op NOT IN designated_writers(x): state(x, after op) == state(x, before op)  -- e.g. checksum(block_input) before norm == residual_addend; expert_id after hook registration == expert_id before; global_rng_state after conf",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T24",
+      "name": "intra-run-recomputation-determinism",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL re-executions e of computation c within step t: value(c, e) == value(c, original)  -- dropout masks under recompute equal the forward masks; bias-correction terms bit-identical across subgroup invocations",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T25",
+      "name": "sharded-layout-conformance",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL (t, op): layout(t, op) == expected_layout(t, parallel_cfg, op_contract)  -- shape(p2p_buffer) == shape(activation)/cp_size on the sequence dim; rank r consumes slice_r(gate) not full gate; loss tensors combined with the declared loca",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T26",
+      "name": "exactly-once-side-effect",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL boundaries b: count(event, b) == 1  -- tracker_increments(step) == 1 even when recompute reruns the module; saves(final_step) == 1 across restarts and never overwrite an existing valid artifact; param_sync_launches(microbatch_id) == ",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T27",
+      "name": "init-distribution-conformance",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL W in initialized_params: |std(W) - spec_std(W, depth, cfg)| <= tol AND truncation_width(W) == cfg.cutoff_factor AND NOT (spec_std(W) > 0 AND std(W) == 0) AND (spec_zero(W) IMPLIES norm(W) == 0) AND stats(W) inconsistent_with_uninitia",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T28",
+      "name": "master-working-weight-copy-fidelity",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL ranks r, params p in partition(r, process_group(param_group(p))): value(working(p), r, after sync_point) == cast(value(master(p), r), working_dtype), and at master creation value(master(p)) == cast(value(source(p)), master_dtype) ele",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T29",
+      "name": "router-gate-probability-range-validity",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL g in router_gate_combine_values(step): 0 <= g <= 1 AND (g feeds log/divide IMPLIES g > 0)  -- combine weights must be drawn from post-softmax gate probabilities, never raw logits",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T30",
+      "name": "static-attention-pattern-mass-exclusion",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL (i,j) in forbidden(pattern_cfg): attention(i, j) == 0, where forbidden is the static position relation of the configured pattern (causal: j > i; two-sided sliding window: the elementwise logical AND of both one-sided window condition",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T31",
+      "name": "sort-key-order-conformance",
+      "category": "model_integrity",
+      "prompt_focus": "sequence(processed_items) == sort(items, key=intended_key, direction=cfg)  -- e.g. checkpoint shard files merged in numeric index order parsed from filenames; documents packed in true descending length order (uint length keys negated withou",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T32",
+      "name": "pipeline-layer-partition-conformance",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL pp_stage s: owned_layers(s) == spec_partition(num_layers, pp_cfg)(s)  -- spec_partition is a monotone boundary cover with |owned_layers(s)| >= 1 for every stage, and per-rank offsets equal to the configured (possibly uneven first/las",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T33",
+      "name": "supervision-label-index-range-validity",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL positions t in supervised_scope: label(t) == ignore_index OR range_offset(target_space_cfg) <= label(t) < range_offset(target_space_cfg) + range_size(target_space_cfg)",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T34",
+      "name": "training-step-budget-data-sufficiency",
+      "category": "model_integrity",
+      "prompt_focus": "example_budget(pipeline) >= training_steps * device_train_batch_size, where example_budget is the total constructed dataset instances or the loader's yield budget before exhaustion; any budget or offset derived from a step count (max_steps,",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    },
+    {
+      "id": "T35",
+      "name": "frozen-parameter-update-exclusion",
+      "category": "model_integrity",
+      "prompt_focus": "FORALL p in designated_frozen_params: p NOT IN optimizer_trainable_set AND checksum(p, t+1) == checksum(p, t) for every step t while frozen(p)",
+      "counterexample": "template-specific CE — not T3 weight inject",
+      "fields": []
+    }
+  ]
+}

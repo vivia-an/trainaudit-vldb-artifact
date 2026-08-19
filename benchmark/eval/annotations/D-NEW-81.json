@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-81",
+  "framework": "deepspeed",
+  "category": "moe",
+  "parallel_dimension": "combo",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["wg_weight_data_ptr", "tracked_parameter_set", "param_dtype", "step"],
+  "check_stage": "after_forward",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P4",
+  "tier_field": "Tier 6",
+  "rationale": "TopKGate.wg gets rebound to a fresh fp32 Linear inside forward, orphaning the ZeRO-tracked parameter. Detection requires checking that wg.weight.data_ptr stays constant across forwards AND that wg.weight remains in DeepSpeed's tracked parameter set. Layer schema_topo_precond: precond guard is 'TopKGate module + ZeRO stage>=1 + fp16/bf16 mixed precision' (rebind only triggers under that combo). Pattern P4 because detection reads module attr (the bound submodule's weight tensor) at runtime hook, not a static class check. Tier 6 needs named_parameters set membership. Borderline P4 vs P7: P4 chosen because the check is on identity/membership of a parameter object, not a counter/flag.",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P4_P7"]
+}

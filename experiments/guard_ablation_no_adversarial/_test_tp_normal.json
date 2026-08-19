@@ -1,0 +1,79 @@
+[
+  {
+    "constraint_name": "shared_experts权重不一致性检查",
+    "constraint_type": "consistency",
+    "status": "pass",
+    "summary": "shared_experts权重在TP通信组间的不一致性检查通过，未发现违规情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "LayerNorm权重一致性检查",
+    "constraint_type": "consistency",
+    "status": "pass",
+    "summary": "LayerNorm权重一致性检查通过，所有DP和TP通信组间的layernorm权重在model-after-backward阶段保持一致。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "Router权重一致性检查",
+    "constraint_type": "consistency",
+    "status": "pass",
+    "summary": "Router权重一致性检查通过，所有router权重参数在TP通信组间完全复制一致，未发现违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP梯度shape和dtype一致性检查",
+    "constraint_type": "consistency",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有tensor parallel组内分片参数的梯度shape和dtype与其参数分片严格一致，未发现任何不一致性违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer_step阶段TP参数optimizer state分片一致性检查",
+    "constraint_type": "consistency",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: Referenced column \"num_tp_shards\" not found in FROM clause!\nCandidate bindings: \"tp_rank\", \"step\", \"dp_rank\", \"pp_rank\"\n\nLINE 1: ...imizer_states GROUP BY param_name, step, dp_rank, pp_rank, num_tp_shards, tp_ranks, cksums HAVING COUNT(DISTINCT cksum...\n                                                                      ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段TP参数AllGather拼接完整性检查",
+    "constraint_type": "consistency",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: In a DISTINCT aggregate, ORDER BY expressions must appear in the argument list",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "initialization阶段TP参数分片边界完整性检查",
+    "constraint_type": "consistency",
+    "status": "pass",
+    "summary": "initialization阶段TP参数分片边界完整性检查通过，未发现分片重叠或遗漏问题。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP分片参数main_grad存在性与完整性检查",
+    "constraint_type": "consistency",
+    "status": "fail",
+    "summary": "在model-after-backward阶段，所有TP组内requires_grad=True的参数分片均未分配main_grad，存在990条违规记录，涉及多个参数（如final_layernorm.bias/weight、mlp层参数等），missing_grad_count均为1，表明main_grad完全缺失，违反了一致性约束。",
+    "n_violations": 4
+  },
+  {
+    "constraint_name": "model-after-forward阶段TP attention.qkv.bias参数shape一致性检查",
+    "constraint_type": "consistency",
+    "status": "pass",
+    "summary": "model-after-forward阶段TP attention.qkv.bias参数shape一致性检查通过，所有tensor parallel组内参数shape与理论分片shape完全一致，未发现任何违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-optimizer-step阶段TP attention output projection权重分片shape与边界完整性检查",
+    "constraint_type": "consistency",
+    "status": "pass",
+    "summary": "在model-after-optimizer-step阶段，所有tensor parallel组内attention output projection权重（attention.dense.weight）的分片shape与理论shape完全一致，且分片边界无越界或重叠，未发现任何违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP分片梯度分布差异性检查",
+    "constraint_type": "consistency",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有tensor parallel组内可训练参数的梯度分片均存在显著分布差异，未发现大范围梯度完全一致的情况，训练未退化为数据并行。",
+    "n_violations": 0
+  }
+]

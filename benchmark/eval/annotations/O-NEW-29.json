@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-29",
+  "framework": "olmo",
+  "category": "communication",
+  "parallel_dimension": "FSDP",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["tensor_device", "op_name", "step"],
+  "check_stage": "all_reduce",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P6",
+  "tier_field": "exceeds_tier6",
+  "rationale": "per_param metric tensors default to CPU and are passed to dist.all_reduce; NCCL needs CUDA, so backend silently falls back to gloo with different reduction semantics. Detection reads each tensor's device at the all_reduce call — observable as a runtime hook around the collective. Schema_topo_precond because the rule is conditional on 'this all_reduce being on the NCCL communicator' (precond on backend/topology), not pure cross-rank equality. Category=communication (anti-example 3: root cause is wrong group/backend, not reduction op). Tier exceeds_tier6 because tensor.device per call is not in Tier 0-6 trace schema.",
+  "borderline_flags": ["CATEGORY_AMBIGUOUS_communication_gradient_sync", "EXCEEDS_TIER6"]
+}

@@ -1,0 +1,5 @@
+layer,count,pct_392,baseline_128,delta_pp
+schema_only,38,9.7,20,-10.3
++topo cumulative,40,10.2,51,-40.8
++precond cumulative (3-layer),326,83.2,74,+9.2
+unobservable gap,66,16.8,26,-9.2

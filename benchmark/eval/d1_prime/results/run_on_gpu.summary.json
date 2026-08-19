@@ -1,0 +1,67 @@
+{
+  "host": "eval-gpu-0",
+  "venv": "/volume/qscai/cqs/temp/venv-cu126",
+  "trace_root": "/volume/qscai/cqs/temp/d1_prime_traces",
+  "runs": [
+    {
+      "bug": "CF1",
+      "variant": "buggy",
+      "trace_dir": "/volume/qscai/cqs/temp/d1_prime_traces/CF1/buggy",
+      "n_files": 3,
+      "total_bytes": 9524926,
+      "has_instrumentation_log": true,
+      "has_proxy_log": true,
+      "looks_ok": true
+    },
+    {
+      "bug": "CF1",
+      "variant": "fixed",
+      "trace_dir": "/volume/qscai/cqs/temp/d1_prime_traces/CF1/fixed",
+      "n_files": 3,
+      "total_bytes": 9544810,
+      "has_instrumentation_log": true,
+      "has_proxy_log": true,
+      "looks_ok": true
+    },
+    {
+      "bug": "CM1",
+      "variant": "buggy",
+      "trace_dir": "/volume/qscai/cqs/temp/d1_prime_traces/CM1/buggy",
+      "n_files": 3,
+      "total_bytes": 8594718,
+      "has_instrumentation_log": true,
+      "has_proxy_log": true,
+      "looks_ok": true
+    },
+    {
+      "bug": "CM1",
+      "variant": "fixed",
+      "trace_dir": "/volume/qscai/cqs/temp/d1_prime_traces/CM1/fixed",
+      "n_files": 3,
+      "total_bytes": 8594718,
+      "has_instrumentation_log": true,
+      "has_proxy_log": true,
+      "looks_ok": true
+    },
+    {
+      "bug": "OF1",
+      "variant": "buggy",
+      "trace_dir": "/volume/qscai/cqs/temp/d1_prime_traces/OF1/buggy",
+      "n_files": 3,
+      "total_bytes": 14355813,
+      "has_instrumentation_log": true,
+      "has_proxy_log": true,
+      "looks_ok": true
+    },
+    {
+      "bug": "OF1",
+      "variant": "fixed",
+      "trace_dir": "/volume/qscai/cqs/temp/d1_prime_traces/OF1/fixed",
+      "n_files": 3,
+      "total_bytes": 14356117,
+      "has_instrumentation_log": true,
+      "has_proxy_log": true,
+      "looks_ok": true
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-44",
+  "framework": "deepspeed",
+  "category": "checkpoint",
+  "parallel_dimension": "combo",
+  "invariant_type": "completeness",
+  "required_trace_fields": ["saved_files", "tp_world_size", "ep_enabled", "step"],
+  "check_stage": "checkpoint_save",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": true,
+  "pi_precond_applicable": true,
+  "pattern_id": "P7",
+  "tier_field": "Tier 5",
+  "rationale": "_save_moe_checkpoint short-returns on exp_dp_rank!=0, so only mp_rank_00_model_states.pt exists; non-zero TP ranks lose non-MoE weights. Invariant: one model_states.pt per TP rank, so checking requires TP topology (pi_topo) under precond MoE+TP>1 (pi_precond). Borderline moe vs checkpoint: chose checkpoint because the bug is missing save files, not router/expert behavior. P7 counts saved-file occurrences across ranks."
+}

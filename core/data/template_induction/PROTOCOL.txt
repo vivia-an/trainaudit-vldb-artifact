@@ -1,0 +1,5 @@
+TrainAudit Pattern Catalog (frozen)
+===================================
+Source artifact: frozen_template_catalog.json (sha256 in frozen_template_catalog.sha256)
+Split: dataset_split.json (seed 128 / development 186 / test 78)
+Miner snapshot: ../../config/pattern_catalog_snapshot.json (or ../config when packed at repo root)

@@ -1,0 +1,1204 @@
+[
+ {
+  "bug_id": "B13",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "OLMoSequentialBlock attn_norm overwrites residual stream",
+  "description": "",
+  "root_cause": "OLMoSequentialBlock.forward did `x = self.attn_norm(x)` clobbering residual stream so identity path uses normed x.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "block_type='sequential'",
+   "norm_after=False (pre-LN, default)"
+  ],
+  "issue_url": "https://github.com/allenai/OLMo/pull/680"
+ },
+ {
+  "bug_id": "B15",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Trainer.train_micro_batch divides z_loss by num_micro_batches instead of batch_size_in_tokens",
+  "description": "",
+  "root_cause": "z_loss = z_loss / num_micro_batches scales auxiliary loss by gradient accumulation count, not by token count. With T=batch_size_in_tokens >> num_micro_batches, z_loss dominates loss and corrupts training.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "softmax_auxiliary_loss = True",
+   "num_micro_batches != batch_size_in_tokens"
+  ],
+  "issue_url": "https://github.com/allenai/OLMo/pull/634"
+ },
+ {
+  "bug_id": "D-005",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "DeepSpeed ZeRO Stage-3 + CPU offloaded optimizer (CPUAdam) inconsistency metadata between subgroup",
+  "description": "CPUAdam 的 IncrementStep 在同一 step 内多次 subgroup 调用时，std::pow 路径与乘法路径产生不同的 bias_correction2 值，导致参数更新不一致",
+  "root_cause": "CPUAdam 的 IncrementStep 在同一 step 内多次 subgroup 调用时，std::pow 路径与乘法路径产生不同的 bias_correction2 值，导致参数更新不一致",
+  "category": "optimizer_state",
+  "parallel_dimension": "DP",
+  "severity": "medium",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/microsoft/DeepSpeed/issues/7819"
+ },
+ {
+  "bug_id": "D-006",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Integer overflow in FusedAdam silently prevents weight updates for large tensors (>= 2^31 elements)",
+  "description": "TensorListMetadata 的 sizes 数组使用 int32，超过 2^31 个元素的 tensor 溢出为负值，CUDA kernel 循环不执行，参数和 optimizer state 不更新",
+  "root_cause": "TensorListMetadata 的 sizes 数组使用 int32，超过 2^31 个元素的 tensor 溢出为负值，CUDA kernel 循环不执行，参数和 optimizer state 不更新",
+  "category": "numerical",
+  "parallel_dimension": "none",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/microsoft/DeepSpeed/issues/7640"
+ },
+ {
+  "bug_id": "D-008",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "DeepSpeed accuracy issue for torch.compile if activation checkpoint function not compiler disabled",
+  "description": "DeepSpeed 自定义 checkpoint 函数与 torch.compile 不兼容，RNG state 保存/恢复机制不匹配导致 dropout 在 forward/backward 间产生不同随机数，loss 逐步发散",
+  "root_cause": "DeepSpeed 自定义 checkpoint 函数与 torch.compile 不兼容，RNG state 保存/恢复机制不匹配导致 dropout 在 forward/backward 间产生不同随机数，loss 逐步发散",
+  "category": "numerical",
+  "parallel_dimension": "none",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/microsoft/DeepSpeed/issues/6811"
+ },
+ {
+  "bug_id": "D-011",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "BF16_Optimizer last-microbatch grad leak under ZeRO-1",
+  "description": "backward_epilogue 中 allreduce_gradients() 在 optimizer.backward_epilogue() 之前调用，导致最后一个 microbatch 的梯度被排除在 cross-rank allreduce 之外，各 rank 模型权重短暂发散",
+  "root_cause": "backward_epilogue() called AFTER allreduce_gradients(). Last micro-batch FP32 grads not included in allreduce.",
+  "category": "gradient_sync",
+  "parallel_dimension": "DP",
+  "severity": "high",
+  "trigger_conditions": [
+   "bf16 + grad_accum_dtype=fp32",
+   "zero_stage=1",
+   "gradient_accumulation_steps > 1"
+  ],
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/7985"
+ },
+ {
+  "bug_id": "D-015",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Misplaced overflow return always exits FP16 optimizer step",
+  "description": "FP16 fused optimizer 中 return self.overflow 和 timer log 语句错位到 if self.overflow 块之外，导致无论是否溢出都提前返回，forward pass 和 loss 计算错误",
+  "root_cause": "return self.overflow at wrong indentation causes optimizer step to always return early",
+  "category": "control_flow",
+  "parallel_dimension": "none",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/7645"
+ },
+ {
+  "bug_id": "D-021",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO3 uses default_stream instead of current_stream for gradient reduce",
+  "description": "ZeRO-3 梯度 reduce 前同步用 wait_stream(default_stream())，但 autograd 在 forward 使用的非默认 stream 上执行 backward，导致 reduce-scatter 在梯度写入完成前就开始，产生随机 NaN",
+  "root_cause": "reduce_and_partition_stream.wait_stream uses default_stream() instead of current_stream()",
+  "category": "communication",
+  "parallel_dimension": "DP",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/7898"
+ },
+ {
+  "bug_id": "D-027",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Residual MoE softmax applied on wrong dimension",
+  "description": "Residual MoE 的 softmax 应用在错误的维度上，expert 和 MLP 的权重未在最后一个维度上正确归一化",
+  "root_cause": "softmax(coef, dim=1) should be dim=-1 for correct expert coefficient normalization",
+  "category": "moe",
+  "parallel_dimension": "none",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/2110"
+ },
+ {
+  "bug_id": "D-043",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Fix saving and loading model checkpoint logic for MiCS sharding",
+  "description": "MiCS 只有第一个 partition group 保存 checkpoint，其他 group 的数据丢失；加载时也缺少对 MiCS partition 的支持",
+  "root_cause": "MiCS 只有第一个 partition group 保存 checkpoint，其他 group 的数据丢失；加载时也缺少对 MiCS partition 的支持",
+  "category": "checkpoint",
+  "parallel_dimension": "DP",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/3440"
+ },
+ {
+  "bug_id": "D-044",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Fix the universal checkpoint issue for stage3 with multiple subgroups",
+  "description": "stage3 universal checkpoint 未正确处理多 subgroup 场景，tensor slicing 越界；多进程同时写入同一 checkpoint 文件导致竞争条件和数据损坏",
+  "root_cause": "stage3 universal checkpoint 未正确处理多 subgroup 场景，tensor slicing 越界；多进程同时写入同一 checkpoint 文件导致竞争条件和数据损坏",
+  "category": "checkpoint",
+  "parallel_dimension": "DP",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/7585"
+ },
+ {
+  "bug_id": "D-045",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO Gradient Accumulation Dtype",
+  "description": "ZeRO 各 stage 强制梯度累积使用与模型权重相同的 dtype，BF16 训练时梯度在 BF16 精度下累积导致数值不稳定",
+  "root_cause": "ZeRO 各 stage 强制梯度累积使用与模型权重相同的 dtype，BF16 训练时梯度在 BF16 精度下累积导致数值不稳定",
+  "category": "dtype",
+  "parallel_dimension": "DP",
+  "severity": "medium",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/2847"
+ },
+ {
+  "bug_id": "D-NEW-12",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "seq_parallel_communication_data_type config key typo causes silent ignore",
+  "description": "",
+  "root_cause": "SEQ_PARALLEL_COMMUNICATION_DATA_TYPE constant uses 'seq_parallel_comm_data_type' but config uses 'seq_parallel_communication_data_type'",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-13",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO-1/2 CPU-offload gradient norm underestimated with manual GA",
+  "description": "",
+  "root_cause": "copy_grads_in_partition only accumulates when ga_steps > 1, misses micro_step_id > 0 case",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-16",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO-3 reduce_and_partition_stream syncs against wrong CUDA stream",
+  "description": "",
+  "root_cause": "__add_grad_to_ipg_bucket uses default_stream() instead of current_stream() for reduce_and_partition_stream synchronization",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-21",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "bf16 without ZeRO incorrectly treated as having ZeRO optimizer state in checkpoint",
+  "description": "",
+  "root_cause": "",
+  "category": "checkpoint",
+  "parallel_dimension": null,
+  "severity": null,
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-25",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "load_module_only with bf16 silently skips refresh_fp32_params, optimizer trains on uninitialized fp32 weights",
+  "description": "",
+  "root_cause": "Two bugs together: (1) load_zero_checkpoint required load_optimizer_states even when only loading the bf16 module, so it ran with no checkpoint files; (2) inside _load_checkpoint, the call to optimizer.refresh_fp32_params() was guarded by self.fp16_enabled(), so for bf16 the high-precision master weights were never refreshed from the loaded 16-bit module. Training proceeds with default-initialized fp32 master weights.",
+  "category": "checkpoint",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "bf16 enabled",
+   "load_checkpoint(load_module_only=True, load_optimizer_states=False)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-27",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO3 communication_data_type comparison inverted — buffer cast happens only when no cast is needed",
+  "description": "",
+  "root_cause": "In __avg_scatter_contiguous_grads the gate was `if self.communication_data_type == self.dtype:` — exactly backward. When the user requested a different communication dtype, the buffer was NOT cast, so reduce-scatter ran on the wrong dtype; when it matched the model dtype the code wastefully cast to itself.",
+  "category": "dtype",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "ZeRO stage 3",
+   "communication_data_type != model dtype (e.g. fp32 comm with bf16 model)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-35",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO3 InflightParamRegistry shared between train and eval coordinators causes stale handles on mode switch",
+  "description": "",
+  "root_cause": "The training and eval PartitionedParameterCoordinators were both constructed with the same shared InflightParamRegistry. When the engine switched modes, in-flight allgather handles registered under one coordinator were observed by the other, which would either re-issue allgather on a still-inflight param or wait on a handle that was never going to fire — leading to silently-stale parameter values during the first iteration after the switch.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "ZeRO stage 3",
+   "alternating model.train()/model.eval() inside a step",
+   "overlap_comm or prefetch enabled"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-38",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "Sparse gradients silently not updating — SparseTensor wraps .data instead of param.grad",
+  "description": "",
+  "root_cause": "In _get_gradients_for_reduction, the sparse-gradient branch wrapped `param.grad.data` into a SparseTensor: `grad_data = SparseTensor(grad_data)`. Because Python re-bound the local name and never wrote back into param.grad, the post-allreduce updated values were stored on a temporary SparseTensor that had no link to the parameter — the sparse embedding gradients were silently dropped.",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "module produces sparse gradients (e.g. nn.Embedding(sparse=True))",
+   "DP > 1"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-48",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "Pipeline + ZeRO: gradient accumulation boundary flag never propagated, ZeRO does early reduction every micro-step",
+  "description": "",
+  "root_cause": "DeepSpeedEngine.allreduce_gradients drove ZeRO's overlapping_partition_gradients_reduce_epilogue, but never told the optimizer whether the engine was at a real GAS boundary. ZeRO's internal `is_gradient_accumulation_boundary` therefore stayed at its default and reduction kicked off on every micro-batch, silently destroying accumulation correctness for PP+ZeRO.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "pipeline parallel + ZeRO stage 2 or 3",
+   "gradient_accumulation_steps > 1"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-54",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "MoE checkpoint records dp_world_size instead of seq_dp_world_size — wrong replication factor on resume with sequence parallel",
+  "description": "",
+  "root_cause": "_save_checkpoint writes the global dp_world_size into the state-dict's 'dp_world_size' field for MoE expert checkpoints. When sequence parallel is also enabled the relevant DP world size is seq_dp_world_size = dp_world_size / sp_size. On resume the checkpoint loader uses this value to re-shard expert tensors, producing the wrong split: experts get replicated/sliced across SP ranks instead of across true DP ranks, so each EP-rank loads weights for the wrong slice and starts from corrupted parameters.",
+  "category": "checkpoint",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "MoE module present",
+   "sequence_parallel_size > 1",
+   "save then load checkpoint"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-71",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO-3 partition padding allocated with torch.empty — undefined values get reduced into other ranks' partitions",
+  "description": "",
+  "root_cause": "When a parameter's last partition is smaller than partition_numel, _avg_scatter_dense_grads built a padded_partition with `torch.empty(...)` and only copied the valid prefix into it. The trailing pad elements held arbitrary garbage from the GPU allocator. That whole padded tensor was then included in the reduce_scatter, so other ranks received contaminated padding bytes mixed into the next parameter's region (because reduce_scatter sums element-wise across ranks before slicing).",
+  "category": "communication",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "ZeRO stage 3",
+   "any param whose partition_numel > the slice numel for the last rank (requires padding)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-81",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "MoE TopKGate.wg silently rebound to a fresh fp32 Linear under ZeRO+fp16/bf16 — gate weight gradients never applied to the ZeRO-managed parameter",
+  "description": "",
+  "root_cause": "TopKGate.__init__ created `self.wg = torch.nn.Linear(...).float()`, registering an fp32 weight with DeepSpeed. When the engine downcasts the model to fp16/bf16, wg.weight becomes fp16/bf16. TopKGate.forward then runs `if self.wg.weight.dtype != torch.float32: self.wg = self.wg.float()` — this creates a brand new Linear module whose weight is a fresh fp32 tensor copy and rebinds self.wg. The new wg.weight is NOT the ZeRO-tracked parameter, so its gradient is never reduced across ranks and the optimizer never updates it. The original (ZeRO-managed) wg.weight stays at its initialization value forever; only the orphan copy receives gradient updates that get thrown away at the end of each step (because the orphan is recreated every forward).",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "MoE layer using TopKGate",
+   "fp16 or bf16 mixed-precision training",
+   "ZeRO stage 1/2/3 (which downcasts model parameters from fp32 to fp16/bf16)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-002",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Wrong attention gradient when Context Parallelism is on",
+  "description": "dQ, dK, dV output from the backward function of core_attention are wrong when context parallelism is enabled. Activation gradients have relative error as large as 1.2 compared to single-card training.",
+  "root_cause": "dQ, dK, dV output from the backward function of core_attention are wrong when context parallelism is enabled. Activation gradients have relative error as large as 1.2 compared to single-card training.",
+  "category": "gradient_sync",
+  "parallel_dimension": "CP",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/1464"
+ },
+ {
+  "bug_id": "M-003",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Incorrect loss scaling in context parallel code logic",
+  "description": "Loss is multiplied by cp_size in the backward pass, causing gradient outputs to differ from non-CP training. The mul cp_size logic should be removed; gradients should use the chunk's local loss, not the all-reduced loss.",
+  "root_cause": "Loss is multiplied by cp_size in the backward pass, causing gradient outputs to differ from non-CP training. The mul cp_size logic should be removed; gradients should use the chunk's local loss, not the all-reduced loss.",
+  "category": "numerical",
+  "parallel_dimension": "CP",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/673"
+ },
+ {
+  "bug_id": "M-014",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE Router topk=1 with post-softmax gives trivial probabilities and zero gradient",
+  "description": "Megatron applies topk first then softmax, while HuggingFace Mixtral applies softmax first then topk. This produces different routing decisions and inference answers, making model conversion incorrect.",
+  "root_cause": "topk-then-softmax with k=1: softmax of single value is always 1.0, producing zero gradient for the router. Router weights never learn.",
+  "category": "numerical",
+  "parallel_dimension": "none",
+  "severity": "high",
+  "trigger_conditions": [
+   "num_experts >= 2",
+   "--moe-router-topk 1",
+   "no --moe-router-pre-softmax (default)"
+  ],
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/955"
+ },
+ {
+  "bug_id": "M-024",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Router input jitter dtype bug — silent fp32 promotion",
+  "description": "MoE router input jitter computation uses wrong dtype, causing numerical inconsistencies in expert routing. The jitter noise is applied with incorrect precision, affecting routing decisions.",
+  "root_cause": "torch.distributions.uniform.Uniform creates fp32 tensors by default (no dtype arg). Multiplying bf16 input by fp32 jitter silently promotes the result to fp32.",
+  "category": "dtype",
+  "parallel_dimension": "EP",
+  "severity": "medium",
+  "trigger_conditions": [
+   "num_experts >= 2 (MoE with TopKRouter)",
+   "--moe-input-jitter-eps > 0",
+   "--bf16 or --fp16 (mixed precision)"
+  ],
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/pull/1726"
+ },
+ {
+  "bug_id": "M-029",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "torch.compile recompile limit breaks autograd graph in PPO loop, silently incorrect gradients",
+  "description": "In PPO training loops, requires_grad state switching causes torch.compile to hit recompile limit. This breaks the autograd graph, and c10d::broadcast_ without registered autograd kernel leads to silently incorrect gradients.",
+  "root_cause": "In PPO training loops, requires_grad state switching causes torch.compile to hit recompile limit. This breaks the autograd graph, and c10d::broadcast_ without registered autograd kernel leads to silently incorrect gradients.",
+  "category": "gradient_sync",
+  "parallel_dimension": "DP",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/1888"
+ },
+ {
+  "bug_id": "M-030",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Learning rate error when continuing training - first step uses old LR value",
+  "description": "After loading checkpoint with --override-opt_param-scheduler and new LR setting, the first training step still uses the old learning rate from the checkpoint instead of the new configured value.",
+  "root_cause": "After loading checkpoint with --override-opt_param-scheduler and new LR setting, the first training step still uses the old learning rate from the checkpoint instead of the new configured value.",
+  "category": "checkpoint",
+  "parallel_dimension": "none",
+  "severity": "medium",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/963"
+ },
+ {
+  "bug_id": "M-040",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Fix bug of reuse_grad_buf_for_mxfp8_param_ag",
+  "description": "When forward_pre_hook is disabled, finish_param_sync() is never called to zero the gradient buffer on the first iteration, so initial parameter values pollute the main gradients silently.",
+  "root_cause": "When forward_pre_hook is disabled, finish_param_sync() is never called to zero the gradient buffer on the first iteration, so initial parameter values pollute the main gradients silently.",
+  "category": "gradient_sync",
+  "parallel_dimension": "DP",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/pull/2802"
+ },
+ {
+  "bug_id": "M-NEW-10",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MoE/DSA gate not sliced when num_query_groups < tp_size",
+  "description": "",
+  "root_cause": "In SelfAttention.forward when output_gate is True and num_query_groups < world_size, the gate tensor was not sliced per TP rank. Each TP rank ended up multiplying its query/key/value partition by the full unsliced gate, producing wrong attention output but no error.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "self-attention with output_gate=True",
+   "num_query_groups < tensor_model_parallel_size",
+   "tp_size > 1"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-11",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "FusedAdam.use_decoupled_grad not set for Megatron-FSDP, gradients silently ignored",
+  "description": "",
+  "root_cause": "When Megatron-FSDP is paired with FusedAdam, gradients are written to param.decoupled_grad rather than param.grad. FusedAdam's use_decoupled_grad flag was never set to True, so the optimizer kept reading param.grad (which is None or stale), silently skipping the actual gradient update.",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "use_megatron_fsdp=True",
+   "use_precision_aware_optimizer=True",
+   "TE FusedAdam available"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-14",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "Layerwise distributed optimizer never marks param_gather as dispatched when expt_dp_size=1",
+  "description": "",
+  "root_cause": "_ParamAndGradBucketGroup.dispatch_param_gather had no early-return when intra distributed-optimizer instance size is 1. The all-gather work handles list ended up empty, but param_gather_dispatched remained False so finish_param_sync never executed. Expert params were therefore left at uninitialized/stale values from previous step's gather buffer.",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "use_layer_wise_distributed_optimizer (e.g. dist_muon)",
+   "expt_dp_size == 1",
+   "MoE expert parameters present"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-21",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MoE aux loss tracker accumulates twice when activation checkpointing reruns router",
+  "description": "",
+  "root_cause": "TopKRouter.aux_loss_load_balancing and seq_aux_loss_load_balancing only checked self.training, not torch.is_grad_enabled(). With activation checkpointing the router forward runs once normally and again under recompute (no grad), and the aux loss tracker was incremented in both passes, doubling the logged values.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "MoE TopKRouter training=True",
+   "activation recompute / checkpointing enabled (router runs twice per step)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-3",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "fp32 residual connection silently downcast to bf16",
+  "description": "",
+  "root_cause": "_bias_dropout_add_func downcasts residual to x.dtype (bf16) instead of upcasting x to residual.dtype (fp32)",
+  "category": "dtype",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-34",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MoE local_indices wrong via fancy indexing on bool mask when topk > 1",
+  "description": "",
+  "root_cause": "BaseMoELayer used local_indices = global_indices[global_local_map] (fancy indexing). For 2-D global_indices with topk>1, advanced indexing collapses dimensions in a way that breaks the (token, expert_slot) layout, resulting in tokens being routed to the wrong experts on each EP rank. masked_select preserves the correct flat ordering.",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "MoE BaseMoELayer dispatch path",
+   "moe_router_topk > 1",
+   "expert_parallel_size > 1"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-35",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MoE GroupedGEMM produces wrong outputs without sequence_parallel even when TP>1",
+  "description": "",
+  "root_cause": "ColumnParallelLinear/RowParallelLinear set explicit_expert_comm based on (config.sequence_parallel or self.expert_parallel). MoEAllGatherTokenDispatcher used the same predicate to decide whether to do the gather/scatter for expert routing. With TP>1 but SP=False (and EP=1), neither condition was True, so expert tokens were never gathered across TP ranks and each TP rank produced wrong (incomplete) MoE outputs.",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "MoE with GroupedGEMM experts",
+   "tensor_model_parallel_size > 1",
+   "sequence_parallel=False"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-42",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "Megatron-FSDP GradReducePipeline scales gbuf.data instead of bucket.data, applying gradient scaling to the wrong tensor span",
+  "description": "",
+  "root_cause": "GradReducePipeline.gradient_reduce_preprocessing was passed gbuf.data (the entire buffer) instead of bucket.data (the per-bucket slice). gradient_scaling preprocessing therefore divided every byte of the joint gradient buffer once per bucket, yielding cumulative scaling factor of (1/dp_size)**num_buckets on the affected ranges instead of (1/dp_size). All-reduce/reduce-scatter then communicated wrongly scaled gradients with no shape mismatch.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "Megatron-FSDP enabled (use_megatron_fsdp=True)",
+   "Multiple buckets per gradient buffer",
+   "Gradient scaling factor != 1.0 (e.g. DP > 1)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-43",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "DistributedDataParallel target_gradient_scaling_factor uses get_data_parallel_world_size without context_parallel, so gradients are over-scaled by cp_size when CP is enabled",
+  "description": "",
+  "root_cause": "DistributedDataParallel computed target_gradient_scaling_factor = 1.0 / parallel_state.get_data_parallel_world_size() without with_context_parallel=True. With CP enabled the gradient reduction collective spans the dp*cp ranks, so the gradients should be divided by dp_size*cp_size. Only dividing by dp_size leaves a residual factor of cp_size in the parameter updates.",
+  "category": "communication",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Context parallel size > 1",
+   "calculate_per_token_loss=False (default sample-mean loss)",
+   "DistributedOptimizer or average_in_collective enabled"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-46",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "Interleaved 1F1B forgets to wait on async P2P send before deallocating the source buffer, sending corrupted activations to the next pipeline stage",
+  "description": "",
+  "root_cause": "forward_backward_pipelining_with_interleaving issued an isend to the next stage and immediately called deallocate_output_tensor without waiting on send_next_wait_handle. Because isend's HtoD copy is asynchronous, the destination buffer on the next rank could end up with whatever value happened to be left in memory by the time the deallocation reuse cycle began. Training continued with subtly corrupted forward activations propagated down the pipeline.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "Interleaved 1F1B pipeline (--num-layers-per-virtual-pipeline-stage)",
+   "deallocate_pipeline_outputs=True",
+   "Async P2P sends (overlap_p2p_communication)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-47",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "prepare_input_tensors_for_wgrad_compute does not enforce all_gathered_input.contiguous(), so wgrad GEMM reads a non-contiguous strided tensor as if it were contiguous",
+  "description": "",
+  "root_cause": "prepare_input_tensors_for_wgrad_compute only called grad_output.contiguous() and assumed all_gathered_input was already contiguous. Some upstream paths (NeMo SFT QAT inputs, some reshape/transpose chains) hand in a strided tensor, but fused_weight_gradient_mlp_cuda.wgrad_gemm_accum_* indexes the buffer via flat data_ptr arithmetic. The kernel reads the wrong elements yet the tensor metadata looks valid, so the wgrad accumulation produces silently incorrect numbers.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Sequence parallel + TP > 1 with non-contiguous gathered activations (e.g. NeMo SFT QAT codepath)",
+   "Gradient accumulation fusion enabled"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-67",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MegatronOptimizer.get_grads_for_norm checks fsdp_param BEFORE precision-aware-optimizer branch, so M-FSDP + precision-aware optimizer reads param.grad._local_tensor instead of decoupled_grad and computes the wrong norm",
+  "description": "",
+  "root_cause": "MegatronOptimizer.get_grads_for_norm gated on getattr(param, '__fsdp_param__', False) FIRST and only fell back to the precision-aware decoupled_grad branch when not an FSDP param. With both flags on, FSDP parameters were always read via param.grad._local_tensor instead of param.decoupled_grad. Under precision-aware optimizer, param.grad is None or stale because gradients are written into param.decoupled_grad. The grad norm computation thus used wrong (likely zero) tensors, silently disabling clipping and giving an incorrect global norm for logging.",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Megatron-FSDP enabled (params have __fsdp_param__ flag)",
+   "use_precision_aware_optimizer_no_fp8_or_ds_fp8 enabled (decoupled grads)",
+   "Gradient clipping with grad norm computation"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-8",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "config.softmax_scale ignored in attention forward paths",
+  "description": "",
+  "root_cause": "",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-017",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Fixed CosWithWarmupAndLinearDecay scheduler initialization bug",
+  "description": "CosWithWarmupAndLinearDecay 学习率 scheduler 的初始化逻辑错误，导致学习率 schedule 不符合预期",
+  "root_cause": "CosWithWarmupAndLinearDecay 学习率 scheduler 的初始化逻辑错误，导致学习率 schedule 不符合预期",
+  "category": "lr_schedule",
+  "parallel_dimension": "none",
+  "severity": "medium",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/allenai/OLMo-core/releases/tag/v2.2.0"
+ },
+ {
+  "bug_id": "O-027",
+  "framework": "olmo",
+  "repo": "pytorch/pytorch",
+  "title": "torch.ops.fsdp.set_ with torch.compile silently incorrect due to CSE optimization",
+  "description": "FSDP 的 set_ 操作未被 functionalized，torch.compile 的 CSE 优化错误地消除了 set_ 之后的重复表达式，导致静默产生错误结果",
+  "root_cause": "FSDP 的 set_ 操作未被 functionalized，torch.compile 的 CSE 优化错误地消除了 set_ 之后的重复表达式，导致静默产生错误结果",
+  "category": "control_flow",
+  "parallel_dimension": "FSDP",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/pytorch/pytorch/issues/132200"
+ },
+ {
+  "bug_id": "O-031",
+  "framework": "olmo",
+  "repo": "pytorch/pytorch",
+  "title": "FP32 accumulation of bf16 gradients in FSDP: training unstable at 48x8 GPU scale",
+  "description": "FSDP 使用 bf16 reduce_dtype 时，梯度的 accumulation/reduction 操作在 bf16 精度下进行，大规模（48x8 GPU）训练变得不稳定",
+  "root_cause": "FSDP 使用 bf16 reduce_dtype 时，梯度的 accumulation/reduction 操作在 bf16 精度下进行，大规模（48x8 GPU）训练变得不稳定",
+  "category": "numerical",
+  "parallel_dimension": "FSDP",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/pytorch/pytorch/issues/106395"
+ },
+ {
+  "bug_id": "O-035",
+  "framework": "olmo",
+  "repo": "pytorch/pytorch",
+  "title": "FSDP with param_init_fn + sync_module_states=True produces random accuracy (model not learning)",
+  "description": "FSDP 使用 param_init_fn 和 sync_module_states=True 时，因 re-initialization 在 flatten/shard 后改变了参数 shape 导致 RNG 序列不同，模型实际上无法学习但不报错",
+  "root_cause": "FSDP 使用 param_init_fn 和 sync_module_states=True 时，因 re-initialization 在 flatten/shard 后改变了参数 shape 导致 RNG 序列不同，模型实际上无法学习但不报错",
+  "category": "sharding",
+  "parallel_dimension": "FSDP",
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": "https://github.com/pytorch/pytorch/issues/105840"
+ },
+ {
+  "bug_id": "O-NEW-10",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "grad_norm_exp_avg EMA self-referential update — adaptive clipping broken",
+  "description": "",
+  "root_cause": "",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-11",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "SDP attention bias not cast to autocast dtype, -inf downcasts to NaNs in mixed precision",
+  "description": "",
+  "root_cause": "The attention bias was created in fp32 with -inf masked positions and only cast to the input dtype at the SDP call. Under autocast, the SDP kernel runs in lower precision; downcasting -inf to bf16/fp16 yields valid -inf values that propagate through softmax and produce NaNs once tokens are masked. The fix uses torch.finfo(target_dtype).min and casts the bias before the SDP call.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "AMP/autocast enabled (bf16 or fp16)",
+   "padded sequences requiring attention masking",
+   "scaled_dot_product_attention used"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-13",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "FLOPs counter multiplies per-sequence flops by global batch size every step instead of accumulating per token",
+  "description": "",
+  "root_cause": "num_fwd_flops/num_bck_flops were computed per sequence (multiplied by max_sequence_length) and SpeedMonitor accumulated them with global_batch_size every step using +=. After resume, the running total was overwritten/reset per step rather than treated as cumulative tokens, so reported Gflops did not accumulate across resumes. Fix changes flops to per-token and assigns Gflops = (fwd+bck) * global_total_tokens / 1e9.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "training restarts from a checkpoint",
+   "speed/flops monitoring enabled"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-15",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Outlier-loss skip-step logic inverted: optimizer steps only when loss IS an outlier",
+  "description": "",
+  "root_cause": "should_step was being AND-ed with is_outlier, meaning the optimizer only stepped on outlier steps and silently skipped normal training steps. The fix negates is_outlier so the optimizer steps on normal batches and skips outliers as intended.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "ce_loss_outlier_detector or grad_norm_outlier_detector enabled",
+   "any training step where the detector reports is_outlier=False (the common case)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-16",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "torch.device('mps') used as boolean check is always truthy, forces every run into MPS/CPU mode",
+  "description": "",
+  "root_cause": "The condition `if torch.device('mps')` is always True because torch.device(...) returns a non-None Device object. As a result the script unconditionally rewrites init_device to 'mps' and disables distributed training even on CUDA hosts. Fix replaces the call with torch.backends.mps.is_available() and a corresponding CPU check.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "scripts/train.py used as entrypoint",
+   "any backend (CUDA/MPS/CPU)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-20",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "ff_out readout reset overwrites muP zero-init weights with normal-distribution values",
+  "description": "",
+  "root_cause": "OLMo.reset_parameters always called init_normal on transformer.ff_out, including under muP where ff_out is a MuReadout that must be initialized to zero. The non-zero initialization breaks the muP coordinate-check property and changes the model's effective output scale at initialization. Fix skips init_normal on ff_out when use_mup is True.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "model.use_mup=true",
+   "OLMo.reset_parameters() invoked (always called from __init__)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-21",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "OLMoSequentialBlock.ff_proj is silently zero-initialized via MuReadout when use_mup is enabled",
+  "description": "",
+  "root_cause": "When use_mup was true, ff_proj was constructed as MuReadout with readout_zero_init=True and reset_parameters skipped re-initializing it. Only the final output ff_out should be a MuReadout in muP; every block's ff_proj being zero-initialized wipes out the FFN contribution at start of training. Fix only uses MuReadout for ff_proj when mlp_hidden_size is also set and always re-initializes ff_proj via init_normal.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "model.use_mup=true",
+   "every OLMoSequentialBlock constructed (any layer count)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-22",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "muP attention scale uses 1/d instead of sqrt(base_d)/d, mismatching the SP scale at the base width",
+  "description": "",
+  "root_cause": "Under muP the attention scale was 1/q.size(-1), which differs from the standard parameterization scale 1/sqrt(d) even at the base width. This silently changes the attention temperature for the base model relative to SP. Fix uses sqrt(mup_base_n_heads)/q.size(-1) so that the scale matches SP exactly when n_heads == mup_base_n_heads and tracks muP scaling rules for wider models.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "model.use_mup=true",
+   "scaled-dot-product attention path (not flash varlen)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-26",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "global_step not reset when restore_dataloader=False, so resumed runs keep the checkpoint's step counter",
+  "description": "",
+  "root_cause": "When the user sets restore_dataloader=False to start from saved weights but a fresh dataset, restore_checkpoint() resets epoch and token counters but forgot to reset global_step. The optimizer/LR scheduler then starts at the checkpoint's step (e.g., 50000) instead of 0, silently skipping warmup and using a much smaller LR than expected.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "training resumes from a checkpoint with cfg.restore_dataloader=False",
+   "training is supposed to start a new run from the saved weights"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-32",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Reduced sums/norms not divided by num_model_replicas in HSDP, optimizer metrics inflated by replica count",
+  "description": "",
+  "root_cause": "After the dist.all_reduce(SUM) in HYBRID_SHARD, identical replica contributions are summed N times. The original code consumed those sums directly, so per-param avg metrics and grad_norm metrics ended up N times larger than the true value. Fix divides the all-reduced tensor (all_sums_norms_numels and all_norms) by self.num_model_replicas before splitting and using.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "HSDP with num_model_replicas > 1",
+   "collect_param_metrics=True",
+   "param-norm metrics being logged"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-55",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Block readout init unconditionally re-initializes ff_proj, overwriting muP zero-init",
+  "description": "",
+  "root_cause": "OLMoSequentialBlock.reset_parameters unconditionally called `init_normal(self.ff_proj, std, cutoff_factor, ...)`. When `use_mup=True`, ff_proj is a `MuReadout` module whose readout weights must remain at the muP zero/special initialization; the unconditional re-init overwrites that with a regular truncated-normal, silently breaking the muP coordinate-check guarantee that activation magnitudes are width-independent.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "OLMoSequentialBlock used and reset_parameters() called",
+   "use_mup enabled OR full_megatron init_fn (where ff_proj should keep MuReadout's zero init)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-56",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "q_norm forced to elementwise_affine=True regardless of attention_layer_norm_with_affine",
+  "description": "",
+  "root_cause": "When constructing QK normalization layers, `k_norm` correctly used `elementwise_affine=config.attention_layer_norm_with_affine` but `q_norm` was hard-coded to `elementwise_affine=True`. With `attention_layer_norm_with_affine=False` the model silently normalizes q with learnable scale/bias but k without, breaking symmetry between q and k and adding parameters that the user did not request.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "attention_layer_norm=True (QK norm enabled)",
+   "attention_layer_norm_with_affine=False (asymmetric config)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-61",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "ff_out nn.Linear constructed without device=init_device, breaking meta-init flow",
+  "description": "",
+  "root_cause": "When building the readout `ff_out`, every other Linear in the model passed `device=config.init_device` so it could be created on the meta device and later materialized by FSDP with the configured init. The buggy version omitted this kwarg for `ff_out`, so it was always built on the default device with default kaiming init, escaping the init pipeline. The readout therefore carries the wrong init scale and lives on the wrong device until FSDP later moves it.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "init_device='meta'",
+   "FSDP enabled (lazy materialization expected)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-62",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "load_model in mup coord-check skips reset_parameters when infshapes is None",
+  "description": "",
+  "root_cause": "`reset_parameters()` was nested inside `if infshapes is not None:` together with `apply_infshapes`. For the standard-parametrization baseline (`infshapes=None`) the code therefore skipped reset_parameters entirely, leaving FSDP-materialized parameters with their default (often near-zero) values. Comparison curves and any downstream training look completely off without raising an error.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "mup_olmo coord-check load_model path used for SP (standard-param) baseline",
+   "infshapes argument is None (i.e. running the SP comparison rather than a muP run)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-63",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "DeepSpeed scheduler set to WarmupLR instead of WarmupDecayLR (no decay phase)",
+  "description": "",
+  "root_cause": "DeepSpeedTrainer built its DeepSpeed config with `\"scheduler\": {\"type\": \"WarmupLR\", ...}`. WarmupLR only ramps up to the max LR and then holds it constant—it never decays. The intended schedule was WarmupDecayLR which ramps then linearly decays. Buggy training therefore runs at peak LR for the entire post-warmup duration, silently overshooting the planned schedule.",
+  "category": "lr_schedule",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "DeepSpeedTrainer in use (configs ending in -lumi-deepspeed.yaml etc.)",
+   "Long enough training that decay matters"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-8",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Attention norm overwrites residual input — destroys identity path",
+  "description": "",
+  "root_cause": "",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-11",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Attention claude-init uses d_model**-0.5 instead of actual w.in_features**-0.5 — wrong std for GQA Q/K/V and w_out",
+  "description": "",
+  "root_cause": "InitMethod.attention used a single std = d_model**-0.5 for Q/K/V and w_out. Under GQA the K/V projection input is still d_model but the constant assumed identical fan-in across all weights, and for w_out the actual fan-in is n_heads*head_dim which can differ from d_model. Initialization was therefore silently scaled wrong on these layers.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "InitMethod.claude initialization selected",
+   "Attention has separated w_q/w_k/w_v with GQA (n_kv_heads != n_heads) so projections have different output dims",
+   "FusedAttention or w_out where in_features differs from d_model"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-16",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Idealized-overlap ladder reads dolma2 (uint32) tokens with default uint16 dtype — silently produces garbage token ids",
+  "description": "",
+  "root_cause": "PerFileChunkedInstanceSourceConfig defaulted token_dtype to uint16. dolma2 stores token IDs as uint32 because the vocab exceeds 65535. Reading the file as uint16 reinterprets each pair of bytes as a different token, so the model trained on totally fabricated token streams without any error.",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "Dolma2 tokenizer (vocab > 65535)",
+   "PerFileChunkedInstanceSourceConfig without explicit token_dtype"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-21",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Config encoding ignores field.init=False — non-init dataclass fields silently round-trip with stale values",
+  "description": "",
+  "root_cause": "Config.as_dict iterated dataclasses.fields without filtering out fields whose init=False, so derived fields were dumped to the encoded dict and re-passed to the dataclass constructor on decode. Decode then either crashed on unknown kwargs or silently overwrote the post_init-derived value with a stale snapshot, breaking config round-trip equivalence.",
+  "category": "checkpoint",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "Config dataclass uses @dataclass with field(init=False) for derived fields",
+   "Config is serialized via Config.as_dict and re-decoded"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-28",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Mamba.forward casts inputs using cached self.dtype — wrong dtype after FSDP wraps the conv1d weight",
+  "description": "",
+  "root_cause": "Mamba.forward used self.dtype (snapshot at construction time) to cast x. After FSDP wrapped the inner conv1d, the actual parameter dtype changed but self.dtype was stale, so x flowed into the kernel in the wrong precision. The MambaSSM kernel still ran but produced silently wrong values.",
+  "category": "dtype",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Mamba sequence mixer wrapped in FSDP / FSDP2",
+   "Mixed-precision params (e.g., bf16 weights, fp32 cast targets)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-29",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "DTPBoundaryPredictor calls F.silu with two arguments — silu treats w3(h) as inplace flag, drops gating",
+  "description": "",
+  "root_cause": "The expression F.silu(self.w1(h), self.w3(h)) passed self.w3(h) as the inplace argument of F.silu (PyTorch interprets the second positional as a bool-coerced inplace flag). The intended SwiGLU gate (silu(w1(h)) * w3(h)) never executed, so the FFN computed silu(w1(h)) alone and the boundary predictor produced silently degraded outputs.",
+  "category": "loss_computation",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "BLT DTPBoundaryPredictor used for byte-level training",
+   "Standard SwiGLU FFN expected"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-3",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "sqrt decay LR schedule uses wrong formula — decay curve inverted",
+  "description": "",
+  "root_cause": "sqrt(progress) instead of 1-sqrt(1-progress) — wrong decay curve shape",
+  "category": "lr_schedule",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-31",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "fused_linear_cross_entropy_loss accumulates gradient in bf16 by default — silently noisier than fp32 accumulation",
+  "description": "",
+  "root_cause": "The liger-kernel fused linear+CE call defaulted accum_grad to bf16, which silently degraded gradient precision on the LM head. The numerical noise was small enough that training continued, but it shifted loss curves vs the unfused baseline.",
+  "category": "dtype",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "LMHead loss_implementation uses liger fused_linear_cross_entropy_loss",
+   "Mixed-precision (bf16) training"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-38",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Grad clipper recorded grad_norm DTensor — record_metric saw distributed value",
+  "description": "",
+  "root_cause": "GradClipperCallback recorded the raw grad_norm output from torch.nn.utils.clip_grad_norm_ without unwrapping it. With TP, this returned a DTensor; the metric system then operated on the DTensor across ranks, producing a wrongly reduced grad-norm value while clipping itself was already applied locally.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "TP enabled",
+   "GradClipperCallback active",
+   "max_grad_norm set"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-41",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Instance filter loss divisor missed masked-out instance tokens — wrong gradient scale",
+  "description": "",
+  "root_cause": "When the instance filter dropped instances on some ranks the loss divisor (batch_num_tokens_for_loss) only counted unmasked tokens. With per-rank sum-then-allreduce, ranks with fewer kept tokens contributed an artificially large per-token loss, producing an unfair weighted average across the data-parallel group and a wrong gradient magnitude.",
+  "category": "loss_computation",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "instance_mask present in batch",
+   "any rank has masked instances"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-47",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "TE attention backend silently ignored cu_doc_lens — intra-doc masking not applied",
+  "description": "",
+  "root_cause": "TEAttentionBackend.forward accepted cu_doc_lens / max_doc_len arguments but did not pass them to TransformerEngine's attn kernel. Documents packed into a single sequence cross-attended each other instead of being masked at boundaries — full attention across all packed docs.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "TEAttentionBackend selected",
+   "sequence packing with cu_doc_lens"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-48",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Flex-attention sliding-window mask used Python `and` on tensors — short-circuit returned wrong mask",
+  "description": "",
+  "root_cause": "_get_flex_attn_mask_mod._sliding_window_mask_mod returned `q_idx - kv_idx <= window_size[0] and kv_idx - q_idx <= window_size[1]`. Python's `and` calls bool() on the first operand and short-circuits — for scalar bool tensors this returns the second operand whenever the first is truthy and the first when falsy, never producing the intended logical AND. The mask was therefore computed as a single one-sided comparison.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "flex_attention backend selected",
+   "Attention configured with sliding window"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-49",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "BLT stage1 froze only teacher.* — student blocks updated against teacher gradient",
+  "description": "",
+  "root_cause": "freeze_params=['teacher.*'] only matched submodules named 'teacher.*'. Because share_blocks_between_teacher_and_student=True, the actual block parameters live under 'blocks.*' (shared with teacher); those weren't matched by the freeze pattern, so blocks were unfrozen and trained against gradients that included contributions from the teacher path.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "BLT stage1 training script",
+   "shared blocks between teacher and student"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-58",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "BLTDistill patch loss div factor used input_ids.numel() — wrong scaling for byte-level losses",
+  "description": "",
+  "root_cause": "The byte-level loss div factor was computed as loss_div_factor / input_ids.numel(), but loss_div_factor passed in is at the byte sequence level not the patch level. The correct denominator is h_byte.shape[0] * h_byte.shape[1] (number of byte positions), and the patch loss needs an analogous division by patch positions. The mismatch silently mis-weighted byte vs patch loss components.",
+  "category": "loss_computation",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "BLTDistillTransformer",
+   "patch_loss_div_factor configured"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-64",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "FSLDataset fingerprint missed sequence_length / bos_token_id — wrong cache reused",
+  "description": "",
+  "root_cause": "fingerprint_fields for several FSLDataset variants did not include sequence_length, bos_token_id, max_target_sequence_length. Cached instance offsets / packed indices computed under the previous values were reused when those settings changed, so the dataset returned instances whose actual layout no longer matched the configured sequence_length.",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "NumpyPaddedFSLDataset / NumpyPackedFSLDataset / NumpyInterleavedFSLDataset cached on disk",
+   "subsequent run with different sequence_length/bos_token_id but matching pre-existing fingerprint"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-9",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "soft_ce branch backprops only alpha*soft_ce — hard_ce gradient zeroed because output.ce_loss is detached",
+  "description": "",
+  "root_cause": "The soft-CE branch built combined_loss = (1-alpha)*hard_ce_loss + alpha*soft_ce_loss + z_loss using output.ce_loss and output.z_loss, both of which LMHead returns as .detach()'d copies. Only output.loss carries gradient. As soon as alpha decayed to 0 the entire backward() saw zero gradient and grad_norm collapsed.",
+  "category": "loss_computation",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "soft_ce_alpha_start is set so soft-CE branch executes",
+   "LMHead returns ce_loss/z_loss as detached tensors via return_logits=True"
+  ],
+  "issue_url": ""
+ }
+]

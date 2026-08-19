@@ -1,0 +1,45 @@
+{
+  "metadata": {
+    "date": "2026-05-10",
+    "n_bugs": 392,
+    "n_patterns": 16
+  },
+  "p1_to_p8": {
+    "source": "28号 E1 strict (extension_v3)",
+    "hits": {
+      "P3": 42,
+      "P6": 22,
+      "P2": 32,
+      "P4": 19,
+      "P1": 43,
+      "P7": 5,
+      "P5": 26,
+      "P8": 6
+    },
+    "any_pattern": 191,
+    "pct": 48.7
+  },
+  "p9_to_p16": {
+    "source": "axial clustering (v2 expansion)",
+    "hits": {
+      "P9": 19,
+      "P10": 45,
+      "P11": 12,
+      "P12": 21,
+      "P13": 29,
+      "P14": 16,
+      "P15": 15,
+      "P16": 11
+    },
+    "any_new_pattern": 154,
+    "pct": 39.3
+  },
+  "combined": {
+    "any_pattern_p1_p16": 345,
+    "pct": 88.0,
+    "overlap_old_new": 0,
+    "residual_uncovered": 47,
+    "residual_pct": 12.0,
+    "expected_gap_3_3_staircase": "16.8% (66/392)"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "batch": 3,
+  "decisions": [
+    {"case_id": "D-NEW-35", "decision": "MATCH", "template_id": "T10", "guard_extension": "precondition: ZeRO-3 prefetch/overlap with alternating train/eval coordinators - each coordinator must consume only its own in-flight allgather handles (no shared InflightParamRegistry)", "note": "Param allgather-before-forward-read is T10's core hazard pair; the shared handle registry is a precondition guard."},
+    {"case_id": "D-NEW-39", "decision": "MATCH", "template_id": "T05", "guard_extension": "topology: PP>1; precondition: PP loss-aggregation broadcast receive buffer must carry the sender's loss dtype", "note": "Collective receive buffer dtype at use point is a designated-dtype site under T05's predicate."},
+    {"case_id": "OC-NEW-14", "decision": "MATCH", "template_id": "T27", "guard_extension": "precondition: hybrid GatedDeltaNet mixer params (A_log/dt_bias) must receive GDN-prescribed init; generic InitMethod must delegate to the mixer", "note": "Uninitialized/empty init-time parameter memory is directly covered by T27's uninitialized-memory clause."},
+    {"case_id": "D-NEW-1", "decision": "NEW_TEMPLATE", "template_id": "T29", "guard_extension": null, "note": "Promoted with batch-02 singleton OC-NEW-30 (independent incident): same boundedness operator over router gate/combine probability values, one range predicate covers both (§4)."},
+    {"case_id": "O-NEW-60", "decision": "MATCH", "template_id": "T27", "guard_extension": "topology: FSDP; precondition: FSDP meta-device init on torch>=2.1 must apply reset_parameters after materialization", "note": "Default/zero-filled params in place of the designed init violate T27's init-statistics predicate."},
+    {"case_id": "OC-NEW-25", "decision": "SINGLETON", "template_id": null, "guard_extension": null, "note": "Cross-job atomic/consistent cache-artifact integrity; operator (structural_integrity) differs from T10's happens-before (§3.1), objects from D-041/O-001 (§3.2)."},
+    {"case_id": "D-NEW-78", "decision": "MATCH", "template_id": "T05", "guard_extension": "precondition: ZeRO gradient allreduce bucket must honor configured communication_data_type (no hard-coded fp16 downcast of bf16 grads)", "note": "Gradient communication dtype is a designated-dtype use point under T05."},
+    {"case_id": "O-NEW-51", "decision": "SINGLETON", "template_id": null, "guard_extension": null, "note": "Disjoint+complete leftover-index partition across workers; exclusivity objects differ from T19/T20 and exclusivity singletons (§3.2)."},
+    {"case_id": "M-NEW-41", "decision": "MATCH", "template_id": "T23", "guard_extension": "precondition: dataset cached loss mask returned by reference - per-sample in-place padding must mutate a private copy, never the shared cache", "note": "Non-designated writer mutating shared cached state is T23's core relation."},
+    {"case_id": "B4", "decision": "MATCH", "template_id": "T01", "guard_extension": "topology: DP>1 and PP>1; phase: data_loading; precondition: batch broadcast src must be the true first global rank of the DP group under non-contiguous layouts", "note": "The broadcast training batch is replicated state whose checksum must agree across the replication group."},
+    {"case_id": "M-NEW-42", "decision": "MATCH", "template_id": "T08", "guard_extension": "precondition: multi-bucket grad buffers - 1/dp_size must divide each bucket's own span exactly once, not the whole buffer per bucket", "note": "Cumulative (1/dp_size)^num_buckets is an exactly-once scale-factor violation under T08."},
+    {"case_id": "O-NEW-56", "decision": "MATCH", "template_id": "T18", "guard_extension": "precondition: q_norm and k_norm elementwise_affine must both equal the configured attention_layer_norm_with_affine", "note": "structural_integrity re-resolved to config_effectiveness from the relation statement (batch-01/02 precedent): constructed flag must equal configured value."},
+    {"case_id": "O-NEW-17", "decision": "MATCH", "template_id": "T11", "guard_extension": "precondition: muP resume must not re-apply set_base_shapes rescaling to already-muP-scaled restored parameters (idempotent load)", "note": "Post-load parameters must equal saved values; the double rescale is a load-path precondition guard."},
+    {"case_id": "M-NEW-56", "decision": "MATCH", "template_id": "T26", "guard_extension": "phase: backward; precondition: fine-grained backward_dw scheduling must invoke every trainable submodule's weight-grad computation (incl. latent MoE projections) exactly once per backward pass", "note": "A per-boundary required launch occurring zero times fits T26's exactly-once event counting (cf. param_sync launches)."},
+    {"case_id": "M-NEW-58", "decision": "MATCH", "template_id": "T05", "guard_extension": "precondition: keep-in-bf16 exempt layers must stay excluded from FP8/FP4 cast paths, including under CUDA-graph capture with global low-precision enabled", "note": "Pinned module compute dtype is a designated-dtype use point under T05."},
+    {"case_id": "M-NEW-13", "decision": "SINGLETON", "template_id": null, "guard_extension": null, "note": "Tokens entering each expert must equal tokens_per_expert (no padding on non-quantized paths); count objects differ from T12/T21/T26 and count singletons (§3.2)."},
+    {"case_id": "OC-NEW-29", "decision": "MATCH", "template_id": "T04", "guard_extension": "precondition: SwiGLU-configured FFN must compute the gated reference silu(w1(h)) * w3(h); the gating branch must not be dropped", "note": "implementation_equivalence normalizes to reference_equivalence via the alias map; witness is an external reference computation (T04, not T03)."},
+    {"case_id": "O-NEW-65", "decision": "SINGLETON", "template_id": null, "guard_extension": null, "note": "Retention must evict oldest and never the just-saved newest; value-ordering over the retention set, not a happens-before race (§3.2), and merging with D-022's sort order needs unrelated OR branches (§3.3)."},
+    {"case_id": "M-NEW-51", "decision": "MATCH", "template_id": "T03", "guard_extension": "precondition: CUDA-graph capture combined with activation recompute of the same module - replay must match the eager reference", "note": "invariance_across_config normalizes to reference_equivalence; CUDA-graph replay vs eager is a performance-only config pair (T03's paired-run witness)."},
+    {"case_id": "OC-NEW-55", "decision": "MATCH", "template_id": "T08", "guard_extension": "precondition: ratio-loss target statistics must be masked means over mask-valid positions only, not full-padded-tensor means", "note": "Normalization denominator must be the mask-valid count - a T08 specified-factor obligation."},
+    {"case_id": "D-NEW-63", "decision": "MATCH", "template_id": "T24", "guard_extension": null, "note": "idempotency aliased to determinism; evidently the same CPUAdam subgroup bias-correction incident as D-005/D-023 (multiplicative vs pow branch), counted once per §4.1 - support unchanged."},
+    {"case_id": "M-NEW-32", "decision": "SINGLETON", "template_id": null, "guard_extension": null, "note": "Jitter-before-gating is a code-order property; extractor reports no crisp runtime observable (none_runtime), so no shared witness with T10 (§3.4)."},
+    {"case_id": "D-NEW-76", "decision": "SINGLETON", "template_id": null, "guard_extension": null, "note": "Init broadcasts must stay outside the autograd graph; object is autograd-graph structure of parameters, not gradient nonzeroness (T17) nor state clobbering (T23) (§3.2)."},
+    {"case_id": "O-NEW-20", "decision": "MATCH", "template_id": "T27", "guard_extension": "precondition: muP readout (output projection) must be zero-initialized; reset_parameters must skip generic normal init under use_mup", "note": "initialization_conformance aliased to value_scaling_consistency; zero-where-spec-prescribes-zero added as an explicit clause of T27's predicate (guard-level tightening, no relation change)."},
+    {"case_id": "OC-NEW-24", "decision": "MATCH", "template_id": "T09", "guard_extension": "topology: PP>1; precondition: cross-PP-stage total grad norm must be the L2 reduction (sqrt of summed squares), not a sum of per-stage norms", "note": "Wrong cross-group reduction form of the global grad norm is T09's norm-fidelity object."}
+  ],
+  "n_matched": 18,
+  "n_new_singletons": 6,
+  "n_new_templates": 1,
+  "core_edits": [],
+  "templates_total_after": 29,
+  "singletons_total_after": 19,
+  "operator_alias_extensions": {"idempotency": "determinism", "initialization_conformance": "value_scaling_consistency"},
+  "stopping_rule_snapshot": {
+    "new_recurring_templates": 1,
+    "matched_share": 0.72,
+    "new_singleton_share": 0.24,
+    "core_relation_modified": false
+  }
+}

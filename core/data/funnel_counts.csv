@@ -1,0 +1,6 @@
+layer,n_candidates,kept_fraction,note
+L1,420,1.00,pattern hypotheses from PatternGuidedLLM (sum over 4 frameworks: megatron=121 deepspeed=103 olmo=99 olmo_core=97)
+L2,5334,12.70,parameter enumeration (L2/L1; sum: megatron=1300 deepspeed=1397 olmo=1300 olmo_core=1337)
+L3,3436,0.6442,healthy-pass on clean Megatron/DeepSpeed/OLMo trace (sum: megatron=992 deepspeed=680 olmo=899 olmo_core=865)
+L4,357,0.1039,adversarial-pass (Layer4 verifier) (sum: megatron=104 deepspeed=83 olmo=81 olmo_core=89)
+Deploy,45,0.1261,human-curated cross-framework rules (32 T0/T1 Python + 13 dsl_native YAML)

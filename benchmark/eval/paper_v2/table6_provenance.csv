@@ -1,0 +1,20 @@
+paper_id,internal_id,framework,fixed_commit,triggered_invariant,case_type,has_h200_replay,has_paired_fixed_replay,source_csv
+Megatron-3c637fc0d,B1,Megatron-LM,3c637fc0d,replica-cksum-equal,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+DS-d56268f3,B3,DeepSpeed,d56268f3,comm-dtype-matches-training,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+DS-8cbbbb53,B8,DeepSpeed,8cbbbb53,process-group-size-correct,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+DS-005afe12,B11,DeepSpeed,005afe12,clip-grad-bounded,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+OLMoC-6e330ba2,B12,OLMo-core,6e330ba2,initial-lr-present,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+Megatron-99f999a4,M-020,Megatron-LM,99f999a4,layer-count-strict,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+OLMo-204ad53c,O-005,OLMo,204ad53c,checkpoint-preserve-rng,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+OLMo-167a7ac8,O-NEW-9,OLMo,167a7ac8,data-loader-token-id-range,yes,no,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+OLMoC-O-022,O-022,OLMo-core,,DL2/O-022: dataset seed override,boundary,no,no,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+OLMoC-2b6cf996,OC-NEW-2,OLMo-core,2b6cf996,optim-step-counter-monotonic,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+Megatron-e6d56d68,M-010,Megatron-LM,e6d56d68,invocation-frequency-per-step,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+DS-e6e8c137,D-029,DeepSpeed,e6e8c137,moe-cpu-offload grad-norm device,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+DS-40009eb1,D-NEW-9,DeepSpeed,40009eb1,bf16-lp-grad-clear,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+OLMo-ce5f30d5,O-NEW-5,OLMo,ce5f30d5,emb-init-std-sqrt-dmodel,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+OLMo-a57f3803,O-NEW-3,OLMo,a57f3803,zloss-mean-reduction,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+OLMo-d7994c86,O-003,OLMo,d7994c86,LC1/O-003: subthreshold z-loss drift,boundary,yes,no,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+OLMoC-db2b6eff,O-040,OLMo-core,db2b6eff,a100-peak-flops-2x,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+Megatron-1505db4c,M-NEW-33,Megatron-LM,1505db4c,chained-optimizer-param-groups-resync,yes,no,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex
+OLMoC-df72f4ee,OC-NEW-22,OLMo-core,df72f4ee,rope-packed-doc-position-reset,yes,yes,yes,benchmark/eval/results.csv; benchmark/eval/results_gpu.csv; benchmark/eval/real_sdc/provenance_table.tex

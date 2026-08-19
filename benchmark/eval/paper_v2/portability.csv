@@ -1,0 +1,6 @@
+framework,adapter_loc,plot_loc,a0_detected,a1_detected,active_probe,hunt_candidates,driver_ready,source
+Megatron-LM,150,140,1,5,no,1,yes,main_cn.tex portability section
+DeepSpeed,50,50,2,3,no,0,yes,main_cn.tex portability section
+OLMo,150,155,3,3,yes,0,partial,main_cn.tex portability section
+OLMo-core,150,170,4,2,yes,0,partial,main_cn.tex portability section
+FSDP,30,30,0,0,no,0,adapter-only,main_cn.tex portability section

@@ -1,0 +1,183 @@
+[
+ {
+  "bug_id": "B5",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "DistributedDataParallel.finish_grad_sync forgets to scale expert_grads by 1/dp_world_size",
+  "description": "",
+  "root_cause": "DistributedDataParallel.finish_grad_sync syncs the regular grad buffers but never divides expert_grads (local-only main_grads of MoE expert params). Buggy expert grads are dp_world_size× larger than intended.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "MoE training (--num-experts >= 2)",
+   "data_parallel_world_size > 1"
+  ],
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/commit/3373641f"
+ },
+ {
+  "bug_id": "D-NEW-25",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "load_module_only with bf16 silently skips refresh_fp32_params, optimizer trains on uninitialized fp32 weights",
+  "description": "",
+  "root_cause": "Two bugs together: (1) load_zero_checkpoint required load_optimizer_states even when only loading the bf16 module, so it ran with no checkpoint files; (2) inside _load_checkpoint, the call to optimizer.refresh_fp32_params() was guarded by self.fp16_enabled(), so for bf16 the high-precision master weights were never refreshed from the loaded 16-bit module. Training proceeds with default-initialized fp32 master weights.",
+  "category": "checkpoint",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "bf16 enabled",
+   "load_checkpoint(load_module_only=True, load_optimizer_states=False)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-66",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO-3 CPU offload set_local_grad does not refresh norm_for_param_grads — gradient clipping uses pre-clipping norm",
+  "description": "",
+  "root_cause": "set_local_grad copies the supplied tensor into the fp32 partition's grad slot but does not update self.norm_for_param_grads[param_id]. With CPU offload, scaled_global_grad_norm is later computed as the L2-aggregate of these cached per-param norms (because the actual grad lives in pinned CPU memory). The aggregate therefore reflects pre-modification gradients, while unscale_and_clip_grads applies a clip factor based on this stale norm to the modified grads — silent mis-clipping. Note that scaled_global_grad_norm also drives the loss-scale-aware clip decision in optimizer.step.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "ZeRO stage 3",
+   "offload_optimizer (CPU)",
+   "user calls safe_set_local_grad to modify a partition's gradient between backward and step (e.g. external clipping/sanitizing)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-74",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO-3 NVMe optimizer offload writes all ranks' tensors to one shared dir — last writer wins, load gets wrong rank's state",
+  "description": "",
+  "root_cause": "save_checkpoint and load_checkpoint copied the entire NVMe swap_folder under `<save_dir>/<tag>/offloaded_tensors/` without per-rank subdir. With dp_size>1, every rank's local NVMe optimizer state (Adam exp_avg, exp_avg_sq slices) gets copied into the same destination directory; rsync/copytree overwrites file-by-file. The resulting checkpoint contains an arbitrary mix of per-rank slices. On load, every rank reads back the same files, so each rank initializes its optimizer state from another rank's slice → optimizer momenta no longer correspond to the parameters they belong to.",
+  "category": "checkpoint",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "ZeRO stage 3",
+   "nvme optimizer offload (zero_nvme_offload_optimizer)",
+   "save_checkpoint OR load_checkpoint with multi-rank DP"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-28",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MoE expert_bias silently downcast to bf16 by Float16Module wrapper",
+  "description": "",
+  "root_cause": "Float16Module.cuda() converts all parameters and buffers to the working dtype. The router's expert_bias buffer was therefore demoted to bf16 each iteration; subsequent in-place updates of expert_bias accumulated in bf16, losing precision and silently distorting load-balancing-free routing decisions.",
+  "category": "dtype",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Mixed-precision training (bf16 or fp16)",
+   "MoE TopKRouter with expert_bias (aux-loss-free routing)",
+   "Float16Module wraps the model"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-62",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MambaStack assigns make_viewless_tensor result to local 'output' but returns 'hidden_states', sending a non-viewless aliased tensor between hybrid VPP stages",
+  "description": "",
+  "root_cause": "MambaStack.forward stored the result of make_viewless_tensor in a local variable 'output', but the function ultimately returned hidden_states. So the explicit make_viewless_tensor call had no effect. The non-viewless tensor (still a view onto an internal buffer) was returned and forwarded to the next PP stage via isend; on a hybrid VPP schedule the underlying buffer was reused before isend completed, and the next stage received corrupted activations.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Hybrid Mamba model with virtual pipeline parallel (VPP)",
+   "post_process and post_layer_norm both True",
+   "Inter-stage tensor sent via PP isend/irecv"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-18",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Restart LR/weight-decay reset uses cfg.learning_rate for every param group, ignoring per-group muP scaling",
+  "description": "",
+  "root_cause": "On restart Trainer.restore_checkpoint reset every group's lr/initial_lr/weight_decay to cfg.optimizer.learning_rate / cfg.optimizer.weight_decay. With muP, matrix-like groups have lr divided by width_mult, so this reset wiped out muP scaling and used the base LR for every group. The fix tags each muP group with mup_lr/mup_weight_decay and uses those when resetting.",
+  "category": "lr_schedule",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "muP enabled (MuAdamW)",
+   "training resumes from a checkpoint",
+   "param groups have different muP width multipliers"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-35",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "param-group classifier uses '.norm.' regex requiring trailing dot, treating q_norm/k_norm/ff_norm leaf weights as decay params",
+  "description": "",
+  "root_cause": "get_param_groups identified norm parameters via the substring '.norm.' which only matches when there is a child name after .norm. For QK layer norms (q_norm.weight, k_norm.weight) the FQN ends with '.q_norm.weight' so the dot after norm never appears and the weight is silently routed to the decay group, applying weight_decay to a normalization layer's gain.",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "model has LayerNorm/RMSNorm modules whose param fully-qualified name does not have anything after .norm (e.g. blocks.0.attn.q_norm.weight)",
+   "no_decay_norm_and_bias enabled"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-66",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Train DataLoader max_steps not multiplied by device_train_batch_size",
+  "description": "",
+  "root_cause": "`build_train_dataloader` passed `max_steps=train_config.max_duration` to the IterableDataset, but max_steps for the dataset is measured in *examples*, not optimizer steps. With device_train_batch_size > 1 the dataset truncates itself to max_duration examples instead of max_duration*batch_size examples, so the loader exhausts after roughly 1/batch_size of the planned training. Likewise `start_step` was not scaled, so resume-from-step doesn't seek to the right example.",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "IterableDataset wrapper with max_steps parameter",
+   "device_train_batch_size > 1"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-45",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Mamba2 ladder hard-coded head_dim from d_model/n_heads — wrong with FLA defaults",
+  "description": "",
+  "root_cause": "The ladder configurators forced fla_layer_kwargs={'head_dim': ensure_multiple_of(d_model/n_heads, 128)}. FLA's Mamba2 already derives head_dim from its own internal layout, so injecting an externally-rounded value made the constructed Mamba2 layer disagree with the configured d_model/n_heads, producing a model whose effective head dimension differed from what other code assumed.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "pure-mamba-ladder or hybrid-mamba-ladder script",
+   "Mamba2 sequence mixer"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-49",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "BLT stage1 froze only teacher.* — student blocks updated against teacher gradient",
+  "description": "",
+  "root_cause": "freeze_params=['teacher.*'] only matched submodules named 'teacher.*'. Because share_blocks_between_teacher_and_student=True, the actual block parameters live under 'blocks.*' (shared with teacher); those weren't matched by the freeze pattern, so blocks were unfrozen and trained against gradients that included contributions from the teacher path.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "BLT stage1 training script",
+   "shared blocks between teacher and student"
+  ],
+  "issue_url": ""
+ }
+]

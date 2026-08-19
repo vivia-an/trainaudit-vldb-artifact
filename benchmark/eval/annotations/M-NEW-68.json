@@ -1,0 +1,14 @@
+{
+  "bug_id": "M-NEW-68",
+  "framework": "megatron-lm",
+  "category": "control_flow",
+  "parallel_dimension": "combo",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["module_attr_pad_granularity", "hybrid_ep_enabled", "module_class"],
+  "check_stage": "init",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P4",
+  "tier_field": "Tier 6",
+  "rationale": "HybridCPDataLoaderWrapper.pad_granularity must equal 128 when HybridEP is enabled. Detection reads a module attribute at init time and compares to a configured constant. Layer is schema_topo_precond: precond guard is 'HybridEP dispatcher active' (rule does not apply when only MXFP8 path is used). Borderline P4 vs P8: chose P4 because the attribute value depends on runtime config selection between MXFP8 (32) and HybridEP (128); needs a runtime hook reading module attr, not a pure static class assertion. Category control_flow per config_invariant -> control_flow mapping. Tier 6 because detection needs named_modules class snapshot + module attr inspection.",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P4_P8", "CATEGORY_AMBIGUOUS_control_flow_moe"]
+}

@@ -1,0 +1,169 @@
+{
+  "metadata": {
+    "experiment": "E1_pattern",
+    "n_bugs": 32,
+    "subset": "32 cross-pool sanity"
+  },
+  "per_bug": {
+    "D-011": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Last-microbatch grads excluded from allreduce produce DP-rank weight checksum divergence after optimizer step — classic P3 cross-rank replication violation. Not P4 (no specific call-count rule per step); not P2 (no missing 1/N factor)."
+    },
+    "D-014": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Ping-pong buffer index reset corrupts grad values by ~0.3% but detection_method is source_analysis. No runtime invariant: grads are still finite, dtype OK, no cross-rank divergence pattern, not a counter init/reset case in P8 sense."
+    },
+    "D-015": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Indentation bug always returns early from FP16 step. Source-only control-flow bug. Loss not decreasing is a downstream symptom, not catchable by any of P1-P8 runtime rules; P4 requires fixed K not 'never executes update'."
+    },
+    "D-021": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Stream wait_stream uses default_stream instead of current_stream; produces random NaN. Source-only stream-synchronization bug, not observable via dtype/scaling/replication/count patterns; NaN appearance is non-deterministic and would not pin to a single invariant."
+    },
+    "D-025": {
+      "patterns_hit": ["P6"],
+      "patterns_uncertain": [],
+      "rationale": "EP group constructed with num_experts instead of ep_size yields 0 EP groups when num_experts > world_size — a structural mismatch between built parallel topology and config. P6 Structural Integrity. Not P3: bug is at init-time topology, not runtime weight value."
+    },
+    "D-026": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "MoE grad double-divided by bucket count → grad norm is 1/ep_size of expected. Missing/extra scaling factor across N ranks ⇒ P2. Not P4: divide flag is a numerical scale, not a call-count issue."
+    },
+    "D-027": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "softmax(coef, dim=1) on wrong axis — algorithmic dim error. Output sums to 1 along the wrong axis but tensor shape, dtype, and cross-rank values are all consistent. None of P1-P8 catch a wrong-axis softmax."
+    },
+    "D-029": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P3"],
+      "rationale": "Grad norm tensor stays on CPU under MoE+offload; under DP>1 averaging behavior differs. Could surface as P3 expert-DP grad-norm mismatch but signal description says norm differs from non-offload reference, not necessarily across ranks of same group. Below 60% confidence on P3."
+    },
+    "D-038": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "logical_or on scalar tensor turns inf into NaN that propagates through clipping. Source-level numerical bug; downstream NaN gradient is observable but the bug-specific invariant (NaN-handling logic) is not in the 8-pattern catalog."
+    },
+    "D-040": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Zero-sized microbatches on some DP ranks cause inconsistent gradient averaging across DP — detection_signal is 'gradient average weights inconsistent across ranks'. Cross-rank replication violation ⇒ P3."
+    },
+    "M-005": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Router torch.nn.Linear init outside RNG tracker — weights diverge across TP ranks. Identical to few-shot Example 1: P3 Cross-Rank Replication."
+    },
+    "M-008": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "All-gather handle list initialization bug → found_inf permanently true → LR=0. The proximate symptom (LR=0, loss flat) is not a P1-P8 invariant; loss-trend is a meta-signal. No dtype/scaling/replication/count rule fires."
+    },
+    "M-010": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "save_to_aux_losses_tracker called twice per step under --moe-layer-recompute instead of once. Exact P4 invocation-frequency mismatch (K=1 expected, observed 2). Not P2: doubling is via duplicate calls not a missing scaling factor."
+    },
+    "M-012": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "Float16Module silently downcasts fp32 expert_bias buffer to bf16 during forward. Buffer dtype no longer matches its registered dtype across the no-op pass-through ⇒ P1 dtype-preservation."
+    },
+    "M-014": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "topk-then-softmax with k=1 yields trivially 1.0 probabilities and zero router gradient. Algorithmic ordering bug — same shape as Example 4 (source-only). No P1-P8 rule catches monotonicity-equivalent topk reordering."
+    },
+    "M-020": {
+      "patterns_hit": ["P6"],
+      "patterns_uncertain": [],
+      "rationale": "Integer division silently drops layers when num_layers % (pp*vp) != 0. Built model has fewer transformer layers than configured ⇒ P6 Structural Integrity (build-time check). Not P3: layer count differs, not weight values."
+    },
+    "M-021": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Expert params bypass distributed optimizer, no allreduce in expert-DP subgroup → expert weights diverge across ranks of the same expert-DP group. P3 cross-rank replication on expert-DP."
+    },
+    "M-024": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "Uniform jitter created in fp32 by default; multiplying bf16 input by fp32 jitter promotes output to fp32 ⇒ apply_input_jitter input/output dtype mismatch. P1 (analogous to Example 2 sigmoid-bf16)."
+    },
+    "M-033": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "global_aux_loss divides by global token count (across DP) but never multiplies back by dp_size ⇒ gradient is 1/dp_size too small. Missing N scaling across N DP ranks ⇒ P2 (matches few-shot Example 5)."
+    },
+    "O-002": {
+      "patterns_hit": ["P7"],
+      "patterns_uncertain": [],
+      "rationale": "x = self.attn_norm(x) overwrites the residual variable, so the residual addition uses the normed input rather than the original. Textbook P7 Residual Stream Integrity violation."
+    },
+    "O-003": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "z_loss divided by num_micro_batches instead of batch_size_in_tokens — wrong denominator scaling factor (off by seq_len). P2 Scaling Consistency. Not P4: it is a numeric scale, not a call-count error."
+    },
+    "O-005": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Inverted boolean: preserve_rng_state set to False when dropout>0, breaking forward/backward recompute consistency. Source-level config bug; not P5 (P5 is train↔eval, not RNG-on-recompute) and forward/backward divergence is not a runtime cross-rank pattern."
+    },
+    "O-006": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "On checkpoint resume with restore_dataloader=False, global_step / data-loader start_index not reset to 0. P5 covers checkpoint save/load round-trip — a training state field is not properly restored on the eval/resume path."
+    },
+    "O-009": {
+      "patterns_hit": ["P6"],
+      "patterns_uncertain": [],
+      "rationale": "k_norm size computed as d_model // n_kv_heads instead of head_dim * n_kv_heads under GQA — built layer shape disagrees with configured architecture. P6 Structural Integrity (shape correctness vs config)."
+    },
+    "O-010": {
+      "patterns_hit": ["P8"],
+      "patterns_uncertain": [],
+      "rationale": "SkipStepAdamW state['step'] never increments, stays at 0 across calls — counter inconsistency between init value and post-step expectation. P8 Counter Consistency. Not P5: this is not train→eval restoration."
+    },
+    "O-014": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Throughput metrics not all-reduced (missing reduce_type=max) → non-zero ranks see partially-reduced values. Detection signal: 'different rank reports different metric values' — direct P3 cross-rank replication violation."
+    },
+    "O-016": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "After checkpoint load, optimizer param_groups missing initial_lr → LR scheduler computes wrong warmup. Train state (initial_lr) not restored after checkpoint round-trip ⇒ P5 (matches the explicit checkpoint clause)."
+    },
+    "O-021": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Missing global_batch_size in mixture config → rounding error → repeated samples at end of training. Source-only data-pipeline bug; no dtype/scaling/replication/count/structural runtime invariant catches it."
+    },
+    "O-022": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Calling random.seed() in build() corrupts the global Python RNG. Reproducibility bug detected only by comparing pre/post RNG sequences — none of the 8 patterns express 'global RNG state must be untouched by config builders'."
+    },
+    "O-023": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P1"],
+      "rationale": "torch.ones_like(input_ids) yields int64 mask but invariant requires bool. P1 is about preservation across non-cast functions; ones_like correctly preserves input_ids dtype, so strictly P1 does not fire — flagging uncertain only because the symptom resembles a dtype mismatch."
+    },
+    "O-025": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "global_train_flops int overflow after long training. Source-only numerical bug in metrics tracking; MFU>100% is a downstream symptom not in the 8-pattern catalog."
+    },
+    "O-040": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Hardcoded A100 BF16 peak FLOPS constant is half of true value, inflating MFU 2x. Source-only constant-table bug; nothing in P1-P8 validates a hardware-spec constant."
+    }
+  }
+}

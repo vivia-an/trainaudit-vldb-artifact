@@ -1,0 +1,80 @@
+{
+  "version": "v2_expanded",
+  "n_patterns": 16,
+  "n_existing": 8,
+  "n_new": 8,
+  "patterns": {
+    "P1": {
+      "name": "Dtype Preservation",
+      "source": "paper §4.1"
+    },
+    "P2": {
+      "name": "Scaling Consistency",
+      "source": "paper §4.1"
+    },
+    "P3": {
+      "name": "Cross-Rank Replication",
+      "source": "paper §4.1"
+    },
+    "P4": {
+      "name": "Invocation Frequency",
+      "source": "paper §4.1"
+    },
+    "P5": {
+      "name": "State Restoration",
+      "source": "paper §4.1"
+    },
+    "P6": {
+      "name": "Structural Integrity",
+      "source": "paper §4.1"
+    },
+    "P7": {
+      "name": "Residual Stream Integrity",
+      "source": "paper §4.1"
+    },
+    "P8": {
+      "name": "Counter Consistency",
+      "source": "paper §4.1"
+    },
+    "P9": {
+      "name": "Init Distribution Consistency",
+      "type": "C",
+      "source": "axial v2"
+    },
+    "P10": {
+      "name": "Config-Implied Coupling",
+      "type": "C",
+      "source": "axial v2"
+    },
+    "P11": {
+      "name": "Position Encoding & Document Boundary Integrity",
+      "type": "B",
+      "source": "axial v2"
+    },
+    "P12": {
+      "name": "Algorithm Variant / Formula Equivalence",
+      "type": "B",
+      "source": "axial v2"
+    },
+    "P13": {
+      "name": "Tensor Aliasing & Stale State",
+      "type": "B",
+      "source": "axial v2"
+    },
+    "P14": {
+      "name": "Sharded State Completeness",
+      "type": "A",
+      "source": "axial v2"
+    },
+    "P15": {
+      "name": "Counter Width & Granularity",
+      "type": "B",
+      "source": "axial v2"
+    },
+    "P16": {
+      "name": "Loss Component Normalization",
+      "type": "B",
+      "source": "axial v2"
+    }
+  }
+}

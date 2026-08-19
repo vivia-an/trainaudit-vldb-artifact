@@ -1,0 +1,16 @@
+{
+  "n_bugs": 17,
+  "trainaudit": {
+    "buggy_detection": "17/17",
+    "fixed_fp": "0/17"
+  },
+  "traincheck": {
+    "buggy_detection": "8/17",
+    "fixed_fp": "0/17"
+  },
+  "naive": {
+    "buggy_detection": "0/17",
+    "fixed_fp": "0/17"
+  },
+  "class_coverage": "12/13 (loss_computation reserved as \u00a73.3 16.8% boundary)"
+}
