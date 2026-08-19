@@ -1,7 +1,7 @@
 # Contributing
 
-This tree is an **anonymous review artifact**. External contributions are not expected
-during the review period; de-anonymize maintainership at camera-ready.
+This tree accompanies a paper under review at PVLDB. Issues and patches are welcome;
+expect slow responses during the review period.
 
 1. Keep API keys out of the tree — use `DEEPSEEK_API_KEY` / `OPENAI_API_KEY`.
 2. Run offline smoke before PRs: `python3 run_smoke.py`.

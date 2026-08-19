@@ -9,7 +9,7 @@ Built here as `paper/main.pdf` (clean build, 0 errors, 0 undefined refs/citation
 
 | # | Requirement | Verbatim / source | Status | Action |
 |---|---|---|---|---|
-| R1 | Page limit — regular research paper | "up to **12 pages** excluding references" | **OVER** — content runs to p.13 (see R2) | trim ~12–15 lines |
+| R1 | Page limit — regular research paper | "up to **12 pages** excluding references" | **OVER by 25 lines** (252 pt ≈ 0.43 column) — measured, see `PAGE_BUDGET.md` | trim 25 lines |
 | R2 | Appendices count toward the limit | "All content, **including any appendices and acknowledgements** but excluding the references, must fit on the given number of pages." | **RISK** — `appendix.tex` is compiled as a separate supplementary PDF and the main text makes 20+ `Appendix~\ref{}` forward references to it | decide: fold essentials into 12 pages, or keep supplement but make the main paper self-contained |
 | R3 | Single-blind, names on page 1 | "VLDB is a single-blind conference. Therefore, authors MUST include their names and affiliations on the first page of the manuscript." | **OK** — 7 authors + affiliations at `main.tex:126–183` | — |
 | R4 | Supplemental material is mandatory | "Authors **must submit supplemental material**, such as code, data, and other implementation artifacts used to produce the results reported in the paper." | **THIS REPO** | publish, then record URL |

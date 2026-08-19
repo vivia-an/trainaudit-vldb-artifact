@@ -1,11 +1,30 @@
 cff-version: 1.2.0
-message: Anonymous artifact — cite the paper title only during double-blind review.
+message: "If you use this software, please cite the paper below."
 title: "TrainAudit Core: Verified Constraint Mining for Silent Training Errors"
 type: software
 authors:
-  - name: Anonymous
+  - given-names: Qingsong
+    family-names: Cai
+    affiliation: Sichuan University
+  - given-names: Shikai
+    family-names: Li
+    affiliation: West China Hospital, Sichuan University
+  - given-names: Zhengmao
+    family-names: Ye
+    affiliation: Sichuan University
+  - given-names: Hao
+    family-names: Tang
+    affiliation: Sichuan University
+  - given-names: Mingjie
+    family-names: Tang
+    affiliation: Sichuan University
+  - given-names: Ran
+    family-names: Tao
+    affiliation: iQuest
+  - given-names: Bryan
+    family-names: Dai
+    affiliation: iQuest
 license: MIT
-repository-code: ""
 keywords:
   - silent errors
   - distributed training
@@ -13,8 +32,22 @@ keywords:
   - data quality
 preferred-citation:
   type: article
-  title: "TrainAudit: Verified Constraint Mining for Silent Errors in Distributed LLM Training"
+  title: "TrainAudit: Silent Error Detection for LLM Training via Verified Guarded Relational Constraints"
   authors:
-    - name: Anonymous
+    - given-names: Qingsong
+      family-names: Cai
+    - given-names: Shikai
+      family-names: Li
+    - given-names: Zhengmao
+      family-names: Ye
+    - given-names: Hao
+      family-names: Tang
+    - given-names: Mingjie
+      family-names: Tang
+    - given-names: Ran
+      family-names: Tao
+    - given-names: Bryan
+      family-names: Dai
   year: 2026
-  notes: "Under double-blind review. Add venue, DOI, authors, and repository URL at camera-ready."
+  journal: "Proceedings of the VLDB Endowment"
+  notes: "Under review for PVLDB Volume 20. Add volume, pages, and DOI once assigned."

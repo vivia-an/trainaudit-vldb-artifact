@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pack self-contained anonymous TrainAudit core (agents + config + smoke + miner).
+# Pack self-contained TrainAudit core (agents + config + smoke + miner).
 set -euo pipefail
 CORE="$(cd "$(dirname "$0")" && pwd)"
 SDC="$(cd "$CORE/.." && pwd)"
@@ -9,7 +9,7 @@ mkdir -p "$OUT"
 
 # top-level docs + entrypoints
 for f in README.md LICENSE CITATION.cff SECURITY.md CONTRIBUTING.md \
-         CODE_OF_CONDUCT.md ANONYMOUS_RELEASE.md requirements.txt .gitignore \
+         CODE_OF_CONDUCT.md requirements.txt .gitignore \
          run_miner.py run_smoke.py make_toy_trace.py example_verifier.py \
          topology_prune.py collector_stub.py pack_release.sh; do
   [[ -f "$CORE/$f" ]] && cp -a "$CORE/$f" "$OUT/"
