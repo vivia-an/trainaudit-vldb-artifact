@@ -96,3 +96,22 @@ Per the author's decision: a **new** repository, and **no edits to `main.tex`**.
 O1 (25-line overflow), O2 (appendix status), O3/O16/O17 + `\NumFixedReplay` (unbacked
 numbers), O5/O6 (figure generators), O7 (temporal holdout), O9 (unshipped trace DBs),
 O12 (availability URL), O13 (cite #4641), O15/O18 (mislabelled row, footnote case name).
+
+### 2026-08-19 — iteration 3: figure-level verification
+Most figure generators hard-code their values, so instead of writing generators that
+would not reproduce the existing plots, `scripts/verify_figures.py` checks the other
+direction: it lifts the numbers back out of the figure PDFs with `pdftotext` and compares
+them to the data. **12 verified, 0 mismatched, 3 unbacked, 6 noted.**
+
+Confirmed: the funnel stages in both funnel figures, skip-L3 114/400 = 28.5%, both
+skip-L4 cohort denominators (764 and 6,922), all 13 pool counts in `bug_distribution`
+(summing to 392), the catalog coverage curve, and the amortization overheads at K=1000.
+
+Two presentation findings (added to `PAPER_ACTIONS.md` as O19/O20):
+- The amortization crossings are derived two different ways — naive K≈2630 is the exact
+  crossing from the measured 192 s dump, but optimised K≈380/760 are that value divided by
+  the rounded 7×; from the measured 25 s they would be 342/683. No claim breaks (K=380 is
+  really 9.0%), but the 7× reads as a result when it is the input.
+- `fig_catalog_generalization`'s "+19.7 pts at equal size" verifies exactly — catalog at 15
+  templates (67.5%) minus free-form frozen (47.8%) — and is *not* the headline gap (35.3 /
+  39.9 pts), which a reviewer could easily misread.

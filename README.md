@@ -67,6 +67,7 @@ committed.
 
 ```bash
 python3 scripts/verify_paper_numbers.py            # 29 published numbers, recomputed
+python3 scripts/verify_figures.py                 # numbers printed inside the figures
 python3 benchmark/injection/parse_overhead_logs.py --check   # Table tab:overhead
 ```
 
@@ -76,6 +77,12 @@ manifest, TrainAudit 17/17, TrainCheck 5/17, Naïve 0/17, the mining funnel
 four-arm guard ablation 342→429/551/598, and every value of `tab:overhead`. It also
 reports the claims the shipped data does *not* support, and flags two files that score
 superseded case sets — see `benchmark/eval/DETECTION_FILES_NOTE.md`.
+
+`verify_figures.py` covers the other direction. Most figure generators hard-code their
+values, so a plot can drift from its data silently; this lifts the numbers back out of the
+figure PDFs and compares them. It confirms the funnel stages, the skip-L3/L4 denominators,
+the 392-record pool counts, the catalog coverage curve and its equal-size annotation, and
+recomputes the amortization crossings from the measured dump costs.
 
 ## Known limits
 
