@@ -149,6 +149,33 @@ def check_funnel():
               want, got.get(layer), rel)
 
 
+# ---------------------------------------------------------------- 4b. funnel ablation arms
+def check_funnel_arms():
+    src = EVAL / "funnel_skip_l3_results.csv"
+    if src.exists():
+        r = rows(src)
+        fired = sum(x["fired"] == "1" for x in r)
+        rel = src.relative_to(ROOT)
+        where = "Sec 5.3 fig:funnel-ablation (b) skip-L3 stress test"
+        check("skip-L3 clean rule evaluations", where, 400, len(r), rel)
+        check("skip-L3 firings", where, 114, fired, rel)
+        check("skip-L3 FP rate (%)", where, 28.5, round(100 * fired / len(r), 1), rel)
+
+    src = EVAL / "funnel_skip_l4_results.csv"
+    if src.exists():
+        r = rows(src)
+        rel = src.relative_to(ROOT)
+        # One file, two cohorts: the full L1-L4 arm and the arm that skips adversarial
+        # verification. Both figures quote it, with different denominators.
+        for cohort, want_n, where in (
+            ("L4_kept", 764, "Sec 5.3 fig:funnel-ablation (b) full arm, 0/764"),
+            ("L3_passed", 6922, "appendix fig:mining-funnel, 0/6,922 fires"),
+        ):
+            sub = [x for x in r if x["cohort"] == cohort]
+            check(f"{cohort} evaluations", where, want_n, len(sub), rel)
+            check(f"{cohort} firings", where, 0, sum(x["fired"] == "1" for x in sub), rel)
+
+
 # ---------------------------------------------------------------- 5. guard ablation
 def check_guard_ablation():
     # main.tex: "raises aggregate false positives from 342 to 429, 551, and 598"
@@ -221,7 +248,7 @@ def main():
     args = ap.parse_args()
 
     for fn in (check_realse, check_detection, check_baselines, check_funnel,
-               check_guard_ablation, check_overhead, check_unbacked):
+               check_funnel_arms, check_guard_ablation, check_overhead, check_unbacked):
         try:
             fn()
         except Exception as exc:                                  # noqa: BLE001
