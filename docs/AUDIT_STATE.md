@@ -73,3 +73,26 @@ Three findings that only surface when the numbers are actually recomputed:
 - **O16/O17** `fig:tier-coverage` has a header-only data file, and
   `paper_v2/portability.csv` was transcribed from `main_cn.tex` — it cannot verify the
   figure it appears to back.
+
+### 2026-08-19 — iteration 2, published
+Per the author's decision: a **new** repository, and **no edits to `main.tex`**.
+
+- Published at <https://github.com/vivia-an/trainaudit-vldb-artifact> (public).
+  Pre-publication scan found no secrets — every `api_key` in `core/agents/llm_config.yaml`
+  is an `${ENV}` placeholder, and the only email addresses in the tree are the paper's own
+  author addresses plus the ACM/VLDB template ones. 145 files contain workspace-absolute
+  paths and one internal GPU hostname (`verl-lsk32-0`); these were left byte-identical
+  because they are run records, and rewriting them would falsify the evidence.
+  Note that `paper/` publishes the manuscript and its PDF; drop that directory if the
+  paper should not be public before a decision.
+- `\vldbavailabilityurl` (R6/O12) is a one-line edit left to the authors, recorded in the
+  checklist.
+- Paper-side findings written up in `PAPER_ACTIONS.md` instead of applied.
+- Funnel-ablation arms verified: 114/400 = 28.5%, and `funnel_skip_l4_results.csv` holds
+  both quoted arms in one file (`cohort=L4_kept` → 0/764, `cohort=L3_passed` → 0/6,922).
+  **29 numbers verified, 0 mismatched.**
+
+## Remaining open items
+O1 (25-line overflow), O2 (appendix status), O3/O16/O17 + `\NumFixedReplay` (unbacked
+numbers), O5/O6 (figure generators), O7 (temporal holdout), O9 (unshipped trace DBs),
+O12 (availability URL), O13 (cite #4641), O15/O18 (mislabelled row, footnote case name).

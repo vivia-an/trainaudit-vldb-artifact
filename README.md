@@ -5,7 +5,8 @@ LLM Training via Verified Guarded Relational Constraints"**, submitted to PVLDB
 Volume 20 (VLDB 2027).
 
 PVLDB requires supplemental material for the results reported in the paper. This
-repository is that material: every numbered table and figure in the paper is traced
+repository is that material, published at
+<https://github.com/vivia-an/trainaudit-vldb-artifact>: every numbered table and figure in the paper is traced
 to a file here in [`docs/CLAIM_TO_ARTIFACT_MAP.md`](docs/CLAIM_TO_ARTIFACT_MAP.md).
 
 ## Layout
@@ -61,6 +62,20 @@ Needs GPUs and the framework checkouts; see
 [`docs/DATA_AVAILABILITY.md`](docs/DATA_AVAILABILITY.md). The trace databases
 (~600 MB) are indexed in `benchmark/injection/trace_db_index.csv` rather than
 committed.
+
+## Verifying the paper's numbers
+
+```bash
+python3 scripts/verify_paper_numbers.py            # 29 published numbers, recomputed
+python3 benchmark/injection/parse_overhead_logs.py --check   # Table tab:overhead
+```
+
+`verify_paper_numbers.py` recomputes rather than restates: Real-SE 17+1 from the
+manifest, TrainAudit 17/17, TrainCheck 5/17, Naïve 0/17, the mining funnel
+420→5334→3436→357→45, the funnel-ablation arms (114/400, 0/764, 0/6,922), the
+four-arm guard ablation 342→429/551/598, and every value of `tab:overhead`. It also
+reports the claims the shipped data does *not* support, and flags two files that score
+superseded case sets — see `benchmark/eval/DETECTION_FILES_NOTE.md`.
 
 ## Known limits
 
