@@ -56,12 +56,20 @@ cd paper && pdflatex -shell-escape main.tex && bibtex main \
 
 Requires `hyperxmp` and `minted` (`-shell-escape` is mandatory).
 
-## Reproducing a full replay
+## Re-running the guard ablation on the real traces
 
-Needs GPUs and the framework checkouts; see
-[`docs/DATA_AVAILABILITY.md`](docs/DATA_AVAILABILITY.md). The trace databases
-(~600 MB) are indexed in `benchmark/injection/trace_db_index.csv` rather than
-committed.
+The trace databases are published as a release asset — 129 DuckDB files from 43 runs,
+39.5 MiB packed, covering every database the 126-cell ablation reads:
+
+```bash
+bash scripts/fetch_trace_dbs.sh --dest /path/for/traces
+export MEGATRON=/path/for/traces SDCCHECK_ROOT=$PWD
+bash core/ablation_scripts/run_d1_phase3.sh
+```
+
+Full replays of the Real-SE cases additionally need GPUs and the framework checkouts at
+the commits named in the manifest; see
+[`docs/DATA_AVAILABILITY.md`](docs/DATA_AVAILABILITY.md).
 
 ## Verifying the paper's numbers
 

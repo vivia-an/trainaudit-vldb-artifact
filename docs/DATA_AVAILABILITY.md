@@ -17,11 +17,26 @@
 
 | Data | Size | Where it lives | Why excluded |
 |---|---|---|---|
-| Trace DuckDB databases: 42 fault-injected + clean runs, plus overhead runs | ~600 MB total, 3–33 MB each | `Megatron-LM/*_test_db`, `normal_db/`, `dp_normal_db/`, `overhead_*_db/`; indexed in `benchmark/injection/trace_db_index.csv` | too large for a git repo; **should be published as a release asset or archival record** — without them the verifier cannot be re-run end to end |
+| Trace DuckDB databases | 212 MiB raw, 39.5 MiB packed | **published**: release [`trace-dbs-v1`](https://github.com/vivia-an/trainaudit-vldb-artifact/releases/tag/trace-dbs-v1), 129 files from 43 runs — every database the guard ablation reads. Fetch with `bash scripts/fetch_trace_dbs.sh`; integrity from `benchmark/injection/trace_db_manifest.csv` | kept out of git as data, not withheld |
+| `VLog/`, `TracePoint/`, `Collector/logs/` beside those databases | ~400 MB | `Megatron-LM/*_test_db/`; sizes in `benchmark/injection/trace_db_index.csv` | run logs, not inputs to any reported number |
 | `rebuttal_v1/` replay outputs | 9.2 GB | `sdc_llm_icml_2025/benchmark/eval/rebuttal_v1/`; indexed in `benchmark/heavy_outputs_index.csv` | prior review round, not cited by this paper |
 | `hunt_log/` mining transcripts | 550 MB | `sdc_llm_icml_2025/benchmark/eval/hunt_log/`; indexed | superseded by `experiments/holdout_mining/` |
 | TrainCheck baseline implementation | 452 MB | upstream project, checked out locally; see `baselines/TRAINCHECK_UPSTREAM.txt` | third-party code, cited not vendored |
 | Framework checkouts (Megatron-LM, DeepSpeed, OLMo) | ~9 GB | upstream repos at the per-case buggy/fixed revisions recorded in `benchmark/eval/real_sdc/real_sdc_manifest.json` | reconstructible from the manifest |
+
+## Re-running the guard ablation end to end
+
+```bash
+bash scripts/fetch_trace_dbs.sh --dest /path/for/traces     # 39.5 MiB, checksum-verified
+export MEGATRON=/path/for/traces
+export SDCCHECK_ROOT=/path/to/a/checkout/with/core
+bash core/ablation_scripts/run_d1_phase3.sh
+```
+
+Both path variables were hardcoded in the original script; the assembler rewrites them to
+honour an override while keeping the original values as defaults. Aggregate false
+positives should come out at 342 (full), 429 (without π_precond) and 598 (without
+π_topo), matching `experiments/guard_ablation/d1_results.csv`.
 
 ## Reconstructing a full replay
 

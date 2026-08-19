@@ -43,6 +43,15 @@ for f in main.py dp_consistency_check.sql; do
 done
 mkdir -p "$OUT/core/ablation_scripts"
 [ -d "$WS/sdccheck/scripts/ablation" ] && cp -rf "$WS/sdccheck/scripts/ablation/." "$OUT/core/ablation_scripts/" && say "scripts/ablation" copied
+# run_d1_phase3.sh hardcodes this workspace's paths; make them overridable so the
+# ablation can be re-run elsewhere, keeping the original values as the defaults.
+if [ -f "$OUT/core/ablation_scripts/run_d1_phase3.sh" ]; then
+  sed -i \
+    -e 's|^ROOT=/volume/posttrain/users/lsk/sdc/lsk/sdccheck$|ROOT="${SDCCHECK_ROOT:-/volume/posttrain/users/lsk/sdc/lsk/sdccheck}"|' \
+    -e 's|^MEGATRON=/volume/posttrain/users/lsk/sdc/lsk/Megatron-LM$|MEGATRON="${MEGATRON:-/volume/posttrain/users/lsk/sdc/lsk/Megatron-LM}"|' \
+    "$OUT/core/ablation_scripts/run_d1_phase3.sh"
+  say "run_d1_phase3.sh paths" "made overridable via SDCCHECK_ROOT / MEGATRON"
+fi
 for f in ERROR_INJECTION_GUIDE.md INJECTION_ARCHITECTURE.md INJECTION_METHODS.md HIERARCHICAL_CONSTRAINT_CHECK_README.md AGENTS_CONFIG_INTEGRATION.md; do
   [ -f "$WS/sdccheck/$f" ] && cp -f "$WS/sdccheck/$f" "$OUT/docs/" && say "docs/$f" copied
 done

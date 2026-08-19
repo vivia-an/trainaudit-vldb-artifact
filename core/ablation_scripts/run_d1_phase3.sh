@@ -8,8 +8,8 @@
 
 set -uo pipefail
 
-ROOT=/volume/posttrain/users/lsk/sdc/lsk/sdccheck
-MEGATRON=/volume/posttrain/users/lsk/sdc/lsk/Megatron-LM
+ROOT="${SDCCHECK_ROOT:-/volume/posttrain/users/lsk/sdc/lsk/sdccheck}"
+MEGATRON="${MEGATRON:-/volume/posttrain/users/lsk/sdc/lsk/Megatron-LM}"
 OUT_DIR="${ROOT}/logs/ablation_d1"
 mkdir -p "$OUT_DIR"
 

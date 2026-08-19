@@ -115,3 +115,24 @@ Two presentation findings (added to `PAPER_ACTIONS.md` as O19/O20):
 - `fig_catalog_generalization`'s "+19.7 pts at equal size" verifies exactly — catalog at 15
   templates (67.5%) minus free-form frozen (47.8%) — and is *not* the headline gap (35.3 /
   39.9 pts), which a reviewer could easily misread.
+
+### 2026-08-19 — iteration 4: trace databases published (O9)
+DuckDB traces compress about 7×, so what the index described as an unshippable ~600 MB
+is a **39.5 MiB** release asset once the run logs are left behind.
+
+Published as [`trace-dbs-v1`](https://github.com/vivia-an/trainaudit-vldb-artifact/releases/tag/trace-dbs-v1):
+129 `.db` files from 43 runs — 40 fault-injected Megatron-LM runs plus 6 clean baselines.
+Verified that all 42 databases referenced by `experiments/guard_ablation/d1_results.csv`
+are covered, including the four clean runs nested under `normal_db/` that a first pass
+missed because they sit one directory deeper than the rest.
+
+- `benchmark/injection/trace_db_manifest.csv` carries a SHA-256 per file.
+- `scripts/fetch_trace_dbs.sh` downloads, extracts and verifies; `--verify-only` re-checks
+  an existing copy.
+- `core/ablation_scripts/run_d1_phase3.sh` hardcoded two workspace paths, so the assembler
+  now rewrites them to `${SDCCHECK_ROOT:-...}` / `${MEGATRON:-...}`, keeping the original
+  values as defaults. The 126-cell ablation is therefore re-runnable off this repository.
+
+Excluded from the bundle: the `VLog/`, `TracePoint/` and `Collector/logs/` directories
+(~400 MB) that sit beside the databases. They are run logs, not inputs to any reported
+number, and remain listed in `trace_db_index.csv`.
