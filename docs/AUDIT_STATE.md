@@ -50,3 +50,26 @@
 ## Blocked on a decision
 Publishing this repository is outward-facing, so it is not done automatically:
 `\vldbavailabilityurl` (O12) cannot be filled until the artifact has a public URL.
+
+### 2026-08-19 — iteration 2 (continued): number-level verification
+Wrote `scripts/verify_paper_numbers.py`, which recomputes the paper's numbers from the
+shipped files rather than asserting them. **22 verified, 0 mismatched, 5 unbacked.**
+
+Verified: Real-SE 17+1=18 from the manifest; TrainAudit 17/17; TrainCheck 5/17 with 1
+tool failure; Naïve 0/17; funnel 420/5334/3436/357/45; the four-arm guard ablation
+342 → 429 / 551 / 598 (551 reproduces exactly from the no-adversarial arm); and all
+eight values of `tab:overhead`.
+
+Three findings that only surface when the numbers are actually recomputed:
+- **O14** three generations of detection data ship together; `results.csv` and
+  `results_gpu.csv` score different case sets from the paper (9 and 6 cases shared out
+  of 17), and `paper_table_baseline_traincheck.md` reports TrainCheck 10/17 against the
+  paper's 5/17. The current set was prose-only, so it is now generated as
+  `real_sdc/real_se_detection.csv` and the older files are labelled.
+- **O15** the "0/17 vs 1/17" discrepancy carried in `experiment_registry.md` since May
+  traces to one mislabelled row: `results.csv:35` has `phase=buggy` on what its message
+  shows to be the fixed side of `OC-NEW-3`, firing the sqrt-decay rule. `OC-NEW-3` is
+  not in the current set, so the reported 0/17 stands.
+- **O16/O17** `fig:tier-coverage` has a header-only data file, and
+  `paper_v2/portability.csv` was transcribed from `main_cn.tex` — it cannot verify the
+  figure it appears to back.
