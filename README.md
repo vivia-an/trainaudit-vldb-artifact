@@ -15,15 +15,21 @@ to a file here in [`docs/CLAIM_TO_ARTIFACT_MAP.md`](docs/CLAIM_TO_ARTIFACT_MAP.m
 paper/            paper sources, PVLDB style files, built PDF (14 pp.) + supplementary appendix
 core/             verified constraint mining: Pattern Catalog (T01-T35) -> multi-agent FSM
                   -> Accept gate (counterexample /\ confirmation) -> healthy-run replay -> SQL verifier
+core/sdccheck/    the runnable verifier: python3 -m sdccheck <trace.db> --constraints-file ...
+core/config/      frozen catalog, the four guard-ablation libraries, and generated_sql.json
+                  (the compiled SQL, recovered from the recorded runs)
 collector/        VTimeline: the training instrumentation that writes the DuckDB trace
 benchmark/eval/   evaluation tree at the paths the paper cites (real_sdc/, template_induction/,
                   catalog_generalization/, traincheck_surrogates/, gpu_logs/, paper_v2/, v2_full/)
-benchmark/injection/  fault-injection + overhead launch scripts, raw H20 collector logs, trace-DB index
+benchmark/injection/  fault-injection + overhead launch scripts, raw H20 collector logs
+                  (two sessions, kept separate), overhead_h20.csv, and the trace-DB manifest
 experiments/      leave-one-out guard ablation (42 db x 3 lib = 126 cells), holdout mining transcripts
 baselines/        baseline logs; TrainCheck itself is upstream, see TRAINCHECK_UPSTREAM.txt
 figures/          the figures the paper includes, plus the generator scripts that exist
-docs/             submission checklist, claim map, gap audit, data availability
-scripts/          assemble_from_workspace.sh — regenerates this tree from the research workspace
+docs/             submission checklist, claim map, gap audit, page budget, re-run limits,
+                  trace-data caveats, and patches/ for the recommended paper edits
+scripts/          check_all.sh (every offline check), fetch_trace_dbs.sh, build_trace_bundle.py,
+                  and assemble_from_workspace.sh — regenerates this tree from the workspace
 ```
 
 ## Quick checks (no GPU, no API key)
@@ -31,9 +37,10 @@ scripts/          assemble_from_workspace.sh — regenerates this tree from the 
 ```bash
 pip install -r core/requirements.txt
 
+bash scripts/check_all.sh                          # all seven offline check groups
 python3 core/run_smoke.py                          # offline pipeline smoke
 python3 core/scripts/reproduce_funnel_counts.py    # funnel 420 -> 5334 -> 3436 -> 357 -> 45
-sha256sum -c core/config/frozen_template_catalog.sha256
+(cd core/config && sha256sum -c frozen_template_catalog.sha256)   # names a bare filename
 ```
 
 ## Mining with the multi-agent pipeline
