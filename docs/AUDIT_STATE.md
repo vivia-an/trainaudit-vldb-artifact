@@ -247,3 +247,33 @@ I checked whether the live collector explains it: `initialize()` builds the file
 the same `ranks_info_` dict that `param_info.update(cls.ranks_info_)` stamps into each
 row, so a genuine two-rank run cannot produce this. The duplication happened outside the
 collector — a copied file, or a second rank that never wrote.
+
+### 2026-08-20 — iteration 9: the rank finding, settled properly
+My two previous diagnoses were both wrong, for the same underlying reason: **hashing a
+DuckDB `.db` file is not a sound content check.** DuckDB keeps uncommitted data in a
+`.db.wal` sidecar, so for 7 of the 43 runs the `.db` is a 12 KB header — and all such
+headers are byte-identical, which is what produced the phantom "duplicates" I reported as a
+collector labelling bug and then as seven duplicated runs.
+
+Settled with an order-independent aggregate over every row:
+
+- **O26 (real).** Four clean baselines have rank 1 identical to rank 0 in content:
+  `normal_db/{dp_normal,dist_optimizer_normal,mixed_precision_normal}` and `dp_normal_db`.
+  Cross-rank rules pass vacuously there, and **67–80% of clean-arm false positives** rest on
+  them (6/9 `lib_full`, 9/13 without π_precond, 28/35 without π_topo). Only `tp_normal` has
+  two genuine ranks. Across all 126 cells it is 43/1,369 (3%) — the aggregate is dominated
+  by fault-injected databases.
+- **The three fault-injected runs I flagged are clear.** `requires_grad_test_db`,
+  `requires_grad_before_backward_test_db` and `shape_test_db` keep their data in WALs of
+  differing sizes; their ranks differ.
+- **O27 (new).** `dp_normal_db` and `normal_db/dist_optimizer_normal` are the *same trace*
+  (`18229edd5147`), so the ablation's 42 databases are 41. They recorded different results
+  from identical input — 9 false positives against 4 without π_topo — which is the clearest
+  evidence in the artifact of the nondeterminism O23 implies.
+- **O28 (my defect).** `trace-dbs-v1`, which I published, omitted the sidecars, so per-rank
+  files for those 7 runs shipped as empty headers. Fixed in `trace-dbs-v2` (139 files, 10
+  sidecars, 40.6 MiB) via a proper `scripts/build_trace_bundle.py`. The ablation path was
+  never affected — merged databases are all self-contained.
+
+`benchmark/injection/audit_rank_captures.py` now performs this check, so it does not depend
+on me remembering the WAL caveat.

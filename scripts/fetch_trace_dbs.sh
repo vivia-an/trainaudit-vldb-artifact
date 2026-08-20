@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # Fetch and verify the trace databases behind the guard ablation (Sec 5.3).
 #
-# They are published as a release asset rather than committed: 117 DuckDB files,
-# 212 MiB raw. Extraction reconstructs <run>/Collector/*.db under --dest.
+# They are published as a release asset rather than committed. Extraction reconstructs
+# <run>/Collector/ under --dest, including the .db.wal sidecars: DuckDB keeps uncommitted
+# data there, and for 7 of the 43 runs the .db file alone is a 12 KB header with no rows.
+# (v1 of the bundle omitted the sidecars; the merged databases are self-contained, so the
+# guard ablation was unaffected, but per-rank data for those runs was not usable.)
 #
 #   bash scripts/fetch_trace_dbs.sh [--dest DIR] [--verify-only]
 set -euo pipefail
 
 REPO=${REPO:-vivia-an/trainaudit-vldb-artifact}
-TAG=${TAG:-trace-dbs-v1}
+TAG=${TAG:-trace-dbs-v2}
 ASSET=trainaudit-trace-dbs.tar.gz
 DEST=$(pwd)/trace_dbs
 VERIFY_ONLY=0
