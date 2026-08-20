@@ -449,3 +449,11 @@ ranks at TP=2, Megatron-Core naming.
 
 Also fixed a display bug in the auditor: it truncated the trace filename, so eight ranks of
 one run printed as eight identical rows. It now truncates the run name and keeps the rank.
+
+**O16 sharpened.** There is tier-coverage data after all — `v2_full/tier_392_v2.csv`, giving
+cumulative coverage over the 392-record corpus (94 records at Tier 0..0 through 261 at Tier
+0..6, i.e. 24.0% → 66.6%). It cannot be reconciled with `fig:tier-coverage`, which renders
+28 / 49 / 57 / 62 / 67 / 78% across S0–S5: no denominator among 392, 341, 261, 249, 202,
+196, 163 or 128 lines the two up, the best matching 2 of 6 points by coincidence. So the
+figure measures something else, and that something is not shipped. Better than "the file is
+empty", and it tells the authors exactly what to reconcile.
