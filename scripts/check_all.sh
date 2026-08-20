@@ -37,6 +37,9 @@ run "Real-SE replay outcomes, from the per-case smoke logs" \
 run "mining funnel counts" \
     python3 core/scripts/reproduce_funnel_counts.py
 # the .sha256 names a bare filename, so it has to be checked from its own directory
+run "main.tex's appendix references all resolve" \
+    python3 paper/check_appendix_refs.py
+# the .sha256 names a bare filename, so it has to be checked from its own directory
 run "frozen Pattern Catalog integrity" \
     bash -c 'cd core/config && sha256sum -c frozen_template_catalog.sha256' 
 

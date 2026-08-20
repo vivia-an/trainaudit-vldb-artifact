@@ -320,3 +320,11 @@ different results (9 vs 4 false positives without π_topo).
   undefined references. Code listings are unhighlighted because `minted` v3's
   `latexminted` helper was not reachable from pdflatex's shell-escape subprocess here;
   `paper/README.md` records that and the rebuild command.
+
+Also verified, with a clean negative result: `appendix-refs.tex` — the file through which
+`main.tex` resolves its 18 `Appendix~\ref` calls — still matches what `appendix.tex`
+builds to. All 36 labels present on both sides with identical numbers, so the 27-vs-10
+page difference between the stale and fresh supplement came from layout, not from content
+that would have shifted section letters. `paper/check_appendix_refs.py` now enforces this
+(it is a silent failure mode otherwise: neither document's own build reports a stale
+cross-reference file), and it is part of `scripts/check_all.sh`, now 8 groups.
