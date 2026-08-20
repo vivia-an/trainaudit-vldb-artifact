@@ -355,3 +355,35 @@ across the logged runs.
 
 `audit_rank_captures.py` now hashes the whole payload, with the reason in a comment so the
 projection is not reintroduced.
+
+### 2026-08-20 — iteration 13, final: loop stopped
+Audited my own documentation: every repo-relative path a doc tells a reviewer to use.
+698 references checked; most misses were legitimately external (upstream framework
+sources, the excluded `rebuttal_v1/` tree, the unshipped Chinese draft). Three were real:
+
+- `CLAIM_TO_ARTIFACT_MAP.md` cited `draft_S6_baselines.tex`, which had never been
+  assembled — the derivation drafts live in the workspace root, not the paper checkout.
+  All nine are now in `docs/derivations/`. This materially improves **O3**:
+  `draft_S6_baselines.tex` derives the 3/13 and 5/13 class-coverage bound class by class,
+  so the claim goes from stated-without-derivation to derived.
+- Four documents (`REPO_INDEX.md`, `artifact_checklist.md`, two figure briefs) described
+  the ICML/SIGMOD-era tree and pointed at files that are not here. Moved to
+  `docs/historical/` with a README, not deleted.
+- Process documents in the same workspace directory (`EXPERIMENT_QUEUE.md`,
+  `INTEGRATION_MAP.md`, `sigmod_writing_constraints.md`) are deliberately **not** shipped:
+  they are about writing the paper, not about deriving a result.
+
+**The author's decisions closing this out:** leave `sdccheck-opensource` untouched, and
+stop the audit loop. Cron job `54c7f6b5` deleted.
+
+## Final state
+- Published: <https://github.com/vivia-an/trainaudit-vldb-artifact>, releases
+  `trace-dbs-v2` (current) and `trace-dbs-v1` (marked superseded).
+- `bash scripts/check_all.sh --traces <dir>` → **12 check groups, 0 failed**.
+- 33 published numbers and 12 figure-rendered numbers recomputed from the shipped data,
+  all agreeing.
+- `GAP_AUDIT.md`: 31 items. Closed what the workspace allows; 4 unbacked numbers and the
+  paper-side decisions remain, each recorded with what it would take.
+- Two patches ready in `docs/patches/`, both `git apply --check` clean.
+- Highest-priority open item: **O26** — four clean baselines have rank 1 identical to
+  rank 0, carrying 67–80% of the clean-arm false positives.
