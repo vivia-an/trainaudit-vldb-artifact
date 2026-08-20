@@ -12,9 +12,12 @@ import collections
 import pathlib
 import sys
 
+# Hash the WHOLE payload. An earlier version projected onto
+# (step, stage, name, cksum) and reported false matches: seven TP injection runs collided
+# on that projection while differing in grad_cksum / requires_grad / shape, and so did two
+# clean runs. Fault injections need not change a parameter checksum.
 AGG = """SELECT md5(string_agg(s,'' ORDER BY s)) FROM (
-  SELECT step||'|'||stage||'|'||coalesce(json_extract_string(data,'$.name'),'')
-         ||'|'||coalesce(json_extract_string(data,'$.cksum'),'') s FROM coredump)"""
+  SELECT step||'|'||stage||'|'||CAST(data AS VARCHAR) s FROM coredump)"""
 
 
 def main():

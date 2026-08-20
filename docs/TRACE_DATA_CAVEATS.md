@@ -4,7 +4,7 @@ Found by executing the recovered SQL against the published traces, then comparin
 per-rank captures at content level. Relevant to anyone re-deriving a clean-trace
 false-positive rate.
 
-> **Two corrections to earlier versions of this file.** (1) I first described this as the
+> **Three corrections to earlier versions of this file.** (1) I first described this as the
 > collector mislabelling the second DP rank; it is not — the captures are identical in
 > content. (2) I then listed seven affected runs, three of them fault-injected. That was an
 > artifact of hashing only the `.db` file: DuckDB keeps uncommitted data in a `.wal`
@@ -20,9 +20,13 @@ order-independent and reads every row:
 
 ```sql
 SELECT md5(string_agg(s,'' ORDER BY s)) FROM (
-  SELECT step||'|'||stage||'|'||coalesce(json_extract_string(data,'$.name'),'')
-         ||'|'||coalesce(json_extract_string(data,'$.cksum'),'') s FROM coredump)
+  SELECT step||'|'||stage||'|'||CAST(data AS VARCHAR) s FROM coredump)
 ```
+
+It must cover the **whole** `data` payload. Projecting onto
+`(step, stage, name, cksum)` produced false matches — seven TP injection runs collided on
+it while differing in `grad_cksum`, `requires_grad` and `shape`, because an injected fault
+need not change a parameter checksum.
 
 ## Finding 1 — four clean baselines have rank 1 identical to rank 0
 
@@ -60,24 +64,29 @@ ranks. The direction is against the paper: real rank-1 captures could only add f
 Detection results are unaffected — those come from the Real-SE method-level replays in
 `benchmark/eval/real_sdc/`, not these databases.
 
-## Finding 2 — two of the "42 databases" are the same data
+## Finding 2 — a stray directory duplicates an injected run
 
-`dp_normal_db` and `normal_db/dist_optimizer_normal` have the **same content hash**
-(`18229edd5147`). The leave-one-database-out ablation treats them as two of its 42
-databases.
+`tp_normal_db` and `tp_router_test_db` are the same trace at full payload — identical
+per-rank files (`378708b49c5d`, `2e79b9d18eca`) and identical merged database
+(`f44095a479327e17`), 50,330 rows each.
 
-They also recorded **different results from identical input**:
+This does **not** touch the ablation. The clean TP database it uses is
+`normal_db/tp_normal` (370,270 rows, hash `9e88f53b228d`), a different directory that is
+genuinely distinct from `tp_router_test_db`. `tp_normal_db` does not appear in
+`experiments/guard_ablation/d1_results.csv` at all. It is a stray copy — worth deleting so
+nobody mistakes it for a clean TP baseline, but not a validity problem.
 
-| arm | `dist_optimizer_normal` | `dp_normal_db` |
-|---|---|---|
-| `lib_full` | pass 87, FP 2, err 4 | pass 85, FP 1, err 7 |
-| `lib_no_precond` | pass 84, FP 2, err 7 | pass 83, FP 2, err 8 |
-| `lib_no_topo` | pass 74, FP **9**, err 10 | pass 81, FP **4**, err 8 |
+### Withdrawn: "two of the 42 databases are the same data"
 
-Same trace, same library, and the `no_topo` arm reports 9 false positives against 4 — a
-factor of two. This is the clearest evidence in the artifact of the nondeterminism implied
-by O23: the SQL is generated per run by an LLM, so two runs of the same cell are not the
-same experiment. It also means the 42 databases are 41 distinct traces.
+An earlier version of this file claimed `dp_normal_db` and `normal_db/dist_optimizer_normal`
+were the same trace, and offered their differing recorded results as evidence of run-to-run
+nondeterminism. **Both claims were wrong** — an artifact of the projected hash. At full
+payload they differ (`ae8bd95e5c91e56e` vs `ad03ed650a166eb5`; per-rank `5367d4ae` vs
+`c7d17763`), so the ablation really does run over 42 distinct databases.
+
+The nondeterminism implied by O23 is real, but the evidence for it is elsewhere and
+cleaner: `core/config/generated_sql.json` records **193 of 228 constraints with more than
+one distinct SQL variant** across the logged runs, because the SQL is generated per run.
 
 ## Finding 3 — the published bundle omits the WAL sidecars
 

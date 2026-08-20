@@ -328,3 +328,30 @@ page difference between the stale and fresh supplement came from layout, not fro
 that would have shifted section letters. `paper/check_appendix_refs.py` now enforces this
 (it is a silent failure mode otherwise: neither document's own build reports a stale
 cross-reference file), and it is part of `scripts/check_all.sh`, now 8 groups.
+
+### 2026-08-20 — iteration 12: full suite green; O27 withdrawn
+`bash scripts/check_all.sh --traces <v2>` → **12 check groups passed, 0 failed**, the first
+complete run including the trace-dependent checks against the v2 bundle.
+
+That run made the auditor report five cross-run content matches where I had characterised
+one, which turned out to be a flaw in my own check rather than in the data. The hash
+projected the payload onto `(step, stage, name, cksum)` — and a fault injection need not
+change a parameter checksum, so runs differing in `grad_cksum` / `requires_grad` / `shape`
+collided. At full payload:
+
+- **O26 stands, now confirmed at full payload.** All four clean runs have `dp1` identical
+  to `dp0` (`7b39aebc1cf7`, `5367d4ae300f`, `c7d17763d4c7`, `67cea2fff6d1`).
+- **O27 withdrawn.** `dp_normal_db` and `normal_db/dist_optimizer_normal` differ
+  (`ae8bd95e5c91e56e` vs `ad03ed650a166eb5`). The ablation does run over 42 distinct
+  databases, and my "identical input, different output" nondeterminism evidence was void.
+- **The seven TP injection runs are all distinct** — every merged payload hash differs.
+- **O31, minor and real.** `tp_normal_db` duplicates `tp_router_test_db` at full payload,
+  but it is not in `d1_results.csv`; the ablation's clean TP database is
+  `normal_db/tp_normal` (370,270 rows vs 50,330), genuinely distinct. A stray copy.
+
+The nondeterminism O23 implies is still real, and the clean evidence is
+`generated_sql.json`: **193 of 228 constraints carry more than one distinct SQL variant**
+across the logged runs.
+
+`audit_rank_captures.py` now hashes the whole payload, with the reason in a comment so the
+projection is not reintroduced.
