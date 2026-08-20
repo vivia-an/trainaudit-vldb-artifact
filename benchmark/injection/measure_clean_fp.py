@@ -62,6 +62,9 @@ def main():
     ap.add_argument("--tp", type=int, default=1)
     ap.add_argument("--pp", type=int, default=1)
     ap.add_argument("--top", type=int, default=10, help="how many firing rules to list")
+    ap.add_argument("--gate", type=float, default=1.0,
+                    help="clean-run gate: flag rules returning more than this %% of the "
+                         "trace's rows (default 1.0)")
     args = ap.parse_args()
     try:
         import duckdb
@@ -111,6 +114,25 @@ def main():
         share = 100 * g[0][0] / sum(k for k, _ in g)
         print(f"\nthe top rule alone accounts for {share:.0f}% of the flagged rows — on a clean "
               f"trace that points at the rule, not the run (see GAP_AUDIT O37)")
+
+    # A clean-run acceptance gate, applied to every rule with recovered SQL rather than to
+    # one arm: a rule returning a large fraction of a clean trace is defective by
+    # construction, whatever its guard.
+    executed = 0
+    over = []
+    for n in have:
+        try:
+            r = con.execute(gen[n]["variants"][0]["sql"]).fetchall()
+        except Exception:
+            continue
+        executed += 1
+        if len(r) > args.gate / 100 * rows:
+            over.append((len(r), n))
+    over.sort(reverse=True)
+    print(f"\nclean-run gate at {args.gate}% of {rows} rows: {len(over)} of {executed} "
+          f"executable rules would be rejected")
+    for k, n in over:
+        print(f"  {100 * k / rows:>5.1f}% ({k:>7} rows)  {n[:64]}")
 
 
 if __name__ == "__main__":

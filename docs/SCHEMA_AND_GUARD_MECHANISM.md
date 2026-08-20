@@ -255,6 +255,20 @@ own definition of "empty" (GAP_AUDIT O37). A rule that flags every row of a clea
 should not have survived acceptance, and it compiles cleanly, so the compile check in
 `validate_generated_sql.py` cannot catch it. A clean-run acceptance gate would.
 
+That gate is cheap, and the problem it catches is narrow. Of the **215** rules that execute
+on this clean trace, only **3** return more than 1% of its rows:
+
+```
+clean-run gate at 1.0% of 370270 rows: 3 of 215 executable rules would be rejected
+   43.8% ( 162360 rows)  前向阶段梯度应为空
+    1.3% (   4777 rows)  forward/backward阶段分片参数分片元数据全局一致性与完整性检查
+    1.1% (   3960 rows)  model-after-backward阶段TP分片参数main_grad存在性与完整性检查
+```
+
+So the library is mostly well-behaved; the damage is concentrated in one rule.
+`measure_clean_fp.py --gate` applies the test to every rule with recovered SQL, independent
+of which guard arm enables it.
+
 ## Reproduce
 
 ```bash

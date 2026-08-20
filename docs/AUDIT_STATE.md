@@ -552,3 +552,9 @@ JSON null**, so the predicate holds for every row.
 It compiles, so O35's compile check cannot catch it. A rule that flags every row of a clean
 trace should never have reached the library — which argues for a clean-run acceptance gate,
 the thing the paper's own funnel claims to have.
+
+**Bounded it.** Of the **215** rules that execute on the clean TP=2 trace, only **3** return
+more than 1% of its rows — 43.8%, 1.3%, 1.1%. So the library is mostly well-behaved and the
+damage is concentrated in one rule. `measure_clean_fp.py --gate 1.0` applies the test to
+every rule with recovered SQL, independent of guard arm, which makes the recommended
+clean-run acceptance gate a concrete and cheap change rather than a vague one.
