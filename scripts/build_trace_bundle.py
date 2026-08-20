@@ -28,9 +28,24 @@ def runs_under(mega):
     return out
 
 
+def events_traces(ws):
+    """The second-generation traces: events(event_id, step, rank, hookpoint, ts_ns, payload).
+
+    This is the schema Sec 4.4 documents -- hookpoints such as build.snapshot,
+    module.fwd.post, optim.step.post -- as opposed to the coredump(step, stage, data)
+    schema the Megatron collector writes. Only the pattern-hunting subset is packed; the
+    overhead runs under rebuttal_v1/C1_overhead_gpu are several GB and back no reported
+    number that is not already covered by benchmark/injection/overhead_h20.csv.
+    """
+    root = ws / "sdc_llm_icml_2025" / "benchmark" / "eval" / "hunt_log" / "novel_hunt"
+    return sorted(root.glob("*/trace_rank*.duckdb")) if root.is_dir() else []
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--workspace", required=True, help="the research workspace root")
+    ap.add_argument("--events", action="store_true",
+                    help="pack the second-generation events-schema traces instead")
     ap.add_argument("--out", required=True, help="directory to write the bundle into")
     ap.add_argument("--name", default="trainaudit-trace-dbs.tar.gz")
     args = ap.parse_args()
@@ -42,6 +57,24 @@ def main():
 
     rec = []
     tar_path = out / args.name
+    if args.events:
+        base = ws / "sdc_llm_icml_2025" / "benchmark" / "eval" / "hunt_log" / "novel_hunt"
+        with tarfile.open(tar_path, "w:gz", compresslevel=6) as tf:
+            for f in events_traces(ws):
+                rel = f.relative_to(base)
+                rec.append({"run": rel.parent.as_posix(), "kind": "events_trace",
+                            "path": rel.as_posix(), "size_bytes": f.stat().st_size,
+                            "sha256": hashlib.sha256(f.read_bytes()).hexdigest()})
+                tf.add(f, arcname=rel.as_posix())
+        man = out / "events_trace_manifest.csv"
+        with man.open("w", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=["run", "kind", "path", "size_bytes", "sha256"])
+            w.writeheader(); w.writerows(rec)
+        print(f"{len(rec)} files from {len({r['run'] for r in rec})} runs")
+        print(f"{tar_path.name}: {tar_path.stat().st_size / 2**20:.1f} MiB")
+        print(f"manifest: {man}")
+        print(f"bundle sha256: {hashlib.sha256(tar_path.read_bytes()).hexdigest()}")
+        return
     with tarfile.open(tar_path, "w:gz", compresslevel=6) as tf:
         for d in runs_under(mega):
             for f in sorted((d / "Collector").glob("*.db")) + \

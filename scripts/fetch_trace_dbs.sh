@@ -12,11 +12,21 @@ set -euo pipefail
 
 REPO=${REPO:-vivia-an/trainaudit-vldb-artifact}
 TAG=${TAG:-trace-dbs-v2}
-ASSET=trainaudit-trace-dbs.tar.gz
+ASSET=${ASSET:-trainaudit-trace-dbs.tar.gz}
 DEST=$(pwd)/trace_dbs
 VERIFY_ONLY=0
 HERE=$(cd "$(dirname "$0")/.." && pwd)
-MANIFEST="$HERE/benchmark/injection/trace_db_manifest.csv"
+MANIFEST=${MANIFEST:-$HERE/benchmark/injection/trace_db_manifest.csv}
+# The events-schema bundle is a separate release with its own manifest:
+#   TAG=trace-events-v1 ASSET=trainaudit-events-traces.tar.gz \
+#   MANIFEST=$HERE/benchmark/injection/events_trace_manifest.csv \
+#     bash scripts/fetch_trace_dbs.sh --dest DIR
+if [ "$TAG" = "trace-events-v1" ]; then
+  ASSET=${ASSET:-trainaudit-events-traces.tar.gz}
+  [ "$ASSET" = "trainaudit-trace-dbs.tar.gz" ] && ASSET=trainaudit-events-traces.tar.gz
+  case "$MANIFEST" in *trace_db_manifest.csv)
+    MANIFEST="$HERE/benchmark/injection/events_trace_manifest.csv" ;; esac
+fi
 
 while [ $# -gt 0 ]; do
   case $1 in

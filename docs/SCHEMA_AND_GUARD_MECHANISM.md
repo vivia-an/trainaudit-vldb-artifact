@@ -106,6 +106,27 @@ Suggested resolution: either pass `--inject-script-config` and re-run so the num
 from the gate the paper describes, or describe the implemented path — guard in the
 specification, compiled into the query, executed deterministically thereafter.
 
+## The events-schema traces are now published
+
+Release [`trace-events-v1`](https://github.com/vivia-an/trainaudit-vldb-artifact/releases/tag/trace-events-v1):
+29 traces from 23 runs (Megatron-LM dense and SwitchMLP MoE, DeepSpeed ZeRO-2/3/bf16/actckpt,
+OLMo-core dense/MoE/EP=2/TP=2/nGPT/OLMo2-271M), 549 MiB raw and 52 MiB packed, in the
+`events(event_id, step, rank, hookpoint, ts_ns, schema_version, payload)` schema.
+
+Their `build.snapshot` payloads carry `cross_rank_cksums` — per-parameter `name`,
+`group_size`, `all_equal`, `gathered_cksums`. Those are the fields the topology guard
+reasons over and the exact structure `CASE2_WALKTHROUGH_PI_TOPO.md` describes, so §4.1's
+mechanism can now be inspected on real data even though the specific 492/57 run is still
+absent: `megatron_moe` has 187 cross-rank records and `megatron_clean` 99, both single-rank,
+so `group_size` is 1 throughout and the 57-vs-435 split cannot arise there.
+
+```bash
+TAG=trace-events-v1 bash scripts/fetch_trace_dbs.sh --dest /path/for/events-traces
+```
+
+Not published: `rebuttal_v1/C1_overhead_gpu/` (several GB of overhead runs) — it backs no
+number that `benchmark/injection/overhead_h20.csv` does not already cover.
+
 ## Reproduce
 
 ```bash

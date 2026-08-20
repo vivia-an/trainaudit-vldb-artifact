@@ -387,3 +387,33 @@ stop the audit loop. Cron job `54c7f6b5` deleted.
 - Two patches ready in `docs/patches/`, both `git apply --check` clean.
 - Highest-priority open item: **O26** — four clean baselines have rank 1 identical to
   rank 0, carrying 67–80% of the clean-arm false positives.
+
+### 2026-08-20 — iteration 14: the events-schema traces, and why §4.1 still cannot be reproduced
+Searched for the run behind §4.1's "57 of 492" example rather than only reporting it missing.
+It is in neither trace generation on this machine, but the search turned up a second family
+that belongs in the artifact.
+
+- **Gen 1** — `coredump(step, stage, data)`, 43 traces, already published as `trace-dbs-v2`.
+  No `build.snapshot` stage, no `query_key_value` parameter.
+- **Gen 2** — `events(event_id, step, rank, hookpoint, ts_ns, schema_version, payload)`,
+  121 traces under `hunt_log/novel_hunt/` and `rebuttal_v1/`. **This is the schema §4.4
+  documents**: `hookpoint` carries `build.snapshot`, `module.fwd.post`, `optim.step.post`,
+  `checkpoint.load/save`. 106 of the 121 have a `build.snapshot` event, and its payload
+  holds `cross_rank_cksums` — per-parameter `name`, `group_size`, `all_equal`,
+  `gathered_cksums`, exactly the structure `CASE2_WALKTHROUGH_PI_TOPO.md` describes.
+
+**Published** the pattern-hunting subset as `trace-events-v1`: 29 traces, 23 runs, 549 MiB
+raw → 52 MiB packed, with a SHA-256 manifest. `fetch_trace_dbs.sh` now handles both bundles.
+Excluded `rebuttal_v1/C1_overhead_gpu/` (several GB, backs nothing that
+`overhead_h20.csv` does not already cover).
+
+**O32 stands.** Even in gen 2, no trace has a `query_key_value` parameter, and the closest
+runs are single-rank — `megatron_moe` 187 cross-rank records, `megatron_clean` 99 — so
+`group_size` is 1 throughout and the 57-vs-435 split cannot arise. The example's *mechanism*
+is now inspectable on real data; its *specific numbers* come from a run that is not here.
+
+Also checked for the 25.8/83.3 source in `rebuttal_v1`: not there either.
+`E_clean_run_fp_audit/e_clean_baseline_summary.csv` reports 0 false positives over 111,308
+events across 4 clean runs, and `A2_ablation/a2_ablation.csv` reports per-case counts
+(V0 full: 25 detected, 0 FP of 27; V2 strip π_topo: 7 FP; V3 strip precondition: 5 FP) —
+both different measurements from the paper's per-million rates. **O21 remains open.**
