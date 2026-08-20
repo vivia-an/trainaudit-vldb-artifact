@@ -40,6 +40,16 @@ run "Real-SE replay outcomes, from the per-case smoke logs" \
 run "mining funnel counts" \
     python3 core/scripts/reproduce_funnel_counts.py
 # the .sha256 names a bare filename, so it has to be checked from its own directory
+# The scripts a reviewer runs first. Their outputs (toy .db files) are gitignored, so this
+# leaves the tree clean.
+run "entry-point scripts a reviewer runs first" \
+    bash -c 'set -e
+      python3 core/run_smoke.py            >/dev/null
+      python3 core/make_toy_trace.py       >/dev/null
+      python3 core/example_verifier.py     >/dev/null
+      python3 core/topology_prune.py       >/dev/null
+      python3 core/collector_stub.py       >/dev/null
+      echo "  run_smoke, make_toy_trace, example_verifier, topology_prune, collector_stub: all OK"'
 run "main.tex's appendix references all resolve" \
     python3 paper/check_appendix_refs.py
 # the .sha256 names a bare filename, so it has to be checked from its own directory

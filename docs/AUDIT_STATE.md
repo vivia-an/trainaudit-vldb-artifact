@@ -468,3 +468,16 @@ differ" — but 3,506 of those are in single-rank runs, where there is no second
 compare against. Only the 392 from the TP=2 run belong to the counterfactual. Fixed to
 report the two separately, with the reason in a comment so the conflation is not
 reintroduced.
+
+### 2026-08-20 — iteration 16: the entry-point scripts had never been run
+The five scripts a reviewer reaches for first — `core/run_smoke.py`,
+`make_toy_trace.py`, `example_verifier.py`, `topology_prune.py`, `collector_stub.py` — were
+in the artifact but had never been executed as part of any check. A clean negative result:
+**all five pass.** `run_smoke.py` walks the FSM S2→S5, accepts on the healthy toy database,
+and correctly rejects on the buggy one ("healthy-run FP … 1 rows"), which is the pipeline's
+own semantics working end to end.
+
+Added them to `check_all.sh` as a ninth offline group. Their outputs are gitignored `.db`
+files, so the suite still leaves the tree clean — checked, not assumed.
+
+**Full suite: 9 offline groups, or 14 with both trace bundles. All passing.**
