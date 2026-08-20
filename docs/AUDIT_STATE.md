@@ -481,3 +481,20 @@ Added them to `check_all.sh` as a ninth offline group. Their outputs are gitigno
 files, so the suite still leaves the tree clean — checked, not assumed.
 
 **Full suite: 9 offline groups, or 14 with both trace bundles. All passing.**
+
+### 2026-08-20 — iteration 17: the documented build command could not work
+`README.md` tells a reviewer to `cd paper && pdflatex -shell-escape main.tex`. Tried it:
+**9 errors, every one a missing figure.** `main.tex` references `figures/...` relative to
+itself, and the figures live at the repo root, so there was no `paper/figures/`. The one
+command the artifact puts in front of a reviewer for rebuilding the paper was broken.
+
+Fixed with symlinks — `paper/figures -> ../figures` and `paper/benchmark -> ../benchmark`
+(the latter for `appendix.tex`'s `benchmark/eval/template_induction/analysis/saturation_curve.pdf`).
+Git stores them as links, not copies. Rebuilt from `paper/` afterwards: **0 errors, 0
+undefined references, 14 pages**, matching the shipped PDF.
+
+Added a check that catches this class without needing a TeX toolchain:
+`paper/check_appendix_refs.py` now also resolves every `\includegraphics`, `\input` and
+`\bibliography` target relative to `paper/` — 21 paths, all resolving. It is part of the
+same `check_all.sh` group, so a future move of `figures/` fails the suite instead of
+failing silently on a reviewer's machine.

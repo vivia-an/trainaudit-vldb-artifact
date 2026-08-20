@@ -33,12 +33,49 @@ def labels(path):
     return out
 
 
+def graphics_and_inputs(text):
+    """Every path main.tex/appendix.tex pulls in, as written."""
+    out = set()
+    for pat in (r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}",
+                r"\\input\{([^}]+)\}",
+                r"\\bibliography\{([^}]+)\}"):
+        for m in re.finditer(pat, text):
+            out.add(m.group(1))
+    return out
+
+
+def check_inputs_resolve():
+    """The documented build is `cd paper && pdflatex main.tex`, so every referenced path
+    must resolve relative to paper/. figures/ and benchmark/ are symlinks for this reason."""
+    bad = []
+    n = 0
+    for src in ("main.tex", "appendix.tex"):
+        f = HERE / src
+        if not f.exists():
+            continue
+        for rel in sorted(graphics_and_inputs(body(f))):
+            n += 1
+            cands = [HERE / rel, HERE / (rel + ".tex"), HERE / (rel + ".bib")]
+            if not any(c.exists() for c in cands):
+                bad.append(f"{src} -> {rel}")
+    print(f"{n} graphics/input paths referenced by the paper sources")
+    if bad:
+        print(f"  {len(bad)} do not resolve from paper/ — the documented build would fail:")
+        for b in bad[:10]:
+            print(f"    {b}")
+        return 1
+    print("  all resolve from paper/ (figures/ and benchmark/ are symlinks to the repo root)")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--refs", default=str(HERE / "appendix-refs.tex"))
     ap.add_argument("--aux", help="appendix.aux from a fresh build of appendix.tex")
     args = ap.parse_args()
 
+    rc = check_inputs_resolve()
+    print()
     refs = pathlib.Path(args.refs)
     if not refs.exists():
         sys.exit(f"missing {refs}")
@@ -55,7 +92,7 @@ def main():
             return 1
         print("  every referenced label is present")
         print("  (pass --aux <appendix.aux> to also compare the numbers)")
-        return 0
+        return rc
 
     fresh = labels(pathlib.Path(args.aux))
     only_ship = sorted(set(ship) - set(fresh))

@@ -29,6 +29,11 @@ for f in main.tex appendix.tex numbers.tex appendix-refs.tex main.bib pvldb.sty 
   [ -f "$PAPER/$f" ] && cp -f "$PAPER/$f" "$OUT/paper/" && say "$f" copied || say "$f" MISSING
 done
 [ -f "$PAPER/main.pdf" ] && cp -f "$PAPER/main.pdf" "$OUT/paper/main.pdf"
+# main.tex/appendix.tex reference figures/... and benchmark/... relative to themselves, so
+# the documented "cd paper && pdflatex main.tex" needs those reachable from paper/.
+ln -sfn ../figures   "$OUT/paper/figures"
+ln -sfn ../benchmark "$OUT/paper/benchmark"
+say "paper/{figures,benchmark}" "symlinked so the documented build works from paper/"
 [ -f "$WORK/appendix.pdf" ] && cp -f "$WORK/appendix.pdf" "$OUT/paper/appendix_supplement.pdf"
 
 # ---------------------------------------------------------------- 2. core mining pipeline
