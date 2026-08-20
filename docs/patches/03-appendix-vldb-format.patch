@@ -1,0 +1,80 @@
+Reformats the supplementary appendix for PVLDB. main.tex was reformatted for the venue and
+appendix.tex was not, so the supplement renders "Anonymous Author(s)", declares
+SIGMOD/PODS '27 as its conference, and cites the "SIGMOD/PACMMOD appendix policy" as the
+reason reviewers need not read it -- while the main paper is single-blind PVLDB with seven
+named authors. See docs/GAP_AUDIT.md O29.
+
+Five changes, all in the front matter:
+  1. the banner comment: SIGMOD/PACMMOD double-blind -> PVLDB Vol. 20
+  2. \documentclass[sigconf,anonymous] -> [sigconf,nonacm], matching main.tex
+  3. drops \acmConference/\acmYear/\acmDOI/\acmISBN -- main.tex sets none of these and
+     nonacm suppresses the block
+  4. restores the author block, mirroring main.tex
+  5. the abstract's policy sentence -> PVLDB
+
+Verify before applying:
+  cd overleaf/sdc_llm_icml_2025
+  git apply --check ../../trainaudit-vldb-artifact/docs/patches/03-appendix-vldb-format.patch
+Then rebuild: pdflatex -shell-escape appendix.tex (x2 with bibtex between).
+
+--- a/appendix.tex
++++ b/appendix.tex
+@@ -1,6 +1,6 @@
+-%%%%%%%% SIGMOD / PACMMOD DOUBLE-BLIND SUBMISSION — SUPPLEMENTARY MATERIAL %
++%%%%%%%% PVLDB VOL. 20 SUBMISSION — SUPPLEMENTARY MATERIAL %
+ 
+-\documentclass[sigconf,anonymous]{acmart}
++\documentclass[sigconf,nonacm]{acmart}
+ 
+ % Real-SE headline numbers shared with main.tex — single source of truth
+ \input{numbers}
+@@ -92,22 +92,43 @@
+ %% SIGMOD 2027 conference metadata (page headers and title block)
+ \setcopyright{none}
+ \copyrightyear{2027}
+-\acmConference[SIGMOD/PODS '27]{ACM SIGMOD/PODS International Conference on Management of Data}{June 13--19, 2027}{Huntington Beach, CA, USA}
+-\acmYear{2027}
+-\acmDOI{}
+-\acmISBN{}
+ \settopmatter{printacmref=false, printccs=false, printfolios=true}
+ 
+ \begin{document}
+ 
+-%% Authors removed for double-blind review
++
++%% VLDB is single-blind: the supplement carries the same author block as main.tex.
++\author{Qingsong Cai}
++\authornote{Qingsong Cai and Shikai Li contributed equally to this work.}
++\affiliation{%
++  \institution{Sichuan University}
++  \city{Chengdu}
++  \country{China}
++}
++\author{Shikai Li}
++\authornotemark[1]
++\affiliation{%
++  \institution{West China Hospital, Sichuan University}
++  \city{Chengdu}
++  \country{China}
++}
++\author{Zhengmao Ye}
++\affiliation{\institution{Sichuan University}\city{Chengdu}\country{China}}
++\author{Hao Tang}
++\affiliation{\institution{Sichuan University}\city{Chengdu}\country{China}}
++\author{Mingjie Tang}
++\affiliation{\institution{Sichuan University}\city{Chengdu}\country{China}}
++\author{Ran Tao}
++\affiliation{\institution{iQuest}\city{Beijing}\country{China}}
++\author{Bryan Dai}
++\affiliation{\institution{iQuest}\city{Beijing}\country{China}}
+ 
+ \title[TrainAudit: Supplementary Material]{TrainAudit: Silent Error Detection for LLM Training via Verified Guarded Relational Constraints---Supplementary Material}
+ 
+ \begin{abstract}
+ This PDF is \emph{review-only} supplementary material for the main paper.
+ The main paper is self-contained: reviewers are not required to read this file
+-(SIGMOD/PACMMOD appendix policy). Content here is limited to methodology protocols, the mining/SQL
++(PVLDB supplemental-material policy). Content here is limited to methodology protocols, the mining/SQL
+ specifications needed to audit main-text claims, and per-case tables.
+ Prompt dumps and collector scripts are omitted (released with the artifact).
+ This appendix is not part of the camera-ready.

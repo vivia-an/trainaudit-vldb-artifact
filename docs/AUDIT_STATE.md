@@ -558,3 +558,23 @@ more than 1% of its rows — 43.8%, 1.3%, 1.1%. So the library is mostly well-be
 damage is concentrated in one rule. `measure_clean_fp.py --gate 1.0` applies the test to
 every rule with recovered SQL, independent of guard arm, which makes the recommended
 clean-run acceptance gate a concrete and cheap change rather than a vague one.
+
+### 2026-08-21 — iteration 21: O29 packaged as a patch
+No drift (paper hashes unchanged, patches 01/02 still unapplied, repo in sync). Since
+editing `.tex` is off the table by the author's decision, I packaged the O29 fix the same way
+as the other two.
+
+Inspecting `appendix.tex` for the patch showed O29 is wider than recorded: besides
+`[sigconf,anonymous]` and the abstract's "SIGMOD/PACMMOD appendix policy" sentence, it
+declares **`\acmConference[SIGMOD/PODS '27]`** with `\acmYear{2027}`, which `main.tex` does
+not set at all.
+
+`docs/patches/03-appendix-vldb-format.patch` makes five front-matter changes: the banner
+comment, the documentclass, dropping the SIGMOD conference block, restoring the author block
+from `main.tex`, and the abstract's policy sentence. Verified beyond "applies cleanly" —
+built the patched file: **seven authors on page 1 and zero occurrences of "anonymous",
+"SIGMOD/PODS" or "PACMMOD" in the whole PDF.**
+
+One consequence to weigh: it grows the supplement **10 → 11 pages**, because the author
+block takes space, and PVLDB counts appendices inside the 12-page limit (O2). Recorded in
+`patches/README.md` so it is decided together with O1.

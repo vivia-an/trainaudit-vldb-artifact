@@ -14,6 +14,7 @@ git apply         ../../trainaudit-vldb-artifact/docs/patches/01-availability-ur
 |---|---|---|
 | `01-availability-url.patch` | fills `\vldbavailabilityurl` | PVLDB requires the supplemental URL; R5/R6 of the checklist |
 | `02-cite-upstream-issue.patch` | names `NVIDIA/Megatron-LM#4641` | single-blind permits it, and it turns the flagship production claim from unverifiable into checkable |
+| `03-appendix-vldb-format.patch` | reformats `appendix.tex` for PVLDB | the supplement was never reformatted for the venue: it renders "Anonymous Author(s)", declares `SIGMOD/PODS '27` as its conference, and cites the "SIGMOD/PACMMOD appendix policy". Five front-matter changes; GAP_AUDIT O29 |
 
 Deliberately **not** provided as patches, because they are judgement calls rather than
 mechanical edits:
@@ -24,6 +25,11 @@ mechanical edits:
 - **The appendix's status** now that PVLDB counts appendices inside the 12 pages.
   `PAPER_ACTIONS.md` §4 lists which of the 18 `Appendix~\ref` calls carry evidence for a
   main-text claim, and the three ways out with their costs.
+- **Patch 03 grows the supplement from 10 to 11 pages**, because the author block takes
+  space. PVLDB counts appendices inside the 12-page limit (O2), so this interacts with the
+  overflow in item 1 — decide them together. Verified by building the patched file: seven
+  authors on page 1 and zero occurrences of "anonymous", "SIGMOD/PODS" or "PACMMOD"
+  anywhere in the PDF.
 - **`%% Acknowledgements removed for double-blind review`** at `main.tex:1159`.
   Single-blind permits acknowledgements, but they count toward the same 12 pages, so this
   interacts with the overflow.
