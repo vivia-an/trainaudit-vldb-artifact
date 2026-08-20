@@ -58,15 +58,22 @@ line up; only the SQL is absent. The recorded cell is `pass=83, fail_FP=2, error
 
    These are reconcilable — the LLM step can be a one-off compilation whose output is
    then executed deterministically every step, which is consistent with both the 2–3 ms
-   figure and the paper's determinism claim. But **the compiled SQL is exactly what is
-   missing from the artifact**, so a reviewer cannot see the deterministic object the
-   paper describes. Shipping the generated SQL per rule would resolve this and is the
-   single highest-value addition left.
+   figure and the paper's determinism claim.
+
+   **This has since been resolved.** Every generation call was logged during the runs
+   behind the paper's numbers, so the compiled SQL was recoverable:
+   `core/extract_generated_sql.py` recovers 228 constraints from 16,408 logged
+   interactions into `core/config/generated_sql.json`, and the recovered queries have
+   exactly the shape §4.5 describes — stage and name filters in `WHERE`,
+   `HAVING COUNT(DISTINCT cksum) > 1` as the violation condition. 94% execute against a
+   real trace. See `core/config/GENERATED_SQL.md`. An API key is still needed to generate
+   SQL for rules that were never instantiated in a logged run.
 
 ## What is fully re-runnable today
 
 | Runs offline, no key | Command |
 |---|---|
+| execute the compiled SQL on a trace | `python3 core/validate_generated_sql.py --db <trace>` |
 | mining-funnel counts | `python3 core/scripts/reproduce_funnel_counts.py` |
 | catalog integrity | `sha256sum -c core/config/frozen_template_catalog.sha256` |
 | pipeline smoke | `python3 core/run_smoke.py` |

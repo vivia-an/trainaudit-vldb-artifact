@@ -94,6 +94,21 @@ figure PDFs and compares them. It confirms the funnel stages, the skip-L3/L4 den
 the 392-record pool counts, the catalog coverage curve and its equal-size annotation, and
 recomputes the amortization crossings from the measured dump costs.
 
+## The compiled SQL
+
+The constraint libraries carry rule specifications, not SQL — the translation is an LLM
+call at check time. The SQL that actually ran during the recorded experiments has been
+recovered from the interaction logs into `core/config/generated_sql.json` (228
+constraints), and it can be executed directly:
+
+```bash
+python3 core/validate_generated_sql.py --db <trace>/Collector/merged_coredump.db
+```
+
+94% executes without error. On a clean trace 203 rules return empty results; on a
+fault-injected trace 44 return violation sets. See
+[`core/config/GENERATED_SQL.md`](core/config/GENERATED_SQL.md).
+
 ## Known limits
 
 [`docs/GAP_AUDIT.md`](docs/GAP_AUDIT.md) lists what this artifact does and does not

@@ -191,3 +191,34 @@ planning. In the shipped code that translation is an LLM call. The two reconcile
 step is a one-off compilation whose output is then executed deterministically — but the
 compiled SQL is precisely what the artifact lacks, so **shipping the generated SQL per rule
 is the highest-value addition remaining.**
+
+### 2026-08-20 — iteration 7: the compiled SQL was recoverable (O23 largely closed)
+Last iteration's conclusion — that the deterministic SQL §4.5 describes is simply absent —
+was half right. It is absent from the libraries, but **every generation call was logged**
+during the runs that produced the paper's numbers.
+
+`core/extract_generated_sql.py` recovers it: **228 constraints from 16,408 logged
+`SQLAgent` interactions across 150 logs**, into `core/config/generated_sql.json` (0.9 MiB,
+up to three variants per rule since generation is per run). Coverage is 151 of the
+library's 242 named rules; the other 91 were never instantiated under the tested
+topologies, consistent with each recorded cell evaluating 93 constraints rather than 249.
+So every rule that contributed to a reported number is covered.
+
+The recovered SQL has exactly the shape §4.5 claims — stage and name filters in `WHERE`,
+`HAVING COUNT(DISTINCT cksum) > 1` as the violation condition — which turns that section
+from described into inspectable.
+
+`core/validate_generated_sql.py` then executes it against real traces:
+
+| trace | empty | non-empty | error |
+|---|---:|---:|---:|
+| `normal_db/dp_normal` (clean) | 203 | 12 | 13 |
+| `dp_normal_db` (clean) | 203 | 12 | 13 |
+| `tp_router_test_db` (fault-injected) | 171 | **44** | 13 |
+
+94% executes cleanly, and the injected fault yields 3.7× the violating rules of a clean
+run. **O25**: the 12 non-empty on a clean trace are guard-excluded rules (TP-specific
+checks on a `TP=1` run) executed without their guard — §4.4's SwitchMLP argument
+reproduced incidentally, and useful as direct evidence that the guards carry weight.
+The 13 errors are all `Referenced column "data" not found`: pipeline-parallel activation
+rules needing trace fields above the S0 tier in these databases, i.e. schema-tier gated.

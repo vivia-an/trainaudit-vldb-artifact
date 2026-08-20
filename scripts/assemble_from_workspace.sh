@@ -53,6 +53,14 @@ for f in "$WS"/sdccheck/config/lib_*.json; do
   [ -f "$f" ] && cp -f "$f" "$OUT/core/config/ablation_libraries/" && n=$((n+1))
 done
 say "ablation constraint libraries" "$n copied (lib_full / no_topo / no_precond / no_adversarial / holdout)"
+# The libraries hold no SQL — it is generated per constraint at check time and logged.
+# Recover it so the compiled queries Sec 4.5 describes are actually in the artifact.
+if [ -d "$WS/sdccheck/logs" ] && [ -f "$OUT/core/extract_generated_sql.py" ]; then
+  ( cd "$OUT" && python3 core/extract_generated_sql.py --logs "$WS/sdccheck/logs" \
+      --out core/config/generated_sql.json >/dev/null 2>&1 ) \
+    && say "generated_sql.json" \
+       "$(python3 -c "import json;print(json.load(open('$OUT/core/config/generated_sql.json'))['n_rules'])" 2>/dev/null) constraints recovered from the LLM logs"
+fi
 mkdir -p "$OUT/core/ablation_scripts"
 [ -d "$WS/sdccheck/scripts/ablation" ] && cp -rf "$WS/sdccheck/scripts/ablation/." "$OUT/core/ablation_scripts/" && say "scripts/ablation" copied
 # run_d1_phase3.sh hardcodes this workspace's paths; make them overridable so the
