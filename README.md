@@ -85,9 +85,21 @@ the commits named in the manifest; see
 Everything offline, in one command:
 
 ```bash
-bash scripts/check_all.sh                          # 7 check groups
-bash scripts/check_all.sh --traces /path/for/traces  # + the trace-dependent checks
+bash scripts/check_all.sh                            # 8 offline check groups
+bash scripts/check_all.sh --traces DIR --events DIR2 # + the trace-dependent checks
 ```
+
+The two trace bundles are separate releases:
+
+```bash
+bash scripts/fetch_trace_dbs.sh --dest DIR                        # coredump schema
+TAG=trace-events-v2 bash scripts/fetch_trace_dbs.sh --dest DIR2   # events schema
+```
+
+`coredump(step, stage, data)` is what the Megatron collector writes and what the guard
+ablation reads. `events(…, hookpoint, payload)` is the schema §4.4 documents; its
+`build.snapshot` payloads carry the per-parameter `group_size`/`all_equal` records the
+topology guard reasons over — see `docs/SCHEMA_AND_GUARD_MECHANISM.md`.
 
 Individually:
 

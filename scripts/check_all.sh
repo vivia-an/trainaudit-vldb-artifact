@@ -2,7 +2,8 @@
 # Run every offline check in this artifact and summarise.
 #
 #   bash scripts/check_all.sh                 # checks that need no data download
-#   bash scripts/check_all.sh --traces DIR    # also the checks that need the trace bundle
+#   bash scripts/check_all.sh --traces DIR    # also the checks that need the coredump bundle
+#   bash scripts/check_all.sh --events DIR    # also the checks that need the events bundle
 #
 # Needs python3 with duckdb for the trace-dependent checks; everything else is stdlib
 # plus pdftotext (poppler-utils) for the figure check.
@@ -10,9 +11,11 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 TRACES=""
+EVENTS=""
 while [ $# -gt 0 ]; do
   case $1 in
     --traces) TRACES=$2; shift 2 ;;
+    --events) EVENTS=$2; shift 2 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -54,8 +57,18 @@ if [ -n "$TRACES" ]; then
         python3 core/validate_generated_sql.py --db "$TRACES/$d/Collector/merged_coredump.db"
   done
 else
-  printf '\n(skipped the trace-dependent checks; pass --traces DIR after '
+  printf '\n(skipped the coredump-trace checks; pass --traces DIR after '
   printf 'scripts/fetch_trace_dbs.sh)\n'
+fi
+
+if [ -n "$EVENTS" ]; then
+  run "events-bundle integrity" \
+      env TAG=trace-events-v2 bash scripts/fetch_trace_dbs.sh --dest "$EVENTS" --verify-only
+  run "the guard's skip-vs-check split is exercised" \
+      python3 benchmark/injection/audit_guard_groups.py --root "$EVENTS"
+else
+  printf '\n(skipped the events-trace checks; pass --events DIR after '
+  printf 'TAG=trace-events-v2 scripts/fetch_trace_dbs.sh)\n'
 fi
 
 printf '\n%s\n' "----------------------------------------"
