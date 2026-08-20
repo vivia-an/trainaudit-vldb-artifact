@@ -269,6 +269,12 @@ So the library is mostly well-behaved; the damage is concentrated in one rule.
 `measure_clean_fp.py --gate` applies the test to every rule with recovered SQL, independent
 of which guard arm enables it.
 
+Cross-checked on a second clean trace (`dp_normal_db`, DP=2): the gate rejects 2 of 215 and
+the same rule appears at **exactly 43.8% / 162,360 rows**, so the defect reproduces rather
+than being specific to one trace. (`dp_normal_db` is one of the traces affected by O26, but
+that does not distort this particular rule — it is a per-row null test, not a cross-rank
+comparison.)
+
 ## Reproduce
 
 ```bash
