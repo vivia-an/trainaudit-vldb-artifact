@@ -1,7 +1,44 @@
 # Gap audit — what the paper needs vs what the public artifact provides
 
-Compared: `paper/main.tex` + `paper/appendix.tex` (VLDB build) against
-`github.com/vivia-an/sdccheck-opensource` @ HEAD (cloned 2026-08-19: 52 files, 1.1 MB).
+## Status at a glance
+
+36 items. Classified by hand — the wording varies too much for a reliable count by pattern.
+
+**Closed or withdrawn (8).** O4 overhead traceability · O9 trace databases published ·
+O11 double-blind framing removed · O18 §5.2 footnote (withdrawn — the footnote is right) ·
+O24 verifier package now shipped · O27 "42 databases are 41" (withdrawn — my hash was too
+narrow) · O28 bundle v1 missing WAL sidecars (fixed in v2) · O30 stale supplementary PDF
+(rebuilt from its own source).
+
+**Mitigated as far as this workspace allows (6).** O3 the DB-baseline false-positive row is
+measured after all and its derivation is now shipped, leaving only the class-coverage bound
+analytical · O5/O6 figures have no generators, so `verify_figures.py` checks the rendered
+numbers against the data instead · O23 the compiled SQL was recovered from the interaction
+logs · O32 §4.1's mechanism is now demonstrable on a published TP=2 run, though its exact
+57/492 figures are not · O33 the events-schema traces are now published.
+
+**Open — needs a measurement run (5).** O7 temporal holdout (unblocked: 374 of 392 records
+dated, split ready) · O16 tier coverage · O17 portability matrix cells · O21 the 25.8/83.3
+FP/1M pair · O22 the temporal split partly confounds with framework.
+
+**Open — needs an author decision (13).** O1 the 25-line page overflow · O2 the appendix's
+status under the 12-page rule · O8 CMT registration and declarations · O12
+`\vldbavailabilityurl` (patch ready) · O13 cite `Megatron-LM#4641` (patch ready) · O19 the
+amortisation crossings computed two ways · O20 the equal-size gap caption · O26 four clean
+baselines with rank 1 identical to rank 0 · O29 the appendix still targets SIGMOD and renders
+anonymous · O31 a stray duplicate directory · O34 the topology gate was not engaged in the
+recorded runs · O35 one in eighteen generated queries is invalid SQL · O36 the ablation
+conflates a semantic effect with a generative one.
+
+**Documented, not defects (4).** O10 heavy outputs excluded by design · O14/O15 three
+generations of detection data, now labelled · O25 unguarded rules firing on a clean trace is
+§4.4's argument reproduced incidentally.
+
+### Where to start
+
+**O26** — four clean baselines carry 67–80% of the clean-arm false positives on traces where
+rank 1 is a copy of rank 0. It bears on the precision result, which is the paper's second
+headline. **O1** is the desk-reject risk. **O29** is a ten-minute fix.
 
 ## Verdict
 
