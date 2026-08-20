@@ -55,11 +55,53 @@ Counting the stage names the rule guards reference, with `%`/`*` treated as wild
 
 The unmatched names are mostly coarse phase labels (`optimizer-step` 34 rules, `forward` 27,
 `backward` 22, `model-after-forward` 14, `checkpoint` 5) plus initialization and
-checkpoint-restore stages. This is the same mismatch that makes 13 of the 228 recovered
-queries fail with `Referenced column "data" not found` — they are written against the other
-schema.
+checkpoint-restore stages. **Correction.** An earlier version of this file attributed the 13 recovered queries that
+fail on a `coredump` trace to this schema split. That was wrong: all 13 use
+`FROM coredump` and `json_extract(data, …)` correctly, and their failures are defects in
+the generated SQL. See §4 below.
 
-## 3. The topology gate exists in the code but was not engaged in the recorded runs
+## 3. One in eighteen generated queries is invalid SQL
+
+Executing the 228 recovered queries against a shipped trace, 13 fail — **5.7%** — and every
+failure is a defect in the query itself, not a schema mismatch:
+
+| Failure | Count |
+|---|---:|
+| references `data` from inside a CTE that does not project it | 7 |
+| shell-style `\` line continuations inside the SQL | 2 |
+| comparing VARCHAR against a numeric type | 1 |
+| `DISTINCT` aggregate with an invalid `ORDER BY` | 1 |
+| ambiguous reference to `step` across joined relations | 1 |
+| `data` used in `SELECT` without appearing in `GROUP BY` | 1 |
+
+The commonest shape is a scoping error. For example, one query's final CTE reads
+
+```sql
+inconsistency AS (SELECT DISTINCT param_name, step, stage, dp_rank, tp_rank, …
+                  FROM pp_activation_check
+                  WHERE size_stddev > 0
+                     OR pp_count != CAST(json_extract(data, '$.pp') AS INTEGER) + 1)
+```
+
+`pp_activation_check` does not project `data`, so the reference cannot bind.
+
+**This corroborates independently in the ablation's own data.** `d1_results.csv` records a
+`status = error` count per cell, and those rates bracket the measured invalid-SQL rate:
+
+| library | rules reporting `error` | rate |
+|---|---:|---:|
+| `lib_full` | 233 / 3,447 | 6.8% |
+| `lib_no_precond` | 275 / 3,443 | 8.0% |
+| `lib_no_topo` | 353 / 3,447 | 10.2% |
+| *recovered queries executed here* | *13 / 228* | *5.7%* |
+
+So roughly one rule evaluation in fifteen in the reported ablation did not evaluate a
+constraint at all — it failed to compile. That is worth stating: it bears on §4.5's
+description of constraints "compiled into parameterized SQL", and the error rate rises as
+guards are stripped, which is consistent with the guard text helping the generator produce
+valid SQL.
+
+## 4. The topology gate exists in the code but was not engaged in the recorded runs
 
 §4.5 says the verifier, before the first training step, "extracts the active topology τ
 from the launch script—DP/TP/PP/EP group sizes, `zero_stage`, and mixed-precision
