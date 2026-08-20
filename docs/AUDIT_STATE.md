@@ -521,3 +521,10 @@ now saying `pip install duckdb` for the checks. Templates live in `scripts/templ
 re-assembly restores the split instead of the bundled version from `core_algo`.
 
 Also corrected the README's stale "all seven offline check groups" — it is nine.
+
+**Verified, not assumed.** Built a clean venv with `duckdb` and nothing else — `import
+autogen` raises `ModuleNotFoundError` in it — and ran the suite there: **9 offline groups
+pass, and 15 with both trace bundles.** So the README's `pip install duckdb` is empirically
+sufficient for the entire verification path, which is what I had inferred from reading the
+imports. `pyyaml` and `pydantic` stay in `requirements.txt` for the mining pipeline's config
+loading; the checks do not touch them.
