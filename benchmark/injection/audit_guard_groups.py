@@ -61,6 +61,11 @@ def main():
         total["skip"] += skip
         total["check"] += check
         total["uneq"] += uneq
+        if check:
+            # Only in a run with a replica group larger than 1 would a skipped record
+            # actually have another rank to be compared against. Counting skips from
+            # single-rank runs toward the guard's saving would overstate it.
+            total["skip_multirank"] += skip
         exercised += check > 0
         # Truncate the run name, never the rank: eight ranks of one run must stay
         # distinguishable in the output.
@@ -75,8 +80,13 @@ def main():
     if total["check"]:
         print(f"\nWith the guard in place a clean run yields {total['uneq']} alarms from the "
               f"{total['check']} checked records.")
-        print(f"Without it the {total['skip']} skipped records would each be compared across "
-              f"ranks and differ by construction — that is the false-positive cost §4.1 quantifies.")
+        print(f"Without it the {total['skip_multirank']} skipped records in multi-rank runs "
+              f"would each be compared across ranks and differ by construction — that is the "
+              f"false-positive cost §4.1 quantifies.")
+        single = total["skip"] - total["skip_multirank"]
+        if single:
+            print(f"({single} further skipped records sit in single-rank runs, where there is "
+                  f"no second rank to compare against, so they are not part of that cost.)")
     if not exercised:
         print("\nNone of these traces exercises the guard's check branch: every record sits in a")
         print("group of size 1, so the skip path is taken throughout. A trace from a run with")

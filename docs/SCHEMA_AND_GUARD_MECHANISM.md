@@ -218,6 +218,10 @@ totals: 392 skipped, 400 checked, 0 checked-and-unequal
 compared across ranks and differ by construction — sharded tensors hold different bytes on
 each rank. That is the same effect the paper quantifies as 57 false positives on its own run.
 
+Run over the whole bundle the auditor reports 3,898 skipped records, but only these 392
+belong to the counterfactual: the other 3,506 are in single-rank runs, where there is no
+second rank to compare against. The tool reports the two separately for that reason.
+
 It is a substitute for the paper's example, not a reproduction of it: different model
 (gpt-tiny, 8 ranks at TP=2), different counts, and the parameter names are Megatron-Core
 (`linear_qkv`) rather than the legacy `query_key_value` the paper cites. What it does give a

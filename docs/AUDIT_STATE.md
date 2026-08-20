@@ -457,3 +457,14 @@ cumulative coverage over the 392-record corpus (94 records at Tier 0..0 through 
 196, 163 or 128 lines the two up, the best matching 2 of 6 points by coincidence. So the
 figure measures something else, and that something is not shipped. Better than "the file is
 empty", and it tells the authors exactly what to reconcile.
+
+**End-to-end verification of `trace-events-v2`:** 37/37 files verified across 24 runs, and
+`audit_guard_groups.py` reports 8 of 37 traces with a replica group larger than 1 — the TP=2
+run's eight ranks, 49 skipped / 50 checked each.
+
+That run also exposed an overstatement in the tool I had just written. Its summary line said
+"without the guard the 3,898 skipped records would each be compared across ranks and
+differ" — but 3,506 of those are in single-rank runs, where there is no second rank to
+compare against. Only the 392 from the TP=2 run belong to the counterfactual. Fixed to
+report the two separately, with the reason in a comment so the conflation is not
+reintroduced.
