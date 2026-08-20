@@ -75,16 +75,27 @@ the commits named in the manifest; see
 
 ## Verifying the paper's numbers
 
+Everything offline, in one command:
+
 ```bash
-python3 scripts/verify_paper_numbers.py            # 29 published numbers, recomputed
-python3 scripts/verify_figures.py                 # numbers printed inside the figures
+bash scripts/check_all.sh                          # 7 check groups
+bash scripts/check_all.sh --traces /path/for/traces  # + the trace-dependent checks
+```
+
+Individually:
+
+```bash
+python3 scripts/verify_paper_numbers.py            # 33 published numbers, recomputed
+python3 scripts/verify_figures.py                  # numbers printed inside the figures
 python3 benchmark/injection/parse_overhead_logs.py --check   # Table tab:overhead
+python3 benchmark/injection/audit_rank_captures.py --root <traces>  # per-rank captures
 ```
 
 `verify_paper_numbers.py` recomputes rather than restates: Real-SE 17+1 from the
-manifest, TrainAudit 17/17, TrainCheck 5/17, Naïve 0/17, the mining funnel
+manifest, TrainAudit 17/17, TrainCheck 5/17, Naïve 0/17, fixed-side 0/17, the mining funnel
 420→5334→3436→357→45, the funnel-ablation arms (114/400, 0/764, 0/6,922), the
-four-arm guard ablation 342→429/551/598, and every value of `tab:overhead`. It also
+four-arm guard ablation 342→429/551/598, the two measured DB-baseline false-positive
+rates, and every value of `tab:overhead`. It also
 reports the claims the shipped data does *not* support, and flags two files that score
 superseded case sets — see `benchmark/eval/DETECTION_FILES_NOTE.md`.
 

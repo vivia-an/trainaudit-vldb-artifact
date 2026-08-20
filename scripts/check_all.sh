@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Run every offline check in this artifact and summarise.
+#
+#   bash scripts/check_all.sh                 # checks that need no data download
+#   bash scripts/check_all.sh --traces DIR    # also the checks that need the trace bundle
+#
+# Needs python3 with duckdb for the trace-dependent checks; everything else is stdlib
+# plus pdftotext (poppler-utils) for the figure check.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+TRACES=""
+while [ $# -gt 0 ]; do
+  case $1 in
+    --traces) TRACES=$2; shift 2 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+done
+
+pass=0; fail=0
+run() {                       # run <label> <command...>
+  local label=$1; shift
+  printf '\n=== %s\n' "$label"
+  if "$@"; then pass=$((pass+1)); else fail=$((fail+1)); printf '    ^ FAILED\n'; fi
+}
+
+run "published numbers, recomputed from the shipped data" \
+    python3 scripts/verify_paper_numbers.py -q
+run "numbers printed inside the figures, against their data" \
+    python3 scripts/verify_figures.py
+run "Table tab:overhead, from the raw H20 logs" \
+    python3 benchmark/injection/parse_overhead_logs.py --check
+run "Real-SE per-case verdicts, from SMOKE_REPORT.md" \
+    python3 benchmark/eval/real_sdc/extract_detection_csv.py
+run "Real-SE replay outcomes, from the per-case smoke logs" \
+    python3 benchmark/eval/real_sdc/extract_replay_outcomes.py
+run "mining funnel counts" \
+    python3 core/scripts/reproduce_funnel_counts.py
+# the .sha256 names a bare filename, so it has to be checked from its own directory
+run "frozen Pattern Catalog integrity" \
+    bash -c 'cd core/config && sha256sum -c frozen_template_catalog.sha256' 
+
+if [ -n "$TRACES" ]; then
+  run "per-rank captures genuinely distinct" \
+      python3 benchmark/injection/audit_rank_captures.py --root "$TRACES"
+  run "trace bundle integrity" \
+      bash scripts/fetch_trace_dbs.sh --dest "$TRACES" --verify-only
+  for d in normal_db/dp_normal tp_router_test_db; do
+    [ -f "$TRACES/$d/Collector/merged_coredump.db" ] || continue
+    run "compiled SQL executes on $d" \
+        python3 core/validate_generated_sql.py --db "$TRACES/$d/Collector/merged_coredump.db"
+  done
+else
+  printf '\n(skipped the trace-dependent checks; pass --traces DIR after '
+  printf 'scripts/fetch_trace_dbs.sh)\n'
+fi
+
+printf '\n%s\n' "----------------------------------------"
+printf '%d check group(s) passed, %d failed\n' "$pass" "$fail"
+[ "$fail" -eq 0 ]
