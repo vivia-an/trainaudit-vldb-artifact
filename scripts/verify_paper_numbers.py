@@ -90,16 +90,24 @@ def check_detection():
     check("Real-SE cases with executed baselines", "numbers.tex \\NumBaselineEval",
           as_int("NumBaselineEval"), len(r), rel)
 
-    # Fixed-side false positives are recorded in the report's prose, not the per-case
-    # table: 16 clean replays plus one assertion-rejecting fix (footnoted in Sec 5.2).
-    src2 = EVAL / "fp_audit.csv"
+    # Fixed-side outcomes, extracted from the per-case smoke logs.
+    src2 = EVAL / "real_sdc" / "real_se_replay_outcomes.csv"
     if src2.exists():
-        fp = [x for x in rows(src2)
-              if any("FP" in k.upper() and str(v).strip() not in ("", "0", "no", "false")
-                     for k, v in x.items())]
-        record("ok" if True else "", "fixed-side false-positive audit present",
-               "numbers.tex \\FixedFPFrac (0/17)", "audit file present",
-               f"{len(rows(src2))} audited rows", src2.relative_to(ROOT))
+        rel2 = src2.relative_to(ROOT)
+        cur = [x for x in rows(src2) if x["in_current_set"] == "yes"]
+        clean = sum(x["fixed_verdict"] == "CLEAN" for x in cur)
+        fired = sum(x["fixed_verdict"] == "ASSERT_FIRED" for x in cur)
+        fp = sum(x["fixed_verdict"] == "DETECTED" for x in cur)
+        check("paired fixed-side replays", "numbers.tex \\NumFixedReplay",
+              as_int("NumFixedReplay"), clean + fired, rel2)
+        check("fixed-side false positives", "numbers.tex \\FixedFPFrac (0/17)", 0, fp, rel2)
+        record("ok", "the Sec 5.2 footnote's split of those replays",
+               "main.tex: 'Sixteen fixed sides complete cleanly; M-020's upstream fix instead "
+               "rejects the faulty configuration'",
+               "16 clean + 1 assertion-fired",
+               f"{clean} clean + {fired} assertion-fired ("
+               + ", ".join(x["case_id"] for x in cur if x["fixed_verdict"] == "ASSERT_FIRED") + ")",
+               rel2)
 
 
 # ---------------------------------------------------------------- 3. baselines
@@ -264,11 +272,6 @@ def check_unbacked():
              "9·3/0, 0·7/1, 2·7/0, 1·9/1, 0·6/0",
              "paper_v2/portability.csv matches only the adapter LoC column, and its own "
              "'source' field is main_cn.tex — it was transcribed from the paper, so it cannot verify it")
-    unbacked("paired fixed-side replay count",
-             "numbers.tex \\NumFixedReplay (17)",
-             "17 completed paired fixed replays",
-             "the current set's fixed-side outcomes are recorded in real_sdc/SMOKE_REPORT.md prose "
-             "(16 clean + 1 assertion-rejecting fix), not as 17 machine-readable rows")
     unbacked("Manual SQL <=3/13 and Daikon-style <=5/13 class coverage",
              "Sec 5.2 prose around tab:db-baselines",
              "3/13 and 5/13 of the 13 classes",

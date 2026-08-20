@@ -1,7 +1,9 @@
 # Paper-side actions (report only — `main.tex` has not been modified)
 
-Three items in `overleaf/sdc_llm_icml_2025/main.tex` need an author decision before
-submission. Each gives the exact location, the evidence, and a suggested edit.
+Items in `overleaf/sdc_llm_icml_2025/main.tex` that need an author decision before
+submission. Each gives the exact location, the evidence, and a suggested edit. Item 3 was
+raised in an earlier pass and is **withdrawn** — it is recorded here rather than deleted so
+the reasoning is auditable.
 
 ---
 
@@ -50,24 +52,25 @@ claim that the authors' patch was merged, because it was not.
 
 ---
 
-## 3. The §5.2 footnote names a case the data does not support
+## 3. ~~The §5.2 footnote names a case the data does not support~~ — withdrawn, the footnote is right
 
-`main.tex:840-843`:
+An earlier pass flagged the §5.2 footnote ("Sixteen fixed sides complete cleanly; M-020's
+upstream fix instead rejects the faulty configuration as intended") as unsupported,
+because `benchmark/eval/results.csv` records M-020's fixed side as `CLEAN`. That file
+scores a superseded case set and the wrong M-020 harness.
 
-> Sixteen fixed sides complete cleanly; M-020's upstream fix instead rejects the faulty
-> configuration as intended. We count this as a fixed-side verdict, not as a completed
-> CLEAN replay.
+The current run says otherwise. `benchmark/eval/real_sdc/logs/smoke/M-020_smoke.log`:
 
-In the shipped data **M-020's fixed side is `CLEAN`** (`benchmark/eval/results.csv`:
-`M-020,fixed,CLEAN,[fixed] T1-layer-count-strict did not fire`). The case that has no
-clean fixed row there is `OC-NEW-3` — and `OC-NEW-3` is not in the current Real-SE set at
-all, so that file cannot settle it either.
+```
+>>> Buggy: BUG DETECTED (expected)
+>>> Fixed: ASSERT fired (expected — bug prevented)
+```
 
-The footnote may still be correct for the current set; the point is that nothing in the
-artifact confirms which case it refers to. Suggested fix: name the case as it appears in
-`benchmark/eval/real_sdc/real_se_detection.csv`, and record its fixed-side outcome there
-so the footnote becomes checkable. The `0/\NumFixedReplay` claim itself is not in
-question — see `../benchmark/eval/DETECTION_FILES_NOTE.md`.
+Extracting all 21 smoke logs and scoping to the 17 current cases
+(`real_sdc/extract_replay_outcomes.py` → `real_se_replay_outcomes.csv`) gives **17 buggy
+sides detected, 16 fixed sides clean, 1 assertion-fired (M-020), 0 false positives** —
+the footnote, `\NumRealSEDet`, `\NumFixedReplay` and `\FixedFPFrac` all exactly as
+published. No edit needed here.
 
 ---
 

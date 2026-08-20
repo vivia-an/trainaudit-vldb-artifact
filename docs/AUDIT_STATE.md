@@ -136,3 +136,31 @@ missed because they sit one directory deeper than the rest.
 Excluded from the bundle: the `VLog/`, `TracePoint/` and `Collector/logs/` directories
 (~400 MB) that sit beside the databases. They are run logs, not inputs to any reported
 number, and remain listed in `trace_db_index.csv`.
+
+### 2026-08-20 — iteration 5: two findings closed, one withdrawn
+- **O7 unblocked.** The temporal holdout was recorded as blocked for missing dates; the
+  dates were only unresolved. 385 of 392 records carry an issue URL or commit hash, and
+  `resolve_record_dates.py` dated **374 (95%)** from upstream — 255 from commit dates, 119
+  from issue/PR creation. The corpus spans **2021-01-26 to 2026-05-06**; a median cut at
+  2025-03-14 gives 186/188 with all 13 categories on both sides (`temporal_split.json`).
+- **O22 new.** That split partly confounds with framework: OLMo is 69 train / 5 test and
+  OLMo-core 5 train / 63 test, because OLMo-core is the newer project. A temporal holdout
+  here would partly measure framework transfer, which §5.4 already reports separately.
+- **O18 withdrawn.** I had flagged the §5.2 footnote as contradicted by the data. It was
+  not — I had read `results.csv`, which scores a superseded case set.
+  `logs/smoke/M-020_smoke.log` records `Fixed: ASSERT fired (expected — bug prevented)`,
+  and `extract_replay_outcomes.py` over the 17 current cases gives **17 detected, 16 clean,
+  1 assertion-fired, 0 false positives** — the footnote and all three macros exactly as
+  published. This also closes the `\NumFixedReplay` gap: those outcomes are now a CSV.
+- **O21 sharpened.** The 25.8 / 83.3 FP/1M pair implies ≈13 and ≈42 violating evaluations
+  over 504 K (ratio 3.2×, matching the figure's annotation). That is a row-level
+  denominator, so it cannot be reconciled with the shipped leave-one-out data, whose five
+  clean databases give 9 and 35 over 438 rule-level evaluations. The 504 K run needs its
+  own file.
+
+**33 numbers verified, 0 mismatched, 4 unbacked.**
+
+## Lesson for later iterations
+Two of my findings came from `results.csv` and both were wrong, because it scores a
+superseded case set. Check `benchmark/eval/DETECTION_FILES_NOTE.md` before treating any
+per-case file as authoritative.
