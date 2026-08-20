@@ -230,6 +230,31 @@ reviewer is the mechanism, measurable, on a run they can download.
 Not published: `rebuttal_v1/C1_overhead_gpu/` (several GB of overhead runs) — it backs no
 number that `benchmark/injection/overhead_h20.csv` does not already cover.
 
+## An independent measurement of the guard's effect
+
+O21's run — the six-case, 504K-evaluation set behind 25.8 → 83.3 FP/1M — is not in the
+artifact. `benchmark/injection/measure_clean_fp.py` measures the same effect with what is:
+the recovered SQL, the two guard libraries, and the clean TP=2 trace.
+
+```
+trace: tp_normal, 370270 rows, DP=1 TP=2 PP=1
+
+guarded              enabled=54   executed=51   failed_to_compile=3    fired=8
+topology-stripped    enabled=151  executed=140  failed_to_compile=11   fired=26
+
+removing the topology guard takes firing rules from 8 to 26 (3.2x)
+```
+
+**3.2× is the ratio the paper reports** (25.8 → 83.3). Treat that as corroboration, not
+reproduction: the denominators differ — firing rules here against per-million rule
+evaluations there — and the exact agreement could be coincidence.
+
+One further detail worth the authors' attention. Of the 173,876 rows flagged in the guarded
+arm, **93% come from a single rule**, `前向阶段梯度应为空`, whose generated SQL inverts its
+own definition of "empty" (GAP_AUDIT O37). A rule that flags every row of a clean trace
+should not have survived acceptance, and it compiles cleanly, so the compile check in
+`validate_generated_sql.py` cannot catch it. A clean-run acceptance gate would.
+
 ## Reproduce
 
 ```bash

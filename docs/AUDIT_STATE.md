@@ -528,3 +528,27 @@ pass, and 15 with both trace bundles.** So the README's `pip install duckdb` is 
 sufficient for the entire verification path, which is what I had inferred from reading the
 imports. `pyyaml` and `pydantic` stay in `requirements.txt` for the mining pipeline's config
 loading; the checks do not touch them.
+
+### 2026-08-21 — iteration 19: measured the guard's effect; found an inverted rule
+O21's run is absent, so instead of reporting that again I measured the same effect from what
+is here — the recovered SQL, both guard libraries, and the clean TP=2 trace
+(`normal_db/tp_normal`, the one clean trace unaffected by O26).
+
+A first check corroborated the method: at DP=1/TP=2/PP=1 the guarded arm enables 66 rules,
+**exactly the `total=66` that `d1_results.csv` records for `tp_normal`**.
+
+`benchmark/injection/measure_clean_fp.py`: guarded arm 54 enabled / 8 firing;
+topology-stripped 151 enabled / 26 firing — **3.2×**, the ratio the paper reports for
+25.8 → 83.3. Corroboration, not reproduction: different denominators, and the exact
+agreement may be coincidence. **O38.**
+
+**O37, the more useful finding.** 93% of the flagged rows come from one rule,
+`前向阶段梯度应为空`. It requires gradient fields absent during forward, and its own
+description says absent means SQL `NULL` *or* the JSON string `'null'`. The generated SQL
+flags rows that are `IS NOT NULL` **or** equal `'null'` — flagging exactly what it calls
+compliant. Verified: of 162,360 forward-stage rows, **0 are SQL NULL and all 162,360 are
+JSON null**, so the predicate holds for every row.
+
+It compiles, so O35's compile check cannot catch it. A rule that flags every row of a clean
+trace should never have reached the library — which argues for a clean-run acceptance gate,
+the thing the paper's own funnel claims to have.
