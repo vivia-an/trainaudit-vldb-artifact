@@ -598,3 +598,27 @@ and size the trim for 44 lines rather than 25". Recorded in `PAGE_BUDGET.md` and
 
 This is why applying a patch and measuring beats reasoning about it: a one-line
 `\renewcommand` costing three quarters of a column is not something I would have predicted.
+
+### 2026-08-21 — iteration 22: which page-trim levers actually work
+Measured what I had previously estimated, and the estimate was wrong.
+
+| change (all with `patch 01`) | spill past p.12 | pages |
+|---|---:|---:|
+| baseline, no patches | 25 | 14 |
+| `patch 01` alone | 44 | 14 |
+| + six figures at 90% of own width | **44, no change** | 14 |
+| + ~139 words of prose removed | 17 | 13 |
+| + ~269 words of prose removed | **0 — content ends on p.12** | 13 |
+
+**Figure width is not a lever.** My earlier `PAGE_BUDGET.md` claim that shrinking four plots
+10% recovers ~90 pt was arithmetic on figure heights; measured it recovers nothing. Tested
+twice — the first attempt had a regex that *enlarged* the two plots inside a 0.44-column
+`minipage`, so I redid it scaling each figure relative to its own unit. Both gave 44. Likely
+`\flushbottom`: freed float space is absorbed by inter-paragraph glue instead of pulling text
+back, and float slots are discrete.
+
+**Prose has ~2:1 leverage** — 13 lines removed cut 27 lines of overflow, and 26 lines cleared
+it. So O1's target is ~26 lines / 270 words, not 44, and not geometry.
+
+I also told the user this correction was written up before actually writing it. Corrected in
+the same turn it was noticed.

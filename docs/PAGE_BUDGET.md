@@ -41,32 +41,45 @@ the long sections or from float geometry:
 | §6 Related Work | 323 | 31 |
 | §7 Conclusion | 92 | 9 |
 
-## Mechanical levers (no prose changes)
+## Which levers actually work — measured, not estimated
 
-`main.tex` has 14 floats. Figure widths today:
+An earlier version of this file claimed that "trimming the four full-width single-column
+plots by 10% recovers on the order of 90 pt, about a third of the deficit". **That was
+arithmetic on figure heights, and it is wrong.** Measured, figure shrinking recovers
+nothing.
 
-| Location | Figure | Width |
-|---|---|---|
-| `main.tex:248` | `figure1_vector_v5` | 0.78 `\columnwidth` |
-| `main.tex:303` | `fig_silent_motivation` | `\columnwidth` |
-| `main.tex:568` | `fig_overview_v32` | 0.70 `\linewidth` (wide float) |
-| `main.tex:641` | `fig_three_predicate_sql` | 0.72 `\textwidth` (wide float) |
-| `main.tex:851` | `fig_predicate_ablation_v2` | `\linewidth` |
-| `main.tex:856` | `fig_funnel_ablation_v2` | `\linewidth` |
-| `main.tex:950` | `fig_catalog_generalization` | `\columnwidth` |
-| `main.tex:1023` | `fig_amortization` | `\columnwidth` |
-| `main.tex:1064` | `fig_portability_matrix` | 0.78 `\columnwidth` |
+Every row below was built in one environment, with `patch 01` applied, and the overflow
+located by finding `REFERENCES` on page 13 with `pdftotext -bbox`:
 
-A 10% width cut on a `\columnwidth` figure returns roughly 10% of its height — for a
-square-ish plot that is 20–25 pt each. Trimming the four full-width single-column
-plots by 10% recovers on the order of 90 pt, about a third of the deficit, with no text
-touched. `\textfloatsep`/`\dbltextfloatsep` are already tightened to 13 pt in the
-preamble, so there is little left there.
+| Change | Content lines spilling past p.12 | Total pages |
+|---|---:|---:|
+| baseline, no patches | 25 | 14 |
+| `patch 01` (availability URL) | 44 | 14 |
+| `patch 01` + six figures scaled to 90% of their own width | **44 — no change** | 14 |
+| `patch 01` + ~139 words of prose removed (~13 lines) | 17 | 13 |
+| `patch 01` + ~269 words of prose removed (~26 lines) | **0 — content ends on p.12** | 13 |
 
-The remaining ~160 pt has to come from prose or from dropping a float. That is an
-authors' call, not a mechanical one — this file only states the size of the problem.
+Two things to take from this.
 
-## Related decision
+**Figure width is not a lever.** Tested twice: once with a regex that mistakenly enlarged
+the two plots living inside a 0.44-column `minipage`, then correctly, scaling six figures to
+90% of whatever unit each already used. Both gave 44. The likely reason is `\flushbottom`,
+which acmart sets: columns are stretched to full height regardless, so space freed inside a
+float is absorbed by inter-paragraph glue rather than pulling text back — and float
+placement is discrete, so a slightly shorter figure still occupies the same top-of-page
+slot.
+
+**Prose has roughly 2:1 leverage.** Removing 13 rendered lines cut the overflow by 27, and
+26 lines cleared it entirely. Shorter text lets a float move up a page, and that cascades.
+
+So the target for O1 is **about 26 lines — some 270 words, two paragraphs — of prose**, with
+`patch 01` included. Not 44 lines, and not geometry.
+
+The paragraphs used to calibrate this were the four longest in §5.1 Experimental Setup,
+chosen because they are descriptive rather than result-bearing. **That was a measurement, not
+a recommendation** — which text to cut is an authors' judgement.
+
+## Related decision## Related decision
 
 `main.tex:1159` still reads `%% Acknowledgements removed for double-blind review`.
 VLDB is single-blind, so acknowledgements are permitted again — but they would count
