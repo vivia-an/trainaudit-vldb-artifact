@@ -41,6 +41,13 @@ echo "[2/10] core mining pipeline (Pattern Catalog + FSM + Accept gate)"
 if [ -d "$WS/sdccheck/core_algo" ]; then
   copytree "$WS/sdccheck/core_algo" "$OUT/core"
   say "core_algo -> core/" copied
+  # core_algo bundles the AutoGen stack into requirements.txt, so the documented first
+  # command would install a few hundred MB to run checks that need only duckdb. Restore the
+  # split versions after the copy (the mining file pulls the base one in).
+  for r in requirements.txt requirements-mining.txt; do
+    [ -f "$OUT/scripts/templates/$r" ] && cp -f "$OUT/scripts/templates/$r" "$OUT/core/$r"
+  done
+  say "requirements split" "checks need duckdb only; mining deps in requirements-mining.txt"
 fi
 # The runnable verifier itself: `python3 -m sdccheck <trace.db> --constraints-file ...`
 # is what every ablation cell invokes, so without this package nothing in the artifact

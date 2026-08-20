@@ -35,15 +35,21 @@ scripts/          check_all.sh (every offline check), fetch_trace_dbs.sh, build_
 ## Quick checks (no GPU, no API key)
 
 ```bash
-pip install -r core/requirements.txt
+pip install duckdb            # the only third-party package the checks need
 
-bash scripts/check_all.sh                          # all seven offline check groups
+bash scripts/check_all.sh                          # all nine offline check groups
 python3 core/run_smoke.py                          # offline pipeline smoke
 python3 core/scripts/reproduce_funnel_counts.py    # funnel 420 -> 5334 -> 3436 -> 357 -> 45
 (cd core/config && sha256sum -c frozen_template_catalog.sha256)   # names a bare filename
 ```
 
 ## Mining with the multi-agent pipeline
+
+This is the only part that needs more than `duckdb` — it pulls in the AutoGen stack:
+
+```bash
+pip install -r core/requirements-mining.txt
+```
 
 ```bash
 export SDC_PAPER_ALIGN=1        # paper path: catalog templates + FSM + Accept gate
@@ -85,7 +91,7 @@ the commits named in the manifest; see
 Everything offline, in one command:
 
 ```bash
-bash scripts/check_all.sh                            # 8 offline check groups
+bash scripts/check_all.sh                            # 9 offline check groups
 bash scripts/check_all.sh --traces DIR --events DIR2 # + the trace-dependent checks
 ```
 

@@ -498,3 +498,26 @@ Added a check that catches this class without needing a TeX toolchain:
 `\bibliography` target relative to `paper/` — 21 paths, all resolving. It is part of the
 same `check_all.sh` group, so a future move of `figures/` fails the suite instead of
 failing silently on a reviewer's machine.
+
+### 2026-08-20 — iteration 18: the README's first command, and the fresh-clone path
+Verified the whole reviewer path from a **fresh `git clone` off GitHub**, not the working
+copy: the symlinks survive, `cd paper && pdflatex …` gives **0 errors, 0 undefined
+references, 14 pages**, and `bash scripts/check_all.sh` passes all 9 groups. That path was
+broken an hour earlier, so it was worth confirming from a clean checkout rather than from
+here.
+
+Then checked the README's *first* command, `pip install -r core/requirements.txt`. It
+resolves — no conflict, `autogen 0.14.1` alongside `pyautogen 0.10.0` — but it installs the
+entire AutoGen stack (autogen, pyautogen, autogen-agentchat, autogen-core, tiktoken, httpx
+and dependencies, a few hundred MB) to reach checks that need almost nothing. Confirmed by
+reading the imports: every offline script — `check_all.sh`'s nine groups, `run_smoke.py`,
+`example_verifier.py`, the `verify_*` scripts — imports **only the standard library plus
+`duckdb`** (lazily, inside a function).
+
+`requirements.txt` had the mining dependencies marked "optional" in a comment, which pip
+does not honour. Split into `requirements.txt` (duckdb, pyyaml, pydantic) and
+`requirements-mining.txt` (which pulls the base file in and adds AutoGen), with the README
+now saying `pip install duckdb` for the checks. Templates live in `scripts/templates/` so
+re-assembly restores the split instead of the bundled version from `core_algo`.
+
+Also corrected the README's stale "all seven offline check groups" — it is nine.
