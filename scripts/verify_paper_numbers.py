@@ -195,6 +195,34 @@ def check_guard_ablation():
     check("minus pi_topo aggregate FP", where, 598, total.get("lib_no_topo"), src1.relative_to(ROOT))
 
 
+# ---------------------------------------------------------------- 5b. DB-style baselines
+def check_db_baselines():
+    """tab:db-baselines' FP row comes from real runs; only its class-coverage bound does not."""
+    where = "Sec 5.2 tab:db-baselines, clean-trace FP/1M row"
+    src = ROOT / "baselines" / "logs" / "manual_sql_baseline.json"
+    if src.exists():
+        s = json.loads(src.read_text())["summary"]
+        check("Manual SQL clean FP/1M", where, 4.8,
+              round(s["clean_crossrank_fp_per_million"] / 1e5, 1), src.relative_to(ROOT), tol=0.05)
+        record("note", "which Manual SQL denominator the paper uses", where,
+               "4.8e5 = the cross-rank subset", 
+               f"cross-rank {s['clean_crossrank_fp_per_million']:.0f}/1M over "
+               f"{s['clean_crossrank_evals']} evals; over all {s['clean_total_evals']} evals it is "
+               f"{s['clean_fp_per_million']:.0f}/1M", src.relative_to(ROOT))
+    src = ROOT / "baselines" / "logs" / "daikon_style_baseline_loo.json"
+    if src.exists():
+        s = json.loads(src.read_text())["summary"]
+        check("Daikon-style clean FP/1M", where, 1.3,
+              round(s["clean_fp_per_million"] / 1e5, 1), src.relative_to(ROOT), tol=0.05)
+        alt = ROOT / "baselines" / "logs" / "daikon_style_baseline.json"
+        if alt.exists():
+            a = json.loads(alt.read_text())["summary"]
+            record("note", "which Daikon protocol the paper uses", where,
+                   "1.3e5 = leave-one-configuration-out",
+                   f"LOO {s['clean_fp_per_million']:.0f}/1M; the single-train-database variant in "
+                   f"{alt.name} gives {a['clean_fp_per_million']:.0f}/1M", src.relative_to(ROOT))
+
+
 # ---------------------------------------------------------------- 6. overhead
 def check_overhead():
     src = ROOT / "benchmark" / "injection" / "overhead_h20.csv"
@@ -217,11 +245,13 @@ def check_overhead():
 
 # ---------------------------------------------------------------- 7. known-unbacked
 def check_unbacked():
-    unbacked("clean-trace FP/1M: 4.8e5 / 1.3e5 / 25.8, and 83.3 without pi_topo",
-             "§5.3 tab:guard-progression, fig:predicate-ablation, §4 fig:three-predicate-sql caption",
-             "25.8 and 83.3 FP per 1M over 504K clean evaluations",
-             "the six-case 504K-evaluation run is not in the artifact; "
-             "paper_v2/mechanism_precond.csv cites benchmark/eval/ablation_s2_results.csv, which is absent")
+    unbacked("TrainAudit's own clean-trace FP/1M: 25.8, and 83.3 without pi_topo",
+             "Sec 5.3 fig:predicate-ablation, tab:db-baselines third column, Sec 4 fig:three-predicate-sql caption",
+             "25.8 and 83.3 FP per 1M over 504K clean rule evaluations",
+             "the two baseline columns of tab:db-baselines DO come from executed runs "
+             "(baselines/logs/), but TrainAudit's own six-case 504K-evaluation run is not in the "
+             "artifact; paper_v2/mechanism_precond.csv cites benchmark/eval/ablation_s2_results.csv, "
+             "which is absent")
     unbacked("schema tier coverage-overhead curve",
              "appendix fig:tier-coverage; §4.4 (~8% -> ~1.5%)",
              "coverage 28-78%, overhead 1.5-7.5%",
@@ -237,9 +267,10 @@ def check_unbacked():
              "the current set's fixed-side outcomes are recorded in real_sdc/SMOKE_REPORT.md prose "
              "(16 clean + 1 assertion-rejecting fix), not as 17 machine-readable rows")
     unbacked("Manual SQL <=3/13 and Daikon-style <=5/13 class coverage",
-             "§5.2 tab:db-baselines",
-             "3/13 and 5/13",
-             "stated in the paper as an analytical expressivity bound; no executable harness ships")
+             "Sec 5.2 prose around tab:db-baselines",
+             "3/13 and 5/13 of the 13 classes",
+             "an analytical expressivity bound, as the paper says; the FP row of the same table "
+             "is measured, but no harness scores class coverage")
 
 
 def main():
@@ -248,23 +279,26 @@ def main():
     args = ap.parse_args()
 
     for fn in (check_realse, check_detection, check_baselines, check_funnel,
-               check_funnel_arms, check_guard_ablation, check_overhead, check_unbacked):
+               check_funnel_arms, check_guard_ablation, check_db_baselines, check_overhead, check_unbacked):
         try:
             fn()
         except Exception as exc:                                  # noqa: BLE001
             record("ERROR", fn.__name__, "-", "-", repr(exc), "-")
 
-    order = {"MISMATCH": 0, "ERROR": 1, "UNBACKED": 2, "superseded": 3, "ok": 4}
-    shown = [r for r in results if not (args.quiet and r[0] == "ok")]
+    order = {"MISMATCH": 0, "ERROR": 1, "UNBACKED": 2, "superseded": 3, "note": 4, "ok": 5}
+    shown = [r for r in results if not (args.quiet and r[0] in ("ok", "note"))]
     shown.sort(key=lambda r: order[r[0]])
 
     label = {"ok": "  ok      ", "MISMATCH": "  MISMATCH", "UNBACKED": "  UNBACKED",
-             "superseded": "  stale   ", "ERROR": "  ERROR   "}
+             "superseded": "  stale   ", "note": "  note    ", "ERROR": "  ERROR   "}
     for status, claim, where, expected, measured, source in shown:
         print(f"{label[status]}  {claim}")
         print(f"              paper: {where}")
         if status == "ok":
             print(f"              {expected} == {measured}   [{source}]")
+        elif status == "note":
+            print(f"              {expected}")
+            print(f"              {measured}   [{source}]")
         elif status == "UNBACKED":
             print(f"              claims {expected}")
             print(f"              {measured if measured != '-' else source}")
@@ -274,7 +308,7 @@ def main():
 
     n = {k: sum(1 for r in results if r[0] == k) for k in order}
     print(f"{n['ok']} verified · {n['MISMATCH']} mismatched · {n['UNBACKED']} unbacked "
-          f"· {n['superseded']} superseded file(s) · {n['ERROR']} error(s)")
+          f"· {n['superseded']} superseded file(s) · {n['note']} noted · {n['ERROR']} error(s)")
     return 1 if n["MISMATCH"] or n["ERROR"] else 0
 
 

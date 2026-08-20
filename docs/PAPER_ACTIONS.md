@@ -71,6 +71,46 @@ question — see `../benchmark/eval/DETECTION_FILES_NOTE.md`.
 
 ---
 
+## 4. What the appendix is carrying, now that appendices count toward the 12 pages
+
+PVLDB counts appendices inside the limit, and reviewers are not obliged to read
+supplemental material. The main text makes **18 `Appendix~\ref` calls across 9 targets**,
+and they are not all detail — roughly two thirds carry the evidence for a main-text claim:
+
+| Target | What the main text leans on it for | Load-bearing? |
+|---|---|---|
+| `app:method-reproducibility` | Real-SE's six admission criteria and construction protocol — the basis for the headline benchmark being a benchmark and not a sample | **yes** |
+| `app:extended_data` (6 calls) | the per-case detection table behind 17/18 and 5/17, the per-case baseline mappings, and `fig:tier-coverage` behind the "~8% → ~1.5%" claim in §4.4 | **yes** |
+| `app:methodology` | provenance strength of the corpus (289 fixed-commit / 96 issue-PR-only / 7 summary-only) | **yes** |
+| `app:diagnosis` | the quantitative diagnosis study behind "53% of cases localized" and "~6× compression" | **yes** |
+| `app:pattern-catalog` | the agreement statistic quoted inline in §5.4 | **yes** |
+| `app:algorithm` | funnel detail behind the 342 → 429/551/598 ablation, plus the FSM state diagram | partly — the numbers themselves are in the main text |
+| `app:production-cases` | Case 1, referenced from a main-text figure caption | partly |
+| `app:sql`, `app:io_examples` | full SQL specification, persisted Accept-gate record | navigational |
+
+So the central evaluation table — the per-case detection results a reviewer would most
+want to check — lives only in the supplement, as does the admission protocol that makes
+Real-SE defensible. The supplement itself is 9 sections, ~3,200 words and 15 floats.
+
+This interacts badly with item 1: the main paper is already 25 lines over, so folding any
+of it in makes the overflow worse. The three ways out, in rough order of how much they
+cost:
+
+1. **Leave it as supplemental material and make the main text self-sufficient** — every
+   claim above needs enough in the main text to stand alone, with the appendix as
+   corroboration rather than as the evidence. Cheapest, and it is what the PVLDB
+   supplemental-material rule actually contemplates.
+2. **Promote the two critical pieces** (the per-case detection table, the admission
+   criteria) into the 12 pages and cut elsewhere. Costs more than the current 25-line
+   deficit.
+3. **Leave it as is** and accept that a reviewer who does not open the supplement sees
+   the headline detection rate with no per-case breakdown.
+
+Rename matters too: calling it "Appendix" invites the reading that it is part of the
+paper and therefore inside the page limit. "Supplementary material" describes what it is.
+
+---
+
 ## Not paper edits, but worth knowing before submission
 
 Four numbers in the paper have no backing data in the artifact
