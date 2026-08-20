@@ -96,10 +96,36 @@ inconsistency AS (SELECT DISTINCT param_name, step, stage, dp_rank, tp_rank, …
 | *recovered queries executed here* | *13 / 228* | *5.7%* |
 
 So roughly one rule evaluation in fifteen in the reported ablation did not evaluate a
-constraint at all — it failed to compile. That is worth stating: it bears on §4.5's
-description of constraints "compiled into parameterized SQL", and the error rate rises as
-guards are stripped, which is consistent with the guard text helping the generator produce
-valid SQL.
+constraint at all — it failed to compile. That bears on §4.5's description of constraints
+"compiled into parameterized SQL".
+
+### Does the rising error rate confound the false-positive result? Partly, and boundedly
+
+The accounting is clean: `pass + FP + error = total` exactly, for all three libraries.
+
+| library | total | pass | FP | error |
+|---|---:|---:|---:|---:|
+| `lib_full` | 3,447 | 2,872 | 342 | 233 |
+| `lib_no_precond` | 3,443 | 2,739 | 429 | 275 |
+| `lib_no_topo` | 3,447 | 2,496 | 598 | 353 |
+
+Stripping π_topo moves 376 rules out of `pass`. Of those, **256 (68%) become false
+positives and 120 (32%) become compile errors.**
+
+Two things follow, and they pull in opposite directions:
+
+- **The headline is sound.** 342 → 598 is a real count of rules that fire on a clean trace.
+  It is not inflated by failures, because errors are tallied separately from `fail_FP`.
+- **But the ablation conflates two effects of removing a guard.** The intended one is
+  semantic: without the topology filter, cross-rank rules fire on legitimately sharded
+  parameters. The unintended one is generative: the guard is part of the specification the
+  SQL-generating LLM reads, so removing it also degrades the SQL it writes — a third of the
+  rules that stopped passing simply stopped compiling. Only the first effect is what §5.3
+  claims to measure.
+
+The clean way to separate them is to report all three columns, so a reader can see that the
+false-positive rise is not an artifact of rules dropping out. That costs nothing: the
+numbers are already in `d1_results.csv`.
 
 ## 4. The topology gate exists in the code but was not engaged in the recorded runs
 
