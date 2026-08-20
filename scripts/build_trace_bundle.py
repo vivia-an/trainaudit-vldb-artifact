@@ -37,8 +37,18 @@ def events_traces(ws):
     overhead runs under rebuttal_v1/C1_overhead_gpu are several GB and back no reported
     number that is not already covered by benchmark/injection/overhead_h20.csv.
     """
-    root = ws / "sdc_llm_icml_2025" / "benchmark" / "eval" / "hunt_log" / "novel_hunt"
-    return sorted(root.glob("*/trace_rank*.duckdb")) if root.is_dir() else []
+    base = ws / "sdc_llm_icml_2025" / "benchmark" / "eval"
+    out = []
+    nh = base / "hunt_log" / "novel_hunt"
+    if nh.is_dir():
+        out += sorted(nh.glob("*/trace_rank*.duckdb"))
+    # Every novel_hunt run is single-rank, so cross_rank_cksums there carries group_size=1
+    # throughout and the guard's check branch is never taken. This TP=2 run is the smallest
+    # one that does exercise it: 49 records at group_size=1 (skipped) and 50 at 2 (checked).
+    tp2 = base / "rebuttal_v1" / "C1_overhead_gpu" / "_runs" / "megatron_gpt_tiny_TP2PP1_sync_T0_s10_r1"
+    if tp2.is_dir():
+        out += sorted(tp2.glob("trace_rank*.duckdb"))
+    return out
 
 
 def main():
@@ -58,10 +68,11 @@ def main():
     rec = []
     tar_path = out / args.name
     if args.events:
-        base = ws / "sdc_llm_icml_2025" / "benchmark" / "eval" / "hunt_log" / "novel_hunt"
+        nh = ws / "sdc_llm_icml_2025" / "benchmark" / "eval" / "hunt_log" / "novel_hunt"
+        c1 = ws / "sdc_llm_icml_2025" / "benchmark" / "eval" / "rebuttal_v1" / "C1_overhead_gpu" / "_runs"
         with tarfile.open(tar_path, "w:gz", compresslevel=6) as tf:
             for f in events_traces(ws):
-                rel = f.relative_to(base)
+                rel = f.relative_to(nh if nh in f.parents else c1)
                 rec.append({"run": rel.parent.as_posix(), "kind": "events_trace",
                             "path": rel.as_posix(), "size_bytes": f.stat().st_size,
                             "sha256": hashlib.sha256(f.read_bytes()).hexdigest()})

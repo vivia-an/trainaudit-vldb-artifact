@@ -183,14 +183,26 @@ OLMo-core dense/MoE/EP=2/TP=2/nGPT/OLMo2-271M), 549 MiB raw and 52 MiB packed, i
 
 Their `build.snapshot` payloads carry `cross_rank_cksums` — per-parameter `name`,
 `group_size`, `all_equal`, `gathered_cksums`. Those are the fields the topology guard
-reasons over and the exact structure `CASE2_WALKTHROUGH_PI_TOPO.md` describes, so §4.1's
-mechanism can now be inspected on real data even though the specific 492/57 run is still
-absent: `megatron_moe` has 187 cross-rank records and `megatron_clean` 99, both single-rank,
-so `group_size` is 1 throughout and the 57-vs-435 split cannot arise there.
+reasons over, and the exact structure `CASE2_WALKTHROUGH_PI_TOPO.md` describes.
+
+**v1 of that bundle could not demonstrate the guard.** Every `novel_hunt` run is
+single-rank, so all **3,506** cross-rank records across its 23 traces carry
+`group_size = 1`: the guard's *skip* path throughout, its *check* path never taken. §4.1's
+example turns on exactly that split, so a bundle in which the split never occurs shows
+nothing.
+
+`trace-events-v2` fixes it by adding `megatron_gpt_tiny_TP2PP1_sync_T0_s10_r1` (8 ranks,
+TP=2), whose snapshot records split **49 at `group_size = 1` (skipped, sharded) and 50 at
+`group_size = 2` (checked, replicated)** — the same structure the paper reports as 57 of 492,
+on a run that is published. 37 traces, 24 runs, 83 MiB packed.
 
 ```bash
-TAG=trace-events-v1 bash scripts/fetch_trace_dbs.sh --dest /path/for/events-traces
+TAG=trace-events-v2 bash scripts/fetch_trace_dbs.sh --dest /path/for/events-traces
+python3 benchmark/injection/audit_guard_groups.py --root /path/for/events-traces
 ```
+
+`audit_guard_groups.py` prints the skip/check split per trace and flags runs where the
+guard never gets to decide.
 
 Not published: `rebuttal_v1/C1_overhead_gpu/` (several GB of overhead runs) — it backs no
 number that `benchmark/injection/overhead_h20.csv` does not already cover.

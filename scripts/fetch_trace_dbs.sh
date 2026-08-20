@@ -18,15 +18,16 @@ VERIFY_ONLY=0
 HERE=$(cd "$(dirname "$0")/.." && pwd)
 MANIFEST=${MANIFEST:-$HERE/benchmark/injection/trace_db_manifest.csv}
 # The events-schema bundle is a separate release with its own manifest:
-#   TAG=trace-events-v1 ASSET=trainaudit-events-traces.tar.gz \
+#   TAG=trace-events-v2 ASSET=trainaudit-events-traces.tar.gz \
 #   MANIFEST=$HERE/benchmark/injection/events_trace_manifest.csv \
 #     bash scripts/fetch_trace_dbs.sh --dest DIR
-if [ "$TAG" = "trace-events-v1" ]; then
+case "$TAG" in trace-events-*)
   ASSET=${ASSET:-trainaudit-events-traces.tar.gz}
   [ "$ASSET" = "trainaudit-trace-dbs.tar.gz" ] && ASSET=trainaudit-events-traces.tar.gz
   case "$MANIFEST" in *trace_db_manifest.csv)
     MANIFEST="$HERE/benchmark/injection/events_trace_manifest.csv" ;; esac
-fi
+  ;;
+esac
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -74,7 +75,23 @@ tar -xzf "$DEST/$ASSET" -C "$DEST"
 rm -f "$DEST/$ASSET"
 verify
 
-cat <<EOF
+if [ "$TAG" = "trace-events-v2" ] || [ "$TAG" = "trace-events-v1" ]; then
+  cat <<EOF
+
+Extracted to $DEST
+
+These are events-schema traces: events(event_id, step, rank, hookpoint, ts_ns,
+schema_version, payload). The guard ablation does NOT read these — it reads the
+coredump-schema bundle (TAG=trace-dbs-v2).
+
+What they are for: build.snapshot payloads carry cross_rank_cksums, a list of per-parameter
+records with name, group_size, all_equal and gathered_cksums. That is the data the topology
+guard reasons over. To see the guard's skip-vs-check decision:
+
+  python3 benchmark/injection/audit_guard_groups.py --root $DEST
+EOF
+else
+  cat <<EOF
 
 Extracted to $DEST
 
@@ -85,3 +102,4 @@ To re-run the guard ablation against them:
 Then compare the aggregate false positives against experiments/guard_ablation/d1_results.csv
 (342 full / 429 without pi_precond / 598 without pi_topo).
 EOF
+fi

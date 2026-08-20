@@ -417,3 +417,25 @@ Also checked for the 25.8/83.3 source in `rebuttal_v1`: not there either.
 events across 4 clean runs, and `A2_ablation/a2_ablation.csv` reports per-case counts
 (V0 full: 25 detected, 0 FP of 27; V2 strip π_topo: 7 FP; V3 strip precondition: 5 FP) —
 both different measurements from the paper's per-million rates. **O21 remains open.**
+
+### 2026-08-20 — iteration 15: the events bundle could not demonstrate the guard; fixed
+Wrote `benchmark/injection/audit_guard_groups.py` to show the guard's skip-vs-check split on
+real data, ran it against the bundle I had just published, and it reported **0 of 29 traces
+with any replica group larger than 1** — 3,506 records, all `group_size = 1`, the skip path
+throughout. Every `novel_hunt` run is single-rank, so the bundle demonstrated nothing about
+the decision §4.1 turns on.
+
+Searching the runs I had excluded found the fix: `megatron_gpt_tiny_TP2PP1_sync_T0_s10_r1`
+under `rebuttal_v1/C1_overhead_gpu/_runs/` splits **49 records at `group_size = 1`
+(skipped, sharded) and 50 at `group_size = 2` (checked, replicated)** — the same structure
+the paper reports as 57 of 492. I had excluded exactly the traces that exercise the paper's
+core mechanism, on the reasoning that the overhead runs back no reported number.
+
+Published `trace-events-v2`: 37 traces, 24 runs, 83 MiB. Also fixed two defects in
+`fetch_trace_dbs.sh` that I had introduced with the events path — it printed guard-ablation
+instructions that make no sense for events traces, and its manifest/asset switch matched only
+the literal tag `trace-events-v1`.
+
+**O32 narrows but stands.** The mechanism is now demonstrable on a published run; the
+specific 492/57 figures are not, and no trace in either generation has a
+`query_key_value.weight` parameter.
