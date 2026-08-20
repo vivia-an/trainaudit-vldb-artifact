@@ -251,7 +251,10 @@ def check_unbacked():
              "the two baseline columns of tab:db-baselines DO come from executed runs "
              "(baselines/logs/), but TrainAudit's own six-case 504K-evaluation run is not in the "
              "artifact; paper_v2/mechanism_precond.csv cites benchmark/eval/ablation_s2_results.csv, "
-             "which is absent")
+             "which is absent. The figures imply about 13 and 42 violating evaluations over 504K "
+             "(ratio 3.2x, matching the figure's annotation). This is a row-level denominator and "
+             "so a different measurement from the shipped leave-one-out data, whose five clean "
+             "databases give 9 and 35 false positives over 438 rule-level evaluations")
     unbacked("schema tier coverage-overhead curve",
              "appendix fig:tier-coverage; §4.4 (~8% -> ~1.5%)",
              "coverage 28-78%, overhead 1.5-7.5%",
