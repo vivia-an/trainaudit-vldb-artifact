@@ -1,0 +1,15 @@
+Sets \vldbavailabilityurl to the published artifact, so the availability footnote appears
+in the PDF. PVLDB requires the supplemental-material URL at submission; this puts it in
+the paper too. See docs/VLDB_SUBMISSION_CHECKLIST.md R5/R6.
+
+--- a/main.tex
++++ b/main.tex
+@@ -13,7 +13,7 @@
+ \renewcommand\vldbpages{XXX-XXX}
+ %% Add the final public artifact URL before submission; leave empty if the
+ %% submission has no URL to display in the paper.
+-\renewcommand\vldbavailabilityurl{}
++\renewcommand\vldbavailabilityurl{https://github.com/vivia-an/trainaudit-vldb-artifact}
+ 
+ \usepackage{rotating}
+ 

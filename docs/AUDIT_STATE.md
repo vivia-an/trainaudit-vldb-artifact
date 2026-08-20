@@ -277,3 +277,29 @@ Settled with an order-independent aggregate over every row:
 
 `benchmark/injection/audit_rank_captures.py` now performs this check, so it does not depend
 on me remembering the WAL caveat.
+
+### 2026-08-20 — iteration 10: bundle v2 published, patches prepared
+- `trace-dbs-v2` asset uploaded (42.6 MB, 139 files, 10 WAL sidecars) and verified present.
+  `trace-dbs-v1` retitled "superseded — missing WAL sidecars" with its notes explaining
+  what was wrong and pointing at v2, so nobody fetches the defective bundle by accident.
+- `docs/patches/` holds the two recommended paper edits as unified diffs, both verified
+  with `git apply --check`: fill `\vldbavailabilityurl`, and name
+  `NVIDIA/Megatron-LM#4641`. `main.tex` stays unmodified, per the author's decision —
+  applying one is now a single command, reverting it a `git checkout`.
+  The judgement calls (page trim, appendix status, acknowledgements, how to present the
+  trace caveats) are deliberately not patches; `patches/README.md` says why.
+- O17 sharpened: searched the whole tree for a per-framework reuse source. Pattern-level
+  reuse exists (`hookpoint_matrix.csv`: 15 of P1–P16 reused, P16 new) and per-source funnel
+  counts exist, but nothing records reuse per framework, so `fig_portability_matrix`'s cells
+  have no shipped source at all.
+
+## Where this stands
+Artifact-side work has converged. `bash scripts/check_all.sh` passes all 7 offline groups.
+The four remaining unbacked numbers (O21 25.8/83.3, O16 tier coverage, O17 portability
+cells, the 3/13/5/13 expressivity bound) each need either a measurement run or an authors'
+methodology decision — none can be closed from the workspace as it stands.
+
+The two findings most worth acting on before submission are **O26/O27**: four clean
+baselines have rank 1 identical to rank 0, carrying 67–80% of the clean-arm false
+positives, and two of the ablation's 42 databases are the same trace yet recorded
+different results (9 vs 4 false positives without π_topo).
