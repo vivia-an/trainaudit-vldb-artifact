@@ -20,6 +20,12 @@ references or citations). Positions read from `pdftotext -bbox`:
 
 **Overflow: 25 lines ≈ 0.43 of one column.** Content must end at the bottom of page 12.
 
+**And the availability URL costs another 19.** Applying
+`docs/patches/01-availability-url.patch` — which PVLDB effectively requires — renders a
+block on page 1 whose displacement cascades through the floats, taking the spill from 25
+lines to **44**. Measured by building both in an identical environment; `02` costs nothing.
+So plan the trim for ~44 lines, and apply `01` as part of that work rather than before it.
+
 ## Why the obvious cuts do not work
 
 §6 Related Work is 323 words (~31 lines) and §7 Conclusion is 92 words (~9 lines).

@@ -10,6 +10,28 @@ git apply --check ../../trainaudit-vldb-artifact/docs/patches/01-availability-ur
 git apply         ../../trainaudit-vldb-artifact/docs/patches/01-availability-url.patch
 ```
 
+## Measured page cost — read before applying
+
+Built each patch in an identical environment and measured the overflow past page 12
+(`REFERENCES` position on page 13, `pdftotext -bbox`):
+
+| Applied | content lines spilling onto p.13 | vs baseline |
+|---|---:|---:|
+| nothing (baseline) | 25 | — |
+| `02` only | 25 | **no cost** |
+| `01` only | **44** | **+19 lines** |
+| `01`+`02`+`03` | 44 | +19 lines, and the supplement grows 10 → 11 pages |
+
+**Patch 01 costs 19 lines of page budget.** Rendering `\vldbavailabilityurl` puts a block on
+page 1, and once page 1 loses room the displacement cascades through the floats. The paper is
+already 25 lines over the 12-page limit (O1), so applying 01 as-is takes the deficit to 44
+lines — roughly three quarters of a column.
+
+That does not argue against applying it: PVLDB wants the availability URL, and O1 has to be
+solved regardless. It does mean **01 should be applied as part of the page-trim work, not
+before it**, and the trim needs to recover ~44 lines rather than ~25. `02` is free. `03`
+affects only the supplement.
+
 | Patch | What it does | Why |
 |---|---|---|
 | `01-availability-url.patch` | fills `\vldbavailabilityurl` | PVLDB requires the supplemental URL; R5/R6 of the checklist |

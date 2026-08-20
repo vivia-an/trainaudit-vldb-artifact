@@ -578,3 +578,23 @@ built the patched file: **seven authors on page 1 and zero occurrences of "anony
 One consequence to weigh: it grows the supplement **10 → 11 pages**, because the author
 block takes space, and PVLDB counts appendices inside the 12-page limit (O2). Recorded in
 `patches/README.md` so it is decided together with O1.
+
+**Measured what the patches cost in page budget** — worth doing before recommending them.
+Built each in an identical environment and located `REFERENCES` on page 13 with
+`pdftotext -bbox`:
+
+| applied | content lines on p.13 |
+|---|---:|
+| baseline | 25 |
+| `02` only | 25 (free) |
+| `01` only | **44** |
+| all three | 44, plus the supplement 10 → 11 pages |
+
+**Patch 01 costs 19 lines.** Rendering `\vldbavailabilityurl` puts a block on page 1 and the
+displacement cascades through the floats. Since PVLDB effectively requires the URL and O1 has
+to be solved anyway, the conclusion is not "don't apply it" but "apply it as part of the trim,
+and size the trim for 44 lines rather than 25". Recorded in `PAGE_BUDGET.md` and
+`patches/README.md`.
+
+This is why applying a patch and measuring beats reasoning about it: a one-line
+`\renewcommand` costing three quarters of a column is not something I would have predicted.
