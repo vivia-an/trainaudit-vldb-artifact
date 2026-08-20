@@ -1,0 +1,54 @@
+% ============================================================
+% DRAFT — §5 "Constraint Catalog"(原 Pattern Catalog 表格化)。改写 backlog 第③项。
+% **尚未并入 main.tex**。数据源: tab:pattern-catalog(P1–P16 语义+coverage)× §2 relation schema(draft_S2_*)。
+% 正文给 5 个代表模板(下方 \paragraph),完整 16 个见末尾 tab:constraint-catalog。
+% 注: P16 用 loss_event relation —— 需在 §2 schema 表补该 relation(与 draft_S2 对齐)。
+% ============================================================
+
+\paragraph{Representative constraint templates.}
+Each pattern compiles into a guarded constraint over one trace relation; we give five representatives (full 16 in Table~\ref{tab:constraint-catalog}).
+
+\begin{description}
+\item[T-P3 Cross-rank replication.] \textit{Relation} \texttt{tensor\_state}; \textit{cols} (dp, step, name, cksum, shard\_flag); \textit{$G_{\text{topo}}$} non-sharded AND same parallel group; \textit{$G_{\text{phase}}$} \texttt{stage='after-optimizer-step'}; \textit{V} \texttt{COUNT(DISTINCT cksum) > 1} per (name, step). Coverage 42 (10.7\%).
+\item[T-P4 Invocation frequency.] \textit{Relation} \texttt{call\_event}; \textit{cols} (hookpoint, step, count); \textit{$G_{\text{phase}}$} per training step; \textit{V} \texttt{count <> K}. Coverage 19 (4.8\%).
+\item[T-P9 Init distribution.] \textit{Relation} \texttt{tensor\_state}; \textit{cols} (name, std/var, fan\_in); \textit{$G_{\text{phase}}$} \texttt{stage='init'}; \textit{V} \texttt{std} deviates from declared (e.g.\ $\sqrt{d_{\text{model}}}$ scaling). Coverage 19 (4.8\%).
+\item[T-P10 Config-implied coupling.] \textit{Relation} \texttt{optimizer\_state} $\bowtie$ config; \textit{cols} (config\_flag, actual\_state); \textit{$G$} static; \textit{V} flag inconsistent with state (e.g.\ \texttt{zero\_stage>0} $\Rightarrow$ sharded optimizer state). Coverage 45 (11.5\%).
+\item[T-P16 Loss normalization.] \textit{Relation} \texttt{loss\_event}; \textit{cols} (divisor, reduction\_mode, numel); \textit{$G_{\text{phase}}$} at loss reduction; \textit{V} \texttt{divisor <> reduction\_semantics}. Coverage 11 (2.8\%).
+\end{description}
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Constraint Catalog: the 16 patterns of Table~\ref{tab:pattern-catalog} as structured guarded constraints over the trace relations of Table~\ref{tab:trace-relations}. \textbf{Type}: A = relational query, B = runtime hook, C = static check. \textbf{Guard} abbreviates the dominant $G_{\text{topo}}$/$G_{\text{phase}}$.}
+\label{tab:constraint-catalog}
+\begin{tabular}{@{}cllll r@{}}
+\toprule
+\textbf{ID} & \textbf{Relation} & \textbf{Required columns} & \textbf{Guard} & \textbf{Violation predicate} & \textbf{Cov.} \\
+\midrule
+P1  & tensor\_state/comm\_event & dtype(in,out)            & at cast site            & out.dtype $\neq$ in.dtype                 & 43 \\
+P2  & comm\_event/grad\_state   & value, world\_size $N$   & cross-rank reduce       & missing $1/N$ or $N$ factor               & 32 \\
+P3  & tensor\_state             & dp, name, cksum, shard\_flag & topo: non-sharded, same group & COUNT(DISTINCT cksum) $>$ 1        & 42 \\
+P4  & call\_event               & hookpoint, step, count   & per step                & count $\neq K$                            & 19 \\
+P5  & checkpoint\_state         & state\_name, cksum(pre,post) & train$\to$eval$\to$train & post.cksum $\neq$ pre.cksum             & 26 \\
+P6  & tensor\_state/config      & shape, layer\_count      & static                  & shape/count $\neq$ config                 & 22 \\
+P7  & tensor\_state(activation) & residual\_ref            & at residual add         & uses normalized not original input        & 5  \\
+P8  & optimizer\_state/call\_event & counter(init,reset)   & phase                   & counter init $\neq$ reset                  & 6  \\
+P9  & tensor\_state             & name, std/var, fan\_in   & at init                 & std $\neq$ declared distribution           & 19 \\
+P10 & optimizer\_state/config   & config\_flag, state      & static                  & flag inconsistent w/ module/optim state    & 45 \\
+P11 & tensor\_state(position)   & position, doc\_boundary  & at doc boundary         & position not reset at boundary             & 12 \\
+P12 & tensor\_state(output)     & variant outputs          & per variant pair        & outputs differ beyond tol                  & 21 \\
+P13 & tensor\_state             & storage\_id, cache       & after mutation          & dependent cache stale                       & 29 \\
+P14 & checkpoint\_state         & rank, sharded\_save      & topo: TP/EP             & not all ranks participate (rank-0-only)     & 16 \\
+P15 & optimizer\_state/call\_event & counter\_bitwidth, volume & overflow check       & bit-width insufficient (int32 overflow)     & 15 \\
+P16 & loss\_event               & divisor, reduction, numel & at loss reduction      & divisor $\neq$ reduction semantics          & 11 \\
+\midrule
+\multicolumn{5}{l}{\textit{Total (dedup, $\geq$1 pattern hit)}} & 345/392 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% ------------------------------------------------------------
+% 衔接: 本 catalog 把 P1–P16 从「自然语言 pattern」升为「relation 上的可编译 guarded constraint」,
+%        每行的 V = §6.5 violation-table 的 HAVING、Guard = RQ3(T3)ablation 的对象、Relation = §2 schema。
+% 与 draft_S2 对齐待办: §2 schema 表需补 loss_event relation(P16 用);activation/position 为 tensor_state 子视图。
+% ------------------------------------------------------------

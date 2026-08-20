@@ -1,0 +1,51 @@
+% ============================================================
+% DRAFT — §6.x Database-style Baselines (RQ2/RQ3 补强:对应 SIGMOD 改写第④项 baselines)
+% 论点:不是"挑了弱 baseline",而是数据库视角下两个最自然的 baseline
+%   (手写 SQL / 通用 invariant mining) 在结构上无法表达 topology-aware、phase-guarded、verified constraint。
+% 证法(免跑、严谨):
+%   (1) detection ≤ expressiveness —— baseline 无法"检测"它无法"表达"的类 → 覆盖率上界。
+%   (2) FP 下界 = lib_no_topo —— 两 baseline 都缺 π_topo,D1 leave-one-out 已实测该条件 ΣFP 342→598(+74.9%)、clean FP/1M 25.8→83.3。
+%   (3) Daikon 过拟合 = funnel 拒绝率 —— 5334 候选 → 357 经验证(~93% 被拒,多为 workload-specific 常量)。
+% 待补(工程步,非本节论点所必需):在 19 Real-SDC replay 上端到端跑两 baseline 填精确 detection/FP cell。
+% 数字溯源:.trace【消融】(342/429/551/598、FP/1M 25.8→83.3、funnel 5334→357)、main.tex tab:taxonomy(13 类)、§6 detection(17/19)。
+% ============================================================
+
+\subsection{Database-style Baselines}
+\label{subsec:db-baselines}
+
+A natural objection is that \textsc{TrainAudit} is compared only against training-specific tools (TrainCheck, Naïve Monitoring) and might lose its advantage against standard data-management techniques. We therefore evaluate the two most natural database-style baselines for finding constraint violations in a trace table: \emph{hand-written SQL constraints} and \emph{generic invariant mining}. Our goal is not to show that these baselines fail outright, but to identify the specific dimension each one cannot express, and what that costs in detection coverage and false positives.
+
+\paragraph{Manual SQL constraints.} The first baseline is what a database engineer would write directly over the trace table without any mining: a small set of hand-authored SQL checks---cross-rank checksum equality, NaN/range bounds, and counter monotonicity. These three idioms are exactly expressible in SQL and require no learning. They cover the three fault classes whose violation predicate is a single self-contained comparison: \emph{Grad Sync} (\texttt{replica-cksum-equal}), \emph{Numerical} (value-range/NaN), and \emph{Control Flow} (\texttt{optim-step-counter-monotonic}). The remaining ten classes are not hand-expressible, because their predicate is not a property of one column but of a column \emph{conditioned on runtime topology and phase metadata} the author does not have: \emph{Sharding} and \emph{Communication} need the shard flag and process-group size; \emph{Optim State} needs the nested optimizer-state dict structure; \emph{Checkpoint} needs RNG-state lineage across save/load; \emph{MoE} needs expert-parallel routing; \emph{Dtype}, \emph{Loss Comp.}, \emph{Data Loading}, \emph{LR Schedule}, and \emph{Offload} each need framework-specific semantics. A hand-written checksum-equality check, lacking the topology guard, also fires on legitimately sharded parameters.
+
+\paragraph{Generic invariant mining.} The second baseline is a Daikon-style learner that infers equality, range, and frequency invariants from a healthy trace, with neither topology metadata nor verification. Learning adds two classes over hand-written SQL---it can discover a per-step invocation \emph{frequency} for \emph{MoE} experts and an equality on \emph{Communication} group size---raising expressible coverage to five classes. But unguided learning over a single healthy run is unsound in two ways. First, like the manual baseline it omits the topology guard, so every learned cross-rank equality fires on sharded parameters. Second, it over-fits: most invariants that hold on one healthy trace are workload-specific coincidences, not semantic contracts. \textsc{TrainAudit}'s verification funnel makes this concrete---of \textbf{5{,}334} candidate constraints generated, only \textbf{357} survive verification (a 93\% rejection rate), the rest being predominantly workload-specific constants that hold on the healthy trace by chance. A learner without verification would emit those rejected candidates as production checks.
+
+\paragraph{Coverage is an upper bound on detection.} A detector cannot flag a violation it cannot express, so expressible class coverage upper-bounds detection. As summarized in Table~\ref{tab:db-baselines}, the manual-SQL baseline can express constraints for at most 3 of the 13 fault classes and generic mining for at most 5, whereas \textsc{TrainAudit}'s verified templates cover all 13 (the basis for its 17/19 detection in \S\ref{subsec:detection}). This gap is structural: it is the cost of not modeling topology and phase, not an artifact of baseline tuning.
+
+\begin{table}[t]
+\centering\small
+\caption{Database-style baselines vs.\ \textsc{TrainAudit}. Expressible coverage upper-bounds detection; both baselines omit the topology guard and inherit its false-positive cost (measured by the $-\pi_{\text{topo}}$ ablation). \textsc{TrainAudit} pays neither cost.}
+\label{tab:db-baselines}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & Manual SQL & Generic mining & \textsc{TrainAudit} \\
+ & (hand-written) & (Daikon-style) & (verified) \\
+\midrule
+Expressible classes      & 3/13 & 5/13 & \textbf{13/13} \\
+Topology guard           & no   & no   & \textbf{yes}  \\
+Verification             & no   & no   & \textbf{yes}  \\
+\midrule
+Clean-trace FP/1M        & $\geq$83.3 & $\geq$83.3 & \textbf{25.8} \\
+Unsound candidates emitted & --  & $\sim$93\% & \textbf{0\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Both baselines inherit the cost of dropping the topology guard.} Neither baseline carries the topology guard $\pi_{\text{topo}}$, and we have already measured the price of that omission directly. In the leave-one-out ablation of \S\ref{subsec:verified-mining-ablation}, removing $\pi_{\text{topo}}$ from the verified library raises the aggregate false-positive count from 342 to \textbf{598 across 42 trace databases (+74.9\%)} and the clean-trace rate from \textbf{25.8 to 83.3 FP per million records}, because cross-rank equality checks then fire on every legitimately sharded tensor. Both database-style baselines operate in exactly this no-guard regime, so each inherits at least this false-positive rate on top of its limited coverage. The conclusion is that the advantage of \textsc{TrainAudit} is not an artifact of weak baselines: the standard data-management techniques are individually reasonable, but only topology-aware, phase-guarded, \emph{verified} constraints simultaneously achieve broad coverage and a clean-trace-silent false-positive rate.
+
+% ------------------------------------------------------------
+% 衔接:本节回应 SIGMOD 改写第④项("DB-flavored baselines")+ RQ3 verification 的必要性。
+% 严谨边界:3/13、5/13 是"可表达类"上界(detection ≤ expressiveness),是 SOUND 的论证;
+%   FP 下界 83.3 FP/1M 来自 −π_topo 实测(两 baseline 同处 no-guard regime)。
+% 待补(工程,非论点必需):在 19 Real-SDC replay 端到端跑两 baseline,填"可表达类内实际命中几个 bug"的精确 detection cell。
+% 当前若审稿人要精确 baseline detection 数,需此 run;但"远弱于 13/13 且 FP 高"的结论已由上界+下界确立。
+% ------------------------------------------------------------

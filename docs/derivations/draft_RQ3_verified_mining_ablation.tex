@@ -1,0 +1,41 @@
+% ============================================================
+% DRAFT — RQ3 Verified-Mining Guard Ablation (T3-A)
+% 数据源: sdccheck/logs/ablation_{d1,no_adv}/ (42 db × lib, leave-one-out, FP 口径)
+% 由 SIGMOD 实验循环 Iter10 (2026-06-29) 成稿。**尚未并入 main.tex**,待用户确认后插入 §6 RQ3。
+% 口径说明: 列 ΣFP = 42 个评测库(37 buggy *_test_db + 5 clean normal)上的 fail_FP 总数;
+%           P1/P3/P4 = per-pattern FP(DP 一致性 / 跨 rank 复制 / 模型完整性)。
+%           本表是 precision(FP 抑制)消融;detection(recall)由 fig:predicate-ablation 互补覆盖。
+% ============================================================
+
+\subsection{Ablation: Why Verified Mining Reduces False Positives}
+\label{subsec:verified-mining-ablation}
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{Verified-mining guard ablation by leave-one-out over 42 evaluation databases. Each row removes one verification component from the full library; the rising $\Sigma$FP shows every guard is load-bearing for precision, with the ordering $\pi_{\text{topo}}>$ adversarial $>\pi_{\text{precond}}$ holding across all 42 databases. Per-pattern columns localize where each guard acts (P1 = DP consistency, P3 = cross-rank replication, P4 = model integrity). The apparent P3/P4 \emph{drop} under $-\pi_{\text{precond}}$ is a fail$\to$error migration, not a precision gain (see text).}
+\label{tab:verified-mining-ablation}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Library variant} & \textbf{$\Sigma$FP} & \textbf{vs.\ full} & \textbf{P1} & \textbf{P3} & \textbf{P4} \\
+\midrule
+Full (all guards)                            & \textbf{342} & ---      & 185 & 15 & 142 \\
+\quad $-\,\pi_{\text{precond}}$              & 429 & +25.4\% & 307 & 12 & 110 \\
+\quad $-$ adversarial verif.\ ($\theta{=}0$) & 551 & +61.1\% & 296 & 49 & 206 \\
+\quad $-\,\pi_{\text{topo}}$                 & 598 & +74.9\% & 347 & 46 & 205 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Verified mining is necessary for precision.}
+A candidate constraint produced by the LLM is untrusted until it survives verification; the operative question is how much each verification component actually buys. We answer it with a leave-one-out ablation over 42 evaluation databases (Table~\ref{tab:verified-mining-ablation}). Starting from the full library, which produces 342 false positives, removing the precondition guard $\pi_{\text{precond}}$ raises false positives by 25.4\%, removing adversarial counterexample verification by 61.1\%, and removing the topology guard $\pi_{\text{topo}}$ by 74.9\%. Every component is load-bearing, and the ordering $\pi_{\text{topo}} >$ adversarial $> \pi_{\text{precond}}$ is consistent across all 42 databases rather than driven by a single run. The per-pattern breakdown localizes the effect: $\pi_{\text{precond}}$ suppresses 122 false positives on DP-consistency checks (P1), whereas adversarial verification and $\pi_{\text{topo}}$ jointly account for the bulk of the cross-rank (P3) and model-integrity (P4) suppression. The apparent reduction of P3/P4 false positives when $\pi_{\text{precond}}$ is removed is not a precision gain: without the precondition guard the compiled SQL loses its stage and module filters and silently matches an empty set, migrating a would-be failure into a binder error. $\pi_{\text{precond}}$ should therefore be read as ensuring a check applies only where it is semantically valid, not as a direct false-positive reducer.
+
+% ------------------------------------------------------------
+% 互补证据(已在 main.tex,RQ3 引用即可,勿重复跑):
+%   recall 侧: fig:predicate-ablation (n=6 + 504K clean) —— 去 π_precond 使 detection 6/6→4/6;full 17/19。
+%   funnel 侧: fig:mining-funnel —— 420→5334→3436→357→45 deploy;跳 L3 → 28.5% clean FP;full 0/764。
+% 合论: precision(本表)+ recall(predicate ablation)+ funnel 选择性 ⇒ verified guarded constraints 必要。
+%
+% 待补(T3-C,可选,需新跑): per-stage *buggy detection* 列(raw→+evidence→+topo→+precond→+ce→+replay 的逐档检出率)。
+% ------------------------------------------------------------

@@ -1,0 +1,44 @@
+% ============================================================
+% DRAFT — §5.2 "Verified Constraint Mining"(原 Invariant Miner 重排)。改写 backlog 第④项(最后一个免跑项)。
+% **尚未并入 main.tex**。重排原则(reference): 先 Problem/Risk/Principle → 算法(counterexample-guided)→ 5 agent 降为 implementation。
+% 贡献应是「verified mining loop」而非「multi-agent workflow」。映射现有 Algorithm(alg:invariant_mining)+ funnel(fig:mining-funnel)。
+% ============================================================
+
+\subsection{Verified Constraint Mining}
+\label{subsec:invariant_miner}
+
+\paragraph{Problem.} Given a constraint template $T$ from the catalog (\S\ref{subsec:pattern_catalog}) and a target framework $F$, we must instantiate a concrete, executable constraint $C$ over the trace relations of \S\ref{sec:traces}---binding $T$'s relation, columns, guards, and violation predicate to $F$'s actual parameter names, stages, and parallel layout.
+
+\paragraph{Risk.} The instantiation is performed by an LLM reading $F$'s source, and an LLM may hallucinate a field that does not exist or over-generalize a guard so the constraint fires on legal states. A constraint that misfires on clean runs is worse than useless in production.
+
+\paragraph{Principle: candidates are untrusted until verified.} We therefore never deploy a generated candidate directly. A candidate enters the library only after it (i) is grounded in framework evidence, (ii) survives adversarial topology/phase counterexamples, and (iii) stays silent on a healthy reference trace. This mirrors verified query rewriting~\cite{qure}: an LLM proposes, an automatic check disposes; only verified artifacts reach the execution path. We do \emph{not} prove program equivalence---we validate that a candidate is a \emph{sound guarded constraint} over training traces.
+
+\begin{algorithm}[t]
+\caption{Counterexample-Guided Constraint Mining}
+\label{alg:verified-mining}
+\small
+\begin{algorithmic}[1]
+\REQUIRE template $T$, framework source $F$, launch config $\kappa$, healthy trace $H$
+\ENSURE accepted constraint $C^\ast$ or $\bot$
+\STATE $E \leftarrow \textsc{RetrieveEvidence}(T, F)$ \COMMENT{$\geq 2$ independent sources, else $\bot$}
+\STATE $C \leftarrow \textsc{Instantiate}(T, F, \kappa, E)$ \COMMENT{bind relation, cols, $G_{\text{topo}}, G_{\text{phase}}, V$}
+\IF{$\textsc{MissingRequiredField}(C, \text{schema}(H))$} \RETURN $\bot$ \ENDIF
+\FOR{$i = 1$ \TO $2$} \COMMENT{adversarial counterexamples}
+  \STATE $x_i \leftarrow \textsc{ConstructCounterexample}(C)$
+  \IF{$\textsc{Holds}(C, x_i)$} \RETURN $\bot$ \COMMENT{guard too weak} \ENDIF
+\ENDFOR
+\IF{$\textsc{FiresOn}(C, H)$} \RETURN $\bot$ \COMMENT{not silent on clean trace} \ENDIF
+\IF{$\textsc{Confidence}(C, E) \geq 0.8$} \RETURN $C$ \ELSE\ \RETURN $\bot$ \ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+The loop's three rejection gates correspond one-to-one to the three failure modes above: insufficient evidence (Line 1), an over-broad guard exposed by a counterexample (Line 6), and a candidate that fires on the healthy trace (Line 8). Acceptance requires all gates passed and confidence $\geq 0.8$.
+
+\paragraph{Implementation.} We realize Algorithm~\ref{alg:verified-mining} as a finite-state machine driven by five specialized LLM agents---Gap-Analysis, Evidence, Synthesis, Persistence, and Reporting---whose state-transition rules are given in Appendix~\ref{app:invariant-miner}. The agent decomposition is an engineering convenience for prompt modularity; the contribution is the verified mining loop itself, not the multi-agent orchestration.
+
+\paragraph{Empirical payoff.} Across the four target frameworks the loop contracts \textbf{420} template hypotheses to \textbf{5{,}334} concrete candidates, which the healthy-trace and counterexample gates tighten to \textbf{357}, of which \textbf{45} enter the deployment library after cross-framework curation (Fig.~\ref{fig:mining-funnel}). Removing the gates is not free: \S\ref{subsec:verified-mining-ablation} shows that dropping the topology guard, the precondition guard, or adversarial verification raises the false-positive count by 74.9\%, 25.4\%, and 61.1\% respectively over 42 evaluation databases---each gate is independently load-bearing for precision.
+
+% ------------------------------------------------------------
+% 衔接: 本节定义「怎么把不可信候选验成可执行 constraint」; §6.3=schema tier(收哪些字段), §6.1 RQ3=去掉各 gate 的 FP 代价(T3-A),
+%        §6.5=violation-table(constraint 触发后的输出)。术语统一: verified constraint mining(非 invariant generation)。
+% ------------------------------------------------------------

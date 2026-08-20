@@ -1,0 +1,42 @@
+% ============================================================
+% DRAFT — §2 "Distributed AI Training Traces as Data" 的 trace-relation schema 表
+% 改写 backlog 第②项(reference)。**尚未并入 main.tex**,待确认后作为 §2 核心表前置。
+% 关键: 物理上是单表 coredump(step INTEGER, stage TEXT, data JSON)(见 new_megatron_collector.py);
+%        下列 relation 是其上的逻辑视图(data.type + stage + JSON 字段区分),非多张物理表。
+% 统一语义: guarded constraint C=(R,A,G_topo,G_phase,V) = π_schema ∧ π_topo ∧ π_precond;空结果=pass / 非空=violation table。
+% ============================================================
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Training-trace relational schema. \textsc{TrainAudit} treats the runtime training state as a set of relations over a single append-only trace table \texttt{coredump(step, stage, data\,JSON)}; each logical relation below is a view selected by \texttt{stage} and \texttt{data.type}. A silent error is a violation of a \emph{guarded} data-quality constraint over these relations that raises no exception. The \emph{Example constraint} column gives one representative guarded predicate per relation (mapped to the pattern catalog Pn).}
+\label{tab:trace-relations}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+\textbf{Relation} & \textbf{Primary key} & \textbf{Key attributes} & \textbf{Realized in coredump (collector)} & \textbf{Example guarded constraint} \\
+\midrule
+\texttt{tensor\_state}    & (dp,tp,pp,cp,ep, step, stage, name) & cksum, dtype, shape, requires\_grad & \texttt{dump\_model} & DP-replicated params bitwise-equal (P3) \\
+\texttt{grad\_state}      & (rank, step, name)                  & grad\_cksum, grad\_dtype, main\_grad\_cksum & \texttt{dump\_model}/\texttt{dump\_main\_grad} & cross-rank grads agree post-backward (P3) \\
+\texttt{optimizer\_state} & (rank, step, group\_index, name)    & lr, betas, eps, step\_id, exp\_avg\_cksum, master\_fp32\_device & \texttt{dump\_optimizer\_state} & step\_id monotonic (P8); tied group $\to$ one optimizer (\#4641) \\
+\texttt{call\_event}      & (rank, step, hookpoint)             & count, stage & hookpoint invocation counts & function invoked $K\times$ per step (P4) \\
+\texttt{comm\_event}      & (rank, step, group\_id, op)         & dtype, world\_size, tensor\_shape & collective hooks & process-group size / dtype consistent (P1/P2) \\
+\texttt{topology\_lineage}& (name, rank)                        & dp,tp,pp,cp,ep, shard\_flag & \texttt{set\_process\_group\_info} + param attrs & guard: which ranks must agree ($\pi_{\text{topo}}$) \\
+\texttt{checkpoint\_state}& (rank, ckpt\_id, state\_name)       & state\_cksum, rng\_state & checkpoint hooks & state \& RNG restored after save/load (P5) \\
+\texttt{loss\_event}      & (rank, step, component)             & divisor, reduction\_mode, numel & loss hooks & divisor matches reduction semantics (P16) \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\paragraph{Silent error as a guarded constraint violation.}
+We model the runtime training state as the relations of Table~\ref{tab:trace-relations} and define a silent error as a violation of a guarded data-quality constraint over them that raises no explicit exception. A constraint is a tuple $C = (R, A, G_{\text{topo}}, G_{\text{phase}}, V)$: it reads attributes $A$ of relation $R$, applies a topology guard $G_{\text{topo}}$ and a phase guard $G_{\text{phase}}$, and flags rows violating the predicate $V$. This is exactly the three-predicate decomposition $p(s) = \pi_{\text{schema}} \wedge \pi_{\text{topo}} \wedge \pi_{\text{precond}}$ realized in SQL:
+\begin{quote}\small\ttfamily
+SELECT ... FROM R WHERE G\_topo AND G\_phase GROUP BY ... HAVING V;
+\end{quote}
+An empty result means the constraint holds (pass); a non-empty result is a \emph{violation table} that both flags and localizes the fault. Because every relation is a view over the single \texttt{coredump} table, adding a check requires no schema migration---only a new query and, where needed, an additional traced field (the schema-tier choice quantified in \S\ref{subsec:efficiency}).
+
+% ------------------------------------------------------------
+% 与实验衔接: 本表的 relation 即 RQ1(T2)benchmark 按 violated-relation 分类的列、RQ3(T3)guard ablation 的对象、
+%             §6.5 violation-table case 的来源。物理单表 coredump 的取舍 = §6.3 schema tier(S0–S6)。
+% 待补(可选): comm_event / checkpoint_state 当前 collector 覆盖较弱(主要 dump_model/optimizer),
+%             若要在线检 P2/P5 需补对应 hook —— 与 T1 overhead 的训练侧埋点同批做。
+% ------------------------------------------------------------

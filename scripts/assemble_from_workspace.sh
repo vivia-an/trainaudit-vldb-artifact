@@ -204,6 +204,25 @@ for f in experiment_registry.md artifact_checklist.md REAL_BUG_DETECTION_RUNBOOK
   [ -f "$PAPER/$f" ] && cp -f "$PAPER/$f" "$OUT/docs/"
 done
 copytree "$PAPER/docs" "$OUT/docs/paper_drafts"
+# Derivation drafts for claims the paper states analytically. They live in the workspace
+# root, not in the paper checkout, and several are the only written record of how a number
+# was arrived at. Process/strategy documents in the same directory (EXPERIMENT_QUEUE.md,
+# INTEGRATION_MAP.md, sigmod_writing_constraints.md) are deliberately left out: they are
+# about how to write the paper, not about how a result was derived.
+mkdir -p "$OUT/docs/derivations"
+n=0
+for f in "$WS"/docs/draft_*.tex "$WS"/docs/draft_*.bib; do
+  [ -f "$f" ] && cp -f "$f" "$OUT/docs/derivations/" && n=$((n+1))
+done
+say "derivation drafts" "$n copied"
+
+# Documents carried over from the ICML/SIGMOD-era paper repo describe a different tree and
+# reference files that are not here. Keep them for provenance, but out of the way.
+mkdir -p "$OUT/docs/historical"
+for f in REPO_INDEX.md artifact_checklist.md FIGURE_BRIEF_FOR_DESIGNER.md FIGURE9_DESIGN_BRIEF.md; do
+  [ -f "$OUT/docs/$f" ] && mv -f "$OUT/docs/$f" "$OUT/docs/historical/"
+done
+say "historical docs" "moved to docs/historical/"
 
 # ---------------------------------------------------------------- 10. de-anonymise
 # VLDB is single-blind and the paper carries author names, so the double-blind
