@@ -59,7 +59,9 @@ Requires `hyperxmp` and `minted` (`-shell-escape` is mandatory).
 ## Re-running the guard ablation on the real traces
 
 The trace databases are published as a release asset — 129 DuckDB files from 43 runs,
-39.5 MiB packed, covering every database the 126-cell ablation reads:
+39.5 MiB packed, covering every database the 126-cell ablation reads. Note that the
+ablation also needs a DeepSeek API key, because the shipped constraint libraries carry
+rule specifications rather than SQL — see [`docs/RERUN_LIMITS.md`](docs/RERUN_LIMITS.md):
 
 ```bash
 bash scripts/fetch_trace_dbs.sh --dest /path/for/traces

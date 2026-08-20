@@ -164,3 +164,30 @@ number, and remain listed in `trace_db_index.csv`.
 Two of my findings came from `results.csv` and both were wrong, because it scores a
 superseded case set. Check `benchmark/eval/DETECTION_FILES_NOTE.md` before treating any
 per-case file as authoritative.
+
+### 2026-08-20 — iteration 6: the artifact could not actually run anything
+Tried to reproduce the 25.8 / 83.3 FP/1M pair (O21) by running the verifier against the
+now-published clean traces. It could not be done, for two reasons found in order.
+
+- **O24.** `core/` held only the mining pipeline — the `sdccheck` verifier package and the
+  four ablation constraint libraries were never assembled, so `python3 -m sdccheck` did not
+  exist in the artifact. Fixed: `core/sdccheck/` (31 modules, 268 KB) and
+  `core/config/ablation_libraries/` (6 libraries) are now copied by the assembler.
+- **O23.** With those in place the verifier runs, connects to the trace (370,270 rows in
+  `coredump(step, stage, data)`) and emits **93 report entries against `lib_full` — exactly
+  the recorded cell's `total=93`** — but all 93 error. Cause: every one of the 249 rules in
+  every library has an **empty `logic` field**, and the `--constraints-file` path
+  synthesises SQL per constraint via `LLMSQLGenerator` → `SQLAgent`, an LLM call. Without a
+  key the SQL is empty, `execute("")` returns `None`, and `.fetchdf()` fails.
+
+That qualifies what I claimed last iteration. "§5.3 is re-runnable off this repository" was
+wrong: the traces, libraries, harness and drivers are all present, but the SQL is not, so
+the ablation needs an API key and is not bit-reproducible. Written up in `RERUN_LIMITS.md`
+with a table of what does run offline (eight commands) versus what needs a key or GPUs.
+
+It also raises a question for the authors rather than a defect: §4.5 describes the verifier
+as compiling each constraint into parameterized SQL, with the 2–3 ms per query being DuckDB
+planning. In the shipped code that translation is an LLM call. The two reconcile if the LLM
+step is a one-off compilation whose output is then executed deterministically — but the
+compiled SQL is precisely what the artifact lacks, so **shipping the generated SQL per rule
+is the highest-value addition remaining.**

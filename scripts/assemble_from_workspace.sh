@@ -37,10 +37,22 @@ if [ -d "$WS/sdccheck/core_algo" ]; then
   copytree "$WS/sdccheck/core_algo" "$OUT/core"
   say "core_algo -> core/" copied
 fi
-# verifier + constraint library from the full research tree (not in the public skeleton)
-for f in main.py dp_consistency_check.sql; do
+# The runnable verifier itself: `python3 -m sdccheck <trace.db> --constraints-file ...`
+# is what every ablation cell invokes, so without this package nothing in the artifact
+# can actually be executed against a trace.
+copytree "$WS/sdccheck/sdccheck" "$OUT/core/sdccheck"
+[ -d "$OUT/core/sdccheck" ] && say "sdccheck package (verifier)" \
+  "$(find "$OUT/core/sdccheck" -name '*.py' | wc -l) modules, $(du -sb --apparent-size "$OUT/core/sdccheck" | cut -f1 | numfmt --to=iec)"
+for f in main.py dp_consistency_check.sql pyproject.toml; do
   [ -f "$WS/sdccheck/$f" ] && cp -f "$WS/sdccheck/$f" "$OUT/core/" && say "sdccheck/$f" copied
 done
+# The four guard-ablation constraint libraries the paper's Sec 5.3 arms are defined by.
+mkdir -p "$OUT/core/config/ablation_libraries"
+n=0
+for f in "$WS"/sdccheck/config/lib_*.json; do
+  [ -f "$f" ] && cp -f "$f" "$OUT/core/config/ablation_libraries/" && n=$((n+1))
+done
+say "ablation constraint libraries" "$n copied (lib_full / no_topo / no_precond / no_adversarial / holdout)"
 mkdir -p "$OUT/core/ablation_scripts"
 [ -d "$WS/sdccheck/scripts/ablation" ] && cp -rf "$WS/sdccheck/scripts/ablation/." "$OUT/core/ablation_scripts/" && say "scripts/ablation" copied
 # run_d1_phase3.sh hardcodes this workspace's paths; make them overridable so the
