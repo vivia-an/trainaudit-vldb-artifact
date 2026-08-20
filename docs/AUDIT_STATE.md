@@ -222,3 +222,28 @@ checks on a `TP=1` run) executed without their guard — §4.4's SwitchMLP argum
 reproduced incidentally, and useful as direct evidence that the guards carry weight.
 The 13 errors are all `Referenced column "data" not found`: pipeline-parallel activation
 rules needing trace fields above the S0 tier in these databases, i.e. schema-tier gated.
+
+### 2026-08-20 — iteration 8: duplicate per-rank captures (O26), and a correction
+Executing the recovered SQL against the published traces surfaced a data problem, and my
+first diagnosis of it was wrong.
+
+**What I first said:** the collector mislabelled the second DP rank in 4 clean traces.
+**What is actually true:** the two per-rank files are *byte-identical* (same MD5, same
+185,135 rows, identical row by row), so the second rank's capture is missing and a copy of
+rank 0 stands in its place. And the scope is **7 of 43 runs**, not 4 — four clean baselines
+plus `requires_grad_test_db`, `requires_grad_before_backward_test_db`, `shape_test_db`.
+
+The impact is correspondingly wider than the 31 rank-counting queries I first named: every
+cross-rank comparison on these traces compares rank 0 with itself and passes vacuously,
+which is the dominant rule shape in the library.
+
+Quantified against `d1_results.csv`: these seven databases contribute **147 of 1,369 false
+positives (11%)** across the 126 cells, and **6 of the 9** clean-arm false positives for
+`lib_full` — only `tp_normal`'s 3 come from a database with two genuine ranks. The
+direction is against the paper (real rank-1 data could only add fires), and detection
+results are untouched since they come from the Real-SE method-level replays.
+
+I checked whether the live collector explains it: `initialize()` builds the filename from
+the same `ranks_info_` dict that `param_info.update(cls.ranks_info_)` stamps into each
+row, so a genuine two-rank run cannot produce this. The duplication happened outside the
+collector — a copied file, or a second rank that never wrote.
