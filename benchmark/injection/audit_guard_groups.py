@@ -62,13 +62,21 @@ def main():
         total["check"] += check
         total["uneq"] += uneq
         exercised += check > 0
-        label = f"{p.parent.name}/{p.stem}"
+        # Truncate the run name, never the rank: eight ranks of one run must stay
+        # distinguishable in the output.
+        run, rank = p.parent.name, p.stem
+        label = f"{run[:50 - len(rank) - 1]}/{rank}" if len(run) + len(rank) + 1 > 50 else f"{run}/{rank}"
         mark = "" if check else "   (single-rank: guard never checks)"
-        print(f"{label[:50]:<52}{skip + check:>8}{skip:>7}{check:>7}{uneq:>11}{mark}")
+        print(f"{label:<52}{skip + check:>8}{skip:>7}{check:>7}{uneq:>11}{mark}")
 
     print(f"\n{exercised} of {len(traces)} traces contain a replica group larger than 1")
     print(f"totals: {total['skip']} skipped, {total['check']} checked, "
           f"{total['uneq']} checked-and-unequal")
+    if total["check"]:
+        print(f"\nWith the guard in place a clean run yields {total['uneq']} alarms from the "
+              f"{total['check']} checked records.")
+        print(f"Without it the {total['skip']} skipped records would each be compared across "
+              f"ranks and differ by construction — that is the false-positive cost §4.1 quantifies.")
     if not exercised:
         print("\nNone of these traces exercises the guard's check branch: every record sits in a")
         print("group of size 1, so the skip path is taken throughout. A trace from a run with")

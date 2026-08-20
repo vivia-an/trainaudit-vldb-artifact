@@ -202,7 +202,26 @@ python3 benchmark/injection/audit_guard_groups.py --root /path/for/events-traces
 ```
 
 `audit_guard_groups.py` prints the skip/check split per trace and flags runs where the
-guard never gets to decide.
+guard never gets to decide. On that TP=2 run it reports, for all eight ranks:
+
+```
+run / rank                                       records   skip  check  not equal
+megatron_gpt_tiny_TP2PP1_sync_T0_s10_r/trace_rank0    99     49     50          0
+…                                                                (×8 ranks)
+
+8 of 8 traces contain a replica group larger than 1
+totals: 392 skipped, 400 checked, 0 checked-and-unequal
+```
+
+**This is §4.1's claim, on published data.** With the guard in place a clean run yields
+**0 alarms from 400 checked records**. Without it the **392 skipped records** would each be
+compared across ranks and differ by construction — sharded tensors hold different bytes on
+each rank. That is the same effect the paper quantifies as 57 false positives on its own run.
+
+It is a substitute for the paper's example, not a reproduction of it: different model
+(gpt-tiny, 8 ranks at TP=2), different counts, and the parameter names are Megatron-Core
+(`linear_qkv`) rather than the legacy `query_key_value` the paper cites. What it does give a
+reviewer is the mechanism, measurable, on a run they can download.
 
 Not published: `rebuttal_v1/C1_overhead_gpu/` (several GB of overhead runs) — it backs no
 number that `benchmark/injection/overhead_h20.csv` does not already cover.

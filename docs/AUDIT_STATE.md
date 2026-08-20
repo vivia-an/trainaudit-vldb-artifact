@@ -439,3 +439,13 @@ the literal tag `trace-events-v1`.
 **O32 narrows but stands.** The mechanism is now demonstrable on a published run; the
 specific 492/57 figures are not, and no trace in either generation has a
 `query_key_value.weight` parameter.
+
+The auditor's output on that TP=2 run, for all eight ranks: 99 records each, **49 skipped /
+50 checked / 0 checked-and-unequal**. Totals 392 skipped, 400 checked, 0 alarms. So with the
+guard a clean run raises nothing, and without it the 392 sharded records would each be
+compared across ranks and differ by construction — §4.1's effect, measured on a published
+run. A substitute for the paper's example rather than a reproduction: different model, 8
+ranks at TP=2, Megatron-Core naming.
+
+Also fixed a display bug in the auditor: it truncated the trace filename, so eight ranks of
+one run printed as eight identical rows. It now truncates the run name and keeps the rank.
