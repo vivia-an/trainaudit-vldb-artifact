@@ -303,3 +303,20 @@ The two findings most worth acting on before submission are **O26/O27**: four cl
 baselines have rank 1 identical to rank 0, carrying 67–80% of the clean-arm false
 positives, and two of the ablation's 42 databases are the same trace yet recorded
 different results (9 vs 4 false positives without π_topo).
+
+### 2026-08-20 — iteration 11: the supplement was never reformatted for VLDB
+- **v2 bundle verified end to end.** Fetched fresh: **139/139 files verified across 43
+  runs**, 10 WAL sidecars present, and `requires_grad_test_db/dp1` now reads 2,605 rows
+  where v1 delivered an empty header. The defect I introduced in v1 is closed and tested.
+- **O29 (new).** `appendix.tex` still declares
+  `\documentclass[sigconf,anonymous]{acmart}` under a "SIGMOD / PACMMOD DOUBLE-BLIND
+  SUBMISSION" banner. Built, it renders **"Anonymous Author(s)"** and its abstract cites
+  the "SIGMOD/PACMMOD appendix policy" as the reason reviewers need not read it — while
+  `main.tex` is single-blind PVLDB and names all seven authors. The main paper was
+  reformatted for the venue and the supplement was not.
+- **O30 (new, fixed).** The `appendix_supplement.pdf` I had been shipping was a
+  2026-07-17 build of the *other* checkout's appendix — 27 pages, different content hash
+  from the `appendix.tex` sitting beside it. Rebuilt from the shipped source: 10 pages, 0
+  undefined references. Code listings are unhighlighted because `minted` v3's
+  `latexminted` helper was not reachable from pdflatex's shell-escape subprocess here;
+  `paper/README.md` records that and the rebuild command.
