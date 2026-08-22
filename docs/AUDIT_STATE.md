@@ -764,3 +764,39 @@ idiom to one category, while in the corpus `cross_rank_equality` alone spans **1
 `value_range` 9, `monotonic` 4. A reviewer holding the same shipped file can argue Manual SQL
 reaches far more than 3 classes. The guard-based statement has no such opening — it is both
 truer to the data and harder to attack. **O42**, check group 15.
+
+### 2026-08-23 — iteration 29: the diagnosis study's numbers are not in the artifact
+Ran the shipped `diagnosis_s3_score.py`, which announced "Rater A not filled yet". Following
+that up:
+
+- `diagnosis_s3_rater_A.csv` — 17 rows, **every rating column empty**, so the two-rater design
+  yields one rater and no agreement measure.
+- `diagnosis_s3_rater_B.csv` — filled: **L1 yes 17/17, L2 `N/A` on all 17**.
+- `diagnosis_s3_input.json` — 17 cases, **no field records a candidate-set size**, `rca_chain`
+  is `[]` for every case, and `meta.source` is `paper_table_baseline_3way.md` — the superseded
+  intermediate case set (O14).
+
+`app:diagnosis` reports 9/17 (53%) at |S_rule|=1, median C1 = 6 with peak 12, 5 of 8 at C1 and
+2 at C2, and draws 1→6→1. **None of those cardinalities is derivable from the shipped files.**
+
+Rater B's 17/17 is *stronger* than 53% but answers "does the rule name identify the fault",
+not "is the candidate set of size 1" — one cannot substitute for the other. **O43**, check
+group 16. Second appendix quantification found absent by *running* a shipped script rather
+than reading it.
+
+### Build artifacts I left in the paper checkout — disclosure
+Twice the shell cwd drifted into `overleaf/sdc_llm_icml_2025` and a heredoc wrote a script
+there; both were moved out and `git status` confirmed clean. But my earlier paper builds
+(iterations 1 and 11, before the instruction to leave the paper alone) ran **in that
+directory** and left build outputs: `main.{aux,bbl,blg,log,out,pdf}`,
+`appendix.{aux,bbl,blg,listing,log,out,pdf}`, `_minted-main/`, and one
+`_C0CB…data.minted`.
+
+All are gitignored there, so no tracked content changed, and `main.tex`/`appendix.tex`/
+`numbers.tex` remain byte-identical throughout. But **`main.pdf` was overwritten**: the
+previous one was a 2026-05-18, 19.5 MB, ICML-era build that no longer matched the sources, and
+it is not recoverable — the artifact's first commit already holds my rebuild. It is
+regenerable from the unchanged sources with `pdflatex -shell-escape main.tex` ×3 plus
+`bibtex`.
+
+Rule from here: build only in a scratch copy, never in the paper checkout.
