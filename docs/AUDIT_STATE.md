@@ -950,3 +950,35 @@ lines) is shared and attributed to none.
 
 It matters more than its size because the adapters now ship: any reviewer can run
 `wc -l`. **O47**, check group 19.
+
+### 2026-08-23 — iteration 36: four excluded subdirectories that shipped docs depend on
+Re-ran the three scripts that had failed on the missing `trainaudit` package. They now fail
+differently, and following that exposed a bad exclusion of mine.
+
+I had dropped the whole 9.2 GB `rebuttal_v1/` as "prior review round, not cited by this
+paper". Four of its six subdirectories are small and **referenced 15 times by shipped docs and
+scripts**, totalling 822 KB:
+
+| subdir | size | why it matters |
+|---|---:|---|
+| `A1_mining_funnel` | 745 K | `pattern_guided_llm.py` and `run_funnel.py`, which `funnel_skip_stress.py` imports, plus `a1_funnel.csv`/`a1_summary.json` that `paper_table_funnel.md` cites — both flagged missing in my earlier doc audit |
+| `B1_diagnosis_accuracy` | 67 K | the fullest diagnosis study |
+| `A2_ablation` | 17 K | the 27-case arm table |
+| `D_portability_tests` | 4 K | driver coverage |
+
+All four assembled. Only `C1_overhead_gpu` (6.7 GB) and `E_clean_run_fp_audit` (2.6 GB) stay
+out, and the one C1 trace that matters is already in `trace-events-v2`. **O48.**
+
+**O49 — a fourth diagnosis study, LLM-annotated.** `B1_diagnosis_accuracy/b1_report.md` scores
+27 D2 cases on four dimensions with strict denominator n=20, and states its annotator
+outright: *"annotator: Claude Opus, computer-science PhD-level"*. Its prefilled pass
+(`b1_annotated.csv`, rule-exact 5/22) and its manual pass (`b1_manual_verdicts.csv`, rule-exact
+20/23) differ sharply; the manual pass is the corrected one. Given that the *other* study's
+human rater A is entirely unfilled (O43), the diagnosis evidence rests on LLM annotation plus
+one human rater — worth disclosing wherever diagnosis accuracy is reported.
+
+**`funnel_skip_stress.py` progress.** With the package and `A1_mining_funnel` in place and the
+paths localized, it gets from `ModuleNotFoundError` to running all three steps against the
+published events traces. Its cohort summaries still come out empty — it wants upstream
+mining-stage inputs that are not wired up — so it is closer to runnable, not yet reproducing
+the funnel numbers.

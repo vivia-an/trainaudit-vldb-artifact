@@ -1,0 +1,8 @@
+bug_id,framework,category,reproduction_status,has_config,has_detect,has_trainaudit_run,reason
+O-006,olmo,data_loading,reproduced,True,False,False,"待补 driver: data_loading bug 在 OLMo 老版本上，复现已验证但还没写 trainaudit 检测路径"
+O-010,olmo-core,optimizer_state,reproduced,True,False,False,"待补 driver: optimizer_state 类别 bug，复现已验证但 detect.py 缺"
+O-014,olmo-core,communication,reproduced,True,False,False,"待补 driver: communication bug 需要 multi-rank 框架适配"
+O-016,olmo-core,lr_schedule,reproduced,True,False,False,"待补 driver: lr_schedule 跨步监控规则需要从 LR-pattern (P10) 落地"
+O-021,olmo-core,data_loading,reproduced,True,False,False,"待补 driver: 与 O-006 类似的数据加载侧问题，hookpoint 未覆盖"
+O-022,olmo-core,data_loading,reproduced,True,False,False,"待补 driver: data_loading"
+O-025,olmo-core,numerical,reproduced,True,False,False,"待补 driver: numerical category，待 T1 numerical pattern 扩展"

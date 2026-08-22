@@ -1,0 +1,500 @@
+{
+  "megatron": [
+    {
+      "pattern": "P1_dtype",
+      "regex": "\\.dtype|to\\(torch\\.|cast|amp\\.|float16|bfloat16",
+      "files": [
+        "megatron/core/optimizer/distrib_optimizer.py",
+        "megatron/core/optimizer/optimizer.py"
+      ]
+    },
+    {
+      "pattern": "P2_scaling",
+      "regex": "loss_scale|amp_scale|grad_scaler|max_grad_norm",
+      "files": [
+        "megatron/core/optimizer/optimizer.py",
+        "megatron/core/optimizer/distrib_optimizer.py"
+      ]
+    },
+    {
+      "pattern": "P3_cross_rank",
+      "regex": "all_reduce|all_gather|reduce_scatter|broadcast",
+      "files": [
+        "megatron/core/optimizer/distrib_optimizer.py",
+        "megatron/training/utils.py"
+      ]
+    },
+    {
+      "pattern": "P4_invocation",
+      "regex": "def forward|@hook|forward_post|backward_post",
+      "files": [
+        "megatron/legacy/model/vision/esvit_swin_backbone.py",
+        "megatron/core/tensor_parallel/mappings.py"
+      ]
+    },
+    {
+      "pattern": "P5_state_restore",
+      "regex": "checkpoint|load_state_dict|save_state_dict",
+      "files": [
+        "megatron/training/checkpointing.py",
+        "megatron/core/dist_checkpointing/serialization.py"
+      ]
+    },
+    {
+      "pattern": "P6_structural",
+      "regex": "build|register_buffer|register_parameter",
+      "files": [
+        "megatron/core/datasets/blended_megatron_dataset_builder.py",
+        "megatron/training/training.py"
+      ]
+    },
+    {
+      "pattern": "P7_step_progress",
+      "regex": "global_step|trainer_step|optim\\.step\\b|state\\[.step.\\]",
+      "files": [
+        "pretrain_vision_inpaint.py",
+        "tasks/vision/segmentation/finetune_segformer.py"
+      ]
+    },
+    {
+      "pattern": "P8_topology",
+      "regex": "tensor_model_parallel|pipeline_model_parallel|ep_size|expert_parallel",
+      "files": [
+        "megatron/core/parallel_state.py",
+        "megatron/core/tensor_parallel/layers.py"
+      ]
+    },
+    {
+      "pattern": "P9_init",
+      "regex": "reset_parameters|kaiming_|trunc_normal_|mitchell_init|init_method",
+      "files": [
+        "megatron/legacy/model/language_model.py",
+        "megatron/core/transformer/transformer_config.py"
+      ]
+    },
+    {
+      "pattern": "P10_config_couple",
+      "regex": "zero_stage|mup_base_width|use_fsdp|sequence_parallel\\s*=",
+      "files": [
+        "megatron/core/tensor_parallel/layers.py",
+        "megatron/core/transformer/custom_layers/transformer_engine.py"
+      ]
+    },
+    {
+      "pattern": "P11_pos_enc",
+      "regex": "apply_rotary_pos_emb|cu_doc_lens|position_ids|RotaryEmb",
+      "files": [
+        "megatron/core/datasets/gpt_dataset.py",
+        "megatron/training/utils.py"
+      ]
+    },
+    {
+      "pattern": "P12_alg_variant",
+      "regex": "flash_attn|fused_norm|use_(?:fused|flash)",
+      "files": [
+        "megatron/legacy/model/transformer.py"
+      ]
+    },
+    {
+      "pattern": "P13_aliasing",
+      "regex": "data_ptr|\\.view\\(|share_memory_|register_buffer.*persistent=False",
+      "files": [
+        "megatron/legacy/model/vision/esvit_swin_backbone.py",
+        "megatron/legacy/model/vision/swin_backbone.py"
+      ]
+    },
+    {
+      "pattern": "P14_sharded",
+      "regex": "mp_rank_|tp_rank.*save|partition_uneven",
+      "files": [
+        "megatron/training/checkpointing.py"
+      ]
+    },
+    {
+      "pattern": "P15_counter",
+      "regex": "int32|torch\\.int|sample_idx|step_count",
+      "files": [
+        "megatron/inference/text_generation/generation.py",
+        "megatron/core/datasets/indexed_dataset.py"
+      ]
+    },
+    {
+      "pattern": "P16_loss_norm",
+      "regex": "num_micro_batches|aux_loss_coeff|reduction\\s*=\\s*['\\\"]mean['\\\"]",
+      "files": [
+        "megatron/training/microbatches.py",
+        "megatron/inference/text_generation/forward_step.py"
+      ]
+    }
+  ],
+  "deepspeed": [
+    {
+      "pattern": "P1_dtype",
+      "regex": "\\.dtype|to\\(torch\\.|cast|amp\\.|float16|bfloat16",
+      "files": [
+        "deepspeed/runtime/engine.py",
+        "deepspeed/runtime/zero/partition_parameters.py"
+      ]
+    },
+    {
+      "pattern": "P2_scaling",
+      "regex": "loss_scale|amp_scale|grad_scaler|max_grad_norm",
+      "files": [
+        "deepspeed/runtime/zero/stage3.py",
+        "deepspeed/runtime/zero/stage_1_and_2.py"
+      ]
+    },
+    {
+      "pattern": "P3_cross_rank",
+      "regex": "all_reduce|all_gather|reduce_scatter|broadcast",
+      "files": [
+        "deepspeed/runtime/zero/partition_parameters.py",
+        "deepspeed/comm/torch.py"
+      ]
+    },
+    {
+      "pattern": "P4_invocation",
+      "regex": "def forward|@hook|forward_post|backward_post",
+      "files": [
+        "deepspeed/compression/basic_layer.py",
+        "deepspeed/compression/utils.py"
+      ]
+    },
+    {
+      "pattern": "P5_state_restore",
+      "regex": "checkpoint|load_state_dict|save_state_dict",
+      "files": [
+        "deepspeed/runtime/engine.py",
+        "deepspeed/utils/zero_to_fp32.py"
+      ]
+    },
+    {
+      "pattern": "P6_structural",
+      "regex": "build|register_buffer|register_parameter",
+      "files": [
+        "deepspeed/runtime/data_pipeline/data_sampling/data_analyzer.py",
+        "op_builder/__init__.py"
+      ]
+    },
+    {
+      "pattern": "P7_step_progress",
+      "regex": "global_step|trainer_step|optim\\.step\\b|state\\[.step.\\]",
+      "files": [
+        "deepspeed/runtime/engine.py",
+        "deepspeed/runtime/pipe/engine.py"
+      ]
+    },
+    {
+      "pattern": "P8_topology",
+      "regex": "tensor_model_parallel|pipeline_model_parallel|ep_size|expert_parallel",
+      "files": [
+        "deepspeed/utils/groups.py",
+        "deepspeed/runtime/lr_schedules.py"
+      ]
+    },
+    {
+      "pattern": "P9_init",
+      "regex": "reset_parameters|kaiming_|trunc_normal_|mitchell_init|init_method",
+      "files": [
+        "deepspeed/comm/comm.py",
+        "deepspeed/compression/basic_layer.py"
+      ]
+    },
+    {
+      "pattern": "P10_config_couple",
+      "regex": "zero_stage|mup_base_width|use_fsdp|sequence_parallel\\s*=",
+      "files": [
+        "deepspeed/utils/zero_to_fp32.py",
+        "deepspeed/autotuning/autotuner.py"
+      ]
+    },
+    {
+      "pattern": "P11_pos_enc",
+      "regex": "apply_rotary_pos_emb|cu_doc_lens|position_ids|RotaryEmb",
+      "files": [
+        "deepspeed/ops/sparse_attention/sparse_attention_utils.py",
+        "op_builder/transformer_inference.py"
+      ]
+    },
+    {
+      "pattern": "P12_alg_variant",
+      "regex": "flash_attn|fused_norm|use_(?:fused|flash)",
+      "files": [
+        "deepspeed/ops/transformer/inference/diffusers_attention.py",
+        "deepspeed/ops/transformer/inference/triton_ops.py"
+      ]
+    },
+    {
+      "pattern": "P13_aliasing",
+      "regex": "data_ptr|\\.view\\(|share_memory_|register_buffer.*persistent=False",
+      "files": [
+        "deepspeed/compression/basic_layer.py",
+        "deepspeed/runtime/zero/stage_1_and_2.py"
+      ]
+    },
+    {
+      "pattern": "P14_sharded",
+      "regex": "mp_rank_|tp_rank.*save|partition_uneven",
+      "files": [
+        "deepspeed/runtime/engine.py",
+        "deepspeed/checkpoint/deepspeed_checkpoint.py"
+      ]
+    },
+    {
+      "pattern": "P15_counter",
+      "regex": "int32|torch\\.int|sample_idx|step_count",
+      "files": [
+        "deepspeed/utils/timer.py",
+        "deepspeed/module_inject/load_checkpoint.py"
+      ]
+    },
+    {
+      "pattern": "P16_loss_norm",
+      "regex": "num_micro_batches|aux_loss_coeff|reduction\\s*=\\s*['\\\"]mean['\\\"]",
+      "files": [
+        "deepspeed/runtime/pipe/schedule.py"
+      ]
+    }
+  ],
+  "olmo": [
+    {
+      "pattern": "P1_dtype",
+      "regex": "\\.dtype|to\\(torch\\.|cast|amp\\.|float16|bfloat16",
+      "files": [
+        "olmo/model.py",
+        "inference/compression/dependencies/AutoGPTQ/auto_gptq/nn_modules/triton_utils/kernels.py"
+      ]
+    },
+    {
+      "pattern": "P2_scaling",
+      "regex": "loss_scale|amp_scale|grad_scaler|max_grad_norm",
+      "files": [
+        "olmo/optim.py",
+        "olmo/train.py"
+      ]
+    },
+    {
+      "pattern": "P3_cross_rank",
+      "regex": "all_reduce|all_gather|reduce_scatter|broadcast",
+      "files": [
+        "olmo/optim.py",
+        "inference/compression/dependencies/AutoGPTQ/autogptq_extension/qigen/intrin.py"
+      ]
+    },
+    {
+      "pattern": "P4_invocation",
+      "regex": "def forward|@hook|forward_post|backward_post",
+      "files": [
+        "olmo/model.py",
+        "inference/compression/dependencies/AutoGPTQ/auto_gptq/utils/peft_utils.py"
+      ]
+    },
+    {
+      "pattern": "P5_state_restore",
+      "regex": "checkpoint|load_state_dict|save_state_dict",
+      "files": [
+        "olmo/train.py",
+        "olmo/checkpoint.py"
+      ]
+    },
+    {
+      "pattern": "P6_structural",
+      "regex": "build|register_buffer|register_parameter",
+      "files": [
+        "olmo/model.py",
+        "olmo/eval/__init__.py"
+      ]
+    },
+    {
+      "pattern": "P7_step_progress",
+      "regex": "global_step|trainer_step|optim\\.step\\b|state\\[.step.\\]",
+      "files": [
+        "olmo/train.py",
+        "olmo/optim.py"
+      ]
+    },
+    {
+      "pattern": "P8_topology",
+      "regex": "tensor_model_parallel|pipeline_model_parallel|ep_size|expert_parallel",
+      "files": []
+    },
+    {
+      "pattern": "P9_init",
+      "regex": "reset_parameters|kaiming_|trunc_normal_|mitchell_init|init_method",
+      "files": [
+        "olmo/model.py",
+        "olmo/initialization.py"
+      ]
+    },
+    {
+      "pattern": "P10_config_couple",
+      "regex": "zero_stage|mup_base_width|use_fsdp|sequence_parallel\\s*=",
+      "files": []
+    },
+    {
+      "pattern": "P11_pos_enc",
+      "regex": "apply_rotary_pos_emb|cu_doc_lens|position_ids|RotaryEmb",
+      "files": [
+        "inference/compression/dependencies/AutoGPTQ/auto_gptq/modeling/_base.py",
+        "olmo/model.py"
+      ]
+    },
+    {
+      "pattern": "P12_alg_variant",
+      "regex": "flash_attn|fused_norm|use_(?:fused|flash)",
+      "files": [
+        "olmo/model.py",
+        "olmo/train.py"
+      ]
+    },
+    {
+      "pattern": "P13_aliasing",
+      "regex": "data_ptr|\\.view\\(|share_memory_|register_buffer.*persistent=False",
+      "files": [
+        "inference/compression/dependencies/AutoGPTQ/autogptq_extension/qigen/generate.py",
+        "olmo/model.py"
+      ]
+    },
+    {
+      "pattern": "P14_sharded",
+      "regex": "mp_rank_|tp_rank.*save|partition_uneven",
+      "files": []
+    },
+    {
+      "pattern": "P15_counter",
+      "regex": "int32|torch\\.int|sample_idx|step_count",
+      "files": [
+        "inference/compression/dependencies/AutoGPTQ/auto_gptq/nn_modules/qlinear/qlinear_cuda.py",
+        "inference/compression/dependencies/AutoGPTQ/auto_gptq/nn_modules/qlinear/qlinear_cuda_old.py"
+      ]
+    },
+    {
+      "pattern": "P16_loss_norm",
+      "regex": "num_micro_batches|aux_loss_coeff|reduction\\s*=\\s*['\\\"]mean['\\\"]",
+      "files": []
+    }
+  ],
+  "olmo_core": [
+    {
+      "pattern": "P1_dtype",
+      "regex": "\\.dtype|to\\(torch\\.|cast|amp\\.|float16|bfloat16",
+      "files": [
+        "src/olmo_core/nn/transformer/model.py",
+        "src/olmo_core/nn/transformer/block.py"
+      ]
+    },
+    {
+      "pattern": "P2_scaling",
+      "regex": "loss_scale|amp_scale|grad_scaler|max_grad_norm",
+      "files": [
+        "src/olmo_core/train/train_module/transformer/train_module.py",
+        "src/olmo_core/train/train_module/transformer/pipeline_train_module.py"
+      ]
+    },
+    {
+      "pattern": "P3_cross_rank",
+      "regex": "all_reduce|all_gather|reduce_scatter|broadcast",
+      "files": [
+        "src/olmo_core/distributed/utils.py",
+        "src/olmo_core/train/trainer.py"
+      ]
+    },
+    {
+      "pattern": "P4_invocation",
+      "regex": "def forward|@hook|forward_post|backward_post",
+      "files": [
+        "src/olmo_core/nn/transformer/block.py",
+        "src/olmo_core/nn/attention/backend.py"
+      ]
+    },
+    {
+      "pattern": "P5_state_restore",
+      "regex": "checkpoint|load_state_dict|save_state_dict",
+      "files": [
+        "src/olmo_core/train/callbacks/checkpointer.py",
+        "src/olmo_core/train/trainer.py"
+      ]
+    },
+    {
+      "pattern": "P6_structural",
+      "regex": "build|register_buffer|register_parameter",
+      "files": [
+        "src/olmo_core/internal/experiment.py",
+        "src/olmo_core/distributed/parallel/__init__.py"
+      ]
+    },
+    {
+      "pattern": "P7_step_progress",
+      "regex": "global_step|trainer_step|optim\\.step\\b|state\\[.step.\\]",
+      "files": [
+        "src/olmo_core/train/trainer.py",
+        "src/olmo_core/optim/adamw.py"
+      ]
+    },
+    {
+      "pattern": "P8_topology",
+      "regex": "tensor_model_parallel|pipeline_model_parallel|ep_size|expert_parallel",
+      "files": [
+        "src/olmo_core/optim/adamw.py",
+        "src/olmo_core/nn/moe/parallel_mlp.py"
+      ]
+    },
+    {
+      "pattern": "P9_init",
+      "regex": "reset_parameters|kaiming_|trunc_normal_|mitchell_init|init_method",
+      "files": [
+        "src/olmo_core/nn/transformer/model.py",
+        "src/olmo_core/nn/moe/mlp.py"
+      ]
+    },
+    {
+      "pattern": "P10_config_couple",
+      "regex": "zero_stage|mup_base_width|use_fsdp|sequence_parallel\\s*=",
+      "files": []
+    },
+    {
+      "pattern": "P11_pos_enc",
+      "regex": "apply_rotary_pos_emb|cu_doc_lens|position_ids|RotaryEmb",
+      "files": [
+        "src/olmo_core/nn/attention/ring.py",
+        "src/olmo_core/nn/attention/backend.py"
+      ]
+    },
+    {
+      "pattern": "P12_alg_variant",
+      "regex": "flash_attn|fused_norm|use_(?:fused|flash)",
+      "files": [
+        "src/olmo_core/nn/attention/flash_attn_api.py",
+        "src/olmo_core/nn/attention/backend.py"
+      ]
+    },
+    {
+      "pattern": "P13_aliasing",
+      "regex": "data_ptr|\\.view\\(|share_memory_|register_buffer.*persistent=False",
+      "files": [
+        "src/olmo_core/nn/attention/__init__.py",
+        "src/olmo_core/nn/moe/parallel_mlp.py"
+      ]
+    },
+    {
+      "pattern": "P14_sharded",
+      "regex": "mp_rank_|tp_rank.*save|partition_uneven",
+      "files": []
+    },
+    {
+      "pattern": "P15_counter",
+      "regex": "int32|torch\\.int|sample_idx|step_count",
+      "files": [
+        "src/olmo_core/data/utils.py",
+        "src/olmo_core/data/data_loader.py"
+      ]
+    },
+    {
+      "pattern": "P16_loss_norm",
+      "regex": "num_micro_batches|aux_loss_coeff|reduction\\s*=\\s*['\\\"]mean['\\\"]",
+      "files": [
+        "src/olmo_core/train/train_module/transformer/train_module.py"
+      ]
+    }
+  ]
+}

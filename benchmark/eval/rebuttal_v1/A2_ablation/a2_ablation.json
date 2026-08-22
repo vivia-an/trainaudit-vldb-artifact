@@ -1,0 +1,42 @@
+[
+  {
+    "variant": "V0_Full",
+    "detected": 25,
+    "fp": 0,
+    "invalid": 0,
+    "n": 27,
+    "note": "baseline (from d2_aggregate)"
+  },
+  {
+    "variant": "V1_no_adversarial",
+    "detected": 25,
+    "fp": 25,
+    "invalid": 0,
+    "n": 27,
+    "note": "L4-rejected predicates (mostly auto-enum boilerplate) fire on fixed run"
+  },
+  {
+    "variant": "V2_schema_only",
+    "detected": 25,
+    "fp": 7,
+    "invalid": 0,
+    "n": 27,
+    "note": "strip \u03c0_topo from every rule; cross-rank rules now fire on sharded params"
+  },
+  {
+    "variant": "V3_no_precond",
+    "detected": 25,
+    "fp": 5,
+    "invalid": 0,
+    "n": 27,
+    "note": "strip step/phase precondition; build-time rules fire on every step"
+  },
+  {
+    "variant": "V4_freeform",
+    "detected": 20,
+    "fp": 6,
+    "invalid": 0,
+    "n": 27,
+    "note": "free-form LLM (no pattern catalog) \u2014 same detection rank-order, higher FP"
+  }
+]

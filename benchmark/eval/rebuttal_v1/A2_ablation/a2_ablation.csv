@@ -1,0 +1,6 @@
+variant,detected,fp,invalid,n,note
+V0_Full,25,0,0,27,"baseline (from d2_aggregate)"
+V1_no_adversarial,25,25,0,27,"L4-rejected predicates (mostly auto-enum boilerplate) fire on fixed run"
+V2_schema_only,25,7,0,27,"strip π_topo from every rule; cross-rank rules now fire on sharded params"
+V3_no_precond,25,5,0,27,"strip step/phase precondition; build-time rules fire on every step"
+V4_freeform,20,6,0,27,"free-form LLM (no pattern catalog) — same detection rank-order, higher FP"

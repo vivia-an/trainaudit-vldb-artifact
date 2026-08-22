@@ -1,0 +1,842 @@
+{
+  "per_framework": {
+    "megatron": {
+      "L1_hypothesis": 121,
+      "L2_enumerated": 1300,
+      "L3_healthy_passed": 992,
+      "L3_rejected": 308,
+      "L4_kept": 104,
+      "L4_rejected": 888,
+      "Deployed": 45,
+      "per_pattern": [
+        {
+          "pattern": "P1_dtype",
+          "seed_file": "megatron/core/optimizer/distrib_optimizer.py",
+          "L1": 3,
+          "L2": 58,
+          "L3_pass": 50
+        },
+        {
+          "pattern": "P1_dtype",
+          "seed_file": "megatron/core/optimizer/optimizer.py",
+          "L1": 3,
+          "L2": 59,
+          "L3_pass": 49
+        },
+        {
+          "pattern": "P2_scaling",
+          "seed_file": "megatron/core/optimizer/optimizer.py",
+          "L1": 3,
+          "L2": 59,
+          "L3_pass": 49
+        },
+        {
+          "pattern": "P2_scaling",
+          "seed_file": "megatron/core/optimizer/distrib_optimizer.py",
+          "L1": 3,
+          "L2": 58,
+          "L3_pass": 50
+        },
+        {
+          "pattern": "P3_cross_rank",
+          "seed_file": "megatron/core/optimizer/distrib_optimizer.py",
+          "L1": 3,
+          "L2": 58,
+          "L3_pass": 50
+        },
+        {
+          "pattern": "P3_cross_rank",
+          "seed_file": "megatron/training/utils.py",
+          "L1": 6,
+          "L2": 73,
+          "L3_pass": 45
+        },
+        {
+          "pattern": "P4_invocation",
+          "seed_file": "megatron/legacy/model/vision/esvit_swin_backbone.py",
+          "L1": 5,
+          "L2": 54,
+          "L3_pass": 29
+        },
+        {
+          "pattern": "P4_invocation",
+          "seed_file": "megatron/core/tensor_parallel/mappings.py",
+          "L1": 4,
+          "L2": 18,
+          "L3_pass": 13
+        },
+        {
+          "pattern": "P5_state_restore",
+          "seed_file": "megatron/training/checkpointing.py",
+          "L1": 3,
+          "L2": 58,
+          "L3_pass": 50
+        },
+        {
+          "pattern": "P5_state_restore",
+          "seed_file": "megatron/core/dist_checkpointing/serialization.py",
+          "L1": 1,
+          "L2": 27,
+          "L3_pass": 23
+        },
+        {
+          "pattern": "P6_structural",
+          "seed_file": "megatron/core/datasets/blended_megatron_dataset_builder.py",
+          "L1": 2,
+          "L2": 9,
+          "L3_pass": 9
+        },
+        {
+          "pattern": "P6_structural",
+          "seed_file": "megatron/training/training.py",
+          "L1": 2,
+          "L2": 32,
+          "L3_pass": 28
+        },
+        {
+          "pattern": "P7_step_progress",
+          "seed_file": "pretrain_vision_inpaint.py",
+          "L1": 5,
+          "L2": 25,
+          "L3_pass": 19
+        },
+        {
+          "pattern": "P7_step_progress",
+          "seed_file": "tasks/vision/segmentation/finetune_segformer.py",
+          "L1": 2,
+          "L2": 6,
+          "L3_pass": 5
+        },
+        {
+          "pattern": "P8_topology",
+          "seed_file": "megatron/core/parallel_state.py",
+          "L1": 4,
+          "L2": 16,
+          "L3_pass": 13
+        },
+        {
+          "pattern": "P8_topology",
+          "seed_file": "megatron/core/tensor_parallel/layers.py",
+          "L1": 6,
+          "L2": 53,
+          "L3_pass": 42
+        },
+        {
+          "pattern": "P9_init",
+          "seed_file": "megatron/legacy/model/language_model.py",
+          "L1": 7,
+          "L2": 58,
+          "L3_pass": 46
+        },
+        {
+          "pattern": "P9_init",
+          "seed_file": "megatron/core/transformer/transformer_config.py",
+          "L1": 3,
+          "L2": 41,
+          "L3_pass": 33
+        },
+        {
+          "pattern": "P10_config_couple",
+          "seed_file": "megatron/core/tensor_parallel/layers.py",
+          "L1": 6,
+          "L2": 53,
+          "L3_pass": 42
+        },
+        {
+          "pattern": "P10_config_couple",
+          "seed_file": "megatron/core/transformer/custom_layers/transformer_engine.py",
+          "L1": 6,
+          "L2": 52,
+          "L3_pass": 42
+        },
+        {
+          "pattern": "P11_pos_enc",
+          "seed_file": "megatron/core/datasets/gpt_dataset.py",
+          "L1": 2,
+          "L2": 11,
+          "L3_pass": 9
+        },
+        {
+          "pattern": "P11_pos_enc",
+          "seed_file": "megatron/training/utils.py",
+          "L1": 6,
+          "L2": 73,
+          "L3_pass": 45
+        },
+        {
+          "pattern": "P12_alg_variant",
+          "seed_file": "megatron/legacy/model/transformer.py",
+          "L1": 9,
+          "L2": 44,
+          "L3_pass": 31
+        },
+        {
+          "pattern": "P13_aliasing",
+          "seed_file": "megatron/legacy/model/vision/esvit_swin_backbone.py",
+          "L1": 5,
+          "L2": 54,
+          "L3_pass": 29
+        },
+        {
+          "pattern": "P13_aliasing",
+          "seed_file": "megatron/legacy/model/vision/swin_backbone.py",
+          "L1": 6,
+          "L2": 81,
+          "L3_pass": 52
+        },
+        {
+          "pattern": "P14_sharded",
+          "seed_file": "megatron/training/checkpointing.py",
+          "L1": 3,
+          "L2": 58,
+          "L3_pass": 50
+        },
+        {
+          "pattern": "P15_counter",
+          "seed_file": "megatron/inference/text_generation/generation.py",
+          "L1": 5,
+          "L2": 25,
+          "L3_pass": 18
+        },
+        {
+          "pattern": "P15_counter",
+          "seed_file": "megatron/core/datasets/indexed_dataset.py",
+          "L1": 3,
+          "L2": 20,
+          "L3_pass": 14
+        },
+        {
+          "pattern": "P16_loss_norm",
+          "seed_file": "megatron/training/microbatches.py",
+          "L1": 2,
+          "L2": 31,
+          "L3_pass": 27
+        },
+        {
+          "pattern": "P16_loss_norm",
+          "seed_file": "megatron/inference/text_generation/forward_step.py",
+          "L1": 3,
+          "L2": 36,
+          "L3_pass": 30
+        }
+      ]
+    },
+    "deepspeed": {
+      "L1_hypothesis": 103,
+      "L2_enumerated": 1397,
+      "L3_healthy_passed": 680,
+      "L3_rejected": 717,
+      "L4_kept": 83,
+      "L4_rejected": 597,
+      "Deployed": 45,
+      "per_pattern": [
+        {
+          "pattern": "P1_dtype",
+          "seed_file": "deepspeed/runtime/engine.py",
+          "L1": 3,
+          "L2": 65,
+          "L3_pass": 39
+        },
+        {
+          "pattern": "P1_dtype",
+          "seed_file": "deepspeed/runtime/zero/partition_parameters.py",
+          "L1": 4,
+          "L2": 49,
+          "L3_pass": 16
+        },
+        {
+          "pattern": "P2_scaling",
+          "seed_file": "deepspeed/runtime/zero/stage3.py",
+          "L1": 5,
+          "L2": 72,
+          "L3_pass": 43
+        },
+        {
+          "pattern": "P2_scaling",
+          "seed_file": "deepspeed/runtime/zero/stage_1_and_2.py",
+          "L1": 7,
+          "L2": 75,
+          "L3_pass": 46
+        },
+        {
+          "pattern": "P3_cross_rank",
+          "seed_file": "deepspeed/runtime/zero/partition_parameters.py",
+          "L1": 4,
+          "L2": 49,
+          "L3_pass": 16
+        },
+        {
+          "pattern": "P3_cross_rank",
+          "seed_file": "deepspeed/comm/torch.py",
+          "L1": 4,
+          "L2": 27,
+          "L3_pass": 10
+        },
+        {
+          "pattern": "P4_invocation",
+          "seed_file": "deepspeed/compression/basic_layer.py",
+          "L1": 5,
+          "L2": 63,
+          "L3_pass": 18
+        },
+        {
+          "pattern": "P4_invocation",
+          "seed_file": "deepspeed/compression/utils.py",
+          "L1": 2,
+          "L2": 39,
+          "L3_pass": 8
+        },
+        {
+          "pattern": "P5_state_restore",
+          "seed_file": "deepspeed/runtime/engine.py",
+          "L1": 3,
+          "L2": 65,
+          "L3_pass": 39
+        },
+        {
+          "pattern": "P5_state_restore",
+          "seed_file": "deepspeed/utils/zero_to_fp32.py",
+          "L1": 4,
+          "L2": 94,
+          "L3_pass": 39
+        },
+        {
+          "pattern": "P6_structural",
+          "seed_file": "deepspeed/runtime/data_pipeline/data_sampling/data_analyzer.py",
+          "L1": 2,
+          "L2": 11,
+          "L3_pass": 9
+        },
+        {
+          "pattern": "P6_structural",
+          "seed_file": "op_builder/__init__.py",
+          "L1": 1,
+          "L2": 4,
+          "L3_pass": 4
+        },
+        {
+          "pattern": "P7_step_progress",
+          "seed_file": "deepspeed/runtime/engine.py",
+          "L1": 3,
+          "L2": 65,
+          "L3_pass": 39
+        },
+        {
+          "pattern": "P7_step_progress",
+          "seed_file": "deepspeed/runtime/pipe/engine.py",
+          "L1": 5,
+          "L2": 52,
+          "L3_pass": 29
+        },
+        {
+          "pattern": "P8_topology",
+          "seed_file": "deepspeed/utils/groups.py",
+          "L1": 1,
+          "L2": 3,
+          "L3_pass": 3
+        },
+        {
+          "pattern": "P8_topology",
+          "seed_file": "deepspeed/runtime/lr_schedules.py",
+          "L1": 1,
+          "L2": 3,
+          "L3_pass": 3
+        },
+        {
+          "pattern": "P9_init",
+          "seed_file": "deepspeed/comm/comm.py",
+          "L1": 2,
+          "L2": 7,
+          "L3_pass": 4
+        },
+        {
+          "pattern": "P9_init",
+          "seed_file": "deepspeed/compression/basic_layer.py",
+          "L1": 5,
+          "L2": 63,
+          "L3_pass": 18
+        },
+        {
+          "pattern": "P10_config_couple",
+          "seed_file": "deepspeed/utils/zero_to_fp32.py",
+          "L1": 4,
+          "L2": 94,
+          "L3_pass": 39
+        },
+        {
+          "pattern": "P10_config_couple",
+          "seed_file": "deepspeed/autotuning/autotuner.py",
+          "L1": 0,
+          "L2": 0,
+          "L3_pass": 0
+        },
+        {
+          "pattern": "P11_pos_enc",
+          "seed_file": "deepspeed/ops/sparse_attention/sparse_attention_utils.py",
+          "L1": 2,
+          "L2": 37,
+          "L3_pass": 22
+        },
+        {
+          "pattern": "P11_pos_enc",
+          "seed_file": "op_builder/transformer_inference.py",
+          "L1": 2,
+          "L2": 10,
+          "L3_pass": 8
+        },
+        {
+          "pattern": "P12_alg_variant",
+          "seed_file": "deepspeed/ops/transformer/inference/diffusers_attention.py",
+          "L1": 5,
+          "L2": 33,
+          "L3_pass": 20
+        },
+        {
+          "pattern": "P12_alg_variant",
+          "seed_file": "deepspeed/ops/transformer/inference/triton_ops.py",
+          "L1": 3,
+          "L2": 19,
+          "L3_pass": 13
+        },
+        {
+          "pattern": "P13_aliasing",
+          "seed_file": "deepspeed/compression/basic_layer.py",
+          "L1": 5,
+          "L2": 63,
+          "L3_pass": 18
+        },
+        {
+          "pattern": "P13_aliasing",
+          "seed_file": "deepspeed/runtime/zero/stage_1_and_2.py",
+          "L1": 7,
+          "L2": 75,
+          "L3_pass": 46
+        },
+        {
+          "pattern": "P14_sharded",
+          "seed_file": "deepspeed/runtime/engine.py",
+          "L1": 3,
+          "L2": 65,
+          "L3_pass": 39
+        },
+        {
+          "pattern": "P14_sharded",
+          "seed_file": "deepspeed/checkpoint/deepspeed_checkpoint.py",
+          "L1": 3,
+          "L2": 66,
+          "L3_pass": 40
+        },
+        {
+          "pattern": "P15_counter",
+          "seed_file": "deepspeed/utils/timer.py",
+          "L1": 2,
+          "L2": 16,
+          "L3_pass": 3
+        },
+        {
+          "pattern": "P15_counter",
+          "seed_file": "deepspeed/module_inject/load_checkpoint.py",
+          "L1": 5,
+          "L2": 83,
+          "L3_pass": 32
+        },
+        {
+          "pattern": "P16_loss_norm",
+          "seed_file": "deepspeed/runtime/pipe/schedule.py",
+          "L1": 1,
+          "L2": 30,
+          "L3_pass": 17
+        }
+      ]
+    },
+    "olmo": {
+      "L1_hypothesis": 99,
+      "L2_enumerated": 1300,
+      "L3_healthy_passed": 899,
+      "L3_rejected": 401,
+      "L4_kept": 81,
+      "L4_rejected": 818,
+      "Deployed": 45,
+      "per_pattern": [
+        {
+          "pattern": "P1_dtype",
+          "seed_file": "olmo/model.py",
+          "L1": 7,
+          "L2": 98,
+          "L3_pass": 66
+        },
+        {
+          "pattern": "P1_dtype",
+          "seed_file": "inference/compression/dependencies/AutoGPTQ/auto_gptq/nn_modules/triton_utils/kernels.py",
+          "L1": 2,
+          "L2": 22,
+          "L3_pass": 13
+        },
+        {
+          "pattern": "P2_scaling",
+          "seed_file": "olmo/optim.py",
+          "L1": 4,
+          "L2": 53,
+          "L3_pass": 39
+        },
+        {
+          "pattern": "P2_scaling",
+          "seed_file": "olmo/train.py",
+          "L1": 4,
+          "L2": 59,
+          "L3_pass": 44
+        },
+        {
+          "pattern": "P3_cross_rank",
+          "seed_file": "olmo/optim.py",
+          "L1": 4,
+          "L2": 53,
+          "L3_pass": 39
+        },
+        {
+          "pattern": "P3_cross_rank",
+          "seed_file": "inference/compression/dependencies/AutoGPTQ/autogptq_extension/qigen/intrin.py",
+          "L1": 3,
+          "L2": 23,
+          "L3_pass": 13
+        },
+        {
+          "pattern": "P4_invocation",
+          "seed_file": "olmo/model.py",
+          "L1": 7,
+          "L2": 98,
+          "L3_pass": 66
+        },
+        {
+          "pattern": "P4_invocation",
+          "seed_file": "inference/compression/dependencies/AutoGPTQ/auto_gptq/utils/peft_utils.py",
+          "L1": 2,
+          "L2": 13,
+          "L3_pass": 9
+        },
+        {
+          "pattern": "P5_state_restore",
+          "seed_file": "olmo/train.py",
+          "L1": 4,
+          "L2": 59,
+          "L3_pass": 44
+        },
+        {
+          "pattern": "P5_state_restore",
+          "seed_file": "olmo/checkpoint.py",
+          "L1": 3,
+          "L2": 53,
+          "L3_pass": 39
+        },
+        {
+          "pattern": "P6_structural",
+          "seed_file": "olmo/model.py",
+          "L1": 7,
+          "L2": 98,
+          "L3_pass": 66
+        },
+        {
+          "pattern": "P6_structural",
+          "seed_file": "olmo/eval/__init__.py",
+          "L1": 1,
+          "L2": 4,
+          "L3_pass": 4
+        },
+        {
+          "pattern": "P7_step_progress",
+          "seed_file": "olmo/train.py",
+          "L1": 4,
+          "L2": 59,
+          "L3_pass": 44
+        },
+        {
+          "pattern": "P7_step_progress",
+          "seed_file": "olmo/optim.py",
+          "L1": 4,
+          "L2": 53,
+          "L3_pass": 39
+        },
+        {
+          "pattern": "P9_init",
+          "seed_file": "olmo/model.py",
+          "L1": 7,
+          "L2": 98,
+          "L3_pass": 66
+        },
+        {
+          "pattern": "P9_init",
+          "seed_file": "olmo/initialization.py",
+          "L1": 2,
+          "L2": 32,
+          "L3_pass": 18
+        },
+        {
+          "pattern": "P11_pos_enc",
+          "seed_file": "inference/compression/dependencies/AutoGPTQ/auto_gptq/modeling/_base.py",
+          "L1": 1,
+          "L2": 6,
+          "L3_pass": 4
+        },
+        {
+          "pattern": "P11_pos_enc",
+          "seed_file": "olmo/model.py",
+          "L1": 7,
+          "L2": 98,
+          "L3_pass": 66
+        },
+        {
+          "pattern": "P12_alg_variant",
+          "seed_file": "olmo/model.py",
+          "L1": 7,
+          "L2": 98,
+          "L3_pass": 66
+        },
+        {
+          "pattern": "P12_alg_variant",
+          "seed_file": "olmo/train.py",
+          "L1": 4,
+          "L2": 59,
+          "L3_pass": 44
+        },
+        {
+          "pattern": "P13_aliasing",
+          "seed_file": "inference/compression/dependencies/AutoGPTQ/autogptq_extension/qigen/generate.py",
+          "L1": 0,
+          "L2": 0,
+          "L3_pass": 0
+        },
+        {
+          "pattern": "P13_aliasing",
+          "seed_file": "olmo/model.py",
+          "L1": 7,
+          "L2": 98,
+          "L3_pass": 66
+        },
+        {
+          "pattern": "P15_counter",
+          "seed_file": "inference/compression/dependencies/AutoGPTQ/auto_gptq/nn_modules/qlinear/qlinear_cuda.py",
+          "L1": 4,
+          "L2": 33,
+          "L3_pass": 22
+        },
+        {
+          "pattern": "P15_counter",
+          "seed_file": "inference/compression/dependencies/AutoGPTQ/auto_gptq/nn_modules/qlinear/qlinear_cuda_old.py",
+          "L1": 4,
+          "L2": 33,
+          "L3_pass": 22
+        }
+      ]
+    },
+    "olmo_core": {
+      "L1_hypothesis": 97,
+      "L2_enumerated": 1337,
+      "L3_healthy_passed": 865,
+      "L3_rejected": 472,
+      "L4_kept": 89,
+      "L4_rejected": 776,
+      "Deployed": 45,
+      "per_pattern": [
+        {
+          "pattern": "P1_dtype",
+          "seed_file": "src/olmo_core/nn/transformer/model.py",
+          "L1": 6,
+          "L2": 91,
+          "L3_pass": 61
+        },
+        {
+          "pattern": "P1_dtype",
+          "seed_file": "src/olmo_core/nn/transformer/block.py",
+          "L1": 4,
+          "L2": 60,
+          "L3_pass": 44
+        },
+        {
+          "pattern": "P2_scaling",
+          "seed_file": "src/olmo_core/train/train_module/transformer/train_module.py",
+          "L1": 4,
+          "L2": 95,
+          "L3_pass": 69
+        },
+        {
+          "pattern": "P2_scaling",
+          "seed_file": "src/olmo_core/train/train_module/transformer/pipeline_train_module.py",
+          "L1": 4,
+          "L2": 95,
+          "L3_pass": 69
+        },
+        {
+          "pattern": "P3_cross_rank",
+          "seed_file": "src/olmo_core/distributed/utils.py",
+          "L1": 1,
+          "L2": 6,
+          "L3_pass": 4
+        },
+        {
+          "pattern": "P3_cross_rank",
+          "seed_file": "src/olmo_core/train/trainer.py",
+          "L1": 4,
+          "L2": 56,
+          "L3_pass": 40
+        },
+        {
+          "pattern": "P4_invocation",
+          "seed_file": "src/olmo_core/nn/transformer/block.py",
+          "L1": 4,
+          "L2": 60,
+          "L3_pass": 44
+        },
+        {
+          "pattern": "P4_invocation",
+          "seed_file": "src/olmo_core/nn/attention/backend.py",
+          "L1": 4,
+          "L2": 23,
+          "L3_pass": 17
+        },
+        {
+          "pattern": "P5_state_restore",
+          "seed_file": "src/olmo_core/train/callbacks/checkpointer.py",
+          "L1": 3,
+          "L2": 50,
+          "L3_pass": 35
+        },
+        {
+          "pattern": "P5_state_restore",
+          "seed_file": "src/olmo_core/train/trainer.py",
+          "L1": 4,
+          "L2": 56,
+          "L3_pass": 40
+        },
+        {
+          "pattern": "P6_structural",
+          "seed_file": "src/olmo_core/internal/experiment.py",
+          "L1": 3,
+          "L2": 53,
+          "L3_pass": 39
+        },
+        {
+          "pattern": "P6_structural",
+          "seed_file": "src/olmo_core/distributed/parallel/__init__.py",
+          "L1": 2,
+          "L2": 7,
+          "L3_pass": 7
+        },
+        {
+          "pattern": "P7_step_progress",
+          "seed_file": "src/olmo_core/train/trainer.py",
+          "L1": 4,
+          "L2": 56,
+          "L3_pass": 40
+        },
+        {
+          "pattern": "P7_step_progress",
+          "seed_file": "src/olmo_core/optim/adamw.py",
+          "L1": 4,
+          "L2": 19,
+          "L3_pass": 16
+        },
+        {
+          "pattern": "P8_topology",
+          "seed_file": "src/olmo_core/optim/adamw.py",
+          "L1": 4,
+          "L2": 19,
+          "L3_pass": 16
+        },
+        {
+          "pattern": "P8_topology",
+          "seed_file": "src/olmo_core/nn/moe/parallel_mlp.py",
+          "L1": 4,
+          "L2": 70,
+          "L3_pass": 26
+        },
+        {
+          "pattern": "P9_init",
+          "seed_file": "src/olmo_core/nn/transformer/model.py",
+          "L1": 6,
+          "L2": 91,
+          "L3_pass": 61
+        },
+        {
+          "pattern": "P9_init",
+          "seed_file": "src/olmo_core/nn/moe/mlp.py",
+          "L1": 6,
+          "L2": 93,
+          "L3_pass": 40
+        },
+        {
+          "pattern": "P11_pos_enc",
+          "seed_file": "src/olmo_core/nn/attention/ring.py",
+          "L1": 2,
+          "L2": 10,
+          "L3_pass": 8
+        },
+        {
+          "pattern": "P11_pos_enc",
+          "seed_file": "src/olmo_core/nn/attention/backend.py",
+          "L1": 4,
+          "L2": 23,
+          "L3_pass": 17
+        },
+        {
+          "pattern": "P12_alg_variant",
+          "seed_file": "src/olmo_core/nn/attention/flash_attn_api.py",
+          "L1": 2,
+          "L2": 50,
+          "L3_pass": 13
+        },
+        {
+          "pattern": "P12_alg_variant",
+          "seed_file": "src/olmo_core/nn/attention/backend.py",
+          "L1": 4,
+          "L2": 23,
+          "L3_pass": 17
+        },
+        {
+          "pattern": "P13_aliasing",
+          "seed_file": "src/olmo_core/nn/attention/__init__.py",
+          "L1": 5,
+          "L2": 23,
+          "L3_pass": 16
+        },
+        {
+          "pattern": "P13_aliasing",
+          "seed_file": "src/olmo_core/nn/moe/parallel_mlp.py",
+          "L1": 4,
+          "L2": 70,
+          "L3_pass": 26
+        },
+        {
+          "pattern": "P15_counter",
+          "seed_file": "src/olmo_core/data/utils.py",
+          "L1": 0,
+          "L2": 0,
+          "L3_pass": 0
+        },
+        {
+          "pattern": "P15_counter",
+          "seed_file": "src/olmo_core/data/data_loader.py",
+          "L1": 1,
+          "L2": 43,
+          "L3_pass": 31
+        },
+        {
+          "pattern": "P16_loss_norm",
+          "seed_file": "src/olmo_core/train/train_module/transformer/train_module.py",
+          "L1": 4,
+          "L2": 95,
+          "L3_pass": 69
+        }
+      ]
+    }
+  },
+  "reject_reason_taxonomy": {
+    "L3": {
+      "healthy-violation": 1873,
+      "compile-error": 25
+    },
+    "L4": {
+      "workload-specific-constant": 3035,
+      "redundant-with-existing": 44
+    }
+  }
+}

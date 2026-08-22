@@ -119,6 +119,17 @@ for f in REPRODUCTION_GUIDE.md SCHEMA.md README.md phase2_real_bug_archaeology.m
   [ -f "$src" ] && cp -f "$src" "$OUT/benchmark/$f"
 done
 say "benchmark/eval" "$(find "$OUT/benchmark/eval" -type f | wc -l) files, $(du -sb --apparent-size "$OUT/benchmark/eval" | cut -f1 | numfmt --to=iec)"
+# rebuttal_v1 is 9.2 GB overall, but four of its six subdirectories are small and are
+# referenced 15 times by shipped docs and scripts — A1_mining_funnel holds the funnel
+# implementation and a1_funnel.csv/a1_summary.json that paper_table_funnel.md cites, and
+# B1_diagnosis_accuracy is the fullest diagnosis study. Only C1_overhead_gpu (6.7 GB) and
+# E_clean_run_fp_audit (2.6 GB) stay out.
+for sub in A1_mining_funnel A2_ablation B1_diagnosis_accuracy D_portability_tests; do
+  copytree "$WORK/benchmark/eval/rebuttal_v1/$sub" "$OUT/benchmark/eval/rebuttal_v1/$sub"
+done
+[ -d "$OUT/benchmark/eval/rebuttal_v1" ] && say "rebuttal_v1 small subdirs" \
+  "$(find "$OUT/benchmark/eval/rebuttal_v1" -type f | wc -l) files, $(du -sb --apparent-size "$OUT/benchmark/eval/rebuttal_v1" | cut -f1 | numfmt --to=iec)"
+
 # index for the two excluded heavy directories
 {
   echo "# Heavy evaluation outputs kept outside git (see docs/DATA_AVAILABILITY.md)"

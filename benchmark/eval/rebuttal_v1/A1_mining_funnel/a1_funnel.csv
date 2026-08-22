@@ -1,0 +1,6 @@
+stage,megatron,deepspeed,olmo,olmo_core
+L1 Hypothesis,121,103,99,97
+L2 Enumerated,1300,1397,1300,1337
+L3 Healthy-pass,992,680,899,865
+L4 Adversarial-pass,104,83,81,89
+Deployed,45,45,45,45
