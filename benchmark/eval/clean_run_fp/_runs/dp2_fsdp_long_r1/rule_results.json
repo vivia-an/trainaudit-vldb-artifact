@@ -1,0 +1,207 @@
+{
+  "cfg_tag": "dp2_fsdp_long",
+  "repeat_idx": "1",
+  "factory": "olmo2_60M",
+  "world_size": 2,
+  "dp_type": "fsdp",
+  "ep_degree": 1,
+  "steps": 200,
+  "seq_len": 256,
+  "dtype": "bfloat16",
+  "ac": "",
+  "training_completed": true,
+  "results": [
+    {
+      "rule_id": "T0-attention-head-uniformity",
+      "violated": false,
+      "n_violations": 0,
+      "message": "All attention modules have uniform per-head output l2."
+    },
+    {
+      "rule_id": "T0-checkpoint-preserve-rng",
+      "violated": false,
+      "n_violations": 0,
+      "message": "no checkpoint.call events (rule passive)"
+    },
+    {
+      "rule_id": "T0-clip-grad-bounded",
+      "violated": false,
+      "n_violations": 0,
+      "message": "all 0 clip_grad calls bounded by max_norm"
+    },
+    {
+      "rule_id": "T0-dtype-propagation",
+      "violated": false,
+      "n_violations": 0,
+      "message": "checked 27738 non-cast layer outputs (passive at T0; full join with pre-event is a T1 feature)"
+    },
+    {
+      "rule_id": "T0-evaluator-eval-mode",
+      "violated": false,
+      "n_violations": 0,
+      "message": "all 33165 module fwd events were consistent (no_grad \u21d2 eval mode, or grad \u21d2 train mode)"
+    },
+    {
+      "rule_id": "T0-grad-norm-finite",
+      "violated": false,
+      "n_violations": 0,
+      "message": "all 200 optim.step.pre events have finite non-zero grad norm"
+    },
+    {
+      "rule_id": "T0-initial-lr-present",
+      "violated": false,
+      "n_violations": 0,
+      "message": "no scheduler.init events (rule passive)"
+    },
+    {
+      "rule_id": "T0-build-has-modules",
+      "violated": false,
+      "n_violations": 0,
+      "message": "build snapshot has parameters and modules (1 snapshots)"
+    },
+    {
+      "rule_id": "T0-loss-per-token-dispersion",
+      "violated": false,
+      "n_violations": 0,
+      "message": "All loss.call events have bounded per-token dispersion."
+    },
+    {
+      "rule_id": "T0-loss-reduction-mode-correct",
+      "violated": true,
+      "n_violations": 50,
+      "message": "201 loss calls with non-'mean' reduction"
+    },
+    {
+      "rule_id": "T0-module-grad-output-alive",
+      "violated": false,
+      "n_violations": 0,
+      "message": "All parameter-bearing modules have non-zero grad_output."
+    },
+    {
+      "rule_id": "T0-no-nan-inf",
+      "violated": false,
+      "n_violations": 0,
+      "message": "no NaN/Inf detected"
+    },
+    {
+      "rule_id": "T0-norm-output-unit-rms",
+      "violated": true,
+      "n_violations": 21,
+      "message": "21 normalizer outputs have abnormal RMS"
+    },
+    {
+      "rule_id": "T0-optim-lr-positive",
+      "violated": false,
+      "n_violations": 0,
+      "message": "all 1 param_groups have positive lr"
+    },
+    {
+      "rule_id": "T0-optim-step-counter-monotonic",
+      "violated": false,
+      "n_violations": 0,
+      "message": "state['step'] monotonic across 200 optim.step events"
+    },
+    {
+      "rule_id": "T0-param-update-applied",
+      "violated": false,
+      "n_violations": 0,
+      "message": "All optim.step.post events show param updates were applied."
+    },
+    {
+      "rule_id": "T0-softmax-degenerate",
+      "violated": false,
+      "n_violations": 0,
+      "message": "checked 0 softmax/router outputs, none degenerate"
+    },
+    {
+      "rule_id": "T0-token-id-in-vocab",
+      "violated": false,
+      "n_violations": 0,
+      "message": "all 200 dataloader batches within sanity range"
+    },
+    {
+      "rule_id": "T1-buffer-replica-cksum-equal",
+      "violated": false,
+      "n_violations": 0,
+      "message": "no buffers in a >1-rank replica group (rule passive; 0 buffers in total)"
+    },
+    {
+      "rule_id": "T1-comm-dtype-matches-training",
+      "violated": false,
+      "n_violations": 0,
+      "message": "no training_dtype declared in any framework_invariants block (rule passive)"
+    },
+    {
+      "rule_id": "T1-expert-bias-fp32",
+      "violated": false,
+      "n_violations": 0,
+      "message": "no router with expert_bias observed (rule passive)"
+    },
+    {
+      "rule_id": "T1-fwd-output-block-uniformity",
+      "violated": true,
+      "n_violations": 3,
+      "message": "3 block-level fwd output outlier(s)"
+    },
+    {
+      "rule_id": "T1-grad-flow-block-uniformity",
+      "violated": true,
+      "n_violations": 1,
+      "message": "1 block-level grad-flow outlier(s)"
+    },
+    {
+      "rule_id": "T1-grad-replica-cksum-equal",
+      "violated": false,
+      "n_violations": 0,
+      "message": "all 0 replica grads consistent across replica group"
+    },
+    {
+      "rule_id": "T1-jitter-preserves-dtype",
+      "violated": false,
+      "n_violations": 0,
+      "message": "no jitter.probe events (rule passive)"
+    },
+    {
+      "rule_id": "T1-layer-count-strict",
+      "violated": false,
+      "n_violations": 0,
+      "message": "no declared num_layers (rule passive)"
+    },
+    {
+      "rule_id": "T1-multi-backward-per-step-fragile-config",
+      "violated": false,
+      "n_violations": 0,
+      "message": "1 step(s) have multiple root-forward passes (steps: [0]...); no fragile DeepSpeed offload+ga=1 config declared in build.snapshot \u2014 pattern is benign here."
+    },
+    {
+      "rule_id": "T1-process-group-size-correct",
+      "violated": false,
+      "n_violations": 0,
+      "message": "all 0 parallelism groups have correct size"
+    },
+    {
+      "rule_id": "T1-replica-cksum-equal",
+      "violated": false,
+      "n_violations": 0,
+      "message": "all 0 replica params consistent across replica group"
+    },
+    {
+      "rule_id": "T1-residual-stream-preserved",
+      "violated": false,
+      "n_violations": 0,
+      "message": "no residual blocks observed (rule passive)"
+    },
+    {
+      "rule_id": "T1-router-has-calculate-per-token-loss",
+      "violated": false,
+      "n_violations": 0,
+      "message": "--calculate-per-token-loss not enabled (rule N/A)"
+    },
+    {
+      "rule_id": "T1-sqrt-decay-front-loaded",
+      "violated": false,
+      "n_violations": 0,
+      "message": "only 0 decay.probe events (rule passive)"
+    }
+  ]
+}
