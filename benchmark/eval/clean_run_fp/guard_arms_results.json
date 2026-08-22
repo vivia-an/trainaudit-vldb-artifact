@@ -1,0 +1,144 @@
+[
+ {
+  "run": "dp2_fsdp_long_r1",
+  "n_dbs": 2,
+  "n_events": 221754,
+  "n_ranks": 2,
+  "arms": {
+   "full": {
+    "T0-loss-reduction-mode-correct": "402 loss calls with non-'mean' reduction",
+    "T0-norm-output-unit-rms": "41 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/399 transitions",
+    "T1-fwd-output-block-uniformity": "3 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "1 block-level grad-flow outlier(s)"
+   },
+   "no_topo": {
+    "T0-loss-reduction-mode-correct": "402 loss calls with non-'mean' reduction",
+    "T0-norm-output-unit-rms": "41 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/399 transitions",
+    "T1-fwd-output-block-uniformity": "3 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "1 block-level grad-flow outlier(s)"
+   },
+   "no_precond": {
+    "T0-loss-reduction-mode-correct": "402 loss calls with non-'mean' reduction",
+    "T0-norm-output-unit-rms": "32078 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/399 transitions",
+    "T1-comm-dtype-matches-training": "128 comm op(s) used dtype != declared training_dtype (bfloat16)",
+    "T1-expert-bias-fp32": "66330 router(s) have non-fp32 expert_bias",
+    "T1-fwd-output-block-uniformity": "4 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "2 block-level grad-flow outlier(s)",
+    "T1-multi-backward-per-step-fragile-config": "1 step(s) have multiple root-forward passes (steps: [0]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "39396/66330 residual blocks (l2-fallback): output closer to normed than to input"
+   }
+  }
+ },
+ {
+  "run": "dp8_ddp_r1",
+  "n_dbs": 8,
+  "n_events": 1227896,
+  "n_ranks": 8,
+  "arms": {
+   "full": {
+    "T0-loss-reduction-mode-correct": "1608 loss calls with non-'mean' reduction",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 7/1599 transitions",
+    "T0-param-update-applied": "1600 optim.step events with frozen/un-updated params",
+    "T1-fwd-output-block-uniformity": "3 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "1 block-level grad-flow outlier(s)"
+   },
+   "no_topo": {
+    "T0-loss-reduction-mode-correct": "1608 loss calls with non-'mean' reduction",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 7/1599 transitions",
+    "T0-param-update-applied": "1600 optim.step events with frozen/un-updated params",
+    "T1-fwd-output-block-uniformity": "3 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "1 block-level grad-flow outlier(s)"
+   },
+   "no_precond": {
+    "T0-loss-reduction-mode-correct": "1608 loss calls with non-'mean' reduction",
+    "T0-norm-output-unit-rms": "227698 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 7/1599 transitions",
+    "T0-param-update-applied": "1600 optim.step events with frozen/un-updated params",
+    "T1-comm-dtype-matches-training": "504 comm op(s) used dtype != declared training_dtype (bfloat16)",
+    "T1-expert-bias-fp32": "393960 router(s) have non-fp32 expert_bias",
+    "T1-fwd-output-block-uniformity": "4 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "2 block-level grad-flow outlier(s)",
+    "T1-multi-backward-per-step-fragile-config": "1 step(s) have multiple root-forward passes (steps: [0]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "234768/393960 residual blocks (l2-fallback): output closer to normed than to input"
+   }
+  }
+ },
+ {
+  "run": "dp8_fsdp_r1",
+  "n_dbs": 8,
+  "n_events": 1311528,
+  "n_ranks": 8,
+  "arms": {
+   "full": {
+    "T0-loss-reduction-mode-correct": "1608 loss calls with non-'mean' reduction",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 7/1599 transitions",
+    "T1-fwd-output-block-uniformity": "3 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "1 block-level grad-flow outlier(s)"
+   },
+   "no_topo": {
+    "T0-loss-reduction-mode-correct": "1608 loss calls with non-'mean' reduction",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 7/1599 transitions",
+    "T1-fwd-output-block-uniformity": "3 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "1 block-level grad-flow outlier(s)"
+   },
+   "no_precond": {
+    "T0-loss-reduction-mode-correct": "1608 loss calls with non-'mean' reduction",
+    "T0-norm-output-unit-rms": "225450 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 7/1599 transitions",
+    "T1-comm-dtype-matches-training": "512 comm op(s) used dtype != declared training_dtype (bfloat16)",
+    "T1-expert-bias-fp32": "393960 router(s) have non-fp32 expert_bias",
+    "T1-fwd-output-block-uniformity": "4 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "2 block-level grad-flow outlier(s)",
+    "T1-multi-backward-per-step-fragile-config": "1 step(s) have multiple root-forward passes (steps: [0]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "234768/393960 residual blocks (l2-fallback): output closer to normed than to input"
+   }
+  }
+ },
+ {
+  "run": "ep2_dp4_moe_r1",
+  "n_dbs": 8,
+  "n_events": 0,
+  "n_ranks": 0,
+  "arms": {
+   "full": {},
+   "no_topo": {},
+   "no_precond": {}
+  }
+ },
+ {
+  "run": "smoke_r0",
+  "n_dbs": 2,
+  "n_events": 6628,
+  "n_ranks": 2,
+  "arms": {
+   "full": {
+    "T0-loss-reduction-mode-correct": "12 loss calls with non-'mean' reduction",
+    "T0-norm-output-unit-rms": "12 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/9 transitions",
+    "T1-fwd-output-block-uniformity": "2 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "1 block-level grad-flow outlier(s)"
+   },
+   "no_topo": {
+    "T0-loss-reduction-mode-correct": "12 loss calls with non-'mean' reduction",
+    "T0-norm-output-unit-rms": "12 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/9 transitions",
+    "T1-fwd-output-block-uniformity": "2 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "1 block-level grad-flow outlier(s)"
+   },
+   "no_precond": {
+    "T0-loss-reduction-mode-correct": "12 loss calls with non-'mean' reduction",
+    "T0-norm-output-unit-rms": "692 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/9 transitions",
+    "T1-comm-dtype-matches-training": "10 comm op(s) used dtype != declared training_dtype (bfloat16)",
+    "T1-expert-bias-fp32": "1980 router(s) have non-fp32 expert_bias",
+    "T1-fwd-output-block-uniformity": "3 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "2 block-level grad-flow outlier(s)",
+    "T1-multi-backward-per-step-fragile-config": "1 step(s) have multiple root-forward passes (steps: [0]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "1176/1980 residual blocks (l2-fallback): output closer to normed than to input"
+   }
+  }
+ }
+]

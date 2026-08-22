@@ -108,6 +108,9 @@ fi
 run "the recorded multi-rank clean-run FP results are intact" \
     python3 benchmark/eval/clean_run_fp_multirank.py --check
 
+run "the recorded guard-arm results hold their invariants" \
+    python3 benchmark/eval/guard_arms_multirank.py --check
+
 # A script under test may write into the tree; surface that rather than let it reach a commit.
 if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
   dirty=$(git status --porcelain -- benchmark core experiments 2>/dev/null | wc -l)

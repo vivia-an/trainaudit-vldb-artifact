@@ -12,8 +12,12 @@ shipped rule sets. A topology guard predicates on cross-rank structure; with one
 there is no replica group to compare against, so dropping the guard cannot change any
 verdict. If it does, the guard is entangled with something other than topology.
 
-The 2-rank runs act as a positive control: there the guard CAN matter, so a nonzero
-delta is expected and its absence would mean the guard is inert.
+The 2-rank runs here are NOT a usable positive control, and the first version of this
+script wrongly treated them as one. Each rank is a separate DuckDB file and this script
+opens them one at a time, so a rule that compares ranks within a replica group has only
+one rank in front of it and can never fire -- the empty delta is forced by the harness,
+not measured. `guard_arms_multirank.py` does the control properly, by merging a run's
+ranks into one store first. Read the invariant below as the only claim this script makes.
 
 This does NOT reproduce the paper's 25.8/83.3 FP/1M -- that needs the authors'
 ablation_s2_results.csv. It tests the mechanism those numbers rest on.
