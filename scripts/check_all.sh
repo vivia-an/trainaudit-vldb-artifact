@@ -54,6 +54,8 @@ run "guard ablation, recomputed without the duplicated-rank databases" \
     python3 benchmark/injection/recompute_ablation_clean.py
 run "temporal pattern-coverage holdout" \
     python3 benchmark/eval/temporal_pattern_holdout.py
+run "predicate necessity across the 392-record corpus" \
+    python3 benchmark/eval/predicate_necessity.py
 run "main.tex's appendix references all resolve" \
     python3 paper/check_appendix_refs.py
 # the .sha256 names a bare filename, so it has to be checked from its own directory

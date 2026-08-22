@@ -672,3 +672,21 @@ Favourable to the paper, and stated with three limits the script prints itself: 
 not detection; the `pattern_id` labels were assigned with the whole corpus in view, so
 hindsight inflates it by an unknown amount; and the split confounds with framework (O22 —
 OLMo 69/5, OLMo-core 5/63).
+
+### 2026-08-22 — iteration 25: an unused corpus dimension supports §4.2
+Looked for other re-aggregations by reading what the annotations actually record.
+`minimum_sufficient_layer` turned out to be one, and the paper never cites it: per bug, which
+of the three predicates a deployable check needs.
+
+Of the 326 records carrying a judgement (66 have none): **286 (87.7%) need all three**, 38
+(11.7%) work with π_schema alone, 2 need π_schema+π_topo. The π_schema-only exceptions cluster
+in `value_equality` (18 of 160), `completeness` (5 of 40), `monotonic` (5 of 13),
+`value_range` (5 of 23).
+
+§4.2 argues the decomposition is necessary and supports it by construction. This is 326
+independent codings agreeing, available at no experimental cost — and it names the exception
+rather than claiming universality, which is the stronger form of the argument.
+
+Caveat the script prints: it records that an annotator judged all three necessary, not that a
+two-predicate version was built and measured firing. The measured form of that claim is
+§5.3's ablation. **O39.** Now check group 12.
