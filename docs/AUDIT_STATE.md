@@ -690,3 +690,32 @@ rather than claiming universality, which is the stronger form of the argument.
 Caveat the script prints: it records that an annotator judged all three necessary, not that a
 two-predicate version was built and measured firing. The measured form of that claim is
 §5.3's ablation. **O39.** Now check group 12.
+
+### 2026-08-23 — iteration 26: three hookpoint vocabularies, none matching
+Continued reading what the annotations record. `check_stage` turned out to be checkable
+against a design claim: §4.4 says the collector reaches "the 8 hookpoints used by the
+verifier's indexer".
+
+Laid three vocabularies side by side (`benchmark/eval/hookpoint_coverage.py`):
+
+| source | distinct values |
+|---|---:|
+| §4.4's description | 8 |
+| corpus `check_stage` | 11 |
+| collector `hookpoint`, from the events traces | **13** |
+
+- The collector emits four the paper never mentions: `functional.softmax`, `loss.call`,
+  `dataloader.batch`, `jitter.probe`.
+- It has **one** backward tap (`module.bwd`) where §4.4 names two points.
+- The corpus's `init` stage — **56 records, 14%** — has no dedicated hookpoint in either
+  list; `build.snapshot` is nearest and fires once per run.
+- **77 of 392 records (20%)** name a stage with no counterpart in §4.4's list.
+
+Not a functional gap — the taps plausibly do the work — but §4.4 is exactly the passage a
+reviewer checks against the code, and the number "8" does not survive that check. **O40**,
+check group 13. The script states its corpus→paper correspondence explicitly so it can be
+argued with rather than trusted.
+
+Also: the heredoc for that script initially landed in the paper checkout, because the shell
+cwd had moved there. Moved it out and confirmed `git status` in the paper repo is clean —
+the instruction is not to touch that repo.
