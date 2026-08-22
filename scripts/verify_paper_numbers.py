@@ -157,6 +157,27 @@ def check_funnel():
               want, got.get(layer), rel)
 
 
+# ---------------------------------------------------------------- 4a. funnel provenance
+def check_funnel_provenance():
+    """funnel_counts.csv is a per-stage total. a1_funnel.csv is the per-framework breakdown it
+    came from, so the two should agree stage by stage — an independent path to the same numbers."""
+    src = EVAL / "rebuttal_v1" / "A1_mining_funnel" / "a1_funnel.csv"
+    if not src.exists():
+        return
+    rel = src.relative_to(ROOT)
+    stage_map = {"L1 Hypothesis": "L1", "L2 Enumerated": "L2",
+                 "L3 Healthy-pass": "L3", "L4 Adversarial-pass": "L4"}
+    totals = EVAL / "funnel_counts.csv"
+    want = {x["layer"]: int(x["n_candidates"]) for x in rows(totals)} if totals.exists() else {}
+    for r in rows(src):
+        layer = stage_map.get(r["stage"])
+        if not layer or layer not in want:
+            continue
+        per_fw = sum(int(r[k]) for k in r if k != "stage")
+        check(f"funnel {layer} summed over the four frameworks",
+              "Sec 5.3, against funnel_counts.csv", want[layer], per_fw, rel)
+
+
 # ---------------------------------------------------------------- 4b. funnel ablation arms
 def check_funnel_arms():
     src = EVAL / "funnel_skip_l3_results.csv"
@@ -285,7 +306,7 @@ def main():
     args = ap.parse_args()
 
     for fn in (check_realse, check_detection, check_baselines, check_funnel,
-               check_funnel_arms, check_guard_ablation, check_db_baselines, check_overhead, check_unbacked):
+               check_funnel_provenance, check_funnel_arms, check_guard_ablation, check_db_baselines, check_overhead, check_unbacked):
         try:
             fn()
         except Exception as exc:                                  # noqa: BLE001

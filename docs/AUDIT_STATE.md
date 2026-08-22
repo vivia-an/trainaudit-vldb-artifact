@@ -991,3 +991,24 @@ Two iterations ago I wrote the rule "assume a shipped script may write" after th
 of mistake, and then ran this one straight against the artifact anyway. The rule was right and
 I did not follow it. What would actually have caught it: run write-capable scripts against a
 copy, and check `git status` immediately after — not at commit time.
+
+### 2026-08-23 — iteration 37: the funnel now has a provenance chain
+With `A1_mining_funnel` assembled, `a1_funnel.csv` — the per-framework breakdown that
+`paper_table_funnel.md` cites and my doc audit had flagged missing — is available. It sums
+exactly to the published funnel:
+
+| stage | megatron | deepspeed | olmo | olmo-core | total | paper |
+|---|---:|---:|---:|---:|---:|---:|
+| L1 hypothesis | 121 | 103 | 99 | 97 | 420 | 420 |
+| L2 enumerated | 1300 | 1397 | 1300 | 1337 | 5334 | 5334 |
+| L3 healthy-pass | 992 | 680 | 899 | 865 | 3436 | 3436 |
+| L4 adversarial-pass | 104 | 83 | 81 | 89 | 357 | 357 |
+
+Until now the funnel could only be checked against `funnel_counts.csv`, which is itself the
+derived total. This is an independent, finer-grained source agreeing exactly, so the funnel
+has a real provenance chain rather than one file restating a number. Added as three checks in
+`verify_paper_numbers.py`, now **37 verified**.
+
+`a1_summary.json` goes further still, down to per-pattern seed files (`P1_dtype` from
+`megatron/core/optimizer/distrib_optimizer.py`: L1 3, L2 58, L3 50, and so on) — the level at
+which a reviewer could audit how a template turned into candidates.
