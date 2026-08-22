@@ -66,6 +66,8 @@ run "what the diagnosis files do and do not contain" \
     python3 benchmark/eval/diagnosis_data_audit.py
 # The shipped run scripts carry the absolute paths of the machines they ran on. They are left
 # that way on purpose; localize_paths.sh rewrites them into a copy. Check it still covers them.
+run "adapter sizes against fig:portability_matrix" \
+    python3 benchmark/eval/adapter_loc.py
 run "the trainaudit package imports and its tests pass" \
     bash -c 'cd core/trainaudit_pkg && PYTHONPATH=. python3 -m pytest tests -q 2>&1 | tail -1'
 run "shipped scripts can be localized to another workspace" \

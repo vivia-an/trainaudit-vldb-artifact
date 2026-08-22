@@ -928,3 +928,25 @@ implementation**, just as none exists in the data.
 That makes O43 considerably firmer: the 53%, the median of 6, the peak of 12 and the 1→6→1
 trajectory come from neither the shipped data nor the shipped code. `diagnosis_c1_demo.py`
 reproduces this in one command.
+
+### 2026-08-23 — iteration 35: an adapter label is double the code
+`fig:portability_matrix` labels each framework with an adapter cost, and that is the one
+column of `paper_v2/portability.csv` matching the figure — so it reads as the trustworthy part
+of an otherwise unbacked table (O17). With the implementation now shipped it is directly
+countable.
+
+| framework | figure | total lines | code lines |
+|---|---:|---:|---:|
+| Megatron-LM | 150 | 190 | 164 |
+| DeepSpeed | 50 | 42 | 31 |
+| OLMo | 150 | 133 | 103 |
+| **OLMo-core** | **150** | **73** | **61** |
+| FSDP | 30 | 35 | 26 |
+
+Four are within a reasonable rounding either way. **OLMo-core's label is 2.1× the file** on
+either count. Checked that nothing per-framework lives outside `adapters/` — no other file is
+named for a framework — so this is the integration cost the figure means. `base.py` (114
+lines) is shared and attributed to none.
+
+It matters more than its size because the adapters now ship: any reviewer can run
+`wc -l`. **O47**, check group 19.
