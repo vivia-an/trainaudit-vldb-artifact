@@ -64,6 +64,12 @@ run "is the SQL barrier the property shape or the guard?" \
     python3 benchmark/eval/expressibility_vs_guard.py
 run "what the diagnosis files do and do not contain" \
     python3 benchmark/eval/diagnosis_data_audit.py
+# The shipped run scripts carry the absolute paths of the machines they ran on. They are left
+# that way on purpose; localize_paths.sh rewrites them into a copy. Check it still covers them.
+run "shipped scripts can be localized to another workspace" \
+    bash -c 'd=$(mktemp -d); bash scripts/localize_paths.sh --base /tmp/ws --out "$d" \
+             | tail -2; rm -rf "$d"'
+
 run "main.tex's appendix references all resolve" \
     python3 paper/check_appendix_refs.py
 # the .sha256 names a bare filename, so it has to be checked from its own directory

@@ -800,3 +800,26 @@ regenerable from the unchanged sources with `pdflatex -shell-escape main.tex` ×
 `bibtex`.
 
 Rule from here: build only in a scratch copy, never in the paper checkout.
+
+### 2026-08-23 — iteration 30: the corpus-rebuild script cannot run anywhere
+Kept running shipped scripts. Two results.
+
+**`silent_evidence_rate.py` is clean.** It runs, reproduces the 392 total (96 + 32 + 263 + 1
+across the source pools), and rewrites `silent_evidence_392.json` and
+`silent_evidence_warnings.csv` **byte-identically** — `git status` stayed clean, so those
+shipped files are current and genuinely reproducible.
+
+**`build_392_catalog.py` crashes on line 95.** It hardcodes
+`ROOT = Path('/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025')` — a different user's
+workspace. `app:method-reproducibility` tells reviewers to rebuild the corpus with exactly
+this script.
+
+Scanning the runnable scripts, that is not isolated: **157 of 177 `/volume/...` references in
+`benchmark/` and `core/` name roots that exist on none of the machines involved** —
+`/volume/qscai/lsk` (107 refs, 44 files), `/volume/qscai/cqs` (49, 33), `/volume/pt-train`
+(1); only 20 point here. The 40 `pretrain_inject_*.sh` drivers are in that set.
+
+Fixed without damaging the record: `scripts/localize_paths.sh --base DIR --out DIR2` rewrites
+all 83 affected files into a copy, verified to leave no `/volume` reference, with the
+originals untouched as the record of what actually ran. Silently rewriting 60+ shipped scripts
+would have made them runnable at the cost of no longer being evidence. **O44**, check group 17.
