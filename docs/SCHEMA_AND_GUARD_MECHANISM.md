@@ -230,6 +230,31 @@ reviewer is the mechanism, measurable, on a run they can download.
 Not published: `rebuttal_v1/C1_overhead_gpu/` (several GB of overhead runs) — it backs no
 number that `benchmark/injection/overhead_h20.csv` does not already cover.
 
+## Why `fig:tier-coverage` cannot be rebuilt from the corpus
+
+The corpus does record, per bug, which trace fields a check would need
+(`v2_full/annotations_392_v2.json`, `required_trace_fields`) — so in principle the tier
+coverage curve could be recomputed by mapping each record's fields onto the paper's S0–S6
+tiers. It cannot, for a measurable reason:
+
+| | count |
+|---|---:|
+| distinct `required_trace_fields` names in the corpus | **675** |
+| field names in the paper's `tab:trace-schema` | 19 |
+| exact matches between them | 12 |
+| field *occurrences* covered by the paper's vocabulary | 244 / 1157 (**21%**) |
+| records whose required fields are **all** in the paper's vocabulary | **4 / 392** |
+
+The corpus names fields at a much finer grain than the schema table — `param_checksum`,
+`module_class`, `tp_world_size`, `bf16_enabled`, `loss_scale` and 670 others against the
+table's `cksum, param_name, ranks, step, stage, dtype, shape, grad_norm, grad_cksum,
+loss_value, learning_rate, micro_step_id, optimizer_state_cksum, ep/cp_rank, zero_stage,
+has_nan/inf, num_tokens`.
+
+Any mapping bridging the two would be mostly invented, and a curve built on it would look
+like the figure without being it. The authors necessarily hold that mapping, having drawn the
+figure; publishing it, or the figure's source data, is the only way to close O16.
+
 ## An independent measurement of the guard's effect
 
 O21's run — the six-case, 504K-evaluation set behind 25.8 → 83.3 FP/1M — is not in the

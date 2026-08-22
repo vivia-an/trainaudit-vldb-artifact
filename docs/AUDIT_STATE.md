@@ -642,3 +642,13 @@ Answered it from the shipped per-cell data by re-aggregating with those four dro
 rather than overturning the conclusion, and it needs a sentence in §5.3 plus the corrected
 aggregate — not a re-capture and re-run. That takes the audit's highest-priority item off the
 critical path.
+
+**O16 pinned down as far as it goes.** The corpus records `required_trace_fields` per bug, so
+the tier-coverage curve looked reconstructible by mapping fields onto S0–S6. Measured, it is
+not: **675 distinct field names against the 19 in `tab:trace-schema`**, overlapping 21% by
+occurrence, and only **4 of 392** records have all their required fields in the paper's
+vocabulary. The corpus names fields far more finely (`param_checksum`, `module_class`,
+`tp_world_size`, `bf16_enabled`, …). Any bridge I built would be mostly invented and would
+produce a curve that resembles the figure without being it — so I did not build one. The
+authors hold the mapping, having drawn the figure; publishing it or the figure's source data
+is the only fix.
