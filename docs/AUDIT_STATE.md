@@ -719,3 +719,24 @@ argued with rather than trusted.
 Also: the heredoc for that script initially landed in the paper checkout, because the shell
 cwd had moved there. Moved it out and confirmed `git status` in the paper repo is clean —
 the instruction is not to touch that repo.
+
+### 2026-08-23 — iteration 27: the corpus declares its own uncertainty
+`borderline_flags` is on every record and the paper never mentions it. 220 of 392 (56.1%)
+carry one — but summing them is wrong, and the wrong number is the dangerous one here.
+
+Three distinct meanings:
+
+| class | records | what it means |
+|---|---:|---|
+| scope declaration (`SOURCE_ONLY_DETECTION`, `EXCEEDS_TIER6`) | 131 (33.4%) | facts about detectability, not doubt about the coding |
+| **coding ambiguity** (`PATTERN_AMBIGUOUS_*`, `CATEGORY_AMBIGUOUS_*`) | **97 (24.7%)** | the annotator could not decide between two labels |
+| weak evidence (`INFERRED_FROM_SPARSE_CONFIG`) | 16 (4.1%) | |
+
+So the reliability figure is **24.7%**, not 56%. It is *consistent* with the paper's reported
+κ=0.566 on a 50-record subset — both say moderately reliable — which makes reporting it
+nearly free. And separating the classes changes where the problem is: naively, `data_loading`
+looks 93% borderline; on ambiguity alone it is 29%, while `control_flow` (39%), `offload`
+(38%) and `dtype` (36%) lead.
+
+The argument for reporting it is defensive: the flags are in a file that ships, and a hostile
+reading quotes the 56%. **O41**, check group 14.
