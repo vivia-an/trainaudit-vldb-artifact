@@ -903,3 +903,28 @@ Mapping the 27 through the corpus and splitting on `min_tier == T0_PYTORCH` give
 
 Nothing reconciles them, so **O17 stays with O16**: it needs the authors' data. Recorded as a
 negative result rather than dropped, so the same attempt is not repeated.
+
+### 2026-08-23 — iteration 34: the diagnosis metric is in neither the data nor the code
+O43 established that no shipped data file holds a candidate-set cardinality. With
+`trainaudit_pkg` now assembled, the same question can be put to the implementation.
+
+`trainaudit/diagnosis/` is the C1+C2 chain: `expander.py` (deterministic C1), `rca_agent.py`
+(C2, with a stub LLM client), `cross_rank_outlier.py`, `report.py`. Ran C1 on a real
+events-schema trace (`megatron_moe`):
+
+```
+report fields: rule_id, violation_event_id, hookpoint, suspect_rank, suspect_step, hypothesis
+context_events: 0
+cardinality-like fields: NONE
+hypothesis: "replica param diverged across the replica group (2-rank tie — both are
+             suspect); init likely went through the wro…"
+```
+
+So C1 produces a **located suspect with a deterministic hypothesis** — which is a real
+capability and matches the paper's qualitative description — but not a candidate set that
+shrinks from |S_rule| to |S_C1| to |S_C2|. **No cardinality field exists in the
+implementation**, just as none exists in the data.
+
+That makes O43 considerably firmer: the 53%, the median of 6, the peak of 12 and the 1→6→1
+trajectory come from neither the shipped data nor the shipped code. `diagnosis_c1_demo.py`
+reproduces this in one command.
