@@ -880,3 +880,26 @@ I could not find earlier may be reconstructible from the rule modules themselves
 
 This is the third component found missing by running something rather than reading it, after
 the verifier package (O24) and the compiled SQL (O23).
+
+### 2026-08-23 — iteration 33: the O46 lead does not pan out
+Tried reconstructing `fig:portability_matrix`'s A0/A1 columns from the newly-assembled rule
+registry, since `tiers.py`'s T0/T1 are exactly those two layers.
+
+No rule declares a framework. The only available link is `evidence_bugs`, and that field turns
+out to be heterogeneous: of 40 references across the 32 registered rules, **27 are corpus bug
+IDs and 13 are not** — theme labels (`sanity` ×3, `mining-pipeline` ×3, `loss-function-class`
+×2, `attention-correctness`, `optimizer-state-drift`) and hunting candidates (`CAND_MEGATRON_
+CUDAGRAPH_BUFFER_CORRUPTION`, `CAND_DEEPSPEED_ZERO_OFFLOAD_MULTI_BACKWARD`,
+`CAND_OLMOCORE_EVAL_NOZEROGRAD`).
+
+Mapping the 27 through the corpus and splitting on `min_tier == T0_PYTORCH` gives
+
+| framework | reconstructed A0/A1 | figure |
+|---|---|---|
+| Megatron-LM | 3 / 6 | 1 / 5 |
+| DeepSpeed | 1 / 2 | 2 / 3 |
+| OLMo | 4 / 1 | 3 / 3 |
+| OLMo-core | 3 / 1 | 4 / 2 |
+
+Nothing reconciles them, so **O17 stays with O16**: it needs the authors' data. Recorded as a
+negative result rather than dropped, so the same attempt is not repeated.
