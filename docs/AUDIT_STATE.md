@@ -652,3 +652,23 @@ vocabulary. The corpus names fields far more finely (`param_checksum`, `module_c
 produce a curve that resembles the figure without being it — so I did not build one. The
 authors hold the mapping, having drawn the figure; publishing it or the figure's source data
 is the only fix.
+
+### 2026-08-22 — iteration 24: O7 partially answered; O17 classed with O16
+Sorted the remaining gaps by whether they are **re-aggregations of recorded facts** (doable) or
+**inventions of missing premises** (not).
+
+**O17 is an invention.** The `mining_baseline_result_*.json` files record per-*source-module*
+funnel counts (ds_clipgrad, ds_grad, ds_scheduler, megatron_router, olmo_block), not
+per-framework mined/reused/failed. Nothing sums to the figure's cells under any reading, and
+`hookpoint_matrix.csv` is pattern-level. Classed with O16: needs the authors' data.
+
+**O7 is partly a re-aggregation.** The corpus records `pattern_id` per bug and
+`temporal_split.json` has the dated split, so `temporal_pattern_holdout.py` can ask whether
+post-cutoff bugs belong to pattern families already present pre-cutoff. At the median cutoff
+(2025-03-14, 186/188): **8 families pre-cutoff, 1 test-only (P2), and 186 of 188 post-cutoff
+records (98.9%) in an already-present family.**
+
+Favourable to the paper, and stated with three limits the script prints itself: it is coverage
+not detection; the `pattern_id` labels were assigned with the whole corpus in view, so
+hindsight inflates it by an unknown amount; and the split confounds with framework (O22 —
+OLMo 69/5, OLMo-core 5/63).
