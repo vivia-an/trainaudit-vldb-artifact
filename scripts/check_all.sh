@@ -60,6 +60,8 @@ run "hookpoint vocabularies: paper vs corpus" \
     python3 benchmark/eval/hookpoint_coverage.py
 run "the corpus's own declared coding uncertainty" \
     python3 benchmark/eval/coding_uncertainty.py
+run "is the SQL barrier the property shape or the guard?" \
+    python3 benchmark/eval/expressibility_vs_guard.py
 run "main.tex's appendix references all resolve" \
     python3 paper/check_appendix_refs.py
 # the .sha256 names a bare filename, so it has to be checked from its own directory

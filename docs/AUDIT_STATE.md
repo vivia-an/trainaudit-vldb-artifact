@@ -740,3 +740,27 @@ looks 93% borderline; on ambiguity alone it is 29%, while `control_flow` (39%), 
 
 The argument for reporting it is defensive: the flags are in a file that ships, and a hostile
 reading quotes the 56%. **O41**, check group 14.
+
+### 2026-08-23 — iteration 28: a stronger form of the paper's own baseline argument
+Last unexploited annotation dimension was `invariant_type` — the *shape* of each correctness
+property. It happens to be the right axis for `tab:db-baselines`, since whether a check is
+hand-writable in SQL depends on the property's shape, not on which subsystem it belongs to.
+
+Crossed it against `minimum_sufficient_layer`:
+
+| property shape | π_schema only | +π_topo | +π_topo+π_precond | n/a | total |
+|---|---:|---:|---:|---:|---:|
+| SQL-shaped | 35 | 2 | 280 | 17 | **334** |
+| not SQL-shaped | 3 | 0 | 6 | 49 | 58 |
+
+**334 of 392 (85%) are ordinary SQL shapes** — equality, range, ordering, presence — and of
+the 317 judged, **282 (89%) need a guard beyond π_schema**.
+
+So the corpus says the barrier is the guard, not SQL expressiveness. That is precisely §5.2's
+mechanism argument, now with 317 coded records behind it instead of a category-counting bound.
+
+And it exposes a weakness in the current framing: "at most 3 of 13 classes" assigns one SQL
+idiom to one category, while in the corpus `cross_rank_equality` alone spans **11 of the 13**,
+`value_range` 9, `monotonic` 4. A reviewer holding the same shipped file can argue Manual SQL
+reaches far more than 3 classes. The guard-based statement has no such opening — it is both
+truer to the data and harder to attack. **O42**, check group 15.
