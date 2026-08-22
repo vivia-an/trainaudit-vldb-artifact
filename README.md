@@ -37,7 +37,7 @@ scripts/          check_all.sh (every offline check), fetch_trace_dbs.sh, build_
 ```bash
 pip install duckdb            # the only third-party package the checks need
 
-bash scripts/check_all.sh                          # all nine offline check groups
+bash scripts/check_all.sh                          # all eleven offline check groups
 python3 core/run_smoke.py                          # offline pipeline smoke
 python3 core/scripts/reproduce_funnel_counts.py    # funnel 420 -> 5334 -> 3436 -> 357 -> 45
 (cd core/config && sha256sum -c frozen_template_catalog.sha256)   # names a bare filename
@@ -91,7 +91,7 @@ the commits named in the manifest; see
 Everything offline, in one command:
 
 ```bash
-bash scripts/check_all.sh                            # 9 offline check groups
+bash scripts/check_all.sh                            # 11 offline check groups
 bash scripts/check_all.sh --traces DIR --events DIR2 # + the trace-dependent checks
 ```
 
@@ -123,6 +123,12 @@ four-arm guard ablation 342→429/551/598, the two measured DB-baseline false-po
 rates, and every value of `tab:overhead`. It also
 reports the claims the shipped data does *not* support, and flags two files that score
 superseded case sets — see `benchmark/eval/DETECTION_FILES_NOTE.md`.
+
+Two of the groups are experiments rather than checks, both re-aggregating recorded data:
+`recompute_ablation_clean.py` redoes the guard ablation with the four duplicated-rank
+databases excluded (336 < 420 < 527 < 570, the published ordering intact), and
+`temporal_pattern_holdout.py` measures how many post-cutoff bugs belong to a pattern family
+already present pre-cutoff (186 of 188). Both print their own limits.
 
 `verify_figures.py` covers the other direction. Most figure generators hard-code their
 values, so a plot can drift from its data silently; this lifts the numbers back out of the
