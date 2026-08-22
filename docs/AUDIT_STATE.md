@@ -977,8 +977,17 @@ outright: *"annotator: Claude Opus, computer-science PhD-level"*. Its prefilled 
 human rater A is entirely unfilled (O43), the diagnosis evidence rests on LLM annotation plus
 one human rater — worth disclosing wherever diagnosis accuracy is reported.
 
-**`funnel_skip_stress.py` progress.** With the package and `A1_mining_funnel` in place and the
-paths localized, it gets from `ModuleNotFoundError` to running all three steps against the
-published events traces. Its cohort summaries still come out empty — it wants upstream
-mining-stage inputs that are not wired up — so it is closer to runnable, not yet reproducing
-the funnel numbers.
+**`funnel_skip_stress.py` progress, and damage I caused.** With the package and
+`A1_mining_funnel` in place and the paths localized, it gets from `ModuleNotFoundError` to
+running all three steps against the published events traces. Its cohorts still come out empty
+— it wants upstream mining-stage inputs that are not wired up.
+
+**And it writes.** Running it overwrote `funnel_skip_l3_results.csv` and
+`funnel_skip_l4_results.csv` with its empty output, which broke two check groups — I pushed a
+red suite at `65bb057` before noticing. Restored both from the preceding commit (401 and 7,687
+rows) and the suite is green again at 19 groups.
+
+Two iterations ago I wrote the rule "assume a shipped script may write" after the same class
+of mistake, and then ran this one straight against the artifact anyway. The rule was right and
+I did not follow it. What would actually have caught it: run write-capable scripts against a
+copy, and check `git status` immediately after — not at commit time.

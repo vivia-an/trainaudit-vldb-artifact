@@ -105,6 +105,15 @@ else
   printf 'TAG=trace-events-v2 scripts/fetch_trace_dbs.sh)\n'
 fi
 
+# A script under test may write into the tree; surface that rather than let it reach a commit.
+if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
+  dirty=$(git status --porcelain -- benchmark core experiments 2>/dev/null | wc -l)
+  if [ "$dirty" -gt 0 ]; then
+    printf '\n!! %s data file(s) under benchmark/ core/ experiments/ differ from HEAD.\n' "$dirty"
+    printf '   A script that writes may have overwritten shipped data — check `git status`.\n'
+  fi
+fi
+
 printf '\n%s\n' "----------------------------------------"
 printf '%d check group(s) passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
