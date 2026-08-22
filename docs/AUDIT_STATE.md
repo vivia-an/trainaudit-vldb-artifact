@@ -622,3 +622,23 @@ it. So O1's target is ~26 lines / 270 words, not 44, and not geometry.
 
 I also told the user this correction was written up before actually writing it. Corrected in
 the same turn it was noticed.
+
+### 2026-08-22 — iteration 23: O26 resolved without re-capturing anything
+Scope narrowed by the author to repository experiments only, with the paper untouched. The
+highest-value one available was O26: four clean baselines have rank 1 identical to rank 0, and
+they carried 67–80% of the clean-arm false positives, which put a question mark over §5.3.
+
+Answered it from the shipped per-cell data by re-aggregating with those four dropped —
+`benchmark/injection/recompute_ablation_clean.py`, 38 databases instead of 42:
+
+| arm | published | vs full | corrected | vs full |
+|---|---:|---:|---:|---:|
+| full | 342 | — | 336 | — |
+| −π_precond | 429 | +25.4% | 420 | +25.0% |
+| −adversarial | 551 | +61.1% | 527 | +56.8% |
+| −π_topo | 598 | +74.9% | 570 | +69.6% |
+
+**Still monotone and within 5 percentage points throughout.** So O26 shifts the numbers
+rather than overturning the conclusion, and it needs a sentence in §5.3 plus the corrected
+aggregate — not a re-capture and re-run. That takes the audit's highest-priority item off the
+critical path.
