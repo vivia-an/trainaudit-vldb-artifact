@@ -846,3 +846,37 @@ directory that held no other file.
 
 Two rules from this, now in `localize_paths.sh`'s header: **point `--base` at a scratch copy,
 never a workspace you care about**, and assume a shipped script may write.
+
+### 2026-08-23 — iteration 32: the paper's implementation was not in the artifact
+Ran more shipped scripts, in a sandbox this time. Three failed identically:
+`ModuleNotFoundError: No module named 'trainaudit'`.
+
+`trainaudit/` is a **172-module, 2.3 MB Python package** in the sibling checkout that I had
+never assembled — the DSL, mining layers, rule implementations, diagnosis chain and verifier.
+Everything shipped so far was `sdccheck`, which is a *different* system: the LLM-orchestrated
+checker used for the guard ablation.
+
+The contrast matters for O23. In `sdccheck` a rule is a specification whose SQL an LLM writes
+at check time, which is why the libraries carry no logic. In `trainaudit` a rule is executable
+Python:
+
+```python
+@rule(rule_id="T0-attention-head-uniformity", min_tier=Tier.T0_PYTORCH, families=["F-NEW"])
+```
+
+and `rules_no_topo/` and `rules_no_precond/` are the two guard-ablation arms **as code**, 34
+modules each against `rules/`'s 34.
+
+Assembled as `core/trainaudit_pkg/` with an `ARTIFACT_NOTE.md` distinguishing the two systems.
+Verified: all 33 rule modules import cleanly, and the package's own suite gives **114 of 124
+passing** — the 10 failures all environmental (six `FileNotFoundError` on original-workspace
+paths, four `ModuleNotFoundError: gen_driver`, which lives in `benchmark/injection/` here).
+Now check group 18. **O45.**
+
+**O46, a lead on O17.** `tiers.py` defines integration tiers `T0_PYTORCH … T4_INSTANCE`, and
+T0/T1 are exactly the "A0 (PyTorch layer) / A1 (framework layer)" columns of
+`fig:portability_matrix`. Every rule declares a `min_tier`, so the per-framework A0/A1 counts
+I could not find earlier may be reconstructible from the rule modules themselves.
+
+This is the third component found missing by running something rather than reading it, after
+the verifier package (O24) and the compiled SQL (O23).

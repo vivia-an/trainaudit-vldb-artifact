@@ -49,6 +49,14 @@ if [ -d "$WS/sdccheck/core_algo" ]; then
   done
   say "requirements split" "checks need duckdb only; mining deps in requirements-mining.txt"
 fi
+# The trainaudit package: the DSL, mining layers, rule implementations, diagnosis chain and
+# verifier that the paper describes. Distinct from sdccheck, which is the LLM-orchestrated
+# checker used for the guard ablation. rules/, rules_no_topo/ and rules_no_precond/ are the
+# three ablation arms as executable code, 34 rules each.
+copytree "$WORK/trainaudit" "$OUT/core/trainaudit_pkg"
+[ -d "$OUT/core/trainaudit_pkg" ] && say "trainaudit package" \
+  "$(find "$OUT/core/trainaudit_pkg" -name '*.py' | wc -l) modules, $(du -sb --apparent-size "$OUT/core/trainaudit_pkg" | cut -f1 | numfmt --to=iec)"
+
 # The runnable verifier itself: `python3 -m sdccheck <trace.db> --constraints-file ...`
 # is what every ablation cell invokes, so without this package nothing in the artifact
 # can actually be executed against a trace.
