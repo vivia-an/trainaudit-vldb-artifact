@@ -823,3 +823,26 @@ Fixed without damaging the record: `scripts/localize_paths.sh --base DIR --out D
 all 83 affected files into a copy, verified to leave no `/volume` reference, with the
 originals untouched as the record of what actually ran. Silently rewriting 60+ shipped scripts
 would have made them runnable at the cost of no longer being evidence. **O44**, check group 17.
+
+### 2026-08-23 — iteration 31: the rebuild works once localized, and it writes
+Localized `build_392_catalog.py` and ran it. **It works** — the crash was purely the
+hardcoded path. Output: step 1 creates 96 configs, step 2 resolves **292/295 into the
+13-class taxonomy (154 by alias map, 138 already classed) with 3 `NEEDS_LLM`**. So the
+corpus rebuild the appendix points at is *not fully deterministic*: three records cannot be
+mapped without an LLM call. Worth stating where the appendix says the corpus is rebuildable.
+
+**Incident, and what I did about it.** I pointed `--base` at the real workspace, so the
+script wrote into the sibling checkout `sdc_llm_icml_2025/`: 96 new `config.json` files under
+`benchmark/bugs/`, and modifications to two *tracked* files, `category_resolved.json` and
+`category_remaining.json`. The appendix gives no warning that its rebuild script has write
+side effects.
+
+Restored to the pre-run state and verified: the two tracked files back to HEAD via
+`git checkout`; the 96 generated files deleted; and the 96 **pre-existing empty directories**
+that my cleanup removed recreated from `pool_overlap.json`'s `only128_ids`. Counts match what
+was there before — 393 entries, 1188 files — and the checkout's git status is back to its
+prior 101 entries. Nothing was overwritten at any point: every generated file landed in a
+directory that held no other file.
+
+Two rules from this, now in `localize_paths.sh`'s header: **point `--base` at a scratch copy,
+never a workspace you care about**, and assume a shipped script may write.

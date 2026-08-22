@@ -16,6 +16,11 @@
 #   bash scripts/localize_paths.sh --base /my/workspace --out /tmp/localized
 #   bash scripts/localize_paths.sh --base /my/workspace --in-place   # if you accept the edit
 #
+# WARNING: several of these scripts WRITE into the base you give them. build_392_catalog.py,
+# for one, creates 96 config.json files under <base>/sdc_llm_icml_2025/benchmark/bugs/ and
+# rewrites category_resolved.json and category_remaining.json. Point --base at a scratch copy,
+# not at a workspace you care about.
+#
 # Under --base BASE, a path like /volume/qscai/lsk/Megatron-LM becomes BASE/Megatron-LM.
 set -euo pipefail
 cd "$(dirname "$0")/.."
