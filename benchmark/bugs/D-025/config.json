@@ -1,0 +1,20 @@
+{
+  "bug_id": "D-025",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "EP group created with num_experts instead of ep_size",
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/7551",
+  "buggy_commit": "533e834b0a4d6400746cd9e09e9188b1f853617f",
+  "fixed_commit": "8cbbbb539dd4195ac6ac733e99269d895526e9cd",
+  "category": "sharding",
+  "severity": "high",
+  "gpu_needed": 0,
+  "root_cause": "_create_ep_parallel_group(config.moe.moe_experts) should be (config.moe.ep_size)",
+  "detection_method": "source_analysis",
+  "invariant": "EP parallel group size must use ep_size, not num_experts",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: EP parallel group size must use ep_size",
+    "fixed": "CLEAN"
+  }
+}

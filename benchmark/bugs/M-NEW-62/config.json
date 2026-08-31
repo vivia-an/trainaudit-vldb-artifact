@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-62",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MambaStack assigns make_viewless_tensor result to local 'output' but returns 'hidden_states', sending a non-viewless aliased tensor between hybrid VPP stages",
+  "fixed_commit": "0911b6dbd5",
+  "buggy_commit": "0911b6dbd5~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/1925",
+  "category": "pipeline",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["PP"],
+  "trigger_conditions": [
+    "Hybrid Mamba model with virtual pipeline parallel (VPP)",
+    "post_process and post_layer_norm both True",
+    "Inter-stage tensor sent via PP isend/irecv"
+  ],
+  "root_cause": "MambaStack.forward stored the result of make_viewless_tensor in a local variable 'output', but the function ultimately returned hidden_states. So the explicit make_viewless_tensor call had no effect. The non-viewless tensor (still a view onto an internal buffer) was returned and forwarded to the next PP stage via isend; on a hybrid VPP schedule the underlying buffer was reused before isend completed, and the next stage received corrupted activations.",
+  "detection_method": "structural_invariant",
+  "invariant": "MambaStack.forward must return a tensor that is viewless (.is_view() == False) so its storage is not aliased with internal stack buffers.",
+  "diff_summary": "Change 'output = make_viewless_tensor(...)' to 'hidden_states = make_viewless_tensor(...)' so the return value is the viewless tensor.",
+  "silent_check": "Returning a view does not raise; downstream PP receives a tensor of correct shape and dtype; only when the source storage gets reused inside the same VPP stage does the next stage observe corrupted floats, with no exception."
+}

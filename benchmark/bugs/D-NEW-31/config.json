@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-31",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO2 round-robin gradient partitioning uses non-reordered group, mapping params to wrong partition owner",
+  "fixed_commit": "b1b41754",
+  "buggy_commit": "b1b41754~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/1274",
+  "category": "sharding",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 2", "round_robin_gradients=True"],
+  "root_cause": "The bookkeeping loop that builds param_to_partition_ids/is_partition_reduced iterated over self.fp16_groups (the original parameter order) even though gradient reduction itself uses self.round_robin_fp16_groups (the reordered list). The partition-owner table therefore disagreed with the actual reduction destination, so some params' gradients were attributed to the wrong owner and never appeared in the optimizer step.",
+  "detection_method": "structural_invariant",
+  "invariant": "param_to_partition_ids must be built from the same parameter ordering that average_tensor / reduce_scatter uses (round_robin_fp16_groups when round_robin_gradients is enabled).",
+  "diff_summary": "Iterate over self.round_robin_fp16_groups instead of self.fp16_groups when populating partition bookkeeping tables in stage2."
+}

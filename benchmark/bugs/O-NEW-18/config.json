@@ -1,0 +1,20 @@
+{
+  "bug_id": "O-NEW-18",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Restart LR/weight-decay reset uses cfg.learning_rate for every param group, ignoring per-group muP scaling",
+  "fixed_commit": "9b02f7d4",
+  "buggy_commit": "9b02f7d4~1",
+  "category": "lr_schedule",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "muP enabled (MuAdamW)",
+    "training resumes from a checkpoint",
+    "param groups have different muP width multipliers"
+  ],
+  "root_cause": "On restart Trainer.restore_checkpoint reset every group's lr/initial_lr/weight_decay to cfg.optimizer.learning_rate / cfg.optimizer.weight_decay. With muP, matrix-like groups have lr divided by width_mult, so this reset wiped out muP scaling and used the base LR for every group. The fix tags each muP group with mup_lr/mup_weight_decay and uses those when resetting.",
+  "detection_method": "value_invariant",
+  "invariant": "after restart, group['lr'] for a muP matrix-like group equals cfg.lr / width_mult, not cfg.lr",
+  "diff_summary": "MuAdamW now stores group_name/mup_lr/mup_weight_decay on each split group; restore_checkpoint and step_optimizer use group['mup_lr']/group['initial_lr'] when computing the new LR"
+}

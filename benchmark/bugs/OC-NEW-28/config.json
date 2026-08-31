@@ -1,0 +1,20 @@
+{
+  "bug_id": "OC-NEW-28",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Mamba.forward casts inputs using cached self.dtype — wrong dtype after FSDP wraps the conv1d weight",
+  "fixed_commit": "2f4f4ed4",
+  "buggy_commit": "2f4f4ed4~1",
+  "category": "dtype",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "Mamba sequence mixer wrapped in FSDP / FSDP2",
+    "Mixed-precision params (e.g., bf16 weights, fp32 cast targets)"
+  ],
+  "root_cause": "Mamba.forward used self.dtype (snapshot at construction time) to cast x. After FSDP wrapped the inner conv1d, the actual parameter dtype changed but self.dtype was stale, so x flowed into the kernel in the wrong precision. The MambaSSM kernel still ran but produced silently wrong values.",
+  "detection_method": "dtype_invariant",
+  "invariant": "Activation dtype entering Mamba.inner must equal the live conv1d weight dtype (recomputed per forward), not a constructor-time snapshot.",
+  "diff_summary": "Recompute dtype = self.inner.conv1d.weight.dtype inside forward and cast x to that live dtype."
+}

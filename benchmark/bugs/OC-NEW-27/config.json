@@ -1,0 +1,20 @@
+{
+  "bug_id": "OC-NEW-27",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "MultiGroupDistributedDataParallel falls back to default group when dist is unavailable but never wires per-bucket grad reduce",
+  "fixed_commit": "fd58838b",
+  "buggy_commit": "fd58838b~1",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": [
+    "MoE training with MultiGroupDistributedDataParallel",
+    "MoE-shaped parameters require per-bucket grad reduction with view-based storage"
+  ],
+  "root_cause": "MoE-style parameters were reduced one-by-one through the existing DDP path, missing the view-based bucket optimization that batches grads of the same dtype/process_group into a single all-reduce. Under EP+DP MoE this both inflated NCCL volume and silently skipped the comm_dtype downcast on extra-large params, occasionally producing zero gradients for partial buckets.",
+  "detection_method": "function_call_counting",
+  "invariant": "Under MoE DDP each parameter's gradient must participate in exactly one all-reduce per step, with comm_dtype matching the configured bucket dtype.",
+  "diff_summary": "Add a _GradBucket dataclass and rewrite MultiGroupDistributedDataParallel to coalesce per-process-group same-dtype grads into bucketed all-reduce."
+}

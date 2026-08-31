@@ -1,0 +1,1 @@
+{"bug_id":"OC-NEW-6","framework":"olmo-core","repo":"allenai/OLMo-core","title":"Sliding window size off-by-one — window 1 token too small","fixed_commit":"a2f9f010","buggy_commit":"a2f9f010~1","category":"attention","severity":"medium","gpu_needed":0}

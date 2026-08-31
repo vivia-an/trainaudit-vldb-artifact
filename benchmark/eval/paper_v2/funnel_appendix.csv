@@ -1,0 +1,8 @@
+kind,name,n,rate,note
+funnel_layer,L1,420,1.00,pattern hypotheses from PatternGuidedLLM (sum over 4 frameworks: megatron=121 deepspeed=103 olmo=99 olmo_core=97)
+funnel_layer,L2,5334,12.70,parameter enumeration (L2/L1; sum: megatron=1300 deepspeed=1397 olmo=1300 olmo_core=1337)
+funnel_layer,L3,3436,0.6442,healthy-pass on clean Megatron/DeepSpeed/OLMo trace (sum: megatron=992 deepspeed=680 olmo=899 olmo_core=865)
+funnel_layer,L4,357,0.1039,adversarial-pass (Layer4 verifier) (sum: megatron=104 deepspeed=83 olmo=81 olmo_core=89)
+funnel_layer,Deploy,45,0.1261,human-curated cross-framework rules (32 T0/T1 Python + 13 dsl_native YAML)
+skip_stress,skip_l3,400,0.2850,114/400 fired on independent clean traces
+skip_stress,skip_l4,7686,0.0000,0/7686 fired on same-framework cross-trace; L4 rejects are mainly workload-specific

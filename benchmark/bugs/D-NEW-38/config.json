@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-38",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Sparse gradients silently not updating — SparseTensor wraps .data instead of param.grad",
+  "fixed_commit": "b8ff4825",
+  "buggy_commit": "b8ff4825~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/1914",
+  "category": "data_processing",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["module produces sparse gradients (e.g. nn.Embedding(sparse=True))", "DP > 1"],
+  "root_cause": "In _get_gradients_for_reduction, the sparse-gradient branch wrapped `param.grad.data` into a SparseTensor: `grad_data = SparseTensor(grad_data)`. Because Python re-bound the local name and never wrote back into param.grad, the post-allreduce updated values were stored on a temporary SparseTensor that had no link to the parameter — the sparse embedding gradients were silently dropped.",
+  "detection_method": "value_invariant",
+  "invariant": "After buffered_allreduce_fallback, param.grad of a sparse-gradient parameter must reflect the all-reduced values (non-zero where local grad was non-zero).",
+  "diff_summary": "Construct SparseTensor from param.grad (not param.grad.data) so the SparseTensor wrapper retains a write path back to the parameter."
+}

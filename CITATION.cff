@@ -1,0 +1,52 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "TrainAudit: Silent Error Detection for LLM Training via Verified Guarded Relational Constraints"
+type: software
+version: "1.0.1"
+date-released: 2026-09-01
+repository-code: "https://github.com/vivia-an/trainaudit-vldb-artifact"
+url: "https://github.com/vivia-an/trainaudit-vldb-artifact"
+license: MIT
+authors:
+  - given-names: Qingsong
+    family-names: Cai
+    affiliation: Sichuan University
+  - given-names: Shikai
+    family-names: Li
+    affiliation: West China Hospital, Sichuan University
+  - given-names: Zhengmao
+    family-names: Ye
+    affiliation: Sichuan University
+  - given-names: Mingjie
+    family-names: Tang
+    affiliation: Sichuan University
+  - given-names: Ran
+    family-names: Tao
+    affiliation: iQuest Lab
+  - given-names: Bryan
+    family-names: Dai
+    affiliation: iQuest Lab
+keywords:
+  - silent errors
+  - distributed training
+  - relational constraints
+  - data quality
+preferred-citation:
+  type: article
+  title: "TrainAudit: Silent Error Detection for LLM Training via Verified Guarded Relational Constraints"
+  authors:
+    - given-names: Qingsong
+      family-names: Cai
+    - given-names: Shikai
+      family-names: Li
+    - given-names: Zhengmao
+      family-names: Ye
+    - given-names: Mingjie
+      family-names: Tang
+    - given-names: Ran
+      family-names: Tao
+    - given-names: Bryan
+      family-names: Dai
+  year: 2026
+  journal: "Proceedings of the VLDB Endowment"
+  notes: "Under review."

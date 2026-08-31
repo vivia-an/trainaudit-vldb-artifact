@@ -1,0 +1,20 @@
+{
+  "bug_id": "D-026",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "MoE gradient scaling divides by ipg_bucket_has_moe_params when it shouldn't",
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/4957",
+  "buggy_commit": "7fb5bade3e57c0acd126a5e9e871fc28d569b931",
+  "fixed_commit": "9d2660d2a3fac767972f01ac96858b2605ffc0e4",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 0,
+  "root_cause": "divide=self.ipg_bucket_has_moe_params incorrectly divides MoE grads by bucket count",
+  "detection_method": "source_analysis",
+  "invariant": "MoE gradient scaling must use divide=False",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: MoE gradient scaling must use divide=False",
+    "fixed": "CLEAN"
+  }
+}

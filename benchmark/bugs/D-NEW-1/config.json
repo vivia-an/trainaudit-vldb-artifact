@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-1",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "TopKGate applies topk to logits instead of post-softmax gates",
+  "buggy_commit": "853c9389~1",
+  "fixed_commit": "853c9389",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 0,
+  "root_cause": "torch.topk(logits, k) selects experts from raw logits, not softmax probabilities",
+  "detection_method": "source_analysis",
+  "invariant": "topk must be applied to gates (post-softmax), not logits (pre-softmax)",
+  "reproduction_status": "reproduced"
+}

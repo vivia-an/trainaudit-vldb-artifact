@@ -1,0 +1,11 @@
+{
+  "bug_id": "O-006",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "start_index not reset in data loader",
+  "category": "data_loading",
+  "root_cause": "global_step not reset to 0 when restore_dataloader=False",
+  "detection_method": "config_invariant",
+  "invariant": "When restore_dataloader=False, global_step must be reset to 0",
+  "reproduction_status": "reproduced"
+}

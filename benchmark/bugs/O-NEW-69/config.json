@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-69",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Ladder script uses eos_token_id=0 instead of dolma tokenizer's 50279",
+  "fixed_commit": "32a68cd8",
+  "buggy_commit": "32a68cd8~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/661",
+  "category": "tokenizer/eos_token",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["FSDP", "DP"],
+  "trigger_conditions": [
+    "scripts/ladder.py used to build the 150M model config",
+    "Dolma/GPT-NeoX tokenizer (eos_token_id=50279)"
+  ],
+  "root_cause": "`MODEL_CONFIG_150M` hard-coded `eos_token_id=0` even though the dolma GPT-NeoX tokenizer uses 50279 for end-of-document. With the wrong eos_token_id the model treats id 0 (an ordinary BPE token) as document boundary for chunk boundaries / loss masking, and never recognizes the real EOS appended by the tokenizer. Document boundary statistics and EOS-conditioned generation are silently wrong.",
+  "detection_method": "config_value_check",
+  "invariant": "model.eos_token_id must equal tokenizer.eos_token_id (50279 for dolma GPT-NeoX)",
+  "diff_summary": "Change MODEL_CONFIG_150M.eos_token_id from 0 to 50279",
+  "silent_check": "0 is a valid token id (it exists in the vocabulary), so embedding lookups and loss masking accept it without raising; the model just trains with the wrong EOS semantics."
+}

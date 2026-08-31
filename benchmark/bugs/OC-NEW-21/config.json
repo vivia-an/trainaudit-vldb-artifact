@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-21",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Config encoding ignores field.init=False — non-init dataclass fields silently round-trip with stale values",
+  "fixed_commit": "a6221e1f",
+  "buggy_commit": "a6221e1f~1",
+  "category": "checkpoint",
+  "severity": "medium",
+  "gpu_needed": 0,
+  "trigger_conditions": [
+    "Config dataclass uses @dataclass with field(init=False) for derived fields",
+    "Config is serialized via Config.as_dict and re-decoded"
+  ],
+  "root_cause": "Config.as_dict iterated dataclasses.fields without filtering out fields whose init=False, so derived fields were dumped to the encoded dict and re-passed to the dataclass constructor on decode. Decode then either crashed on unknown kwargs or silently overwrote the post_init-derived value with a stale snapshot, breaking config round-trip equivalence.",
+  "detection_method": "structural_invariant",
+  "invariant": "Encoded Config dict must contain only fields whose .init is True; decoding then re-encoding must be a fixed point.",
+  "diff_summary": "In Config.iter_fields, skip fields where not field.init in addition to the existing exclude_set check."
+}

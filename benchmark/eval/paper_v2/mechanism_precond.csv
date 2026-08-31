@@ -1,0 +1,3 @@
+setting,clean_traces,total_violations,delta_vs_full,rules_with_delta_gt0,worst_rule,worst_rule_delta,source
+full,30,3546,0,0,,0,benchmark/eval/ablation_s2_results.csv
+minus_pi_precond,30,980209,976663,8,T1-expert-bias-fp32,698572,benchmark/eval/ablation_s2_results.csv

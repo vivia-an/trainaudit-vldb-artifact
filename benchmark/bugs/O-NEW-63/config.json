@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-63",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "DeepSpeed scheduler set to WarmupLR instead of WarmupDecayLR (no decay phase)",
+  "fixed_commit": "cb3d5cfd",
+  "buggy_commit": "cb3d5cfd~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/118",
+  "category": "scheduler/learning_rate",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": [
+    "DeepSpeedTrainer in use (configs ending in -lumi-deepspeed.yaml etc.)",
+    "Long enough training that decay matters"
+  ],
+  "root_cause": "DeepSpeedTrainer built its DeepSpeed config with `\"scheduler\": {\"type\": \"WarmupLR\", ...}`. WarmupLR only ramps up to the max LR and then holds it constant—it never decays. The intended schedule was WarmupDecayLR which ramps then linearly decays. Buggy training therefore runs at peak LR for the entire post-warmup duration, silently overshooting the planned schedule.",
+  "detection_method": "lr_schedule_shape_check",
+  "invariant": "After warmup, learning rate must be monotonically decreasing toward warmup_min_lr; not constant",
+  "diff_summary": "Set scheduler type to WarmupDecayLR for the DeepSpeed config",
+  "silent_check": "Both WarmupLR and WarmupDecayLR are valid DeepSpeed scheduler types; engine accepts the config and steps; LR just plateaus instead of decaying."
+}

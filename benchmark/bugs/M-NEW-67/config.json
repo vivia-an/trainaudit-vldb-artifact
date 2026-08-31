@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-67",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MegatronOptimizer.get_grads_for_norm checks fsdp_param BEFORE precision-aware-optimizer branch, so M-FSDP + precision-aware optimizer reads param.grad._local_tensor instead of decoupled_grad and computes the wrong norm",
+  "fixed_commit": "a52ceeb5c5",
+  "buggy_commit": "a52ceeb5c5~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/3746",
+  "category": "optimizer",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["FSDP", "DP"],
+  "trigger_conditions": [
+    "Megatron-FSDP enabled (params have __fsdp_param__ flag)",
+    "use_precision_aware_optimizer_no_fp8_or_ds_fp8 enabled (decoupled grads)",
+    "Gradient clipping with grad norm computation"
+  ],
+  "root_cause": "MegatronOptimizer.get_grads_for_norm gated on getattr(param, '__fsdp_param__', False) FIRST and only fell back to the precision-aware decoupled_grad branch when not an FSDP param. With both flags on, FSDP parameters were always read via param.grad._local_tensor instead of param.decoupled_grad. Under precision-aware optimizer, param.grad is None or stale because gradients are written into param.decoupled_grad. The grad norm computation thus used wrong (likely zero) tensors, silently disabling clipping and giving an incorrect global norm for logging.",
+  "detection_method": "config_invariant",
+  "invariant": "When config.use_precision_aware_optimizer_no_fp8_or_ds_fp8 is True, get_grads_for_norm must use param.decoupled_grad (with ._local_tensor when also __fsdp_param__) and never use param.grad.",
+  "diff_summary": "Reorder branches in get_grads_for_norm: take the precision-aware decoupled_grad path first; if also __fsdp_param__, additionally extract decoupled_grad._local_tensor.",
+  "silent_check": "Reading None or zero from param.grad does not raise; grads_for_norm just contains the wrong values; clip_grad_norm proceeds and returns a wrong scalar; training continues with mis-clipped or unclipped gradients."
+}

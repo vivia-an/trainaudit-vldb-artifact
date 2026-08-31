@@ -1,0 +1,20 @@
+{
+  "bug_id": "O-NEW-29",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Optimizer metric tensors are kept on CPU, causing per-rank cross-device mismatch on the all_reduce path",
+  "fixed_commit": "144ae91a",
+  "buggy_commit": "144ae91a~1",
+  "category": "gradient_sync",
+  "severity": "medium",
+  "gpu_needed": 8,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "distributed training (FSDP/DDP)",
+    "optimizer metric collection enabled"
+  ],
+  "root_cause": "per_param_min/max/sum/norm tensors were appended without explicit device, defaulting to CPU. The subsequent dist.all_reduce was then performed on CPU tensors while NCCL only supports GPU tensors; this either silently used the gloo backend (different reduction semantics, slower) or returned partially-reduced values when ranks ended up on different devices. Fix forces all metric tensors to the GPU device.",
+  "detection_method": "structural_invariant",
+  "invariant": "every tensor passed to dist.all_reduce/dist.reduce in clip_grads_and_collect_metrics must reside on the CUDA device, not CPU",
+  "diff_summary": "appended .to(device=device, dtype=torch.float32) (and dtype/device kwargs to torch.linalg.vector_norm) to all per_param metric tensors before they are concatenated and reduced"
+}

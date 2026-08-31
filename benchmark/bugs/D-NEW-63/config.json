@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-63",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "CPUAdam IncrementStep non-idempotent across same-step subgroup updates — bias-correction drifts between subgroups",
+  "fixed_commit": "44c51e34",
+  "buggy_commit": "44c51e34~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/7982",
+  "category": "optimizer",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["DeepSpeedCPUAdam (cpu_offload optimizer)", "ZeRO-3 with sub_group_size > 0 OR SuperOffload (multiple subgroup optimizer calls per logical step)"],
+  "root_cause": "Adam_Optimizer::IncrementStep first did `_step++; if (_step != step) { recompute betta1_t/betta2_t with pow }` else `_betta1_t *= _betta1`. ZeRO-3 calls IncrementStep once per subgroup with the SAME logical `step` value. The first subgroup call increments _step to match, takes the multiplicative branch (betta_t *= betta). The second subgroup call also increments _step (now _step != step), so it falls through to the pow-recompute branch which computes pow(betta, step) — a different floating-point value than the just-multiplied one (catastrophic cancellation in pow vs repeated multiply). So subgroup 0 and subgroup 1 see different betta1_t when applying the same logical Adam step → updated weights drift apart between subgroups.",
+  "detection_method": "value_invariant",
+  "invariant": "Repeated calls to step_subgroup(step=k) for different subgroups must produce bit-identical bias-correction coefficients (betta1_t, betta2_t).",
+  "diff_summary": "Restructure IncrementStep into three explicit cases: step == _step (no-op early return), step == _step+1 (multiplicative update), else (pow recompute).",
+  "silent_check": "Buggy CPUAdam runs to completion and updates parameters with valid finite values; the bias-correction error is on the order of float-precision differences between pow(b,k) and b*b*...*b. No assert; only manifests as cross-subgroup parameter inconsistency that grows with training."
+}

@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-2",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Attention causal mask inverted — future tokens attend to past",
+  "fixed_commit": "6c4b8e1548f55ad1f3e638693c26de9ee932829f",
+  "buggy_commit": "6c4b8e15~1",
+  "category": "attention",
+  "severity": "critical",
+  "gpu_needed": 0,
+  "root_cause": "1 - triu() masks the lower triangle instead of upper, inverting causal attention",
+  "detection_method": "runtime_check",
+  "invariant": "In causal attention, position 0 should only attend to itself (avg attended index = 0)"
+}

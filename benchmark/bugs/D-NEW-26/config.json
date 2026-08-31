@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-26",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO3 quantized_nontrainable_weights flag overwrites quantized_weights instead",
+  "fixed_commit": "60bf7845",
+  "buggy_commit": "60bf7845~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/4399",
+  "category": "control_flow",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3", "zero_quantized_nontrainable_weights=True in config", "constructor caller did not pass zero_quantized_nontrainable_weights explicitly"],
+  "root_cause": "In zero.Init.__init__, when the deepspeed config has zero_quantized_nontrainable_weights=True but the local kwarg is False, the code mistakenly assigns the value to self.quantized_weights instead of self.quantized_nontrainable_weights — a copy-paste typo. Trainable weights end up being quantized while the nontrainable weights stay full precision (the opposite of what was requested).",
+  "detection_method": "config_invariant",
+  "invariant": "After zero.Init, self.quantized_nontrainable_weights must equal config.zero_quantized_nontrainable_weights.",
+  "diff_summary": "Replace `self.quantized_weights = ...` with `self.quantized_nontrainable_weights = ...` on the misassigned line."
+}

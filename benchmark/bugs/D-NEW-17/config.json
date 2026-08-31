@@ -1,0 +1,1 @@
+{"bug_id":"D-NEW-17","framework":"deepspeed","repo":"microsoft/DeepSpeed","title":"Loss double-scaling in backward — scale_if_loss applied to gas_scaled_loss","fixed_commit":"0bf92ccd","buggy_commit":"0bf92ccd~1","category":"loss_scaling","severity":"high","gpu_needed":2}

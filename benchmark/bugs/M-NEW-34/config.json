@@ -1,0 +1,21 @@
+{
+  "bug_id": "M-NEW-34",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE local_indices wrong via fancy indexing on bool mask when topk > 1",
+  "fixed_commit": "254c87400",
+  "buggy_commit": "254c87400~1",
+  "category": "moe",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["EP"],
+  "trigger_conditions": [
+    "MoE BaseMoELayer dispatch path",
+    "moe_router_topk > 1",
+    "expert_parallel_size > 1"
+  ],
+  "root_cause": "BaseMoELayer used local_indices = global_indices[global_local_map] (fancy indexing). For 2-D global_indices with topk>1, advanced indexing collapses dimensions in a way that breaks the (token, expert_slot) layout, resulting in tokens being routed to the wrong experts on each EP rank. masked_select preserves the correct flat ordering.",
+  "detection_method": "value_invariant",
+  "invariant": "local_indices.shape must equal global_local_map.sum() and the values must be the masked-selected entries of global_indices in row-major order.",
+  "diff_summary": "Replaced 'global_indices[global_local_map]' with 'global_indices.masked_select(global_local_map)' (and similarly for local_probs) in BaseMoELayer."
+}

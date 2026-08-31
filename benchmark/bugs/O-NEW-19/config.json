@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-19",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "OLMoBlock 'normal' init divides ff_out by sqrt(2*n_layers), shrinking it 1/sqrt(2L) below the configured init_std",
+  "fixed_commit": "23906669",
+  "buggy_commit": "23906669~1",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 0,
+  "trigger_conditions": [
+    "init_fn = normal",
+    "model has more than one layer"
+  ],
+  "root_cause": "In the 'normal' init branch ff_out.weight was further divided by sqrt(2 * n_layers) after init_normal, supposedly to compensate for it being a residual layer. This left the per-row std much smaller than the configured init_std and broke equivalence with the full_megatron path. Fix removes the post-init divisor and unifies the std/cutoff_factor selection across init_fn variants.",
+  "detection_method": "value_scaling_check",
+  "invariant": "for init_fn=normal the std of OLMoBlock.ff_out.weight at initialization should equal config.init_std (within sampling noise), not config.init_std / sqrt(2*n_layers)",
+  "diff_summary": "removed the `with torch.no_grad(): self.ff_out.weight.div_(math.sqrt(2 * self.config.n_layers))` post-init divisor; refactored to compute attn_out_std/ff_out_std/cutoff_factor up front and call init_normal once"
+}

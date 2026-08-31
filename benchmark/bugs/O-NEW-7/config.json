@@ -1,0 +1,1 @@
+{"bug_id":"O-NEW-7","framework":"olmo","repo":"allenai/OLMo","title":"Wrong layer initialized — ff_out instead of ff_proj (variable name typo)","fixed_commit":"930fb1f4","buggy_commit":"930fb1f4~1","category":"initialization","severity":"high","gpu_needed":0}

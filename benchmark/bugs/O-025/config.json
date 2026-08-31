@@ -1,0 +1,11 @@
+{
+  "bug_id": "O-025",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Integer overflow when tracking global flops",
+  "category": "numerical",
+  "root_cause": "global_train_flops: int overflows after ~107K steps for 7B models",
+  "detection_method": "value_invariant",
+  "invariant": "global flops tracking must use float to avoid overflow",
+  "reproduction_status": "reproduced"
+}

@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-33",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "NumpyDataLoaderBase double-counts tokens_processed — counter advances both inside and outside the iterator",
+  "fixed_commit": "eae4f4c0",
+  "buggy_commit": "eae4f4c0~1",
+  "category": "metric_tracking",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Resume from checkpoint that used the same data loader",
+    "Trainer also increments tokens_processed externally"
+  ],
+  "root_cause": "NumpyDataLoaderBase incremented self.tokens_processed += self.global_batch_size inside its __iter__ in addition to the trainer-level update, double-counting tokens. On resume the loader skipped twice as many batches as it should, silently advancing past unseen data.",
+  "detection_method": "function_call_counting",
+  "invariant": "tokens_processed must increase by exactly global_batch_size per yielded batch, not 2x.",
+  "diff_summary": "Remove the redundant self.tokens_processed += self.global_batch_size line inside NumpyDataLoaderBase.__iter__."
+}

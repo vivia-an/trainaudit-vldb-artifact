@@ -1,0 +1,21 @@
+{
+  "bug_id": "M-NEW-23",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Distributed optimizer expert grad scaling wrong when TP != expert-TP",
+  "fixed_commit": "4f8974a40",
+  "buggy_commit": "4f8974a40~1",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["TP", "EP", "DP"],
+  "trigger_conditions": [
+    "MoE training",
+    "expert_tensor_parallel_size != tensor_model_parallel_size",
+    "average_in_collective=True"
+  ],
+  "root_cause": "expert_gradient_scaling_factor was set to 1/ep_size, which only correctly normalized when DP equaled EDP (expert data parallel). When DP != EDP (e.g., TP != ETP makes EDP differ from DP), the resulting averaged-in-collective gradient was scaled by 1/(ep_size*edp_size) instead of 1/dp_size, silently changing effective learning rate for expert params.",
+  "detection_method": "value_scaling_check",
+  "invariant": "Effective post-reduce expert gradient scale must equal 1/dp_size, regardless of EP and ETP values.",
+  "diff_summary": "Changed expert_gradient_scaling_factor from 1.0/ep_size to edp_size/dp_size in DistributedDataParallel."
+}

@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-59",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Flex attention not upcast to fp32 — precision mismatch with SDPA backend",
+  "fixed_commit": "23d6b19a",
+  "buggy_commit": "23d6b19a~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/23d6b19a",
+  "category": "attention",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["AttentionBackend = flex_attn", "bf16 training"],
+  "root_cause": "Flex attention was called directly on bf16 q/k/v while SDPA's reference path runs the matmul/softmax in fp32. The bf16-only flex path silently produced lower-precision attention outputs that diverge from the SDPA path used by tests, causing different loss trajectories between the two backends.",
+  "detection_method": "constraint:attention_backend_parity",
+  "invariant": "When flex_attention is the chosen backend, q/k/v must be upcast to fp32 inside an autocast(disabled) block to match SDPA's full-precision behavior, then the result cast back to og_dtype.",
+  "diff_summary": "Cast q,k,v to .float() before flex_attention call inside torch.autocast(enabled=False); cast result back to og_dtype.",
+  "silent_check": "Buggy flex_attention call returns finite bf16 outputs without raising — the model trains, just with bf16-precision attention math that quietly drifts from the validated SDPA reference."
+}

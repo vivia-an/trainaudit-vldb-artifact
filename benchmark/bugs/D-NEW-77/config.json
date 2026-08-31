@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-77",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO++ secondary partition copy not synchronized — prefetch all-gather reads garbage",
+  "fixed_commit": "4578c249",
+  "buggy_commit": "4578c249~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/5216",
+  "category": "communication",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3 with hierarchical ZeRO++ (zero_hpz_partition_size > 1)", "stage3 prefetching enabled (default)", "any forward/backward step that triggers 2nd-tensor allgather before the 2nd-tensor partition copy completes"],
+  "root_cause": "_partition_param_sec issued an asynchronous device-to-device copy from the full param into ds_secondary_tensor (via .narrow(...).copy_()) but never recorded a stream-synchronization at the end. The next allgather of ds_secondary_tensor (launched by the prefetch coordinator) could be enqueued before the copy completed. Because both ops live on the same device but on different streams, the reader stream sees pre-copy contents — a stale fragment of the previous step's secondary tensor — and broadcasts it; the constructed full parameter is a mix of new values for the master partition and stale values for everyone else's secondary partition.",
+  "detection_method": "structural_invariant",
+  "invariant": "After _partition_param_sec, get_accelerator().current_stream().synchronize() must complete before any consumer of param.ds_secondary_tensor (e.g. _all_gather_dtype) is enqueued.",
+  "diff_summary": "Append `get_accelerator().current_stream().synchronize()` after the ds_secondary_tensor copy_; also flatten the if-else copy logic into one branch using `min(numel-start, partition_size)`.",
+  "silent_check": "Both ops complete normally; just out of order. The reduced/all-gathered tensor is finite and well-shaped, only its values mix old and new state. Loss curve diverges from the reference but no exception is raised."
+}

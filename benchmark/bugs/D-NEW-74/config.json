@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-74",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO-3 NVMe optimizer offload writes all ranks' tensors to one shared dir — last writer wins, load gets wrong rank's state",
+  "fixed_commit": "e37c37ac",
+  "buggy_commit": "e37c37ac~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/7613",
+  "category": "checkpointing",
+  "severity": "critical",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3", "nvme optimizer offload (zero_nvme_offload_optimizer)", "save_checkpoint OR load_checkpoint with multi-rank DP"],
+  "root_cause": "save_checkpoint and load_checkpoint copied the entire NVMe swap_folder under `<save_dir>/<tag>/offloaded_tensors/` without per-rank subdir. With dp_size>1, every rank's local NVMe optimizer state (Adam exp_avg, exp_avg_sq slices) gets copied into the same destination directory; rsync/copytree overwrites file-by-file. The resulting checkpoint contains an arbitrary mix of per-rank slices. On load, every rank reads back the same files, so each rank initializes its optimizer state from another rank's slice → optimizer momenta no longer correspond to the parameters they belong to.",
+  "detection_method": "structural_invariant",
+  "invariant": "After save_checkpoint, the on-disk path for NVMe-offloaded optimizer tensors must be unique per DP rank (e.g. .../offloaded_tensors/rank<r>/...).",
+  "diff_summary": "Compute rank_dir = 'rank' + dp_index_to_str(rank); join offload_ckpt_dir with rank_dir in both save_checkpoint and load_checkpoint code paths; also gate the load_zero_checkpoint call by `not self.zero_nvme_offload_optimizer()` so NVMe path takes its own load route.",
+  "silent_check": "copytree succeeds (last writer wins is a normal filesystem operation), torch.load on the wrong file returns a valid tensor of the right shape (all ranks' partitions are same shape under ZeRO-3), and optimizer.step uses these wrong moments without any exception. Loss after resume diverges silently."
+}

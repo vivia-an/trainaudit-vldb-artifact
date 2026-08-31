@@ -1,0 +1,14 @@
+{
+  "bug_id": "OC-NEW-2",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Adam step counter not incremented — bias correction permanently wrong",
+  "fixed_commit": "2b6cf996",
+  "buggy_commit": "2b6cf996~1",
+  "category": "optimizer",
+  "severity": "high",
+  "gpu_needed": 0,
+  "root_cause": "step.add_(step_factor) was commented out in adamw_step",
+  "detection_method": "runtime_check",
+  "invariant": "optimizer state step must increment each training step"
+}

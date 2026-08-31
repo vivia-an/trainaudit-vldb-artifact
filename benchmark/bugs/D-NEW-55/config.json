@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-55",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO 1/2 expert gradients pre-divide by edp_world_size then skip the bucket-level divide — net divisor is dp/edp not dp",
+  "fixed_commit": "b647fb24",
+  "buggy_commit": "b647fb24~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/6546",
+  "category": "moe",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": ["MoE layers present", "ZeRO stage 1 or 2", "ep_size != dp_size"],
+  "root_cause": "When the IPG bucket contains MoE params, average_tensor pre-divides each expert grad by dist.get_world_size(expert_dp_process_group)/sp_size and then skips the bucket-final divide by dist.get_world_size(dp_process_group)/sp_size. This was meant to handle the smaller EP group but it never compensates for the dp/ep ratio. The expert grad is then all-reduced over expert_dp_process_group; the final reduced value equals (sum over edp ranks)/edp_world_size — but the model's effective DP world for expert grads is dp_world_size, so the proper averaging factor should be dp_world_size, not edp_world_size. Result: expert gradients are systematically off by a factor of (dp/edp).",
+  "detection_method": "value_invariant",
+  "invariant": "For matched (DP=N, EP=1) vs (DP=N, EP=2) runs with identical batch and seed, after one optimizer step the expert weights must agree to within fp32 tolerance.",
+  "diff_summary": "Drop the special MoE pre-divide branch; always divide the final bucket tensor by dp_world_size/sp_size at the end of average_tensor.",
+  "silent_check": "Buggy code does floating-point divisions and an all-reduce — the result is a finite, valid tensor, merely scaled by the wrong constant. Optimizer step proceeds, only the loss curve diverges from the EP=1 reference."
+}

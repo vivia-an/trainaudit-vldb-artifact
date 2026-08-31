@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-3",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Frozen parameters included in optimizer groups",
+  "fixed_commit": "116dbe28",
+  "category": "optimizer_state",
+  "detection_method": "runtime_check",
+  "invariant": "Optimizer groups must only contain params with requires_grad=True",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED",
+    "fixed": "CLEAN"
+  }
+}

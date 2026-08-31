@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-69",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MegatronOptimizer uses use_precision_aware_optimizer instead of use_precision_aware_optimizer_no_fp8_or_ds_fp8 when selecting decoupled_grad, so FP8 + precision-aware paths read param.decoupled_grad which is None and report grad_norm=0",
+  "fixed_commit": "a82fa72d52",
+  "buggy_commit": "a82fa72d52~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/3478",
+  "category": "optimizer",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": [
+    "use_precision_aware_optimizer enabled",
+    "FP8 training with non-delayed scaling (or DeepSeek-style FP8) so the no_fp8_or_ds_fp8 derived flag is False",
+    "Gradient clipping or count_zeros active"
+  ],
+  "root_cause": "MegatronOptimizer.get_grads_for_norm and clip_grad_by_total_norm_fp32 dispatched on self.config.use_precision_aware_optimizer. With FP8 enabled, decoupled_grad is intentionally NOT used for those parameters; they should fall back to param.grad. The buggy gate took the precision-aware path anyway, attempting to read param.decoupled_grad (which is None), so grads_for_norm came back empty and grad_norm computed to 0.0. Without proper gradient clipping the optimizer could overshoot, but no exception was raised because count_zeros and clip routines treat empty input as a valid no-op.",
+  "detection_method": "config_invariant",
+  "invariant": "When config.fp8 is set or config.fp8_recipe in the DS_FP8 family, get_grads_for_norm must follow the param.grad branch (not param.decoupled_grad).",
+  "diff_summary": "Replace self.config.use_precision_aware_optimizer with self.config.use_precision_aware_optimizer_no_fp8_or_ds_fp8 in get_grads_for_norm, clip_grad_by_total_norm_fp32, and count_zeros_fp32 calls.",
+  "silent_check": "Empty grads_for_norm makes grad_norm a 0-tensor, which silently disables clipping; the optimizer continues to step using full-magnitude grads with no NaN/Inf appearing, only manifesting as poor convergence after many iterations."
+}

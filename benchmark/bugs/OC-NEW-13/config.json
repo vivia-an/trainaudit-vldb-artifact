@@ -1,0 +1,20 @@
+{
+  "bug_id": "OC-NEW-13",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "RotaryEmbedding cu_doc_lens path miscomputes positions for B>1 — second batch element reuses batch-0 doc layout",
+  "fixed_commit": "e3408ab4",
+  "buggy_commit": "e3408ab4~1",
+  "category": "attention",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Packed-document training with cu_doc_lens",
+    "Batch size > 1 with different document boundaries per batch element",
+    "RotaryEmbedding or ComplexRotaryEmbedding"
+  ],
+  "root_cause": "The cu_doc_lens code path built positions = arange(k_len) without adding any per-batch offset, then ran searchsorted against the flat cumulative-doc-lens list. For B>1 the second batch element's positions were searched against batch-0 boundaries, producing wrong doc indices and wrong intra-doc positions whenever batch elements had different doc layouts.",
+  "detection_method": "cross_rank_equality",
+  "invariant": "Local positions computed for each (batch, token) must equal token_index minus the start of that token's document; batch elements with identical doc structure must give identical local_positions.",
+  "diff_summary": "Compute global_positions = batch_offsets[:, None] + arange(k_len)[None, :] and searchsorted on the flattened global positions, then reshape back to (B, k_len) so each batch element gets its own intra-doc layout."
+}

@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-15",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "BF16 + ZeRO-0 gradients never zeroed between optimizer steps",
+  "fixed_commit": "1752c2ab",
+  "buggy_commit": "1752c2ab~1",
+  "category": "optimizer",
+  "severity": "critical",
+  "gpu_needed": 2,
+  "root_cause": "_take_model_step hits `pass` for bf16+zero_stage=0, skipping zero_grad entirely",
+  "detection_method": "runtime_hook",
+  "invariant": "Gradients must be zeroed after each optimizer step to prevent stale accumulation"
+}

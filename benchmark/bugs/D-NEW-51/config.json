@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-51",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO2 extra_large_param leaks reference when contiguous_gradients=False — silent stale-grad reduction in next step",
+  "fixed_commit": "01d17492",
+  "buggy_commit": "01d17492~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/3306",
+  "category": "gradient_sync",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 2", "contiguous_gradients=False", "at least one param.numel() > reduce_bucket_size"],
+  "root_cause": "reduce_independent_p_g_buckets_and_remove_grads set `self.extra_large_param_to_reduce = param` whenever a param exceeded reduce_bucket_size, regardless of contiguous_gradients. With contiguous_gradients=False the IPG buffer path is never taken, so the assignment was a dead store but the reference outlived the iteration. On the next backward pass the ipg-flush code saw the stale extra_large_param_to_reduce and called average_tensor on a previous-iteration gradient (silent corruption).",
+  "detection_method": "structural_invariant",
+  "invariant": "self.extra_large_param_to_reduce must be None (or never set) when self.contiguous_gradients is False.",
+  "diff_summary": "Wrap the extra_large_param_to_reduce assignment and the contiguous-buffer copy inside `if self.contiguous_gradients:` so neither runs when the feature is disabled."
+}

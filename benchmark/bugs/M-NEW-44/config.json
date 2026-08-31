@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-44",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "DSA indexer loss is not divided by num_microbatches in forward_step_calc_loss, so the auxiliary loss gradient is overweighted by a factor of num_microbatches",
+  "fixed_commit": "3a7fae049e",
+  "buggy_commit": "3a7fae049e~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/3856",
+  "category": "loss_computation",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": [
+    "experimental_attention_variant == 'dsa' (Dynamic Sparse Attention indexer)",
+    "num_microbatches > 1 (gradient accumulation)",
+    "calculate_per_token_loss=False"
+  ],
+  "root_cause": "forward_step_calc_loss set MTPLossAutoScaler.set_loss_scale(loss_scale / num_microbatches) but DSAIndexerLossAutoScaler was never given a per-microbatch divisor. As a result the DSA indexer auxiliary loss accumulates num_microbatches times into the gradient instead of being averaged, contributing a (num_microbatches)x larger gradient than the main loss.",
+  "detection_method": "value_scaling_check",
+  "invariant": "DSAIndexerLossAutoScaler.loss_scale at backward time must equal loss_scale / num_microbatches when calculate_per_token_loss=False.",
+  "diff_summary": "Add a parallel DSAIndexerLossAutoScaler.set_loss_scale(loss_scale / num_microbatches) block alongside the existing MTPLossAutoScaler block in forward_step_calc_loss.",
+  "silent_check": "DSAIndexerLossAutoScaler is just a multiplicative wrapper; backward proceeds normally and produces no exception, optimizer steps as usual, but the DSA branch dominates the gradient signal in proportion to num_microbatches."
+}

@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-48",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Flex-attention sliding-window mask used Python `and` on tensors — short-circuit returned wrong mask",
+  "fixed_commit": "f884373b",
+  "buggy_commit": "f884373b~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/f884373b",
+  "category": "attention",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["flex_attention backend selected", "Attention configured with sliding window"],
+  "root_cause": "_get_flex_attn_mask_mod._sliding_window_mask_mod returned `q_idx - kv_idx <= window_size[0] and kv_idx - q_idx <= window_size[1]`. Python's `and` calls bool() on the first operand and short-circuits — for scalar bool tensors this returns the second operand whenever the first is truthy and the first when falsy, never producing the intended logical AND. The mask was therefore computed as a single one-sided comparison.",
+  "detection_method": "constraint:logical_and_on_tensors",
+  "invariant": "Mask-mod functions for flex_attention must use torch.logical_and / & on tensors, never Python's `and`/`or`.",
+  "diff_summary": "Replace Python `and` with torch.logical_and(q_idx - kv_idx <= window_size[0], kv_idx - q_idx <= window_size[1]).",
+  "silent_check": "flex_attention compiles the mask_mod returning a finite bool tensor with no exception — attention runs end-to-end producing valid-looking outputs based on the wrong mask."
+}

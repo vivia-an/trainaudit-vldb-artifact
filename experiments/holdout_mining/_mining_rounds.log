@@ -1,0 +1,33 @@
+[mining-holdout] exclusions=/volume/posttrain/users/lsk/sdc/lsk/sdccheck/logs/holdout_mining/EXCLUSION_LIST.json per_round=60 cats=(tensor_parallel pipeline_parallel zero_optimization model_integrity training_progress data_parallel)
+[mining-holdout] output=/volume/posttrain/users/lsk/sdc/lsk/sdccheck/config/lib_holdout_mined.json
+[mining-holdout] 2026-07-12 22:16:59 === round: tensor_parallel (60 iters) ===
+scripts/ablation/run_mining_holdout.sh: line 39: 792251 Killed                  python3 -u run_self_reason_with_writeAgent.py >> "${ROOT}/logs/holdout_mining/_round_${cat}.log" 2>&1
+[mining-holdout] WARN: round tensor_parallel exited nonzero
+[mining-holdout] after tensor_parallel: {'data_parallel': 69, 'model_integrity': 3, 'tensor_parallel': 13, 'pipeline_parallel': 2, 'distributed_optimizer': 2, 'zero_optimization': 0, 'training_progress': 0}
+[mining-holdout] 2026-07-12 23:25:39 === round: pipeline_parallel (60 iters) ===
+[mining-holdout] 2026-07-12 23:26:48 RESTART fresh with deepseek-v4-pro (thinking disabled)
+[mining-holdout] seeded fresh library
+[mining-holdout] exclusions=/volume/posttrain/users/lsk/sdc/lsk/sdccheck/logs/holdout_mining/EXCLUSION_LIST.json per_round=60 cats=(tensor_parallel pipeline_parallel zero_optimization model_integrity training_progress data_parallel)
+[mining-holdout] output=/volume/posttrain/users/lsk/sdc/lsk/sdccheck/config/lib_holdout_mined.json
+[mining-holdout] 2026-07-12 23:26:48 === round: tensor_parallel (60 iters) ===
+[mining-holdout] 2026-07-12 23:33:19 RESTART fresh deepseek-v4-pro thinking=enabled effort=high + RC patch
+[mining-holdout] seeded fresh library
+[mining-holdout] exclusions=/volume/posttrain/users/lsk/sdc/lsk/sdccheck/logs/holdout_mining/EXCLUSION_LIST.json per_round=60 cats=(tensor_parallel pipeline_parallel zero_optimization model_integrity training_progress data_parallel)
+[mining-holdout] output=/volume/posttrain/users/lsk/sdc/lsk/sdccheck/config/lib_holdout_mined.json
+[mining-holdout] 2026-07-12 23:33:19 === round: tensor_parallel (60 iters) ===
+[mining-holdout] after tensor_parallel: {'data_parallel': 0, 'tensor_parallel': 54, 'pipeline_parallel': 0, 'zero_optimization': 0, 'model_integrity': 0, 'training_progress': 0}
+[mining-holdout] 2026-07-13 07:40:08 === round: pipeline_parallel (60 iters) ===
+[mining-holdout] 2026-07-13 08:27:16 REORDER: prioritize data_parallel (keep lib, no FRESH); then PP→ZeRO→MI→TProg
+[mining-holdout] exclusions=/volume/posttrain/users/lsk/sdc/lsk/sdccheck/logs/holdout_mining/EXCLUSION_LIST.json per_round=60 cats=(data_parallel pipeline_parallel zero_optimization model_integrity training_progress)
+[mining-holdout] output=/volume/posttrain/users/lsk/sdc/lsk/sdccheck/config/lib_holdout_mined.json
+[mining-holdout] 2026-07-13 08:27:16 === round: data_parallel (60 iters) ===
+[mining-holdout] after data_parallel: {'data_parallel': 36, 'tensor_parallel': 54, 'pipeline_parallel': 7, 'zero_optimization': 0, 'model_integrity': 0, 'training_progress': 0}
+[mining-holdout] 2026-07-13 16:42:13 === round: pipeline_parallel (60 iters) ===
+[mining-holdout] after pipeline_parallel: {'data_parallel': 36, 'tensor_parallel': 54, 'pipeline_parallel': 7, 'zero_optimization': 0, 'model_integrity': 0, 'training_progress': 0}
+[mining-holdout] 2026-07-13 16:42:16 === round: zero_optimization (60 iters) ===
+[mining-holdout] after zero_optimization: {'data_parallel': 36, 'tensor_parallel': 54, 'pipeline_parallel': 7, 'zero_optimization': 0, 'model_integrity': 0, 'training_progress': 0}
+[mining-holdout] 2026-07-13 16:42:19 === round: model_integrity (60 iters) ===
+[mining-holdout] after model_integrity: {'data_parallel': 36, 'tensor_parallel': 54, 'pipeline_parallel': 7, 'zero_optimization': 0, 'model_integrity': 0, 'training_progress': 0}
+[mining-holdout] 2026-07-13 16:42:23 === round: training_progress (60 iters) ===
+[mining-holdout] after training_progress: {'data_parallel': 36, 'tensor_parallel': 54, 'pipeline_parallel': 7, 'zero_optimization': 0, 'model_integrity': 0, 'training_progress': 0}
+[mining-holdout] 2026-07-13 16:42:26 all rounds done

@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-1",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "RMSNorm uses L2 norm instead of root-mean-square — wrong normalization",
+  "fixed_commit": "67c9e315",
+  "buggy_commit": "67c9e315~1",
+  "category": "normalization",
+  "severity": "high",
+  "gpu_needed": 0,
+  "root_cause": "x.norm(2) is L2 norm (sqrt(sum(x^2))), not RMS (sqrt(mean(x^2)))",
+  "detection_method": "runtime_check",
+  "invariant": "After RMSNorm, output.pow(2).mean(-1) should be approximately 1.0"
+}

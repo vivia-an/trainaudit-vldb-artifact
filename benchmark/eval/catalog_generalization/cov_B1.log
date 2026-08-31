@@ -1,0 +1,9 @@
+taxonomy taxonomy_freeform.json (15 entries) | held-out 249 | done 0 | to run 249
+  50/249
+  100/249
+  150/249
+  200/249
+  249/249
+
+COVERAGE taxonomy_freeform.json: 119/249 = 47.8%
+judge calls=249 tokens in/out 129733/174614

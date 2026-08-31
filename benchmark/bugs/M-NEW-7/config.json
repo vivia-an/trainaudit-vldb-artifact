@@ -1,0 +1,1 @@
+{"bug_id":"M-NEW-7","framework":"megatron-lm","repo":"NVIDIA/Megatron-LM","title":"z-loss metric tracking missing avg_group — not averaged across ranks","fixed_commit":"a0177b681","buggy_commit":"a0177b681~1","category":"metric_tracking","severity":"medium","gpu_needed":2}

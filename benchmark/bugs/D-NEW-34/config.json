@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-34",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO3 allgather hardcodes ds_tensor dtype — mixed-dtype param groups silently allgather wrong bytes",
+  "fixed_commit": "b8e16642",
+  "buggy_commit": "b8e16642~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/4647",
+  "category": "dtype",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3", "model contains parameters of more than one floating dtype (e.g. fp32 LayerNorm + bf16 weights)"],
+  "root_cause": "all_gather_coalesced built one flat partition buffer assuming a single ds_tensor dtype across all params in the group, so when the param list contained mixed dtypes the larger-dtype params were silently truncated/aliased into the smaller-dtype buffer. After allgather, parameters held garbage bit patterns until the next iteration overwrote them.",
+  "detection_method": "dtype_invariant",
+  "invariant": "After all_gather_coalesced, every gathered param p must satisfy p.data.dtype == p.ds_tensor.dtype and p.numel() * p.element_size() bytes were transferred for p.",
+  "diff_summary": "Group params by dtype before allgather and issue one allgather per dtype with a per-dtype flat buffer."
+}

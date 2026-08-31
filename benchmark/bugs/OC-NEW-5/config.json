@@ -1,0 +1,1 @@
+{"bug_id":"OC-NEW-5","framework":"olmo-core","repo":"allenai/OLMo-core","title":"Document packing sort overflow — uint32 * -1 wraps to huge positive","fixed_commit":"6ce62ccd","buggy_commit":"6ce62ccd~1","category":"data_processing","severity":"critical","gpu_needed":0}

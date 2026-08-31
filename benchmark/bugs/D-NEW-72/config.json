@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-72",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Sequence parallel single_all_to_all reshape collapses batch and seq dims — QKV permuted into wrong tokens",
+  "fixed_commit": "3bdd187e",
+  "buggy_commit": "3bdd187e~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/5664",
+  "category": "sequence_parallel",
+  "severity": "critical",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["SP"],
+  "trigger_conditions": ["DeepSpeed sequence parallelism (DistributedAttention)", "sp_world_size > 1", "scatter_idx >= 2 (head-scatter path used in the second alltoall)"],
+  "root_cause": "single_all_to_all's reshape for the head-scatter path used `[seq_world_size, inp_shape[scatter_idx]] + inp_shape[scatter_idx+1:]` and then transposed (0,2). This collapses batch and sequence into a single dimension and reorders elements such that after the all_to_all+reshape back, query[b,s,h] no longer corresponds to the same logical token. Pre-attention QKV are permuted into the wrong (b,s,h) positions, attention is computed on scrambled tokens, and the model never converges.",
+  "detection_method": "value_invariant",
+  "invariant": "For an identity test (round-trip _SeqAllToAll(scatter, gather) followed by _SeqAllToAll(gather, scatter)), output must equal input element-wise.",
+  "diff_summary": "Refactor single_all_to_all to use explicit (bs, seq, num_head, head_dim) layout-aware reshapes/permutes that handle batch_dim_idx in {0,1} and scatter_idx <{2,>=2} correctly.",
+  "silent_check": "Reshape/transpose run successfully — shapes line up so all_to_all_single completes, attention computes, loss is a finite tensor. The model's loss just refuses to drop because the relationship between tokens and their attention scores is broken; no exception."
+}

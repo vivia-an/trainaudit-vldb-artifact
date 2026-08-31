@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-68",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO-2 ipg double-buffer swap not synchronized — current backward writes into bucket while previous reduce still reads",
+  "fixed_commit": "f897b673",
+  "buggy_commit": "f897b673~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/7371",
+  "category": "communication",
+  "severity": "critical",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 2", "contiguous_gradients=True", "overlap_comm=True", "model large enough to fill more than one ipg bucket per step"],
+  "root_cause": "In ipg_remove_grads, after triggering an async reduce_ipg_grads on bucket index k, the code immediately swaps `bucket.index = 1 - bucket.index` so the next gradient writes into bucket index (1-k). Without an explicit reduction_stream <-> current_stream wait, the backward kernel writing into bucket (1-k) on the current stream can begin before the previous reduce-scatter on bucket k has finished — and on accelerators that don't auto-resolve cross-stream data deps, both buffers (k and 1-k) are aliased through the same flat IPG tensor allocation, so the write into bucket 1-k can stomp on bucket k's still-in-flight reduce input. Loss became 0 with grad_norm 1.414 by step 3 in the user's repro.",
+  "detection_method": "structural_invariant",
+  "invariant": "Before swapping ipg bucket index after a reduce, default stream must wait for reduction_stream to complete on accelerators where resolves_data_dependency()==False.",
+  "diff_summary": "Around the bucket.index swap, add `self.reduction_stream.wait_stream(current_stream); current_stream.wait_stream(self.reduction_stream)` guarded by `not get_accelerator().resolves_data_dependency()`.",
+  "silent_check": "All operations are valid CUDA kernels writing to allocated memory; the race produces well-typed but corrupted reduced gradients. The optimizer step uses these and produces zero loss / wrong grad_norm — no exception, no CUDA error."
+}

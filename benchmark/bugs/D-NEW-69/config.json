@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-69",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO 1/2 reduction stream not waited by current stream — ipg_buffer rewrite races allreduce when comm > compute",
+  "fixed_commit": "a41729f6",
+  "buggy_commit": "a41729f6~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/5606",
+  "category": "communication",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 1 or 2", "overlap_comm=True", "communication time per allreduce > backward compute time of next bucket"],
+  "root_cause": "In average_tensor (overlap_comm path), reduction_stream did wait_stream(current_stream) so the allreduce waits for backward to finish populating the buffer, but current_stream did NOT wait_stream(reduction_stream) afterwards. When backward of the next bucket completes faster than the previous allreduce, the next gradient gets written into the same ipg_buffer slot that allreduce is still reading, corrupting the reduce input. Equivalence (loss with vs without overlap_comm) is broken on small sequence-length / fast-compute models.",
+  "detection_method": "structural_invariant",
+  "invariant": "On an accelerator without automatic data-dep resolution, after triggering an async reduce on the reduction_stream, current_stream must wait for reduction_stream before reusing the IPG buffer.",
+  "diff_summary": "After `stream.wait_stream(get_accelerator().current_stream())`, add `get_accelerator().current_stream().wait_stream(stream)`.",
+  "silent_check": "The race produces a corrupted but valid float tensor as the allreduce input — no shape mismatch, no NCCL error. Subsequent optimizer step uses wrong gradients; loss diverges from reference but no exception is raised."
+}

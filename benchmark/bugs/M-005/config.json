@@ -1,0 +1,27 @@
+{
+  "bug_id": "M-005",
+  "framework": "megatron-lm",
+  "title": "SwitchMLP router weights not synchronized within TP group",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/599",
+  "buggy_commit": "cd760a9e0ec1417a0cb7081ce62dad832e06e6ad",
+  "fixed_commit": "3c637fc0d2b24ee689929ff7923561892d415f45",
+  "fix_date": "2023-10-26",
+  "category": "sharding",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": [
+    "TP"
+  ],
+  "trigger_conditions": [
+    "tensor_model_parallel_size > 1",
+    "num_experts >= 2 (SwitchMLP/MoE)",
+    "GPU initialization (not CPU init)"
+  ],
+  "root_cause": "torch.nn.Linear in router uses default CUDA RNG which has different seeds across TP ranks. Router weights diverge from initialization.",
+  "detection_method": "cross_rank_equality",
+  "invariant": "router.weight checksum must be identical across all ranks in the same TP group",
+  "fixed_behavior": "training completes with consistent router weights across TP ranks",
+  "notes": "Old Megatron version — does not support --mock-data, requires fake preprocessed data",
+  "reproduction_status": "failed",
+  "failure_reason": "default CUDA RNG synced across TP ranks"
+}

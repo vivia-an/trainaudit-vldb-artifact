@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-5",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Embedding init std missing sqrt(d_model) factor — embeddings 16x too small",
+  "fixed_commit": "ce5f30d5",
+  "buggy_commit": "ce5f30d5~1",
+  "category": "initialization",
+  "severity": "high",
+  "gpu_needed": 0,
+  "root_cause": "init_std used directly instead of init_std * sqrt(d_model) for embeddings",
+  "detection_method": "runtime_check",
+  "invariant": "embedding weight std should be init_std * sqrt(d_model)"
+}

@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-41",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "GPTDataset returns aliased cached_loss_mask, downstream in-place padding mutates the shared cache and corrupts later samples",
+  "fixed_commit": "c94d58f326",
+  "buggy_commit": "c94d58f326~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/4164",
+  "category": "data_processing",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": [
+    "create_attention_mask=False so the cached-mask branch is taken",
+    "Sequences with padding so loss_mask is mutated per-sample by mask_loss_or_position fill",
+    "Multiple steps with same dataset"
+  ],
+  "root_cause": "In the cached-mask branch, GPTDataset assigned loss_mask = self.cached_loss_mask, returning the cached tensor by reference instead of a clone. Downstream code in the same __getitem__ path applies in-place modifications (e.g. zeroing the loss for pad tokens). The first sample with padding silently mutates the shared cache, so every subsequent sample served from the cache starts from a polluted mask.",
+  "detection_method": "value_invariant",
+  "invariant": "GPTDataset.cached_loss_mask must equal a tensor of all-ones at the start of every __getitem__ call.",
+  "diff_summary": "Replace loss_mask = self.cached_loss_mask with loss_mask = self.cached_loss_mask.clone().",
+  "silent_check": "Returning a tensor view rather than a clone is legal Python; no exception is raised, loss values stay finite, but loss_mask of later batches has growing zeros and the per-token loss is silently under-counted."
+}

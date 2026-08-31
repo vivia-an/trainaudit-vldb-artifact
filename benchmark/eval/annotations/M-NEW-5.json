@@ -1,0 +1,14 @@
+{
+  "bug_id": "M-NEW-5",
+  "framework": "megatron-lm",
+  "category": "moe",
+  "parallel_dimension": "EP",
+  "invariant_type": "completeness",
+  "required_trace_fields": ["module_class", "named_attributes", "config.calculate_per_token_loss"],
+  "check_stage": "build",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "TopKRouter missing calculate_per_token_loss attr post-__init__; detect.py hasattr check on router build = named_modules attr-set assertion → P8. Layer=schema_topo_precond: precond is config.calculate_per_token_loss=True. Tier 6 (named-attr snapshot). P8 over P7: statically inspectable.",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P7_P8"]
+}

@@ -1,0 +1,23 @@
+{
+  "bug_id": "B5",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "DistributedDataParallel.finish_grad_sync forgets to scale expert_grads by 1/dp_world_size",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/commit/3373641f",
+  "fixed_commit": "3373641f",
+  "buggy_commit": "3373641f~1",
+  "category": "gradient_scaling",
+  "severity": "high",
+  "gpu_needed": 2,
+  "trigger_conditions": [
+    "MoE training (--num-experts >= 2)",
+    "data_parallel_world_size > 1"
+  ],
+  "root_cause": "DistributedDataParallel.finish_grad_sync syncs the regular grad buffers but never divides expert_grads (local-only main_grads of MoE expert params). Buggy expert grads are dp_world_size× larger than intended.",
+  "detection_method": "expert_grad_norm_ratio_pre_post_sync",
+  "invariant": "After finish_grad_sync, expert_grad_norm_after / expert_grad_norm_before == 1 / data_parallel_world_size",
+  "expected_output": {
+    "buggy": "BUG DETECTED: ratio == 1.0 (no scaling)",
+    "fixed": "CLEAN: ratio == 1/dp_world_size"
+  }
+}

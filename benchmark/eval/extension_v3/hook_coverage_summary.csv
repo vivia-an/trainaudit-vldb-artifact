@@ -1,0 +1,10 @@
+hook,earliest_count_392,pct_392,baseline_128,delta_pp
+before-forward,57,14.5,-,-
+after-forward,108,27.6,37.5,-9.9
+main-grad-in-backward,30,7.7,-,-
+after-backward,76,19.4,-,-
+before-optimizer,40,10.2,-,-
+checkpoint_save,18,4.6,-,-
+checkpoint_load,22,5.6,-,-
+build,32,8.2,-,-
+unobservable,9,2.3,-,-

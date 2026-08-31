@@ -1,0 +1,24 @@
+{
+  "bug_id": "O-005",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "preserve_rng_state incorrectly set to False with dropout",
+  "issue_url": "https://github.com/allenai/OLMo/commit/204ad53c",
+  "buggy_commit": "0bc7f6c7",
+  "fixed_commit": "204ad53c",
+  "category": "control_flow",
+  "severity": "high",
+  "gpu_needed": 0,
+  "trigger_conditions": [
+    "any dropout > 0",
+    "activation checkpointing enabled"
+  ],
+  "root_cause": "Boolean condition inverted: preserve_rng_state = (all_dropout==0) instead of not(all_dropout==0)",
+  "detection_method": "config_invariant",
+  "invariant": "When dropout > 0, preserve_rng_state must be True",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: preserve_rng_state=False with dropout > 0",
+    "fixed": "CLEAN: preserve_rng_state=True with dropout > 0"
+  }
+}

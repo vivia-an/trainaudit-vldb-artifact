@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-57",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Token embedding sized by vocab_size instead of embedding_size, mismatching ff_out width",
+  "fixed_commit": "fe1061b3",
+  "buggy_commit": "fe1061b3~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/53",
+  "category": "model_init/embedding",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["FSDP", "DP"],
+  "trigger_conditions": [
+    "embedding_size set distinct from vocab_size (e.g. embedding_size=50304, vocab_size=50257—padded for hardware alignment)",
+    "weight_tying=False"
+  ],
+  "root_cause": "wte was constructed with `nn.Embedding(config.vocab_size, ...)` but the output projection `ff_out` was sized for `config.embedding_size or config.vocab_size`. When embedding_size > vocab_size, ff_out has more output classes than the embedding table has rows, so the extra logits backprop into nothing on the embedding side and the loss is computed over rows that have no corresponding learnable embedding. Logits for ids in [vocab_size, embedding_size) silently bias the softmax denominator.",
+  "detection_method": "shape_consistency_check",
+  "invariant": "wte.num_embeddings must equal ff_out.out_features (= embedding_size or vocab_size)",
+  "diff_summary": "Construct wte with `embedding_size or vocab_size` rows",
+  "silent_check": "All token ids in input data lie in [0, vocab_size) so no embedding lookup is out of range; the size mismatch only matters in the loss/softmax, which still produces a finite loss."
+}

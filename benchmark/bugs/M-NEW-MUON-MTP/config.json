@@ -1,0 +1,44 @@
+{
+  "bug_id": "M-NEW-MUON-MTP",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Muon + PP + MTP: tied word_embeddings on MTP-only last PP stage routed to Muon instead of Adam",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/4641",
+  "fix_pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/4642",
+  "buggy_commit": "b25a76e0003b93d663ec8302574371fb40c3efcd",
+  "fixed_commit": "f81435b0b7201667bd98823fbf2cb99d2664f881",
+  "fix_date": "2026-05-06",
+  "category": "optimizer_state",
+  "severity": "high",
+  "gpu_needed": 8,
+  "parallel_dimensions": ["PP"],
+  "trigger_conditions": [
+    "Muon optimizer enabled",
+    "Pipeline parallelism PP >= 2",
+    "Multi-Token Prediction (MTP) enabled with last PP stage as MTP-only",
+    "Tied word_embeddings (--share-embeddings-and-output-weights or default)"
+  ],
+  "root_cause": "language_module.py setup_embeddings_and_output_layer() only sets is_embedding_or_output_parameter=True when self.pre_process is True. On MTP-only final PP stages where pre_process=False but the MTP module owns a tied word_embeddings replica, the parameter stays untagged. Muon's routing exclusion (skip params tagged is_embedding_or_output_parameter) overlooks the MTP replica and routes it to Muon, while PP rank 0's replica stays in AdamW. After every gradient all-reduce the two tied copies receive different optimizer updates (AdamW vs Muon Newton-Schulz), causing silent divergence and corrupted training.",
+  "detection_method": "param_optimizer_routing",
+  "invariant": "Every word_embeddings.weight tensor across all PP stages MUST carry is_embedding_or_output_parameter=True (so Muon's exclusion rule routes it to AdamW).",
+  "expected_output": {
+    "buggy": "BUG DETECTED: word_embeddings.weight on MTP-only stage lacks is_embedding_or_output_parameter tag",
+    "fixed": "CLEAN: all word_embeddings tensors tagged is_embedding_or_output_parameter=True"
+  },
+  "reproduction_status": "reproduced",
+  "reproduction_config": {
+    "host": "eval-gpu-0",
+    "megatron_dir": "external Megatron-LM worktree on PR #4642",
+    "nproc": 2,
+    "pp_size": 2,
+    "tp_size": 1,
+    "num_layers": 4,
+    "hidden": 256,
+    "nhead": 4,
+    "seqlen": 128,
+    "mtp_num_layers": 1,
+    "extra_flags": "--position-embedding-type rope (MTP requires rope/none); tied embeddings = default (no --untie-embeddings-and-output-weights)",
+    "muon_flags": "not required for detection: invariant is set at model construction, before optimizer build"
+  },
+  "notes": "Reproduced 2026-05-08 on eval-gpu-0. Buggy: 1/2 word_embeddings untagged on pp_rank=1 (MTP-only stage). Fixed: 2/2 tagged. Detection uses torch.distributed.all_gather_object inside patched setup_model_and_optimizer to avoid filesystem TOCTOU race between ranks. Old guidance about needing --share-embeddings-and-output-weights was stale: that flag was renamed to --untie-embeddings-and-output-weights (default = tied)."
+}

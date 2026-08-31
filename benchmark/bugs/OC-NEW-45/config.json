@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-45",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Mamba2 ladder hard-coded head_dim from d_model/n_heads — wrong with FLA defaults",
+  "fixed_commit": "7a5fb0f6",
+  "buggy_commit": "7a5fb0f6~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/7a5fb0f6",
+  "category": "config",
+  "severity": "medium",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["pure-mamba-ladder or hybrid-mamba-ladder script", "Mamba2 sequence mixer"],
+  "root_cause": "The ladder configurators forced fla_layer_kwargs={'head_dim': ensure_multiple_of(d_model/n_heads, 128)}. FLA's Mamba2 already derives head_dim from its own internal layout, so injecting an externally-rounded value made the constructed Mamba2 layer disagree with the configured d_model/n_heads, producing a model whose effective head dimension differed from what other code assumed.",
+  "detection_method": "constraint:layer_config_consistency",
+  "invariant": "When using a third-party layer factory (FLA Mamba2), head_dim must be derived by that library, not externally rounded and re-injected.",
+  "diff_summary": "Comment out the head_dim override in fla_layer_kwargs in both pure and hybrid mamba ladder scripts.",
+  "silent_check": "FLA constructs the Mamba2 layer with whatever head_dim was passed and trains; the only effect is a silent mismatch between the configured and effective head dimension that produces a finite but unintended forward pass."
+}

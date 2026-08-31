@@ -1,0 +1,23 @@
+{
+  "bug_id": "O-023",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Incorrect label_mask tensor creation in NumpyPaddedFSLDataset",
+  "issue_url": "https://github.com/allenai/OLMo-core/commit/916ecf9c",
+  "buggy_commit": "b29838a3",
+  "fixed_commit": "916ecf9c",
+  "category": "data_loading",
+  "severity": "medium",
+  "gpu_needed": 0,
+  "trigger_conditions": [
+    "NumpyPaddedFSLDataset with padding"
+  ],
+  "root_cause": "torch.ones_like(input_ids) creates int64 mask, padded with pad_token_id instead of bool+False",
+  "detection_method": "source_analysis",
+  "invariant": "label_mask must be bool dtype with False padding",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: label_mask uses int64 dtype",
+    "fixed": "CLEAN: label_mask uses bool dtype with False padding"
+  }
+}

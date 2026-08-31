@@ -1,0 +1,14 @@
+{
+  "bug_id": "OC-NEW-8",
+  "framework": "olmo-core",
+  "category": "loss_computation",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["tensor_name", "requires_grad", "step"],
+  "check_stage": "after_forward",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P4",
+  "tier_field": "Tier 0",
+  "rationale": "PoE branch adds output.z_loss (a detached metric tensor with requires_grad=False) into combined_loss; the z_loss value shows in metrics but contributes zero gradient. Detection reads requires_grad attr on every tensor summed into combined_loss before backward — must be True. schema_topo_precond: precond is 'tensor is operand of combined_loss in PoE branch'. P4 over P1 because requires_grad on a runtime tensor is not in standard trace; needs forward hook. Borderline value_equality vs other: requires_grad must equal True (constant).",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P1_P4"]
+}

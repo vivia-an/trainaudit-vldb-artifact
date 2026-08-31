@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-28",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "bf16+ZeRO1+CPU offload silently routes through bf16 wrapper; extra-large param uses raw param.grad instead of reduction grad",
+  "fixed_commit": "8a8683d3",
+  "buggy_commit": "8a8683d3~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/4084",
+  "category": "offload",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["bf16 model", "grad_accum_dtype=fp32", "ZeRO stage 1", "zero_cpu_offload=True", "param.numel > reduce_bucket_size"],
+  "root_cause": "Two related bugs: (a) The dtype dispatch picked the BFLOAT16 optimizer path for bf16+fp32-grad-accum even when CPU offload was on, where it doesn't work correctly. (b) For an extra-large param the reduction code took `self.extra_large_param_to_reduce.grad` directly instead of routing through get_gradient_for_reduction(), so when use_grad_accum_for_reduction was on the accumulated fp32 grad was bypassed and the raw bf16 grad was reduced (loss of precision and stale value).",
+  "detection_method": "dtype_invariant",
+  "invariant": "When use_grad_accum_for_reduction is True, the tensor passed to average_tensor must be the same object/dtype as get_gradient_for_reduction(param), not param.grad.",
+  "diff_summary": "Add `and not self.zero_cpu_offload()` to the BFLOAT16 path selection, route extra-large param reduction through get_gradient_for_reduction, and copy from grad_reduc instead of param.grad in the contiguous bucket path."
+}

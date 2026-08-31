@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-43",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "SkipStepOptimizer fed unreduced ce_batch_loss — skip decisions on per-rank values",
+  "fixed_commit": "34ceef09",
+  "buggy_commit": "34ceef09~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/34ceef09",
+  "category": "optimizer",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["SkipStepOptimizer in use", "world_size > 1"],
+  "root_cause": "SkipStepOptimizer.latest_loss was set from the local per-rank ce_batch_loss before the all-reduce that produced the global mean. The rolling-window statistics for outlier detection were thus computed on per-rank loss values, and skip-step decisions diverged across ranks, producing inconsistent optimizer behavior.",
+  "detection_method": "constraint:cross_rank_consistency",
+  "invariant": "SkipStepOptimizer.latest_loss must be the globally reduced loss; all DP ranks must agree on whether to skip or not.",
+  "diff_summary": "Reduce ce_batch_loss across ranks before assigning it to optim.latest_loss in the SkipStepOptimizer branch.",
+  "silent_check": "Buggy version still completes the step — backward and optimizer.step() run normally; only the skip decision differs across ranks, which on DDP/FSDP causes silently divergent parameter states between ranks rather than a crash."
+}

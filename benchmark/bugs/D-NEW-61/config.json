@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-61",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO-1 fp16 overflow flag broadcast only on partition_gradients path — Z1 ranks diverge on overflow",
+  "fixed_commit": "bc9ed477",
+  "buggy_commit": "bc9ed477~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/7580",
+  "category": "loss_scaling",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["fp16 (with dynamic loss scaler)", "ZeRO stage 1", "some training step where one rank's grads overflow but other ranks' do not"],
+  "root_cause": "In has_overflow_partitioned_grads_serial, the cross-rank `dist.all_reduce(overflow_gpu, op=MAX, group=dp_process_group)` was guarded by `if partition_gradients`. ZeRO stage 1 is partition_gradients=False, so the all-reduce was skipped. Each rank then made an independent overflow decision: ranks that saw overflow skip the step and shrink loss-scale, ranks that did not see overflow apply the step. After a few overflow events ranks have different loss_scale values and (more critically) different parameter values — DDP-equivalence is broken.",
+  "detection_method": "value_invariant",
+  "invariant": "After has_overflow returns, every rank in dp_process_group must agree on self.overflow and self.loss_scale (and therefore on whether to take the step).",
+  "diff_summary": "Remove the `if partition_gradients:` guard so dist.all_reduce(overflow_gpu, MAX) always runs, regardless of ZeRO stage.",
+  "silent_check": "Buggy code skips a collective and proceeds with each rank's local overflow flag — no NCCL hang (collective is just absent, not partial), no exception. Ranks silently desync; only manifests as parameter drift over many steps."
+}

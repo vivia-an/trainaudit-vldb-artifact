@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-56",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "H-Net embed loss never normalized by loss_div_factor — wrong loss weighting",
+  "fixed_commit": "9f14dcea",
+  "buggy_commit": "9f14dcea~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/9f14dcea",
+  "category": "loss",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["BLTDistillTransformer", "hnet_embed loss component active"],
+  "root_cause": "The BLTDistillTransformer finalize block called self._finalize_loss on local_encoder_loss and local_decoder_loss but omitted the call for hnet_embed_loss. The component was added to the weighted-sum loss as a raw sum (not divided by token count), so its effective weight was inflated by approximately seq_len * batch_size relative to the configured loss_weights entry.",
+  "detection_method": "constraint:loss_normalization_consistency",
+  "invariant": "All loss components that appear in the weighted combination must be passed through _finalize_loss with the appropriate loss_div_factor.",
+  "diff_summary": "Add hnet_embed_loss = self._finalize_loss(hnet_embed_loss, loss_div_factor=loss_div_factor) before the weighted combination.",
+  "silent_check": "Buggy step runs to completion — loss is finite, backward works, optimizer steps; the only effect is that the H-Net embed term is silently weighted thousands of times above its intended share, biasing the gradient direction."
+}

@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-43",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "DistributedDataParallel target_gradient_scaling_factor uses get_data_parallel_world_size without context_parallel, so gradients are over-scaled by cp_size when CP is enabled",
+  "fixed_commit": "3bdcbbbe5d",
+  "buggy_commit": "3bdcbbbe5d~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/1923",
+  "category": "context_parallel",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP", "CP"],
+  "trigger_conditions": [
+    "Context parallel size > 1",
+    "calculate_per_token_loss=False (default sample-mean loss)",
+    "DistributedOptimizer or average_in_collective enabled"
+  ],
+  "root_cause": "DistributedDataParallel computed target_gradient_scaling_factor = 1.0 / parallel_state.get_data_parallel_world_size() without with_context_parallel=True. With CP enabled the gradient reduction collective spans the dp*cp ranks, so the gradients should be divided by dp_size*cp_size. Only dividing by dp_size leaves a residual factor of cp_size in the parameter updates.",
+  "detection_method": "value_scaling_check",
+  "invariant": "When context_parallel_size > 1, the gradient_scaling_factor used by DDP must be 1 / (data_parallel_world_size * context_parallel_size).",
+  "diff_summary": "Add with_context_parallel=True to the get_data_parallel_world_size() calls used to compute target_gradient_scaling_factor and the DDP gradient_scaling_factor.",
+  "silent_check": "World-size queries return positive ints; division never errors; gradients flow normally and the optimizer steps; only after many steps does the cp_size-scale-off learning rate manifest as slower convergence relative to a CP=1 baseline."
+}

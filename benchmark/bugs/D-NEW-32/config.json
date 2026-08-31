@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-32",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Pipeline partition_balanced returns degenerate partitions, last PP stage can be assigned zero layers",
+  "fixed_commit": "2bdf061f",
+  "buggy_commit": "2bdf061f~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/4312",
+  "category": "sharding",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["PP"],
+  "trigger_conditions": ["pipeline parallel num_stages > 2", "uniform layer weights (e.g. partition by parameter count of identical layers)"],
+  "root_cause": "ds_utils.partition_balanced used a binary-search probe (_lprobe / _rb_partition_balanced) that, when probed with uniform weights, returned a non-monotone boundary list like [0,2,4,5,5] for 5 items / 4 parts — i.e. the last stage owns 0 layers. Pipeline modules construct from that boundary list and silently train with a stage holding no parameters.",
+  "detection_method": "value_invariant",
+  "invariant": "For every adjacent pair (parts[p], parts[p+1]) returned by partition_balanced, parts[p+1] - parts[p] must be >= 1 (each PP stage owns at least one item).",
+  "diff_summary": "Replace the binary-search _rb_partition_balanced with a direct cumulative-weight greedy partitioner that guarantees every part receives at least one item."
+}

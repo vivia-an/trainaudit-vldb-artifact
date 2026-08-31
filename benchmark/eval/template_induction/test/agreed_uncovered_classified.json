@@ -1,0 +1,39 @@
+{
+ "classified": [
+  {
+   "case_id": "D-002",
+   "agreed_verdict": "INSUFFICIENT_EVIDENCE",
+   "uncovered_category": "U6",
+   "justification": "root_cause is a verbatim copy of description and names only a symptom (grad-norm range dropped across versions) with no compared objects, defect site, or fix, so the record itself cannot support deriving any relation.",
+   "boundary_vs_coding_failure": "coding_failure"
+  },
+  {
+   "case_id": "D-NEW-2",
+   "agreed_verdict": "SINGLETON_NEW_RELATION",
+   "uncovered_category": "U5",
+   "justification": "The relation is expressible as an executable count predicate (one scheduler-emitted LR entry per optimizer param group) but its objects recur in no other case, so §4 holds it as a singleton rather than promoting it.",
+   "boundary_vs_coding_failure": "systematic_boundary"
+  },
+  {
+   "case_id": "O-008",
+   "agreed_verdict": "INSUFFICIENT_EVIDENCE",
+   "uncovered_category": "U6",
+   "justification": "root_cause restates the title ('incomplete or incorrect') with no mechanism and no trigger conditions, leaving the fields unable to discriminate a T12 save-inventory count obligation from a T11 restored-value equality obligation.",
+   "boundary_vs_coding_failure": "coding_failure"
+  },
+  {
+   "case_id": "O-009",
+   "agreed_verdict": "SINGLETON_NEW_RELATION",
+   "uncovered_category": "U5",
+   "justification": "The config-vs-constructed-module structural consistency (QK-norm size equals the dimension implied by n_kv_heads/n_heads under GQA) is a writable predicate, but it appears once and matches no frozen template's objects, so it stays a singleton.",
+   "boundary_vs_coding_failure": "systematic_boundary"
+  },
+  {
+   "case_id": "O-040",
+   "agreed_verdict": "UNOBSERVABLE",
+   "uncovered_category": "U1",
+   "justification": "The violated quantity is a hard-coded hardware datasheet constant whose truth lives outside the run; the training trace carries no signal witnessing a 2x-low peak, since training is unaffected and inflated MFU need not exceed 100%.",
+   "boundary_vs_coding_failure": "systematic_boundary"
+  }
+ ]
+}

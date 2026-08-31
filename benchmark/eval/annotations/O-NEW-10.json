@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-10",
+  "framework": "olmo",
+  "category": "optimizer_state",
+  "parallel_dimension": "none",
+  "invariant_type": "implementation_equivalence",
+  "required_trace_fields": [],
+  "check_stage": "before_optimizer",
+  "minimum_sufficient_layer": "none",
+  "pattern_id": "none",
+  "tier_field": "exceeds_tier6",
+  "rationale": "In _do_adaptive_clipping the EMA update lerps grad_norm_exp_avg toward max_norm_ratio*EMA itself instead of the actual current grad norm — a self-referential update that converges to a fixed point. Both buggy and correct code call lerp_ with finite arguments; only the target operand differs. No standard trace field exposes the lerp source operand. Detection requires source-level inspection or op-level hook on the specific lerp_ call. Per anti-example 9, source-only bugs are pattern=none, layer=none, tier=exceeds_tier6.",
+  "borderline_flags": ["SOURCE_ONLY_DETECTION"]
+}

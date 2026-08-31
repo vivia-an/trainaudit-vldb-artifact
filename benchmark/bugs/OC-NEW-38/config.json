@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-38",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Grad clipper recorded grad_norm DTensor — record_metric saw distributed value",
+  "fixed_commit": "7e8920b3",
+  "buggy_commit": "7e8920b3~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/7e8920b3",
+  "category": "metrics",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "TP"],
+  "trigger_conditions": ["TP enabled", "GradClipperCallback active", "max_grad_norm set"],
+  "root_cause": "GradClipperCallback recorded the raw grad_norm output from torch.nn.utils.clip_grad_norm_ without unwrapping it. With TP, this returned a DTensor; the metric system then operated on the DTensor across ranks, producing a wrongly reduced grad-norm value while clipping itself was already applied locally.",
+  "detection_method": "constraint:metric_local_tensor",
+  "invariant": "Values passed to record_metric with reduce_type=None must be plain tensors representing per-call values, never DTensors with implicit replication semantics.",
+  "diff_summary": "grad_norm = get_local_tensor(grad_norm.detach()) before record_metric.",
+  "silent_check": "Buggy step never raises — clip_grad_norm_ runs, optim step runs, the only effect is that the logged grad-norm metric was the DTensor representation, producing a silently wrong number with no exception."
+}

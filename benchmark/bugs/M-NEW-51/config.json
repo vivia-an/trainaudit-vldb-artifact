@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-51",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "tensor_parallel.checkpoint runs CheckpointFunction during CUDA graph warmup, causing graph capture to record stale recomputed activations",
+  "fixed_commit": "9c5e82ddea",
+  "buggy_commit": "9c5e82ddea~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/3873",
+  "category": "cuda_graph",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["TP"],
+  "trigger_conditions": [
+    "Activation recompute via tensor_parallel.checkpoint enabled",
+    "CUDA graph capture for the same module (cuda_graph_modules)",
+    "Warmup or capture phase active"
+  ],
+  "root_cause": "tensor_parallel.checkpoint always dispatched to CheckpointFunction.apply, even during graph warmup or capture. CheckpointFunction tries to recompute the saved forward inside the graph context, which corrupts the captured graph because random states and saved tensors get rewritten between warmup and capture passes. The result is a captured graph that on replay produces values that do not match the eager reference.",
+  "detection_method": "runtime_check",
+  "invariant": "When is_graph_warmup() or is_graph_capturing() is True, tensor_parallel.checkpoint must invoke function(*args) directly without entering CheckpointFunction.apply.",
+  "diff_summary": "At the top of checkpoint(), short-circuit to function(*args) when is_graph_warmup() or is_graph_capturing() is True.",
+  "silent_check": "CheckpointFunction.apply during warmup does not raise; the captured graph replays without error and the activations look numerically reasonable, but they no longer match the eager-mode reference and the loss curve drifts away from runs without CUDA graphs."
+}

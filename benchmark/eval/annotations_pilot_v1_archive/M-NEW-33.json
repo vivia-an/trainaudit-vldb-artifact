@@ -1,0 +1,15 @@
+{
+  "bug_id": "M-NEW-33",
+  "framework": "megatron-lm",
+  "category": "checkpoint",
+  "parallel_dimension": "EP",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["module_class", "outer_param_groups_id", "inner_param_groups_id"],
+  "check_stage": "checkpoint_load",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "After load_state_dict the outer ChainedOptimizer.param_groups must be identity-equal to concat of inner.param_groups. Detection requires reading module attrs (id() of param_groups list), not a numeric trace field, so P8 static assert with module_class==ChainedOptimizer precond. Borderline optimizer_state vs checkpoint: chose checkpoint per anti-example 7 (bug surfaces on load even though scope is optimizer)."
+}

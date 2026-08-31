@@ -1,0 +1,28 @@
+{
+  "bug_id": "M-010",
+  "framework": "megatron-lm",
+  "title": "MoE aux_loss accumulated twice with activation checkpointing",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/784",
+  "buggy_commit": "892c4c85448c6f81ee8bf8347c430ecba528d634",
+  "fixed_commit": "e6d56d6828c0773f55772b92b2ec0eed5639665e",
+  "fix_date": "2024-06-04",
+  "category": "control_flow",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": [],
+  "trigger_conditions": [
+    "num_experts >= 2 (MoE model)",
+    "--moe-layer-recompute enabled",
+    "--moe-aux-loss-coeff > 0 (default is 0)"
+  ],
+  "root_cause": "MoE layer recompute re-runs forward without no_grad, calling save_to_aux_losses_tracker() twice per step. The aux_loss contribution is doubled.",
+  "detection_method": "function_call_counting",
+  "invariant": "save_to_aux_losses_tracker() must be called exactly once per (step, layer, loss_name)",
+  "fixed_behavior": "training completes with 1 call per step/layer",
+  "notes": "Trace diff (cksum comparison) cannot detect this bug — the parameter impact is too small in short training",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: 6 violations (aux_loss called 2x per step)",
+    "fixed": "CLEAN: aux_loss called 1x per step/layer"
+  }
+}

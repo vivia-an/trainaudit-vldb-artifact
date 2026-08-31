@@ -1,0 +1,23 @@
+{
+  "bug_id": "B12",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "AdamWConfig.build does not set initial_lr on param_groups; restart-time peak LR lost",
+  "issue_url": "https://github.com/allenai/OLMo-core/pull/27",
+  "fixed_commit": "6e330ba2",
+  "buggy_commit": "6e330ba2~1",
+  "category": "lr_schedule",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Optimizer built via olmo_core.optim.AdamWConfig.build(model)",
+    "Restart / scheduler that depends on param_groups[*]['initial_lr']"
+  ],
+  "root_cause": "build() returned torch.optim.AdamW without setting initial_lr. PyTorch LRScheduler with last_epoch>=0 requires initial_lr in each param_group; without it, peak LR after restart is lost.",
+  "detection_method": "structural_invariant_after_train_step",
+  "invariant": "after AdamWConfig.build(model), every param_group must contain key 'initial_lr'",
+  "expected_output": {
+    "buggy": "BUG DETECTED: 0/N param groups have initial_lr",
+    "fixed": "CLEAN: all param groups have initial_lr"
+  }
+}

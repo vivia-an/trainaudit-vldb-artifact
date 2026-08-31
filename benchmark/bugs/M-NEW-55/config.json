@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-55",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "_ParamAndGradBucket builds local param_to_index from naive concatenation, ignoring per-param padding so optimizer reads from misaligned offsets when distributed optimizer pads to data_parallel_world_size",
+  "fixed_commit": "a3ec4b02ed",
+  "buggy_commit": "a3ec4b02ed~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/3007",
+  "category": "optimizer",
+  "severity": "critical",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": [
+    "DistributedOptimizer enabled (data_parallel_world_size alignment to 64 elements)",
+    "Bucket with multiple params where at least one param.numel() is not a multiple of data_parallel_world_size",
+    "Adjacent params therefore receive runtime padding between them"
+  ],
+  "root_cause": "_ParamAndGradBucket initialized param_to_index by walking params and assigning offset += param.numel(), but the global param_index_map already had per-param padded offsets. The two layouts diverged whenever a param's size was not a multiple of dp_world_size. param_to_index was then used by the distributed optimizer to slice param_data, so the optimizer wrote/read different slices than where the gradients lived.",
+  "detection_method": "structural_invariant",
+  "invariant": "For every param in bucket, bucket.param_to_index[param] must equal (param_index_map[param][0] - bucket.offset, param_index_map[param][1] - bucket.offset).",
+  "diff_summary": "Replace local-offset accumulation in _ParamAndGradBucket with derivation from param_index_map: param_to_index[param] = (global_start - offset, global_end - offset).",
+  "silent_check": "Both index ranges have the right total numel; tensor slices succeed; only the values landing at each location are wrong, so the optimizer updates the wrong slice of weights and gradients without raising any error."
+}

@@ -1,0 +1,24 @@
+{
+  "bug_id": "B10",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO-2 + CPU offload micro_step_id off-by-one and wrong copy/accumulate gating",
+  "issue_url": "https://github.com/deepspeedai/DeepSpeed/pull/6550",
+  "fixed_commit": "c85c8703",
+  "buggy_commit": "c85c8703~1",
+  "category": "gradient_accumulation",
+  "severity": "high",
+  "gpu_needed": 2,
+  "trigger_conditions": [
+    "ZeRO stage 2",
+    "CPU offload optimizer",
+    "gradient_accumulation_steps > 1"
+  ],
+  "root_cause": "DeepSpeedZeroOptimizer initialised micro_step_id=0 (instead of -1). After backward()'s `+= 1`, the first global step sees ids (1..gas) while subsequent steps see (0..gas-1). The copy/accumulate gating used `not is_gradient_accumulation_boundary` for copy, which copies on every non-boundary microstep instead of only the first.",
+  "detection_method": "hook_first_microstep_id",
+  "invariant": "On every global step, micro_step_id sequence must start at 0 (so first call has id == 0)",
+  "expected_output": {
+    "buggy": "BUG DETECTED: first call had micro_step_id == 1",
+    "fixed": "CLEAN: first call had micro_step_id == 0"
+  }
+}

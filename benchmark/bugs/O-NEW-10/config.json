@@ -1,0 +1,1 @@
+{"bug_id":"O-NEW-10","framework":"olmo","repo":"allenai/OLMo","title":"grad_norm_exp_avg EMA self-referential update — adaptive clipping broken","fixed_commit":"c205912b","buggy_commit":"c205912b~1","category":"optimizer","severity":"high","gpu_needed":0}

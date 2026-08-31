@@ -1,0 +1,1 @@
+{"bug_id":"M-NEW-9","framework":"megatron-lm","repo":"NVIDIA/Megatron-LM","title":"aux_loss metric incorrectly scaled by TP world_size, missing reduce_group","fixed_commit":"5c8eb08f6","buggy_commit":"5c8eb08f6~1"}

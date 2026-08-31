@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-4",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "RoPE sin/cos missing type_as — dtype mismatch in mixed precision",
+  "fixed_commit": "cebdbe53559a09f2bd2de9ecd80ff2e9fff55503",
+  "buggy_commit": "cebdbe53~1",
+  "category": "positional_encoding",
+  "severity": "medium",
+  "gpu_needed": 0,
+  "root_cause": "pos_sin/pos_cos cached in float32, not cast to match q_ dtype (bf16/fp16)",
+  "detection_method": "runtime_check",
+  "invariant": "In apply_rotary_pos_emb, pos_sin.dtype and pos_cos.dtype must match t.dtype"
+}

@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-64",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "FSLDataset fingerprint missed sequence_length / bos_token_id — wrong cache reused",
+  "fixed_commit": "88019237",
+  "buggy_commit": "88019237~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/pull/303",
+  "category": "data",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["NumpyPaddedFSLDataset / NumpyPackedFSLDataset / NumpyInterleavedFSLDataset cached on disk", "subsequent run with different sequence_length/bos_token_id but matching pre-existing fingerprint"],
+  "root_cause": "fingerprint_fields for several FSLDataset variants did not include sequence_length, bos_token_id, max_target_sequence_length. Cached instance offsets / packed indices computed under the previous values were reused when those settings changed, so the dataset returned instances whose actual layout no longer matched the configured sequence_length.",
+  "detection_method": "constraint:cache_fingerprint_completeness",
+  "invariant": "Every dataset attribute that influences the on-disk cache layout must appear in fingerprint_fields so a config change invalidates the cache.",
+  "diff_summary": "Add 'sequence_length' (and 'max_target_sequence_length', 'bos_token_id' where relevant) to fingerprint_fields for NumpyPaddedFSLDataset, NumpyPackedFSLDataset, and NumpyInterleavedFSLDataset.",
+  "silent_check": "Buggy run loads the stale cache without raising — instance offsets are valid; the trainer simply gets instances whose lengths match the previous sequence_length, reading and training without any exception."
+}

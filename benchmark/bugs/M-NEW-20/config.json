@@ -1,0 +1,20 @@
+{
+  "bug_id": "M-NEW-20",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "calculate_per_token_loss with CP misses context_parallel_size scale factor",
+  "fixed_commit": "5946e24b3",
+  "buggy_commit": "5946e24b3~1",
+  "category": "loss_computation",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["CP"],
+  "trigger_conditions": [
+    "calculate_per_token_loss=True",
+    "context_parallel_size > 1"
+  ],
+  "root_cause": "In pretrain_gpt.py loss_func and pipeline schedules.forward_step, the loss was multiplied by args.context_parallel_size only when not using calculate_per_token_loss. With per-token loss the CP factor was missing, so when CP later divided again the resulting gradient was off by 1/cp_size.",
+  "detection_method": "value_scaling_check",
+  "invariant": "Final scaled loss passed to backward must equal local_loss * cp_world_size / num_microbatches in both calculate_per_token_loss=True and False modes.",
+  "diff_summary": "Added 'output_tensor *= parallel_state.get_context_parallel_world_size()' in both per-token and legacy averaging branches of forward_step; removed the 'loss[0] * args.context_parallel_size' from pretrain_gpt loss_func."
+}

@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-14",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Layerwise distributed optimizer never marks param_gather as dispatched when expt_dp_size=1",
+  "fixed_commit": "51bcf1470",
+  "buggy_commit": "51bcf1470~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/4138",
+  "category": "optimizer",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": [
+    "use_layer_wise_distributed_optimizer (e.g. dist_muon)",
+    "expt_dp_size == 1",
+    "MoE expert parameters present"
+  ],
+  "root_cause": "_ParamAndGradBucketGroup.dispatch_param_gather had no early-return when intra distributed-optimizer instance size is 1. The all-gather work handles list ended up empty, but param_gather_dispatched remained False so finish_param_sync never executed. Expert params were therefore left at uninitialized/stale values from previous step's gather buffer.",
+  "detection_method": "function_call_counting",
+  "invariant": "After dispatch_param_gather returns, param_gather_dispatched must be True for every bucket group.",
+  "diff_summary": "Added early return setting param_gather_dispatched=True when dp_size==1; also initialized layerwise_params_list for expt_dp_size==1 single-rank case."
+}

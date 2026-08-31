@@ -1,0 +1,70 @@
+[
+ {
+  "run": "megatron_clean",
+  "n_dbs": 1,
+  "n_events": 9141,
+  "n_ranks": 1,
+  "arms": {
+   "full": {},
+   "no_topo": {},
+   "no_precond": {
+    "T0-norm-output-unit-rms": "1128 normalizer outputs have abnormal RMS",
+    "T1-expert-bias-fp32": "3040 router(s) have non-fp32 expert_bias",
+    "T1-multi-backward-per-step-fragile-config": "20 step(s) have multiple root-forward passes (steps: [0, 1, 2, 3, 4]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "700/3040 residual blocks (l2-fallback): output closer to normed than to input"
+   }
+  }
+ },
+ {
+  "run": "megatron_moe",
+  "n_dbs": 1,
+  "n_events": 20821,
+  "n_ranks": 1,
+  "arms": {
+   "full": {},
+   "no_topo": {},
+   "no_precond": {
+    "T0-norm-output-unit-rms": "1250 normalizer outputs have abnormal RMS",
+    "T1-expert-bias-fp32": "6880 router(s) have non-fp32 expert_bias",
+    "T1-multi-backward-per-step-fragile-config": "20 step(s) have multiple root-forward passes (steps: [0, 1, 2, 3, 4]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "700/6880 residual blocks (l2-fallback): output closer to normed than to input",
+    "T1-router-has-calculate-per-token-loss": "160 router(s) missing calculate_per_token_loss attr"
+   }
+  }
+ },
+ {
+  "run": "olmo_core_baseline",
+  "n_dbs": 1,
+  "n_events": 40001,
+  "n_ranks": 1,
+  "arms": {
+   "full": {},
+   "no_topo": {},
+   "no_precond": {
+    "T0-norm-output-unit-rms": "3251 normalizer outputs have abnormal RMS",
+    "T1-comm-dtype-matches-training": "62 comm op(s) used dtype != declared training_dtype (bfloat16)",
+    "T1-expert-bias-fp32": "12306 router(s) have non-fp32 expert_bias",
+    "T1-grad-flow-block-uniformity": "1 block-level grad-flow outlier(s)",
+    "T1-multi-backward-per-step-fragile-config": "1 step(s) have multiple root-forward passes (steps: [0]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "6804/12306 residual blocks (l2-fallback): output closer to normed than to input"
+   }
+  }
+ },
+ {
+  "run": "olmo_core_moe_hybrid",
+  "n_dbs": 1,
+  "n_events": 41345,
+  "n_ranks": 1,
+  "arms": {
+   "full": {},
+   "no_topo": {},
+   "no_precond": {
+    "T0-norm-output-unit-rms": "4754 normalizer outputs have abnormal RMS",
+    "T1-comm-dtype-matches-training": "1070 comm op(s) used dtype != declared training_dtype (bfloat16)",
+    "T1-expert-bias-fp32": "12306 router(s) have non-fp32 expert_bias",
+    "T1-multi-backward-per-step-fragile-config": "1 step(s) have multiple root-forward passes (steps: [0]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "7140/12306 residual blocks (l2-fallback): output closer to normed than to input"
+   }
+  }
+ }
+]

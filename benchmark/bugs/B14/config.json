@@ -1,0 +1,24 @@
+{
+  "bug_id": "B14",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "cross_entropy_loss z-loss reduction='mean' uses wrong masked-mean formula",
+  "issue_url": "https://github.com/allenai/OLMo/pull/523",
+  "fixed_commit": "a57f3803",
+  "buggy_commit": "a57f3803~1",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "compute_z_loss=True",
+    "reduction='mean'",
+    "labels contain ignore_index (-100) tokens"
+  ],
+  "root_cause": "buggy: z_squared = z_squared / (labels != ignore).mean() returns vector divided by scalar, wrong scaling. Fix: z_squared = (z_squared * (labels != ignore)).mean() returns scalar masked-mean.",
+  "detection_method": "value_compare_vs_reference",
+  "invariant": "olmo.train.cross_entropy_loss z_loss with reduction='mean' must equal 1e-4 * masked_mean(logsumexp**2 of valid tokens)",
+  "expected_output": {
+    "buggy": "BUG DETECTED: z_loss differs from masked-mean reference",
+    "fixed": "CLEAN: z_loss matches masked-mean reference"
+  }
+}

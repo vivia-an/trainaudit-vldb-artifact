@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-29",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "DTPBoundaryPredictor calls F.silu with two arguments — silu treats w3(h) as inplace flag, drops gating",
+  "fixed_commit": "d0daf852",
+  "buggy_commit": "d0daf852~1",
+  "category": "loss_computation",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "BLT DTPBoundaryPredictor used for byte-level training",
+    "Standard SwiGLU FFN expected"
+  ],
+  "root_cause": "The expression F.silu(self.w1(h), self.w3(h)) passed self.w3(h) as the inplace argument of F.silu (PyTorch interprets the second positional as a bool-coerced inplace flag). The intended SwiGLU gate (silu(w1(h)) * w3(h)) never executed, so the FFN computed silu(w1(h)) alone and the boundary predictor produced silently degraded outputs.",
+  "detection_method": "value_invariant",
+  "invariant": "FFN must implement gated SwiGLU: out = w2(silu(w1(h)) * w3(h)); silu must be called with exactly one tensor argument.",
+  "diff_summary": "Rewrite as h = self.w2(F.silu(self.w1(h)) * self.w3(h)) so the gate multiply runs."
+}

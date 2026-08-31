@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-15",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Megatron-FSDP precision-aware optimizer keeps duplicate FusedAdam master_weights",
+  "fixed_commit": "ab43d43f0",
+  "buggy_commit": "ab43d43f0~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/4133",
+  "category": "optimizer",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "use_megatron_fsdp=True",
+    "use_precision_aware_optimizer=True",
+    "FusedAdam (TE or apex) available"
+  ],
+  "root_cause": "When constructing the per-model-chunk optimizer for Megatron-FSDP, the code did not override FusedAdam's master_weights flag. FusedAdam allocated and used its own internal master weights instead of relying on Megatron-FSDP's main weights, so optimizer updates were applied to a stale duplicate copy that never received gradient updates.",
+  "detection_method": "config_invariant",
+  "invariant": "When use_megatron_fsdp and use_precision_aware_optimizer are both True, optimizer.optimizer.master_weights must be False.",
+  "diff_summary": "Refactored loop to capture optimizer_part and added setattr(optimizer_part.optimizer, 'master_weights', False) override."
+}

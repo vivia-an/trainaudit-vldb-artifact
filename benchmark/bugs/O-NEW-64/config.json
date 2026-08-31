@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-64",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "DeepSpeed warmup_min_lr=0 instead of base_lr*0.1, also missing warmup_type=linear",
+  "fixed_commit": "a8d99da6",
+  "buggy_commit": "a8d99da6~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/115",
+  "category": "scheduler/learning_rate",
+  "severity": "medium",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": [
+    "DeepSpeedTrainer used",
+    "Warmup steps > 0"
+  ],
+  "root_cause": "DeepSpeedTrainer hard-coded `warmup_min_lr=0.0` and omitted `warmup_type='linear'`. Combined, the warmup ramp starts from exactly 0 (rather than 10% of base lr) and uses DeepSpeed's default warmup interpolation, producing a different shape than the OLMo trainer for the equivalent config. Training runs to completion but with a silently mismatched warmup schedule.",
+  "detection_method": "lr_schedule_shape_check",
+  "invariant": "DeepSpeed warmup LR profile must match the OLMo trainer's warmup profile for an equivalent configuration",
+  "diff_summary": "Set warmup_min_lr=lr*0.1 and add warmup_type=linear in DeepSpeed scheduler params",
+  "silent_check": "DeepSpeed accepts both 0 and lr*0.1 for warmup_min_lr without error; training proceeds with finite LRs."
+}

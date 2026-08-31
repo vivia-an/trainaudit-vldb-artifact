@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-52",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Instance packing ladder set source_group_size on both Packing source and parent — double counting",
+  "fixed_commit": "78a92530",
+  "buggy_commit": "78a92530~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/78a92530",
+  "category": "data",
+  "severity": "medium",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["instance_packing_ladder script", "PackingInstanceSourceConfig with source_group_size set on parent"],
+  "root_cause": "instance_packing_ladder set source_group_size=8 on both the inner NumpyDocumentSourceMixConfig and the outer PackingInstanceSourceConfig. The two interact multiplicatively in the source-permutation logic, so the effective grouping was 64 documents per group instead of the intended 8, changing the packing distribution silently.",
+  "detection_method": "constraint:source_group_size_single_authority",
+  "invariant": "source_group_size must be specified at exactly one layer of the source pipeline; duplicating it across nested configs changes the actual grouping by a multiplicative factor.",
+  "diff_summary": "Drop source_group_size from PackingInstanceSourceConfig and set it (=4) only on the inner NumpyDocumentSourceMixConfig.",
+  "silent_check": "Buggy ladder builds the data pipeline successfully — packing produces valid instances with the wrong grouping; training proceeds without exception, just on differently-distributed packed batches."
+}

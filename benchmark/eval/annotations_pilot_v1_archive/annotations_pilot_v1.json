@@ -1,0 +1,598 @@
+{
+  "meta": {
+    "phase": 1,
+    "count": 30,
+    "date": "2026-05-10",
+    "schema_issues": []
+  },
+  "annotations": [
+    {
+      "bug_id": "M-NEW-1",
+      "framework": "megatron-lm",
+      "category": "dtype",
+      "parallel_dimension": "none",
+      "invariant_type": "dtype_consistency",
+      "required_trace_fields": [
+        "op_name",
+        "input_dtype",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "pi_schema_applicable": true,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P4",
+      "tier_field": "Tier 0",
+      "rationale": "Sigmoid for aux-loss must run in fp32; the buggy code feeds bf16 logits in. Root cause is dtype, not MoE topology (single-GPU reproduces, so parallel_dim=none per anti-example 6). Detected by hooking the op and checking input dtype == fp32 under precondition 'op == sigmoid_for_aux_loss', so pi_schema+pi_precond=true. Borderline P1 vs P4: chose P4 because op-level input dtype is not a default trace field, needs runtime hook."
+    },
+    {
+      "bug_id": "M-NEW-5",
+      "framework": "megatron-lm",
+      "category": "loss_computation",
+      "parallel_dimension": "none",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "module_class",
+        "module_attr_calculate_per_token_loss"
+      ],
+      "check_stage": "build",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "INFERRED_FROM_SPARSE_CONFIG. TopKRouter missing calculate_per_token_loss attribute means aux loss not scaled by num_tokens. Detected at build by static assert on module attr; single-GPU MoE reproduces so parallel_dim=none (anti-example 6). Borderline numerical vs loss_computation: chose loss_computation because root cause is missing scaling logic, not float math."
+    },
+    {
+      "bug_id": "M-NEW-33",
+      "framework": "megatron-lm",
+      "category": "checkpoint",
+      "parallel_dimension": "EP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_class",
+        "outer_param_groups_id",
+        "inner_param_groups_id"
+      ],
+      "check_stage": "checkpoint_load",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "After load_state_dict the outer ChainedOptimizer.param_groups must be identity-equal to concat of inner.param_groups. Detection requires reading module attrs (id() of param_groups list), not a numeric trace field, so P8 static assert with module_class==ChainedOptimizer precond. Borderline optimizer_state vs checkpoint: chose checkpoint per anti-example 7 (bug surfaces on load even though scope is optimizer)."
+    },
+    {
+      "bug_id": "M-NEW-67",
+      "framework": "megatron-lm",
+      "category": "gradient_sync",
+      "parallel_dimension": "combo",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "param_name",
+        "module_attr_fsdp_param",
+        "config_use_precision_aware_optimizer",
+        "grad_source"
+      ],
+      "check_stage": "before_optimizer",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P4",
+      "tier_field": "Tier 6",
+      "rationale": "When use_precision_aware_optimizer=True, get_grads_for_norm must read param.decoupled_grad never param.grad. Needs runtime hook on optimizer to inspect which grad source was selected, gated on config flag (precond). Borderline P7 vs P4: chose P4 because the check is on parameter dtype/source attribute at hook point, not a counter increment. parallel_dim=combo (FSDP+DP)."
+    },
+    {
+      "bug_id": "M-NEW-21",
+      "framework": "megatron-lm",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "function_name",
+        "call_count_per_step",
+        "torch_is_grad_enabled"
+      ],
+      "check_stage": "after_forward",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P7",
+      "tier_field": "Tier 6",
+      "rationale": "Aux loss tracker save called twice per step under activation checkpointing because guard checked self.training but not torch.is_grad_enabled(). Detection counts function calls per training step, gated on router module (precond). Borderline moe vs control_flow: chose control_flow because root cause is a missing condition guard, not MoE math. Single-GPU recompute reproduces, so parallel_dim=none (anti-example 6). P7 because counter check at hook point."
+    },
+    {
+      "bug_id": "M-NEW-27",
+      "framework": "megatron-lm",
+      "category": "moe",
+      "parallel_dimension": "none",
+      "invariant_type": "value_range",
+      "required_trace_fields": [
+        "module_class",
+        "config_moe_router_topk",
+        "config_use_pre_softmax"
+      ],
+      "check_stage": "build",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "When topk==1 with post-softmax, softmax of length-1 vector is constant 1.0 with zero gradient. Detectable at build by asserting NOT(topk==1 AND use_pre_softmax==False) on TopKRouter (precond). Single-GPU MoE reproduces, so parallel_dim=none (anti-example 6). Borderline numerical vs moe: chose moe because the bug is specific to MoE router topk algorithm. P8 over P5 because static config check is cheaper than runtime grad-norm probe."
+    },
+    {
+      "bug_id": "M-NEW-30",
+      "framework": "megatron-lm",
+      "category": "loss_computation",
+      "parallel_dimension": "TP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "function_name",
+        "aux_loss_coeff_arg",
+        "config_moe_aux_loss_coeff",
+        "tp_world_size"
+      ],
+      "check_stage": "after_forward",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": true,
+      "pi_precond_applicable": true,
+      "pattern_id": "P4",
+      "tier_field": "Tier 6",
+      "rationale": "Coefficient passed to switch_load_balancing_loss_func must equal config.moe_aux_loss_coeff / tp_world_size; otherwise aux-loss grad inflates by tp_size after TP all-reduce. Topology-aware (depends on TP size) and precond-gated (only when MoE aux loss enabled). Borderline moe vs loss_computation: chose loss_computation because root cause is missing TP scaling, parallel to numerical loss-scaling bugs. P4 because check reads function arg at hook point."
+    },
+    {
+      "bug_id": "M-NEW-68",
+      "framework": "megatron-lm",
+      "category": "sharding",
+      "parallel_dimension": "combo",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_class",
+        "pad_granularity",
+        "hybrid_ep_enabled"
+      ],
+      "check_stage": "build",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "HybridCPDataLoaderWrapper.pad_granularity=32 must be 128 when HybridEP is on, otherwise per-CP-rank shards land at offsets that misalign HybridEP dispatcher and silently mix tokens across ranks. Detection is a static config_invariant on a module attribute under precond hybrid_ep_enabled, so P8 + pi_precond. Borderline communication vs sharding: chose sharding because the fault is the per-rank shard offset, not the collective op."
+    },
+    {
+      "bug_id": "D-NEW-2",
+      "framework": "deepspeed",
+      "category": "lr_schedule",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "lr_per_group",
+        "num_param_groups",
+        "step"
+      ],
+      "check_stage": "before_optimizer",
+      "pi_schema_applicable": true,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P1",
+      "tier_field": "Tier 3",
+      "rationale": "WarmupCosineLR.get_lr() returns a scalar instead of a list of length num_param_groups. Single-rank reproduces, so parallel_dim=none. Checked by reading lr trace and asserting len(get_lr())==num_param_groups before optimizer.step. pi_schema+pi_precond (precond: scheduler is WarmupCosineLR). P1 (trace equality) over P5 because grad bounds are not involved."
+    },
+    {
+      "bug_id": "D-NEW-1",
+      "framework": "deepspeed",
+      "category": "moe",
+      "parallel_dimension": "none",
+      "invariant_type": "implementation_equivalence",
+      "required_trace_fields": [
+        "module_class",
+        "gate_implementation_signature"
+      ],
+      "check_stage": "build",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "TopKGate applies topk to raw logits instead of post-softmax gates. Detection_method=source_analysis indicates this is not directly runtime-observable from a single trace field; must be caught at build-time by asserting the routing implementation. Borderline numerical vs moe: chose moe because the bug is specific to MoE router algorithm, not generic numerical math. parallel_dim=none because single-GPU MoE reproduces (anti-example 6). pi_precond=true (precond is module_class==TopKGate); pattern P8 because runtime traces cannot easily distinguish topk-of-logits vs topk-of-softmax."
+    },
+    {
+      "bug_id": "D-NEW-8",
+      "framework": "deepspeed",
+      "category": "lr_schedule",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "lr",
+        "optimizer_configured_lr",
+        "warmup_max_lr",
+        "step"
+      ],
+      "check_stage": "before_optimizer",
+      "pi_schema_applicable": true,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P1",
+      "tier_field": "Tier 3",
+      "rationale": "WarmupLR ignores optimizer.param_groups lr and uses hardcoded warmup_max_lr=0.001. After warmup, observed lr should equal optimizer-configured lr; reading trace lr value alone suffices, so pi_schema=true. Precond: scheduler is WarmupLR and step>=warmup_steps. Single-rank reproducible so parallel_dim=none. P1 (value equality on a trace field) not P5 because no grad-norm bound."
+    },
+    {
+      "bug_id": "D-NEW-44",
+      "framework": "deepspeed",
+      "category": "checkpoint",
+      "parallel_dimension": "combo",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "saved_files",
+        "tp_world_size",
+        "ep_enabled",
+        "step"
+      ],
+      "check_stage": "checkpoint_save",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": true,
+      "pi_precond_applicable": true,
+      "pattern_id": "P7",
+      "tier_field": "Tier 5",
+      "rationale": "_save_moe_checkpoint short-returns on exp_dp_rank!=0, so only mp_rank_00_model_states.pt exists; non-zero TP ranks lose non-MoE weights. Invariant: one model_states.pt per TP rank, so checking requires TP topology (pi_topo) under precond MoE+TP>1 (pi_precond). Borderline moe vs checkpoint: chose checkpoint because the bug is missing save files, not router/expert behavior. P7 counts saved-file occurrences across ranks."
+    },
+    {
+      "bug_id": "D-NEW-81",
+      "framework": "deepspeed",
+      "category": "moe",
+      "parallel_dimension": "DP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_class",
+        "param_id",
+        "param_data_ptr",
+        "zero_tracked_set",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P7",
+      "tier_field": "Tier 6",
+      "rationale": "TopKGate.forward rebinds self.wg to a fresh fp32 Linear under ZeRO+fp16/bf16, orphaning the ZeRO-tracked parameter so its grads are never reduced or applied. Detection requires hooking TopKGate and checking wg.weight identity/data_ptr stays in ZeRO's tracked set across forwards under precond module_class==TopKGate AND ZeRO+mixed-precision (pi_precond). P7 (module-state counter/identity check) over P4 because the check is param-identity not dtype, and the orphan is in DP not EP routing path."
+    },
+    {
+      "bug_id": "D-NEW-12",
+      "framework": "deepspeed",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "user_config_keys",
+        "parsed_engine_config",
+        "seq_parallel_comm_dtype"
+      ],
+      "check_stage": "init",
+      "pi_schema_applicable": true,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P1",
+      "tier_field": "Tier 6",
+      "rationale": "Constant key 'seq_parallel_comm_data_type' mismatches documented 'seq_parallel_communication_data_type', so user value is silently dropped at parse and dtype defaults to fp32. Detection compares user-set key vs parsed engine config at init. Borderline dtype vs control_flow: chose control_flow because the root cause is config-key wiring at init, not a numeric dtype computation. parallel_dim=none (single-rank parses config). P1 trace equality on parsed config field."
+    },
+    {
+      "bug_id": "D-NEW-42",
+      "framework": "deepspeed",
+      "category": "checkpoint",
+      "parallel_dimension": "DP",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "param_name",
+        "requires_grad",
+        "checkpoint_keys"
+      ],
+      "check_stage": "checkpoint_load",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P7",
+      "tier_field": "Tier 0",
+      "rationale": "ZeRO3 omits frozen params from checkpoint; detected by comparing module.named_parameters() set vs saved keys at load (anti-example 7). Borderline P7 vs P8: chose P7 because the check fires only when an actual save/load runs (state-counter on saved-key set), not a pure build-time assertion. parallel_dim=DP because ZeRO3 shards along DP."
+    },
+    {
+      "bug_id": "D-NEW-64",
+      "framework": "deepspeed",
+      "category": "gradient_sync",
+      "parallel_dimension": "TP",
+      "invariant_type": "implementation_equivalence",
+      "required_trace_fields": [
+        "global_grad_norm",
+        "tp_size",
+        "step",
+        "tensor_model_parallel"
+      ],
+      "check_stage": "before_optimizer",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": true,
+      "pi_precond_applicable": true,
+      "pattern_id": "P3",
+      "tier_field": "Tier 1",
+      "rationale": "FP16_Optimizer skips TP-sliced grads as if replicated, undercounting global_grad_norm by sqrt(tp_size). Borderline gradient_sync vs communication: per anti-example 3, root cause is wrong reduction mask (which slices to sum), not group config, so gradient_sync. Detection compares TP=k norm to TP=1 reference, requires topology and only valid for TP-sliced params, so pi_topo+pi_precond=true."
+    },
+    {
+      "bug_id": "D-NEW-54",
+      "framework": "deepspeed",
+      "category": "checkpoint",
+      "parallel_dimension": "combo",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "param_name",
+        "param_checksum",
+        "rank_coords",
+        "dp_world_size_meta"
+      ],
+      "check_stage": "checkpoint_load",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": true,
+      "pi_precond_applicable": true,
+      "pattern_id": "P3",
+      "tier_field": "Tier 0",
+      "rationale": "MoE checkpoint stores dp_world_size instead of seq_dp_world_size, so resume reslices experts wrongly across SP ranks. Detected by post-load expert checksum vs pre-save fragment per rank (cross-rank equality with topology-aware mapping). check_stage=load per anti-example 7. Borderline checkpoint vs moe: chose checkpoint because the bug is in save/load metadata, not the MoE router algorithm itself."
+    },
+    {
+      "bug_id": "D-NEW-21",
+      "framework": "deepspeed",
+      "category": "checkpoint",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "has_zero_optimizer_state",
+        "zero_stage",
+        "bf16_enabled"
+      ],
+      "check_stage": "build",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "Engine sets has_zero_optimizer_state = zero or bf16, so bf16 without ZeRO is wrongly flagged as having ZeRO state. Detected at build by asserting has_zero_optimizer_state == (zero_stage>0); a free-form module attribute, hence Tier 6. Borderline P8 vs P4: chose P8 because the wrong flag is set once in __init__ and never changes, single-GPU reproduces so parallel_dim=none."
+    },
+    {
+      "bug_id": "O-NEW-26",
+      "framework": "olmo",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "global_step",
+        "restore_dataloader",
+        "stage"
+      ],
+      "check_stage": "init",
+      "pi_schema_applicable": true,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P1",
+      "tier_field": "Tier 0",
+      "rationale": "restore_checkpoint forgot to reset global_step when restore_dataloader=False; LR scheduler then resumes mid-decay. Detected by trace assertion global_step==0 right after restore under that flag. Borderline P1 vs P7: chose P1 because step is a default trace field, not a runtime hook on module state. framework=olmo (allenai/OLMo per anti-example 8)."
+    },
+    {
+      "bug_id": "O-NEW-63",
+      "framework": "olmo",
+      "category": "lr_schedule",
+      "parallel_dimension": "DP",
+      "invariant_type": "monotonic",
+      "required_trace_fields": [
+        "lr",
+        "step",
+        "warmup_steps"
+      ],
+      "check_stage": "before_optimizer",
+      "pi_schema_applicable": true,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P1",
+      "tier_field": "Tier 3",
+      "rationale": "DeepSpeed scheduler set to WarmupLR not WarmupDecayLR, so LR plateaus after warmup instead of decaying. Detected from lr trace: post-warmup lr must be monotonically decreasing. Borderline P1 vs P8: chose P1 because both scheduler types are valid configs (build-time assert can't tell intent), the symptom only shows in the runtime lr sequence. framework=olmo (allenai/OLMo per anti-example 8)."
+    },
+    {
+      "bug_id": "O-NEW-10",
+      "framework": "olmo",
+      "category": "optimizer_state",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "op_name",
+        "lerp_self_value",
+        "lerp_target_value",
+        "current_grad_norm",
+        "step"
+      ],
+      "check_stage": "before_optimizer",
+      "pi_schema_applicable": true,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P4",
+      "tier_field": "Tier 4",
+      "rationale": "EMA self-referential lerp: target arg equals the EMA itself, never the live grad_norm. Borderline numerical vs optimizer_state: chose optimizer_state because the corrupted state is the EMA buffer used for adaptive clipping (anti-example 9). Hooking lerp_ args is needed (P4), single-GPU reproduces so parallel_dim=none."
+    },
+    {
+      "bug_id": "O-NEW-20",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "param_name",
+        "param_checksum",
+        "use_mup",
+        "step"
+      ],
+      "check_stage": "init",
+      "pi_schema_applicable": true,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P4",
+      "tier_field": "Tier 0",
+      "rationale": "Under muP, ff_out (MuReadout) must be zero post-init but reset_parameters re-inits with normal. Borderline numerical vs other: chose numerical because the bug breaks muP's coordinate-check scaling property. Hook reads ff_out.weight after construction under precond use_mup=True (P4, pi_schema+pi_precond)."
+    },
+    {
+      "bug_id": "O-NEW-57",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_name",
+        "wte_num_embeddings",
+        "ff_out_out_features",
+        "vocab_size",
+        "embedding_size"
+      ],
+      "check_stage": "build",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P8",
+      "tier_field": "Tier 0",
+      "rationale": "wte sized by vocab_size while ff_out sized by embedding_size; padding rows backprop to nothing. Borderline sharding vs numerical: not a parallel-shard bug, it's a model-init shape inconsistency observable statically on named_modules (P8). pi_precond=true (precond is module pair wte+ff_out present)."
+    },
+    {
+      "bug_id": "O-NEW-51",
+      "framework": "olmo",
+      "category": "data_loading",
+      "parallel_dimension": "DP",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "worker_id",
+        "num_workers",
+        "rank",
+        "sample_index",
+        "epoch"
+      ],
+      "check_stage": "other",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": true,
+      "pi_precond_applicable": true,
+      "pattern_id": "P3",
+      "tier_field": "Tier 6",
+      "rationale": "Leftover indices contiguously sliced per worker.id, so workers overlap and miss others. Borderline sharding vs data_loading: chose data_loading per table A (shard duplicate/missing). Detect by gathering worker-emitted sample ids and checking union==full set with no overlap (P3 cross-rank/worker, pi_topo+pi_precond). check_stage=other (data loader, not a model phase)."
+    },
+    {
+      "bug_id": "O-NEW-29",
+      "framework": "olmo",
+      "category": "communication",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "dtype_consistency",
+      "required_trace_fields": [
+        "op_name",
+        "tensor_device",
+        "backend",
+        "step"
+      ],
+      "check_stage": "all_reduce",
+      "pi_schema_applicable": true,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P6",
+      "tier_field": "Tier 0",
+      "rationale": "Per-param metric tensors live on CPU and get passed to dist.all_reduce, silently falling back to gloo with different reduction semantics. Borderline gradient_sync vs communication: chose communication because the root cause is wrong device/backend on the collective input, not the reduction op (anti-example 3). Hook before all_reduce, assert tensor.device.type=='cuda' (P6, pi_schema+pi_precond)."
+    },
+    {
+      "bug_id": "OC-NEW-1",
+      "framework": "olmo-core",
+      "category": "data_loading",
+      "parallel_dimension": "none",
+      "invariant_type": "dtype_consistency",
+      "required_trace_fields": [
+        "op_name",
+        "input_dtype",
+        "output_dtype",
+        "step"
+      ],
+      "check_stage": "before_forward",
+      "pi_schema_applicable": true,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P4",
+      "tier_field": "Tier 0",
+      "rationale": "as_tensor truncates float soft_target_probs to int via astype(np.int_). Detected by hooking the dataloader op and asserting output_dtype matches input_dtype when input is float. Borderline dtype vs data_loading: chose data_loading because the failure surface is the dataset/collator path, not a model dtype mismatch. pi_precond=true (op==as_tensor on float array)."
+    },
+    {
+      "bug_id": "OC-NEW-8",
+      "framework": "olmo-core",
+      "category": "loss_computation",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "loss_term_name",
+        "requires_grad",
+        "is_detached",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "pi_schema_applicable": true,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P4",
+      "tier_field": "Tier 0",
+      "rationale": "PoE branch sums detached output.z_loss into combined_loss, so regularizer has no gradient. Detected by hooking the loss aggregation and asserting every term has requires_grad=True. Borderline numerical vs loss_computation: chose loss_computation because the bug is in how loss terms are combined, not in numerical math. pi_precond=true (only when PoE+z_loss_multiplier active)."
+    },
+    {
+      "bug_id": "OC-NEW-67",
+      "framework": "olmo-core",
+      "category": "lr_schedule",
+      "parallel_dimension": "combo",
+      "invariant_type": "implementation_equivalence",
+      "required_trace_fields": [
+        "scheduler_class",
+        "recipe_name",
+        "warmup_steps",
+        "decay_steps"
+      ],
+      "check_stage": "build",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "OLMoE3 recipe used CosWithWarmup where WSD was intended; both produce monotonic lr curves so runtime trace cannot distinguish them. Must be caught at build-time by asserting scheduler_class matches recipe intent. Borderline lr_schedule vs control_flow: chose lr_schedule because root cause is scheduler selection. pi_precond=true (precond is recipe==OLMoE3-WSD)."
+    },
+    {
+      "bug_id": "OC-NEW-49",
+      "framework": "olmo-core",
+      "category": "control_flow",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "param_name",
+        "requires_grad",
+        "freeze_pattern",
+        "shared_with"
+      ],
+      "check_stage": "build",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "freeze_params=['teacher.*'] missed shared blocks.* params, so blocks trained against teacher gradients. Detected at build by walking named_parameters and asserting every param intended frozen has requires_grad=False under share_blocks=True. Borderline control_flow vs sharding: chose control_flow because the bug is about which params are frozen (a flag/pattern misconfig), not parameter splitting."
+    },
+    {
+      "bug_id": "OC-NEW-19",
+      "framework": "olmo-core",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_class",
+        "preserve_rng_state",
+        "has_dropout"
+      ],
+      "check_stage": "build",
+      "pi_schema_applicable": false,
+      "pi_topo_applicable": false,
+      "pi_precond_applicable": true,
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "apply_activation_checkpointing hard-coded preserve_rng_state=False; with dropout active, backward recompute uses a different mask. Detected at build by asserting preserve_rng_state==True whenever any nn.Dropout exists in the model. Borderline numerical vs control_flow: chose control_flow because the bug is a misconfigured flag, not numerical math. pi_precond=true (precond is has_dropout=True)."
+    }
+  ]
+}

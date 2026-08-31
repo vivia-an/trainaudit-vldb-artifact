@@ -1,0 +1,11 @@
+{
+  "bug_id": "O-021",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Mixture rounding error causing sample repetition",
+  "category": "data_loading",
+  "root_cause": "Missing global_batch_size in SourceMixtureDatasetConfig causes rounding error",
+  "detection_method": "source_analysis",
+  "invariant": "Config must include global_batch_size for proper allocation",
+  "reproduction_status": "reproduced"
+}

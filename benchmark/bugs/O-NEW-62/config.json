@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-62",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "load_model in mup coord-check skips reset_parameters when infshapes is None",
+  "fixed_commit": "4bb23fb8",
+  "buggy_commit": "4bb23fb8~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/838",
+  "category": "model_init/mup",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "mup_olmo coord-check load_model path used for SP (standard-param) baseline",
+    "infshapes argument is None (i.e. running the SP comparison rather than a muP run)"
+  ],
+  "root_cause": "`reset_parameters()` was nested inside `if infshapes is not None:` together with `apply_infshapes`. For the standard-parametrization baseline (`infshapes=None`) the code therefore skipped reset_parameters entirely, leaving FSDP-materialized parameters with their default (often near-zero) values. Comparison curves and any downstream training look completely off without raising an error.",
+  "detection_method": "weight_init_distribution_check",
+  "invariant": "olmo_model.reset_parameters() must be called whenever the model is freshly built, regardless of mup mode",
+  "diff_summary": "Dedent `olmo_model.reset_parameters()` so it runs unconditionally",
+  "silent_check": "Skipping a method call never raises; FSDP-wrapped model uses default init silently and produces finite (but wrong) outputs."
+}

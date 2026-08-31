@@ -1,0 +1,402 @@
+[
+ {
+  "bug_id": "B14",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "cross_entropy_loss z-loss reduction='mean' uses wrong masked-mean formula",
+  "description": "",
+  "root_cause": "buggy: z_squared = z_squared / (labels != ignore).mean() returns vector divided by scalar, wrong scaling. Fix: z_squared = (z_squared * (labels != ignore)).mean() returns scalar masked-mean.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "compute_z_loss=True",
+   "reduction='mean'",
+   "labels contain ignore_index (-100) tokens"
+  ],
+  "issue_url": "https://github.com/allenai/OLMo/pull/523"
+ },
+ {
+  "bug_id": "B15",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Trainer.train_micro_batch divides z_loss by num_micro_batches instead of batch_size_in_tokens",
+  "description": "",
+  "root_cause": "z_loss = z_loss / num_micro_batches scales auxiliary loss by gradient accumulation count, not by token count. With T=batch_size_in_tokens >> num_micro_batches, z_loss dominates loss and corrupts training.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "softmax_auxiliary_loss = True",
+   "num_micro_batches != batch_size_in_tokens"
+  ],
+  "issue_url": "https://github.com/allenai/OLMo/pull/634"
+ },
+ {
+  "bug_id": "D-NEW-13",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO-1/2 CPU-offload gradient norm underestimated with manual GA",
+  "description": "",
+  "root_cause": "copy_grads_in_partition only accumulates when ga_steps > 1, misses micro_step_id > 0 case",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-28",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "bf16+ZeRO1+CPU offload silently routes through bf16 wrapper; extra-large param uses raw param.grad instead of reduction grad",
+  "description": "",
+  "root_cause": "Two related bugs: (a) The dtype dispatch picked the BFLOAT16 optimizer path for bf16+fp32-grad-accum even when CPU offload was on, where it doesn't work correctly. (b) For an extra-large param the reduction code took `self.extra_large_param_to_reduce.grad` directly instead of routing through get_gradient_for_reduction(), so when use_grad_accum_for_reduction was on the accumulated fp32 grad was bypassed and the raw bf16 grad was reduced (loss of precision and stale value).",
+  "category": "offload",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "bf16 model",
+   "grad_accum_dtype=fp32",
+   "ZeRO stage 1",
+   "zero_cpu_offload=True",
+   "param.numel > reduce_bucket_size"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-45",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO3 backward hook closure captures stale group index `i` — gradient routed to wrong reduction bucket",
+  "description": "",
+  "root_cause": "create_reduce_and_remove_grad_hooks built the per-param backward hook via `wrapper(param, i)` where `i` was the loop index over groups. Because `i` was Python-late-bound inside the closure, every hook fired with the same final value of `i`, routing earlier groups' gradients into the last group's reduction bucket. The fix removes the unused `i` argument entirely (the bucket is determined from the param itself).",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "ZeRO stage 3",
+   "multiple parameter groups"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-75",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "CPU Adam/Adagrad uses params.size(0) instead of numel() — only the first row of multi-dim params gets updated",
+  "description": "",
+  "root_cause": "ds_adam_step / ds_adagrad_step (and the *_plus_copy variants) passed `params_c.size(0)` (the size of the FIRST dimension only) as the element count to the kernel's Step_8. For a Linear weight of shape (out, in), only `out` elements are stepped instead of `out*in`. The kernel happily walks `size(0)` floats from the data pointer (which is in-bounds) and writes back only those — the other (size(0)*(size(1)-1) ... ) elements never receive an update.",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "DeepSpeedCPUAdam or CPU Adagrad",
+   "any tensor parameter with ndim >= 2 (e.g. linear weights, embedding tables)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-79",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "WarmupLR / LRRangeTest / OneCycle do not initialize optimizer group lr at construction — first step uses original lr",
+  "description": "",
+  "root_cause": "WarmupLR.__init__ stored its desired schedule but never wrote min_lr into self.optimizer.param_groups[0]['lr']. As a result, when the engine's first optimizer.step() runs (before lr_scheduler.step() which by convention is called after), the optimizer uses whatever lr the user instantiated the optimizer with — typically the peak lr — for one full step instead of the scheduler's warmup_min_lr (e.g. 0). With a typical 1e-4 peak lr and 0 warmup_min_lr, the first parameter update is therefore ~10000x larger than intended, often catastrophic for early training stability.",
+  "category": "lr_schedule",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "any DeepSpeed LRScheduler in {WarmupLR, LRRangeTest, OneCycle}",
+   "user reads lr_scheduler.get_last_lr() / param_group['lr'] before the first step()",
+   "optimizer.param_groups[0]['lr'] differs from scheduler's intended initial lr (which is min_lr / warmup_min_lr, typically 0)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-17",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "FSDP grad accumulation fusion missing main_grad creation in linear backward",
+  "description": "",
+  "root_cause": "LinearWithGradAccumulationAndAsyncCommunication.backward called fused_weight_gradient_mlp_cuda.wgrad_gemm_accum_fp32 directly with weight.main_grad, but for Megatron-FSDP parameters main_grad must be reconstructed in-place via weight.get_main_grad() each iteration. Without this call main_grad pointed to a stale buffer, so accumulated weight gradients were wrong.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "use_megatron_fsdp=True",
+   "gradient_accumulation_fusion=True",
+   "weight is FSDP DTensor (has __fsdp_param__ attribute)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-3",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "fp32 residual connection silently downcast to bf16",
+  "description": "",
+  "root_cause": "_bias_dropout_add_func downcasts residual to x.dtype (bf16) instead of upcasting x to residual.dtype (fp32)",
+  "category": "dtype",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-31",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "LinearWithFrozenWeight backward skips TP all-reduce of dgrad when TP>1",
+  "description": "",
+  "root_cause": "LinearWithFrozenWeight.forward did not save/forward the allreduce_dgrad flag; backward then computed grad_input = grad_output @ weight without performing the cross-TP all-reduce that the dgrad needs. Downstream layers received TP-rank-local input gradients instead of the summed gradient, silently producing wrong weights for the upstream trainable layers.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "ColumnParallelLinear/RowParallelLinear with frozen weights (requires_grad=False on weight)",
+   "tensor_model_parallel_size > 1",
+   "asynchronous all-reduce path"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-35",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MoE GroupedGEMM produces wrong outputs without sequence_parallel even when TP>1",
+  "description": "",
+  "root_cause": "ColumnParallelLinear/RowParallelLinear set explicit_expert_comm based on (config.sequence_parallel or self.expert_parallel). MoEAllGatherTokenDispatcher used the same predicate to decide whether to do the gather/scatter for expert routing. With TP>1 but SP=False (and EP=1), neither condition was True, so expert tokens were never gathered across TP ranks and each TP rank produced wrong (incomplete) MoE outputs.",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "MoE with GroupedGEMM experts",
+   "tensor_model_parallel_size > 1",
+   "sequence_parallel=False"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-43",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "DistributedDataParallel target_gradient_scaling_factor uses get_data_parallel_world_size without context_parallel, so gradients are over-scaled by cp_size when CP is enabled",
+  "description": "",
+  "root_cause": "DistributedDataParallel computed target_gradient_scaling_factor = 1.0 / parallel_state.get_data_parallel_world_size() without with_context_parallel=True. With CP enabled the gradient reduction collective spans the dp*cp ranks, so the gradients should be divided by dp_size*cp_size. Only dividing by dp_size leaves a residual factor of cp_size in the parameter updates.",
+  "category": "communication",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Context parallel size > 1",
+   "calculate_per_token_loss=False (default sample-mean loss)",
+   "DistributedOptimizer or average_in_collective enabled"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-45",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "TEGroupedMLP fused-ops backward_dw skips _trigger_wgrad_accumulation_and_reduce_hooks on the original linear modules, so DDP never zeros param.grad and AccumulateGrad double-counts",
+  "description": "",
+  "root_cause": "_make_fused_ops creates new GroupedLinear instances for the fused FC1/activation/FC2 path. backward_dw was called on the new instances, but DDP had registered the wgrad-accumulate-and-reduce hooks on the ORIGINAL self.linear_fc1/fc2 modules. Hooks therefore never fired, param.grad was not cleared, and AccumulateGrad performed an additional in-place add into main_grad on the next iteration, silently double-counting expert weight gradients.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "TE GroupedLinear with fused operations (TEGroupedMLP fused path)",
+   "DDP overlap_grad_reduce enabled (reduce-scatter wgrad hooks)",
+   "MoE training with multiple microbatches"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-57",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "_CudagraphReplayNode treats fp4_enabled as fp8 only, skipping the per-module FP-recipe restoration on FP4 paths so saved scaling factors drift each replay",
+  "description": "",
+  "root_cause": "_CudagraphReplayNode.forward only checked runner.fp8_enabled when deciding whether to set is_first_microbatch and restore the per-module DelayedScaling recipe. With FP4 active but FP8 inactive, the recipe restore branch was skipped, so each replay used a stale amax history. Every step shifted the FP4 scale away from the target, causing slowly drifting numerics.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "FP4 (NVFP4) training enabled (config.fp4 set, fp4_recipe DelayedScaling)",
+   "CUDA graphs enabled with FP4 modules"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-61",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MultimodalRotaryEmbedding slices rotary embedding along the wrong dimension and omits cp_group when CP is enabled, so each CP rank sees the wrong rotary position embedding",
+  "description": "",
+  "root_cause": "After emb.transpose(0, 1).contiguous() the sequence dimension is index 0, but get_pos_emb_on_this_cp_rank was called with seq_dim=1 and no cp_group argument. The wrong axis was sharded across CP ranks, and the default global cp_group fallback was used instead of the configured one. Each CP rank ended up with a rotary slice that does not correspond to its own sequence partition.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "MultimodalRotaryEmbedding (mrope) used in a multimodal model",
+   "context_parallel_world_size > 1",
+   "Sequence dimension is dim 0 of the post-transpose tensor"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-64",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "Hybrid DSL CommonLayerConfig does not derive params_dtype from mixed_precision_dtype, so models with mixed_precision_dtype='bf16' silently keep params_dtype=fp32",
+  "description": "",
+  "root_cause": "The DSL allowed bf16 mixed-precision compute while keeping params_dtype at fp32, producing a TransformerConfig with bf16=True but params_dtype=torch.float32. The legacy --bf16 CLI path automatically aligns params_dtype with bf16, so the DSL path silently diverged: parameters were materialized in fp32 and then cast on every forward, doubling memory and changing numerics relative to the legacy path.",
+  "category": "dtype",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Hybrid model built via the new Python DSL recipe API",
+   "Recipe sets mixed_precision_dtype='bf16' and leaves params_dtype at its 'fp32' default",
+   "Path: CommonLayerConfig.to_transformer_config_kwargs"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-11",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "SDP attention bias not cast to autocast dtype, -inf downcasts to NaNs in mixed precision",
+  "description": "",
+  "root_cause": "The attention bias was created in fp32 with -inf masked positions and only cast to the input dtype at the SDP call. Under autocast, the SDP kernel runs in lower precision; downcasting -inf to bf16/fp16 yields valid -inf values that propagate through softmax and produce NaNs once tokens are masked. The fix uses torch.finfo(target_dtype).min and casts the bias before the SDP call.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "AMP/autocast enabled (bf16 or fp16)",
+   "padded sequences requiring attention masking",
+   "scaled_dot_product_attention used"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-14",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "clip_grads_and_collect_metrics reduces grad norm over the global PG instead of the HSDP shard PG",
+  "description": "",
+  "root_cause": "When training with HSDP each replica holds a full copy of the gradients, so reducing per-shard gradient norms over the WORLD process group double-counts grads across replicas. The original code called dist.reduce/dist.all_reduce without specifying a process group, so they used WORLD instead of the shard group. The fix accepts an optional process_group argument and routes every reduce/all_reduce call through it.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "FSDP HYBRID_SHARD or HYBRID_SHARD_ZERO2 strategy",
+   "more than one model replica",
+   "gradient clipping or grad-norm metric collection enabled"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-15",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Outlier-loss skip-step logic inverted: optimizer steps only when loss IS an outlier",
+  "description": "",
+  "root_cause": "should_step was being AND-ed with is_outlier, meaning the optimizer only stepped on outlier steps and silently skipped normal training steps. The fix negates is_outlier so the optimizer steps on normal batches and skips outliers as intended.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "ce_loss_outlier_detector or grad_norm_outlier_detector enabled",
+   "any training step where the detector reports is_outlier=False (the common case)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-8",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Attention norm overwrites residual input — destroys identity path",
+  "description": "",
+  "root_cause": "",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-1",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "soft_target_probs silently truncated from float to int by as_tensor()",
+  "description": "",
+  "root_cause": "Local as_tensor() casts non-bool numpy arrays via astype(np.int_), destroying float probabilities",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-35",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Evaluator iterates with stale data-loader state — second eval pass starts mid-stream, evaluating a different subset",
+  "description": "",
+  "root_cause": "Evaluator.__iter__ called reshuffle() but did not reset() the data loader. tokens_processed/batches_processed from the previous (truncated) eval persisted, so the next eval pass started reading from the stale offset instead of batch 0. Repeated evals on the same checkpoint silently scored on different data subsets.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "LM evaluator runs multiple passes with eval_duration truncating each pass",
+   "DataLoaderBase carried over batches_processed from the previous pass"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-51",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "MultiHeadLatentAttention init dispatched to Attention branch — wrong layers initialized",
+  "description": "",
+  "root_cause": "InitMethod.init_attention dispatched on isinstance(m, Attention) before isinstance hasattr(m, 'wq_a'). Because MultiHeadLatentAttention inherits from Attention and exposes w_q, the MLA branch was never reached; the projections wq_a, wkv_a, wkv_b were never initialized while only w_q was, leaving the rest at the dtype-empty allocation values.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "MultiHeadLatentAttention (DeepSeek-style MLA) module"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-58",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "BLTDistill patch loss div factor used input_ids.numel() — wrong scaling for byte-level losses",
+  "description": "",
+  "root_cause": "The byte-level loss div factor was computed as loss_div_factor / input_ids.numel(), but loss_div_factor passed in is at the byte sequence level not the patch level. The correct denominator is h_byte.shape[0] * h_byte.shape[1] (number of byte positions), and the patch loss needs an analogous division by patch positions. The mismatch silently mis-weighted byte vs patch loss components.",
+  "category": "loss_computation",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "BLTDistillTransformer",
+   "patch_loss_div_factor configured"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-60",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "BLT distill missed first-call label_offsets when fuse_boundaries enabled",
+  "description": "",
+  "root_cause": "The label-offset application path that conditionally adds vocab_size_blt to boundary positions was duplicated for the alternate boundary computation but missed in the first forward branch. Boundary positions did not get their offsets applied to labels, so the cross-entropy compared against the wrong target indices for boundary tokens.",
+  "category": "loss_computation",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "BLTDistillTransformer with local_decoder.fuse_boundaries=True"
+  ],
+  "issue_url": ""
+ }
+]

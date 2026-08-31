@@ -1,0 +1,21 @@
+{
+  "bug_id": "O-NEW-11",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "SDP attention bias not cast to autocast dtype, -inf downcasts to NaNs in mixed precision",
+  "fixed_commit": "e63b3896",
+  "buggy_commit": "e63b3896~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/323",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "AMP/autocast enabled (bf16 or fp16)",
+    "padded sequences requiring attention masking",
+    "scaled_dot_product_attention used"
+  ],
+  "root_cause": "The attention bias was created in fp32 with -inf masked positions and only cast to the input dtype at the SDP call. Under autocast, the SDP kernel runs in lower precision; downcasting -inf to bf16/fp16 yields valid -inf values that propagate through softmax and produce NaNs once tokens are masked. The fix uses torch.finfo(target_dtype).min and casts the bias before the SDP call.",
+  "detection_method": "value_invariant",
+  "invariant": "attention output must not contain NaNs after softmax when an attention mask is provided",
+  "diff_summary": "added _cast_attn_bias helper that converts the bias to the autocast dtype and replaces -inf with torch.finfo(dtype).min before scaled_dot_product_attention is invoked"
+}

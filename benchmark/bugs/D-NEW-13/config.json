@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-13",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO-1/2 CPU-offload gradient norm underestimated with manual GA",
+  "fixed_commit": "9d632f10",
+  "buggy_commit": "9d632f10~1",
+  "category": "optimizer",
+  "severity": "high",
+  "gpu_needed": 2,
+  "root_cause": "copy_grads_in_partition only accumulates when ga_steps > 1, misses micro_step_id > 0 case",
+  "detection_method": "runtime_hook",
+  "invariant": "CPU gradient buffer must be updated on every micro-step when cpu_offload is enabled"
+}

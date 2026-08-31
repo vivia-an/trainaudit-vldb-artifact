@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-18",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "QwenRMSNorm absent from olmo-core — RMSNorm casts back to og_dtype after weight multiply, diverging from HF Qwen3",
+  "fixed_commit": "fc344e22",
+  "buggy_commit": "fc344e22~1",
+  "category": "normalization",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Qwen3 model factory used (qwen3_*B family)",
+    "Mixed-precision (bf16) inputs"
+  ],
+  "root_cause": "olmo-core's RMSNorm computed normalize -> weight-multiply -> cast(og_dtype), which performs the affine multiply in fp32. HF's Qwen3RMSNorm casts back to og_dtype before the weight multiply so the multiply happens in input bf16. Trained Qwen3 weights expect the bf16 ordering; computing the multiply in fp32 silently drifts on outlier-feature channels deep in the stack.",
+  "detection_method": "dtype_invariant",
+  "invariant": "For Qwen3 layer norm the weight*x multiply executes in input dtype (bf16), not in fp32 — equivalently x is cast back to og_dtype before the affine.",
+  "diff_summary": "Add a QwenRMSNorm subclass whose forward casts x to og_dtype before multiplying by self.weight; route qwen3_* factories to layer_norm_name='qwen_rms'."
+}

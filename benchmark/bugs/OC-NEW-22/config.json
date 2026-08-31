@@ -1,0 +1,20 @@
+{
+  "bug_id": "OC-NEW-22",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "RoPE positions use global token index in packed mode — second document gets [k_doc1_len, ...] instead of [0, ...]",
+  "fixed_commit": "df72f4ee",
+  "buggy_commit": "df72f4ee~1",
+  "category": "attention",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Multiple documents packed into one sequence",
+    "cu_doc_lens describes intra-document boundaries",
+    "RotaryEmbedding (non-Fused)"
+  ],
+  "root_cause": "RotaryEmbedding.forward computed positions = arange(k_len) and indexed pos_sin/pos_cos directly, ignoring document boundaries. Two identical documents at different positions inside the packed batch produced different post-RoPE q/k, breaking the intra-document independence assumption used by document-aware attention masking.",
+  "detection_method": "value_invariant",
+  "invariant": "Two identical documents packed back-to-back must yield identical post-RoPE q/k values (per-document positions reset at each cu_doc_lens boundary).",
+  "diff_summary": "Add cu_doc_lens parameter to RotaryEmbedding.forward; use searchsorted on cu_doc_lens to compute per-document local positions before indexing pos_sin/pos_cos."
+}

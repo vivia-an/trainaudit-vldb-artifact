@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-62",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "BF16_Optimizer skips fp32 cast of gradient when grad_acc_dtype != fp32 — Adam runs on bf16 grads",
+  "fixed_commit": "cfc6ed37",
+  "buggy_commit": "cfc6ed37~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/6485",
+  "category": "mixed_precision",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["bf16 model + BF16_Optimizer", "grad_accum_dtype set to bf16 (not fp32)", "any optimizer.step()"],
+  "root_cause": "BF16_Optimizer.step() previously assumed param_partition.grad was already in the param's fp32 dtype because initialize_optimizer_states() did the cast at init. When grad_acc_dtype is bf16, that one-shot cast at init becomes meaningless — every subsequent step the bf16-grad accumulator gets reduced into the partition's grad slot but nothing converts it to fp32 before the wrapped Adam.step() reads it. Adam then computes m_t, v_t, and the parameter update entirely in bf16, with corresponding precision loss in the second moment.",
+  "detection_method": "value_invariant",
+  "invariant": "Inside BF16_Optimizer.step(), at the moment self.optimizer.step() is called, every param_partition.grad's dtype must equal param_partition.dtype (i.e. fp32).",
+  "diff_summary": "Move the per-step cast `param_partition.grad = grad_partition.to(param_partition.dtype) if dtypes differ else grad_partition` from initialize_optimizer_states() into step(); remove the now-redundant initialize_optimizer_states.",
+  "silent_check": "Adam is dtype-polymorphic in PyTorch — feeding it bf16 grads with fp32 params runs without error (it casts internally per-op, losing precision in m_t/v_t). No exception; loss curve diverges slowly from the fp32-grad baseline."
+}

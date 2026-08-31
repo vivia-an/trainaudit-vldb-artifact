@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-1",
+  "framework": "deepspeed",
+  "category": "moe",
+  "parallel_dimension": "none",
+  "invariant_type": "implementation_equivalence",
+  "required_trace_fields": [],
+  "check_stage": "other",
+  "minimum_sufficient_layer": "none",
+  "pattern_id": "none",
+  "tier_field": "exceeds_tier6",
+  "rationale": "TopKGate applies topk to raw logits instead of post-softmax gates. detection_method=source_analysis: softmax is monotonic so topk indices may match between buggy and correct implementations; only the gate weights differ. No runtime trace field can reliably distinguish buggy vs clean — must read source. Per anti-example 9, source-only bugs are pattern=none, layer=none, tier=exceeds_tier6. parallel_dim=none (single-GPU MoE reproduces). Borderline numerical vs moe: chose moe because the bug is specific to MoE router algorithm, not generic numerical math.",
+  "borderline_flags": ["SOURCE_ONLY_DETECTION", "CATEGORY_AMBIGUOUS_moe_numerical"]
+}

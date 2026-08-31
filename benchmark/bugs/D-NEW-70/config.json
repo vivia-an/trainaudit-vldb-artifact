@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-70",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO-1/2 IPG buffer averaged over full allocated size — averages garbage from unused tail elements",
+  "fixed_commit": "75e579e7",
+  "buggy_commit": "75e579e7~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/5268",
+  "category": "communication",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 1 or 2", "contiguous_gradients=True", "no extra_large_param to reduce", "elements_in_ipg_bucket < reduce_bucket_size (i.e. bucket flushed before fill)"],
+  "root_cause": "In average_tensor's contiguous_gradients/non-extra-large branch, the code passed `self.ipg_buffer[self.ipg_index]` (the whole pre-allocated buffer of size reduce_bucket_size) to average_tensor. When the bucket flushes early (e.g. last params of a step or after a dtype switch), only elements_in_ipg_bucket are valid; the tail still holds whatever was last computed there. Those stale floats get included in the all-reduce sum and the divide-by-world-size, contaminating the per-rank averaged gradient slice for the genuine grads near the end of the buffer.",
+  "detection_method": "structural_invariant",
+  "invariant": "The tensor passed to average_tensor must be exactly self.ipg_buffer.narrow(0, 0, self.elements_in_ipg_bucket).",
+  "diff_summary": "Replace `self.ipg_buffer[self.ipg_index]` with `self.ipg_buffer[self.ipg_index].narrow(0, 0, self.elements_in_ipg_bucket)` in the average call.",
+  "silent_check": "average_tensor still receives a contiguous fp16/bf16 tensor of valid shape; the all-reduce succeeds. The garbage tail values just bias gradients near bucket boundaries — finite numbers, no NaN, no shape mismatch."
+}

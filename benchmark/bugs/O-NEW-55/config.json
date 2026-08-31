@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-55",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Block readout init unconditionally re-initializes ff_proj, overwriting muP zero-init",
+  "fixed_commit": "bff472f5",
+  "buggy_commit": "bff472f5~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/697",
+  "category": "model_init/weights",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["FSDP", "DP"],
+  "trigger_conditions": [
+    "OLMoSequentialBlock used and reset_parameters() called",
+    "use_mup enabled OR full_megatron init_fn (where ff_proj should keep MuReadout's zero init)"
+  ],
+  "root_cause": "OLMoSequentialBlock.reset_parameters unconditionally called `init_normal(self.ff_proj, std, cutoff_factor, ...)`. When `use_mup=True`, ff_proj is a `MuReadout` module whose readout weights must remain at the muP zero/special initialization; the unconditional re-init overwrites that with a regular truncated-normal, silently breaking the muP coordinate-check guarantee that activation magnitudes are width-independent.",
+  "detection_method": "weight_init_distribution_check",
+  "invariant": "If use_mup=True, ff_proj.weight at end of init must remain at MuReadout's zero/scaled init (not truncated-normal with std=init_std)",
+  "diff_summary": "Wrap the readout `init_normal` call in `if not self.config.use_mup`",
+  "silent_check": "init_normal accepts any nn.Linear/MuReadout-shaped weight and just rewrites the data tensor in place; no exception is raised, the model trains, only its initialization is silently wrong."
+}

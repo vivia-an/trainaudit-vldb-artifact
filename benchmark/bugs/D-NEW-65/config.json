@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-65",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "PipelineEngine non-last-stage backward double-updates hp_grads when bfloat16_immediate_grad_update is enabled",
+  "fixed_commit": "91a9986d",
+  "buggy_commit": "91a9986d~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/5605",
+  "category": "pipeline",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["PP", "DP"],
+  "trigger_conditions": ["pipeline parallel (PP > 1)", "bf16 with BF16_Optimizer", "bfloat16_immediate_grad_update=True (per-param hooks update hp_grads inline)"],
+  "root_cause": "PipelineEngine._exec_backward_pass for non-last-stage manually calls self.optimizer.update_hp_grads(clear_lp_grads=False) because backward is invoked via torch.autograd.backward instead of optimizer.backward(). With immediate_grad_update=True the per-param backward hooks already populate fp32_groups_gradients_flat as each lp.grad is produced. The unconditional call to update_hp_grads then iterates every parameter and adds lp.grad to the fp32 accumulator a SECOND time — every gradient on PP non-last stages is doubled.",
+  "detection_method": "value_invariant",
+  "invariant": "On any non-last pipeline stage, after _exec_backward_pass, fp32_groups_gradients_flat[p] must equal exactly one cast of lp.grad[p] (i.e. updated once, not twice).",
+  "diff_summary": "Wrap the manual update_hp_grads call: `if not self._config.bfloat16_immediate_grad_update: self.optimizer.update_hp_grads(clear_lp_grads=False)`.",
+  "silent_check": "Buggy code produces fp32 grads that are exactly 2x the correct value — finite, well-shaped, no NaN/Inf. The next allreduce and Adam step proceed; only the loss curve grows ~2x faster than reference and may diverge."
+}

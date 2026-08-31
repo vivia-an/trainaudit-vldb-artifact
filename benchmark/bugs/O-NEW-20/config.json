@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-20",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "ff_out readout reset overwrites muP zero-init weights with normal-distribution values",
+  "fixed_commit": "a4a5b6e2",
+  "buggy_commit": "a4a5b6e2~1",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 0,
+  "trigger_conditions": [
+    "model.use_mup=true",
+    "OLMo.reset_parameters() invoked (always called from __init__)"
+  ],
+  "root_cause": "OLMo.reset_parameters always called init_normal on transformer.ff_out, including under muP where ff_out is a MuReadout that must be initialized to zero. The non-zero initialization breaks the muP coordinate-check property and changes the model's effective output scale at initialization. Fix skips init_normal on ff_out when use_mup is True.",
+  "detection_method": "value_invariant",
+  "invariant": "for use_mup=true, transformer.ff_out.weight must be all zeros immediately after model construction",
+  "diff_summary": "wrapped the init_normal(self.transformer.ff_out, ...) call in `if not self.config.use_mup` so that the MuReadout zero-init is preserved"
+}

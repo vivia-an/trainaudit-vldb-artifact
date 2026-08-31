@@ -1,0 +1,24 @@
+[project]
+name = "sdccheck"
+version = "0.1.0"
+description = "Compatibility verifier for TrainAudit recorded DuckDB traces"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "duckdb>=1.3.2",
+    "ipdb>=0.13.13",
+    "openai>=1.97.1",
+    "pandas>=2.3.1",
+    "pydantic>=2.11.7",
+    "pyyaml>=6.0",
+    "numpy>=1.26.0",
+]
+
+[project.scripts]
+sdccheck = "main:main"
+sdccheck-merge = "tools.merge_db:main"
+sdccheck-hierarchy = "tools.merge_db:hierarchy_main"
+
+[[tool.uv.index]]
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
+default = true

@@ -1,0 +1,65 @@
+{
+  "annotator_id": "llm_independent_batch5",
+  "annotations": [
+    {
+      "bug_id": "OC-NEW-20",
+      "category": "control_flow",
+      "confidence": "high",
+      "rationale": "freeze override moved to wrong class scope"
+    },
+    {
+      "bug_id": "O-010",
+      "category": "optimizer_state",
+      "confidence": "high",
+      "rationale": "Adam state['step'] never incremented"
+    },
+    {
+      "bug_id": "O-011",
+      "category": "numerical",
+      "confidence": "medium",
+      "rationale": "shared RoPE buffer breaks position encoding under CP"
+    },
+    {
+      "bug_id": "O-039",
+      "category": "checkpoint",
+      "confidence": "high",
+      "rationale": "duplicate final checkpoint overwrites on restart"
+    },
+    {
+      "bug_id": "OC-NEW-15",
+      "category": "moe",
+      "confidence": "high",
+      "rationale": "MoE aux loss double-counted by recompute"
+    },
+    {
+      "bug_id": "O-017",
+      "category": "lr_schedule",
+      "confidence": "high",
+      "rationale": "CosWithWarmupAndLinearDecay init wrong"
+    },
+    {
+      "bug_id": "O-013",
+      "category": "loss_computation",
+      "confidence": "high",
+      "rationale": "fused cross-entropy variant under-performs"
+    },
+    {
+      "bug_id": "O-019",
+      "category": "data_loading",
+      "confidence": "high",
+      "rationale": "LM eval loader bookkeeping not reset"
+    },
+    {
+      "bug_id": "OC-NEW-10",
+      "category": "dtype",
+      "confidence": "high",
+      "rationale": "RoPE promoted to fp32, diverges from bf16 HF"
+    },
+    {
+      "bug_id": "O-012",
+      "category": "sharding",
+      "confidence": "medium",
+      "rationale": "missing TP wrapper, wrong DTensor handling for loss"
+    }
+  ]
+}

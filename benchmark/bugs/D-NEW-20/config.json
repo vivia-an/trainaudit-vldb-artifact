@@ -1,0 +1,1 @@
+{"bug_id":"D-NEW-20","framework":"deepspeed","repo":"microsoft/DeepSpeed","title":"BF16_Optimizer incorrectly selected for bf16+fp32_grad_accum without ZeRO","fixed_commit":"09885efe","buggy_commit":"09885efe~1"}

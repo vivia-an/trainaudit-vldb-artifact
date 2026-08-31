@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-66",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Attention gate w_g never initialized — uses uninitialized memory",
+  "fixed_commit": "2b71b779",
+  "buggy_commit": "2b71b779~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/2b71b779",
+  "category": "initialization",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["Attention with attention gating (w_g not None)", "init_method.init_attention runs"],
+  "root_cause": "init_attention initialized w_q/w_k/w_v (and w_qkv for FusedAttention) but never touched the optional gate projection w_g. When constructed via nn.Linear with init_device='meta'/'cpu', w_g.weight held whatever values reset_parameters or torch.empty produced rather than the intended trunc-normal distribution.",
+  "detection_method": "constraint:full_module_initialization",
+  "invariant": "Every learnable Linear weight in attention (including the optional gate projection) must be initialized exactly once via _init_linear before training starts.",
+  "diff_summary": "Add `if m.w_g is not None: self._init_linear(m.w_g, std=g_std, generator=generator)` after the q/k/v block.",
+  "silent_check": "Initialization completes without exception — w_g.weight is a finite tensor (whatever empty/reset_parameters left it as); the model trains, just from an unintended starting distribution for the gate."
+}

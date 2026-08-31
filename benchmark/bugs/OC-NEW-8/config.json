@@ -1,0 +1,20 @@
+{
+  "bug_id": "OC-NEW-8",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "PoE z_loss combined into combined_loss is detached, contributing value but no gradient",
+  "fixed_commit": "2b0e6e21",
+  "buggy_commit": "2b0e6e21~1",
+  "category": "loss_computation",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Product-of-experts (PoE) training path active",
+    "z_loss_multiplier is set",
+    "return_logits=True from LMHead"
+  ],
+  "root_cause": "In TransformerTrainModule.train_batch the PoE branch added output.z_loss to combined_loss, but LMHead emits output.z_loss as a detached metric tensor. The optimizer therefore saw the z_loss value in the printed metric while backprop applied zero z_loss gradient, so logit-norm regularization never actually constrained the weights.",
+  "detection_method": "value_invariant",
+  "invariant": "Any tensor summed into combined_loss prior to backward() must have requires_grad=True so the regularizer reaches the parameters.",
+  "diff_summary": "Recompute z_loss inline from the logits used for poe_loss with a gradient-bearing logsumexp, and add that recomputed tensor to combined_loss instead of the detached output.z_loss."
+}

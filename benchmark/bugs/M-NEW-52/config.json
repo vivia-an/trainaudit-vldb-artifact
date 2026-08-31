@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-52",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "_CudagraphReplayNode unconditionally copies user_input into cudagraph_input even when the data pointers already match, overwriting in-place results from preceding ops",
+  "fixed_commit": "9ff763aa42",
+  "buggy_commit": "9ff763aa42~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/3948",
+  "category": "cuda_graph",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["TP"],
+  "trigger_conditions": [
+    "CUDA graphs enabled with input/output buffer reuse across runners",
+    "Sequence of layers where the previous layer's output is the next layer's input alias"
+  ],
+  "root_cause": "When the user_input tensor is the SAME storage as cudagraph_input (data_ptr equality), copy_ amounts to a self-copy that semantically still launches a kernel. In specific reuse patterns the source and destination data pointers were intentionally identical so no copy was needed, but cudagraph_input.copy_(user_input) was always issued and could overwrite a value that another op had just written, especially under certain stream orderings.",
+  "detection_method": "function_call_counting",
+  "invariant": "cudagraph_input.copy_(user_input) must only be issued when user_input.data_ptr() != cudagraph_input.data_ptr().",
+  "diff_summary": "Guard the cudagraph_input.copy_(user_input) call with if user_input.data_ptr() != cudagraph_input.data_ptr().",
+  "silent_check": "Self-copies via copy_ never raise; subsequent reads succeed; the only effect is that values produced concurrently on adjacent streams may be silently overwritten with stale data, leading to numerical drift across replays."
+}

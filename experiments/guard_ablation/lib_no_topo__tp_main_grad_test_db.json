@@ -1,0 +1,464 @@
+[
+  {
+    "constraint_name": "shared_experts权重不一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，shared_experts权重在TP通信组间的不一致性检查通过，未发现违规情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "LayerNorm权重一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "LayerNorm权重一致性检查通过，所有DP和TP通信组间的layernorm权重在model-after-backward阶段保持一致。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "Router权重一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "Router权重一致性检查通过，所有router权重参数在TP通信组间完全复制一致，未发现违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP梯度shape和dtype一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有tensor parallel组内分片参数的梯度shape和dtype与其参数分片严格一致，未发现任何不一致性违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer_step阶段TP参数optimizer state分片一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "optimizer_step阶段TP参数optimizer state分片一致性检查通过，未发现任何分片不一致问题。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段TP参数AllGather拼接完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在forward阶段TP参数AllGather拼接完整性检查中，发现245个参数存在不一致性，每个参数在TP组内具有2个不同的校验和，表明AllGather后拼接结果存在内容不一致，可能由于通信或分片逻辑错误导致。",
+    "n_violations": 3
+  },
+  {
+    "constraint_name": "initialization阶段TP参数分片边界完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "initialization阶段TP参数分片边界完整性检查通过，未发现分片重叠或遗漏问题。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP分片参数main_grad存在性与完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-after-backward阶段，检测到296个参数分片存在main_grad缺失的违规情况，涉及多个TP组内的参数，表明分布式训练中梯度分配或通信存在异常。",
+    "n_violations": 6
+  },
+  {
+    "constraint_name": "model-after-forward阶段TP attention.qkv.bias参数shape一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "model-after-forward阶段TP组内attention.qkv.bias参数shape一致性检查通过，未发现shape不一致、冗余或缺失的违规情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-optimizer-step阶段TP attention output projection权重分片shape与边界完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-optimizer-step阶段，所有tensor parallel组内attention output projection权重（attention.dense.weight）的分片shape与理论shape完全一致，且分片边界无越界或重叠，未发现任何违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP分片梯度分布差异性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有tensor parallel组内可训练参数的梯度分片分布无显著一致性异常，未发现大范围梯度完全一致的情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "checkpoint阶段TP分片参数分片边界、shape和dtype一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "检查点阶段TP分片参数的分片边界、shape和dtype一致性检查通过，未发现任何违规记录。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-forward阶段TP参数requires_grad一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "model-after-forward阶段所有tensor parallel组内参数的requires_grad属性一致，未发现不一致情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer-step阶段TP参数optimizer state分片边界完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "optimizer-step阶段TP参数optimizer state分片边界完整性检查通过，未发现分片边界错位、信息丢失或拼接不一致的问题。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-forward阶段TP分片参数与全局参数requires_grad同步与不变性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-forward阶段，所有tensor parallel分片参数的requires_grad属性与全局参数保持同步，且forward阶段后该属性未发生变化，未发现梯度计算异常或训练同步错误。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP optimizer state分片边界一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有tensor parallel组内optimizer state（如momentum, variance等）在分片边界处的数值一致性与初始化状态检查通过，未发现未初始化或数值漂移等异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-forward阶段TP分片attention.qkv.weight拼接数值连续性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "model-after-forward阶段TP分片attention.qkv.weight拼接数值连续性检查通过，未发现分片边界处存在异常跳变或断层。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP attention output projection权重分布一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-after-backward阶段，所有60个TP分片的attention output projection权重均存在一致性违规：每个分片对（共2个TP分片）的校验和均不相同，表明分片间权重分布不一致，可能存在通信异常或数值漂移。",
+    "n_violations": 2
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP attention.qkv.weight分片数值分布统计特征一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有tensor parallel分片的attention.qkv.weight参数的数值分布统计特征（均值、方差）一致性检查通过，未发现异常分片。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward/optimizer-step阶段TP attention.qkv.weight分片拼接边界连续性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: Referenced column \"param_name\" not found in FROM clause!\nCandidate bindings: \"data\"\n\nLINE 1: ...(data, '$.name') LIKE '%attention.qkv.weight%' GROUP BY param_name, step, stage, dp_rank, pp_rank), inconsistency_c...\n                                                                   ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP attention.qkv.weight.grad分片拼接边界连续性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，TP分片attention.qkv.weight.grad的拼接边界连续性检查通过，未发现数值不连续或通信同步异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP分片LayerNorm.bias数值分布一致性与合理性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有tensor parallel组内LayerNorm.bias参数的数值分布一致且合理，未发现均值或方差显著漂移或超出正常区间的情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP attention.qkv.weight.grad分片数值健康性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有tensor parallel分片的attention.qkv.weight.grad均未检测到NaN、Inf或数值异常，梯度健康性检查通过。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP attention.qkv.weight.grad分片分布统计一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "model-after-backward阶段TP attention.qkv.weight.grad分片分布统计一致性检查通过，所有分片的统计特征（均值、方差、极值）一致，未发现异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP MLP dense_h_to_4h权重分片边界与数值分布一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，TP MLP dense_h_to_4h权重分片边界与数值分布一致性检查通过，未发现任何违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer-step阶段TP分片optimizer state拼接后数值分布健康性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "optimizer-step阶段TP分片optimizer state拼接后数值分布健康性检查通过，未发现异常漂移或分布断裂。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段TP分片参数requires_grad属性同步性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "所有TP分片参数的requires_grad属性在各TP rank与全局参数之间保持一致，未发现参数动态冻结/解冻未同步的问题。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward与optimizer-step阶段TP attention.qkv.weight参数requires_grad同步性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: Cannot compare values of type VARCHAR and type INTEGER_LITERAL - an explicit cast is required\n\nLINE 1: ..., stage, tp_rank, requires_grad FROM param_data WHERE tp_rank > 0) SELECT tp_requires_grad.param_name, tp_requires_grad...\n                                                                         ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-initialization与model-after-forward阶段TP参数requires_grad同步与不可变性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "TP参数requires_grad同步与不可变性检查通过，所有分片参数的requires_grad属性在初始化后与前向传播后均保持一致，未发现异常更改。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP attention.qkv.weight.grad分片独立性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有TP分片的attention.qkv.weight.grad梯度数值分布独立，未发现高度相关或完全一致的分片对，TP通信/同步正常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP attention.qkv.weight分片拼接边界数值变化幅度健康性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，TP分片拼接边界数值变化幅度健康性检查通过，未发现异常突变或断层。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer-step阶段TP分片optimizer state拼接后全局分布一致性与异常断点检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "optimizer-step阶段TP分片optimizer state拼接后全局分布一致性与异常断点检查通过，未发现任何违规数据。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-forward与model-after-optimizer-step阶段TP分片参数requires_grad同步与不变性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "model-after-forward与model-after-optimizer-step阶段TP分片参数requires_grad同步性与不变性检查通过，未发现任何违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段TP attention.qkv.weight.grad全局健康性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "model-after-backward阶段TP attention.qkv.weight.grad全局健康性检查通过，未发现数值异常（NaN/Inf/爆炸）。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "冻结参数不更新（requires_grad=false）检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "冻结参数在训练过程中未发生意外更新，所有 requires_grad=false 的参数在 optimizer step 前后 cksum 保持一致。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "冻结参数梯度严格为空",
+    "constraint_type": "ConstraintType.VALIDITY",
+    "status": "pass",
+    "summary": "所有冻结参数（requires_grad=false）的梯度相关字段均为空，未发现冻结失效情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "grad/main_grad 的形状与类型匹配",
+    "constraint_type": "ConstraintType.VALIDITY",
+    "status": "pass",
+    "summary": "所有梯度数据的形状和类型均匹配，未发现违规情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "权重共享（weight tying）一致性检查（嵌入-输出）",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "权重共享一致性检查通过，未发现嵌入层与输出层权重在相同并行策略下的校验和不一致问题。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "模型初始化阶段TP参数分布一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "模型初始化阶段TP参数分布一致性检查通过，所有未冻结且未共享的参数在TP rank间分布一致，未发现初始化同步异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "checkpoint恢复阶段全参数cksum/shape/dtype完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "检查点恢复阶段全参数完整性检查通过，所有参数（包括常规参数、shared_experts、layernorm、router、tied_weights等）在DP/TP/PP/SP/EP所有并行维度下的cksum、shape和dtype均与保存时完全一致，未发现任何不一致或损坏。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "backward阶段SP分片参数通信后全局一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "backward阶段SP分片参数通信后全局一致性检查通过，未发现任何违规数据。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer-step阶段多维并行optimizer state与参数shape/dtype及分布一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "optimizer-step阶段多维并行optimizer state与参数shape/dtype及分布一致性检查通过，未发现任何违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段TP下shared_experts参数分片一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "forward阶段TP下shared_experts参数分片一致性检查通过，所有TP rank上的shared_experts参数分片分布完全一致。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段DP LayerNorm状态统计量一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "forward阶段DP LayerNorm状态统计量一致性检查通过，未发现任何违规数据。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer-step阶段参数与optimizer state一一对应完整性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "fail",
+    "summary": "在model-after-optimizer-step阶段，检测到296个参数缺少对应的optimizer state，违反了参数与optimizer state一一对应的完整性约束。",
+    "n_violations": 10
+  },
+  {
+    "constraint_name": "forward/backward阶段全局tied参数同步完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在forward和backward阶段，所有被标记为'tied'（权重绑定）的参数组在不同rank间内容一致且同步更新，未发现同步异常或通信机制缺陷。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "训练全程参数requires_grad属性不变性完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "所有参数的requires_grad属性在训练全程保持初始值不变，未发现模型完整性异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward阶段未分片普通参数DP组间cksum一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在forward/backward阶段，检测到745个未分片普通参数在DP组间存在cksum不一致，表明模型副本间存在同步异常或初始化漂移，可能导致训练不可复现或收敛异常。",
+    "n_violations": 10
+  },
+  {
+    "constraint_name": "optimizer-step及checkpoint恢复后未分片参数optimizer state shape/dtype一致性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "pass",
+    "summary": "所有未被冻结且未分片的参数的optimizer state与参数本身的shape和dtype严格一致，未发现不一致情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward阶段未分片参数requires_grad属性并行组一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: Referenced column \"data\" not found in FROM clause!\nCandidate bindings: \"dp_rank\", \"tp_rank\", \"param_name\", \"step\"\n\nLINE 1: ...) as all_requires_grad, array_agg(DISTINCT CAST(json_extract(data, '$.tp') AS INTEGER) || ',' || CAST(json_extract(data...\n                                                                        ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward阶段PP激活张量跨stage通信完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在forward/backward阶段，所有pipeline stage边界的激活张量跨stage通信后，shape、dtype和cksum在发送端与接收端完全一致，未发现通信错误、数据截断或静默错误。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward阶段未分片参数分布一致性完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: Referenced column \"data\" not found in FROM clause!\nCandidate bindings: \"dp_rank\", \"tp_rank\", \"param_name\", \"step\"\n\nLINE 1: ... cksum) as all_cksums, array_agg(DISTINCT CAST(json_extract(data, '$.tp') AS INTEGER) || ',' || CAST(json_extract(data...\n                                                                       ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "训练全程未分片参数requires_grad属性全局一致性完整性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "pass",
+    "summary": "训练全程未分片参数requires_grad属性全局一致性完整性检查通过，所有未分片参数在forward、backward、optimizer-step、checkpoint恢复等阶段均保持与初始化一致，且跨并行组完全一致。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段未分片参数requires_grad全局不变性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "forward阶段所有未分片参数的requires_grad属性全局一致，未发现动态修改或跨rank不一致的情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer-step阶段未分片参数optimizer state同步完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "optimizer-step阶段未分片参数optimizer state同步完整性检查通过，未发现任何数值不一致或同步异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward阶段未分片参数requires_grad属性全程不变性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "error",
+    "summary": "检查过程中出错: 'NoneType' object has no attribute 'fetchdf'",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward阶段分片参数分片元数据全局一致性与完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在forward/backward阶段，参数分片元数据存在全局一致性与完整性问题，共发现1725条违规记录，主要表现为分片维度冲突（shard_conflict）和跨TP分片的校验和不一致（cksum_consistency），涉及多个参数在不同阶段和微批次中的分片元数据异常。",
+    "n_violations": 4
+  },
+  {
+    "constraint_name": "optimizer-step及checkpoint恢复阶段未分片参数全局数值一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-after-optimizer-step阶段，检测到245个未分片参数在并行组间存在数值bitwise不一致，每个参数均出现2种不同的校验和，表明存在同步异常或恢复错误。",
+    "n_violations": 10
+  },
+  {
+    "constraint_name": "全阶段多维并行未分片参数requires_grad全局一致性与不变性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: Referenced column \"data\" not found in FROM clause!\nCandidate bindings: \"dp\", \"param_name\", \"step\"\n\nLINE 1: ...) as all_requires_grad, array_agg(DISTINCT CAST(json_extract(data, '$.tp') AS INTEGER) || '-' || CAST(json_extract(data...\n                                                                        ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段未分片参数requires_grad属性checkpoint一致性完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "所有未分片参数在checkpoint恢复后，其requires_grad属性与保存时保持一致，未发现属性漂移。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-optimizer-step阶段未分片参数optimizer state与requires_grad属性严格对应性完整性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: Referenced column \"data\" not found in FROM clause!\nCandidate bindings: \"dp\", \"grad_type\", \"grad_shape\", \"param_name\", \"etp\"\n\nLINE 1: ..., grad_cksum, grad_shape, grad_type, CASE WHEN json_extract(data, '$.requires_grad') = false AND (grad_cksum IS NOT...\n                                                                       ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段分片参数元数据与物理属性一致性完整性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "pass",
+    "summary": "forward阶段分片参数元数据与物理属性一致性完整性检查通过，未发现任何违规数据。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段分片参数分片边界与拼接顺序完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "一致性检查失败：所有740个参数均存在DP、PP、EP分片多样性缺失问题，表明分片边界或拼接顺序与模型配置不一致，可能导致模型行为异常。",
+    "n_violations": 3
+  },
+  {
+    "constraint_name": "forward/backward阶段分片参数全局元数据一致性完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "forward/backward阶段所有分片参数的全局元数据与物理分片数据完全一致，未发现任何不一致性违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward/optimizer-step阶段分片参数物理内存与元数据一致性完整性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: Referenced column \"data\" not found in FROM clause!\nCandidate bindings: \"dp_rank\", \"tp_rank\", \"param_name\", \"step\"\n\nLINE 1: ... cksum) as all_cksums, array_agg(DISTINCT CAST(json_extract(data, '$.tp') AS INTEGER) || '-' || CAST(json_extract(data...\n                                                                       ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward/optimizer-step及checkpoint恢复阶段未分片参数requires_grad与optimizer state严格对应完整性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "pass",
+    "summary": "所有未分片参数的requires_grad属性与optimizer state存在性严格对应，完整性检查通过。",
+    "n_violations": 0
+  }
+]

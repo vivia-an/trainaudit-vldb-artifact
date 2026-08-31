@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-13",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "FLOPs counter multiplies per-sequence flops by global batch size every step instead of accumulating per token",
+  "fixed_commit": "6effc3e0",
+  "buggy_commit": "6effc3e0~1",
+  "category": "metric_tracking",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "training restarts from a checkpoint",
+    "speed/flops monitoring enabled"
+  ],
+  "root_cause": "num_fwd_flops/num_bck_flops were computed per sequence (multiplied by max_sequence_length) and SpeedMonitor accumulated them with global_batch_size every step using +=. After resume, the running total was overwritten/reset per step rather than treated as cumulative tokens, so reported Gflops did not accumulate across resumes. Fix changes flops to per-token and assigns Gflops = (fwd+bck) * global_total_tokens / 1e9.",
+  "detection_method": "value_invariant",
+  "invariant": "total_training_Gflops must be a strictly non-decreasing function of global_total_tokens across training resumes",
+  "diff_summary": "switched num_fwd_flops/num_bck_flops to per-token and replaced += with assignment using cumulative global_total_tokens; renamed wandb metric"
+}

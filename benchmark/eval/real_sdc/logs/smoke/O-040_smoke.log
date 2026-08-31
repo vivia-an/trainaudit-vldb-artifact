@@ -1,0 +1,7 @@
+Warning: Permanently added '[183.242.150.6]:32462' (ED25519) to the list of known hosts.
+===== TrainAudit on O-040 BUGGY (f49e7559) =====
+[O-040] BUG DETECTED: olmo_core_a100_peak_flops_2x_invariant: device_peak_flops_per_second=1.560e+14, target_buggy=1.560e+14, target_fixed=3.120e+14 — A100 fallback uses 312e12 (sparsity-inclusive) instead of 624e12 (dense), MFU reported 2x too high
+
+===== TrainAudit on O-040 FIXED (db2b6eff) =====
+[O-040] CLEAN: A100 fallback uses 624e12 dense spec: device_peak_flops_per_second=3.120e+14, target_buggy=1.560e+14, target_fixed=3.120e+14
+

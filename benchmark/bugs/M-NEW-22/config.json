@@ -1,0 +1,21 @@
+{
+  "bug_id": "M-NEW-22",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "encoder->decoder PP gradients summed instead of averaged when ETP < DTP",
+  "fixed_commit": "5a3b6bcf1",
+  "buggy_commit": "5a3b6bcf1~1",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["TP", "PP"],
+  "trigger_conditions": [
+    "encoder TP size != decoder TP size",
+    "encoder_tp_size <= decoder_tp_size",
+    "PP > 1"
+  ],
+  "root_cause": "In p2p_communication._communicate, when an encoder TP rank receives multiple gradients from corresponding decoder TP ranks, _handle_tensor_list reduced them via torch.stack(...).sum(dim=0). The fix is mean(dim=0): summing scaled the encoder gradient by the TP-fanout factor, silently inflating learning rate for encoder params.",
+  "detection_method": "value_scaling_check",
+  "invariant": "When ETP < DTP, the gradient received at the encoder must equal the mean of the per-decoder-rank gradients, not the sum.",
+  "diff_summary": "Replaced .sum(dim=0, dtype=fp32) with .mean(dim=0, dtype=fp32) in _handle_tensor_list of p2p_communication._communicate."
+}

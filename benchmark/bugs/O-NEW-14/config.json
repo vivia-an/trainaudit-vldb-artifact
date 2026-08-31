@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-14",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "clip_grads_and_collect_metrics reduces grad norm over the global PG instead of the HSDP shard PG",
+  "fixed_commit": "7be71cd7",
+  "buggy_commit": "7be71cd7~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/551",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 8,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "FSDP HYBRID_SHARD or HYBRID_SHARD_ZERO2 strategy",
+    "more than one model replica",
+    "gradient clipping or grad-norm metric collection enabled"
+  ],
+  "root_cause": "When training with HSDP each replica holds a full copy of the gradients, so reducing per-shard gradient norms over the WORLD process group double-counts grads across replicas. The original code called dist.reduce/dist.all_reduce without specifying a process group, so they used WORLD instead of the shard group. The fix accepts an optional process_group argument and routes every reduce/all_reduce call through it.",
+  "detection_method": "cross_rank_equality",
+  "invariant": "after reducing gradient norm metrics, the per-replica total_grad_norm should equal the un-replicated full-model norm; with N replicas, using the WORLD group would multiply the value by N",
+  "diff_summary": "added optional process_group parameter to clip_grads_and_collect_metrics and get_post_step_metrics; passed group= to every dist.reduce and dist.all_reduce; computed dst_rank via dist.get_global_rank when group is set"
+}

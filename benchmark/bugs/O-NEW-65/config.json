@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-65",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Newest checkpoint deleted by retention policy because it is appended after pruning",
+  "fixed_commit": "ce312bb5",
+  "buggy_commit": "ce312bb5~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/35",
+  "category": "checkpoint/retention",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "FSDP"],
+  "trigger_conditions": [
+    "save_num_checkpoints_to_keep > 0 (or save_num_unsharded_checkpoints_to_keep > 0)",
+    "List already contains save_num_checkpoints_to_keep entries when a new save fires"
+  ],
+  "root_cause": "Both `save_checkpoint` and `save_unsharded_checkpoint` appended the freshly-saved directory to `self.checkpoints`/`self.unsharded_checkpoints` *after* the deletion loop. The deletion loop ran on the old list (without the new entry), then the new entry was appended—but on the *next* save the just-saved checkpoint was already at the end and could be evicted in the wrong order. The fix appends before the dist.barrier so retention always sees the new entry.",
+  "detection_method": "checkpoint_consistency_check",
+  "invariant": "After save_checkpoint(N), the directory step{N} must remain on disk and self.checkpoints must reflect the actual contents of save_folder",
+  "diff_summary": "Move `self.checkpoints.append(checkpoint_dir)` (and unsharded variant) to before the retention pruning",
+  "silent_check": "Pruning operations succeed even on a stale list; no exception is raised, the run keeps going—only checkpoints are silently lost / mis-tracked."
+}

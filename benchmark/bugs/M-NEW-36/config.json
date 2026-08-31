@@ -1,0 +1,19 @@
+{
+  "bug_id": "M-NEW-36",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MTP per-layer loss overwritten instead of accumulated when log_interval > 1",
+  "fixed_commit": "8e2de5622",
+  "buggy_commit": "8e2de5622~1",
+  "category": "metric_tracking",
+  "severity": "low",
+  "gpu_needed": 2,
+  "trigger_conditions": [
+    "Multi-Token Prediction (MTP) enabled",
+    "log_interval > 1"
+  ],
+  "root_cause": "MTPLossLoggingHelper.save_loss_to_tracker assigned total_loss_dict[name] = loss for each iteration regardless of whether the key already existed. Across multiple training iterations within one logging window, only the most recent iteration's MTP loss survived; the logged value was the last-step loss rather than the average over log_interval steps.",
+  "detection_method": "function_call_counting",
+  "invariant": "Within a single log_interval window, total_loss_dict[mtp_name] must equal the running sum of mtp_losses[i] across iterations until the window flushes.",
+  "diff_summary": "Replaced 'total_loss_dict[name] = loss' with 'if name in total_loss_dict: total_loss_dict[name] += loss; else: total_loss_dict[name] = loss'."
+}

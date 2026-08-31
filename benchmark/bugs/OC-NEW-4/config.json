@@ -1,0 +1,14 @@
+{
+  "bug_id": "OC-NEW-4",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "NaN loss when all instances on a rank are masked — division by zero",
+  "fixed_commit": "2504cc28d48645c8e9407e3dcc67f1ea73199daa",
+  "buggy_commit": "2504cc28~1",
+  "category": "loss_computation",
+  "severity": "critical",
+  "gpu_needed": 0,
+  "root_cause": "batch_num_tokens_for_loss = 0 when all instances masked, causing loss / 0 = NaN",
+  "detection_method": "runtime_check",
+  "invariant": "batch_num_tokens_for_loss must be > 0 to avoid NaN in loss computation"
+}

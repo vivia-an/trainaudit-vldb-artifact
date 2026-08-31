@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-10",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE/DSA gate not sliced when num_query_groups < tp_size",
+  "fixed_commit": "16a8cdb64",
+  "buggy_commit": "16a8cdb64~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/3575",
+  "category": "attention",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["TP"],
+  "trigger_conditions": [
+    "self-attention with output_gate=True",
+    "num_query_groups < tensor_model_parallel_size",
+    "tp_size > 1"
+  ],
+  "root_cause": "In SelfAttention.forward when output_gate is True and num_query_groups < world_size, the gate tensor was not sliced per TP rank. Each TP rank ended up multiplying its query/key/value partition by the full unsliced gate, producing wrong attention output but no error.",
+  "detection_method": "structural_invariant",
+  "invariant": "When output_gate is True, gate.shape[2] must equal num_attention_heads_per_partition on every TP rank.",
+  "diff_summary": "Added per-TP-rank slicing of the gate tensor in SelfAttention.forward when num_query_groups < world_size."
+}

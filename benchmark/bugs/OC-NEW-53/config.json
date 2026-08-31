@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-53",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Qwen3Clone-8B script forgot use_head_qk_norm — used per-channel QK norm instead of per-head",
+  "fixed_commit": "63f00f26",
+  "buggy_commit": "63f00f26~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/63f00f26",
+  "category": "config",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["Qwen3Clone-8B training script"],
+  "root_cause": "build_model_config for Qwen3Clone-8B configured the Qwen3 model but did not set config.block.attention.use_head_qk_norm = True. Qwen3 uses per-head QK norm; the default per-channel QK norm was applied instead, normalizing across the wrong axis and producing different attention scores from the reference Qwen3.",
+  "detection_method": "constraint:hf_model_clone_parity",
+  "invariant": "Model factories that clone HF reference models must set every option that affects forward semantics to match the reference, including use_head_qk_norm for Qwen3.",
+  "diff_summary": "Add config.block.attention.use_head_qk_norm = True after the Qwen3 builder in build_model_config.",
+  "silent_check": "Training runs with no exception — QK norm is applied across the wrong dimension producing valid finite attention; the model trains but on a fundamentally different normalization than Qwen3 reference."
+}

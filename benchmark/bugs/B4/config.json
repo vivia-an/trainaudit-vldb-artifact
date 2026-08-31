@@ -1,0 +1,23 @@
+{
+  "bug_id": "B4",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "get_data_parallel_src_rank uses global_rank % num_dp_groups instead of looking up first global rank in the DP group",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/commit/9ad1944d",
+  "fixed_commit": "9ad1944d",
+  "buggy_commit": "9ad1944d~1",
+  "category": "parallelism_initialization",
+  "severity": "high",
+  "gpu_needed": 4,
+  "trigger_conditions": [
+    "world_size >= 4",
+    "non-trivial parallel layout (e.g. PP=2, DP=2)"
+  ],
+  "root_cause": "Buggy formula `global_rank % num_data_parallel_groups` only matches the true DP src rank when DP groups are contiguous global ranks; with PP > 1 or other interleavings, the formula returns the wrong rank.",
+  "detection_method": "compare_with_actual_dp_group_min",
+  "invariant": "get_data_parallel_src_rank() must equal min(global ranks in the local DP group)",
+  "expected_output": {
+    "buggy": "BUG DETECTED: returned src rank not in DP group",
+    "fixed": "CLEAN: returned src rank == min(DP group)"
+  }
+}

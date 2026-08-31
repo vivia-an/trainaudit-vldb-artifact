@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-42",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Megatron-FSDP GradReducePipeline scales gbuf.data instead of bucket.data, applying gradient scaling to the wrong tensor span",
+  "fixed_commit": "ba456fdad9",
+  "buggy_commit": "ba456fdad9~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/3023",
+  "category": "gradient_sync",
+  "severity": "critical",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["FSDP", "DP"],
+  "trigger_conditions": [
+    "Megatron-FSDP enabled (use_megatron_fsdp=True)",
+    "Multiple buckets per gradient buffer",
+    "Gradient scaling factor != 1.0 (e.g. DP > 1)"
+  ],
+  "root_cause": "GradReducePipeline.gradient_reduce_preprocessing was passed gbuf.data (the entire buffer) instead of bucket.data (the per-bucket slice). gradient_scaling preprocessing therefore divided every byte of the joint gradient buffer once per bucket, yielding cumulative scaling factor of (1/dp_size)**num_buckets on the affected ranges instead of (1/dp_size). All-reduce/reduce-scatter then communicated wrongly scaled gradients with no shape mismatch.",
+  "detection_method": "value_scaling_check",
+  "invariant": "After gradient_reduce_preprocessing, the magnitude of bucket.data must equal the pre-scaled magnitude divided by gradient_scaling_factor (not by gradient_scaling_factor**num_buckets).",
+  "diff_summary": "Change gradient_reduce_preprocessing(gbuf.data, ...) to gradient_reduce_preprocessing(bucket.data, ...).",
+  "silent_check": "Both gbuf.data and bucket.data are valid contiguous tensors; division does not raise; gradients are smaller but finite, optimizer steps complete, and only the loss curve eventually deviates from the correctly-scaled run."
+}

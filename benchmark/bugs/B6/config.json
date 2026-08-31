@@ -1,0 +1,24 @@
+{
+  "bug_id": "B6",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "forward_backward_pipelining_with_interleaving uses num_microbatches instead of total_num_microbatches in the param-sync gate",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/pull/483",
+  "fixed_commit": "32bbb76d5",
+  "buggy_commit": "32bbb76d5~1",
+  "category": "pipeline_parallel_sync",
+  "severity": "high",
+  "gpu_needed": 4,
+  "trigger_conditions": [
+    "interleaved pipeline parallelism (num_layers_per_virtual_pipeline_stage > 0)",
+    "config.param_sync_func is set",
+    "num_model_chunks >= 3 (so the inner range matters)"
+  ],
+  "root_cause": "Condition `param_sync_microbatch_id < num_microbatches` should be `< total_num_microbatches`; only first num_microbatches param-syncs were aligned across PP ranks.",
+  "detection_method": "count_param_sync_invocations",
+  "invariant": "param_sync_func should be invoked the same number of times whether the gate uses num_microbatches or total_num_microbatches when total = num*num_chunks > num",
+  "expected_output": {
+    "buggy": "BUG DETECTED: param_sync_func called fewer times than the fixed branch",
+    "fixed": "CLEAN: param_sync_func call count matches expected"
+  }
+}

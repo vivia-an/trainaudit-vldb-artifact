@@ -1,0 +1,23 @@
+{
+  "bug_id": "B1",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "SwitchMLP router torch.nn.Linear init not wrapped in data-parallel RNG tracker",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/599",
+  "fixed_commit": "3c637fc0d",
+  "buggy_commit": "3c637fc0d~1",
+  "category": "moe_router_init",
+  "severity": "high",
+  "gpu_needed": 2,
+  "trigger_conditions": [
+    "tensor_model_parallel_size > 1",
+    "num_experts >= 2 (SwitchMLP MoE)"
+  ],
+  "root_cause": "Buggy init does `self.router = torch.nn.Linear(...)` outside of any RNG tracker fork. If the default CUDA RNG state is asymmetric across TP ranks at the point of router construction, weights diverge. Fix wraps init in `get_cuda_rng_tracker().fork(get_data_parallel_rng_tracker_name())`.",
+  "detection_method": "rng_tracker_fork_observation_plus_cross_rank_hash",
+  "invariant": "During SwitchMLP construction, the router's weight init must execute inside a get_cuda_rng_tracker().fork(<data-parallel name>) context",
+  "expected_output": {
+    "buggy": "BUG DETECTED: router init never entered the data-parallel rng tracker context",
+    "fixed": "CLEAN: router init wrapped in get_cuda_rng_tracker().fork(...)"
+  }
+}

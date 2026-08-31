@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-73",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "AutoEP manual loss.backward path skips ep_size loss scaling — parity with engine.backward broken",
+  "fixed_commit": "5f7dc1e7",
+  "buggy_commit": "5f7dc1e7~1",
+  "pr_url": "https://github.com/deepspeedai/DeepSpeed/commit/5f7dc1e7",
+  "category": "moe",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": ["AutoEP MoE layer present", "user calls engine.scale_loss(loss).backward() manually instead of engine.backward(loss)", "ep_size > 1"],
+  "root_cause": "The manual-backward path (scale_loss → loss.backward) only applied optimizer.scale_if_loss / torch_autocast scaling, but forgot the AutoEP-specific multiplication by self._autoep_output_grad_scale that engine.backward applies. Since manual-backward is the recommended path for HF Trainer integrations, expert gradients in those setups are again undercount by ep_size relative to the engine.backward path.",
+  "detection_method": "value_invariant",
+  "invariant": "Across two AutoEP runs differing only in (engine.backward(loss)) vs (engine.scale_loss(loss).backward()), per-step expert weights must match within fp32 tolerance.",
+  "diff_summary": "Factor _scale_loss_for_autoep helper; call it in both engine.backward and engine.scale_loss code paths.",
+  "silent_check": "loss.backward() proceeds with a smaller-by-ep_size scalar; gradients are valid finite tensors. No assert; only a divergence between manual-backward and engine.backward training curves."
+}

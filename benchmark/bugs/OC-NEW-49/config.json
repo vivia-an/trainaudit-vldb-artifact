@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-49",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "BLT stage1 froze only teacher.* — student blocks updated against teacher gradient",
+  "fixed_commit": "ffa19120",
+  "buggy_commit": "ffa19120~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/ffa19120",
+  "category": "freeze",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": ["BLT stage1 training script", "shared blocks between teacher and student"],
+  "root_cause": "freeze_params=['teacher.*'] only matched submodules named 'teacher.*'. Because share_blocks_between_teacher_and_student=True, the actual block parameters live under 'blocks.*' (shared with teacher); those weren't matched by the freeze pattern, so blocks were unfrozen and trained against gradients that included contributions from the teacher path.",
+  "detection_method": "constraint:freeze_pattern_completeness",
+  "invariant": "freeze_params patterns must match every parameter that should remain frozen, including shared submodule names.",
+  "diff_summary": "Expand freeze_params to ['blocks*', 'teacher*'] so the shared blocks are also frozen.",
+  "silent_check": "Buggy training step runs forward and backward without any error — gradients on blocks are nonzero, optimizer updates them; the user only notices wrong stage1 behavior when the trained model fails downstream parity checks."
+}

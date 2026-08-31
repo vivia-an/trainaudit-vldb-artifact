@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-34",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "ComplexRotaryEmbedding ignores cu_doc_lens — packed-document positions never reset for complex-RoPE blocks",
+  "fixed_commit": "1a4f174e",
+  "buggy_commit": "1a4f174e~1",
+  "category": "attention",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Model uses ComplexRotaryEmbedding (complex-number RoPE) instead of standard RotaryEmbedding",
+    "Packed-document training with cu_doc_lens"
+  ],
+  "root_cause": "ComplexRotaryEmbedding.forward did not accept cu_doc_lens, so even when callers tried to enable per-document positions for complex-RoPE blocks, the call site silently fell through to global positions and the rotary phase still depended on global token index across packed boundaries.",
+  "detection_method": "value_invariant",
+  "invariant": "Per-document positions used by complex-RoPE must reset at each cu_doc_lens boundary; identical packed documents must yield identical post-RoPE q/k.",
+  "diff_summary": "Add cu_doc_lens parameter and the searchsorted-based local position computation to ComplexRotaryEmbedding.forward."
+}

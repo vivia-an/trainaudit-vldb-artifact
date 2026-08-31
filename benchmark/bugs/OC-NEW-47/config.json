@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-47",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "TE attention backend silently ignored cu_doc_lens — intra-doc masking not applied",
+  "fixed_commit": "e1608103",
+  "buggy_commit": "e1608103~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/e1608103",
+  "category": "attention",
+  "severity": "critical",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["TEAttentionBackend selected", "sequence packing with cu_doc_lens"],
+  "root_cause": "TEAttentionBackend.forward accepted cu_doc_lens / max_doc_len arguments but did not pass them to TransformerEngine's attn kernel. Documents packed into a single sequence cross-attended each other instead of being masked at boundaries — full attention across all packed docs.",
+  "detection_method": "constraint:intra_doc_attention_isolation",
+  "invariant": "When cu_doc_lens is supplied, attention from token i must be limited to its own document; the TE backend must either honor cu_doc_lens or refuse the call.",
+  "diff_summary": "TEAttentionBackend.forward now raises RuntimeError when any intra-doc-mask argument is set (so the silent path is no longer reachable).",
+  "silent_check": "Buggy version did not raise — TE attention ran on the packed sequence without intra-doc masking, returning finite outputs; gradients flowed and training proceeded with cross-document leakage as a silent SDC."
+}

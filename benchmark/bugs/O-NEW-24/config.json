@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-24",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "norm_after path applies attn_norm to (att_proj output) instead of to the attention output, leaving residual unnormed",
+  "fixed_commit": "aac4bdd1",
+  "buggy_commit": "aac4bdd1~1",
+  "category": "normalization",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "model.norm_after=true",
+    "OLMoSequentialBlock forward executed during training"
+  ],
+  "root_cause": "Under norm_after, attn_norm was being applied to the QKV projection output (qkv = attn_norm(att_proj(x))) before splitting and computing attention. The Post-LN attention design requires applying attn_norm to the attention output before the residual add. This silently changes the model semantics from Post-LN attention to a normalized-QKV attention.",
+  "detection_method": "value_invariant",
+  "invariant": "for norm_after=true, the tensor flowing into att_proj must be unnormed; attn_norm must be applied to the attention output (att) prior to the residual add",
+  "diff_summary": "moved attn_norm application: pre-norm only when not norm_after; otherwise apply attn_norm to att (the attention output) before x = x + dropout(att)"
+}

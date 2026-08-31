@@ -1,0 +1,26 @@
+{
+  "bug_id": "M-014",
+  "framework": "megatron-lm",
+  "title": "MoE Router topk=1 with post-softmax gives trivial probabilities and zero gradient",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/955",
+  "buggy_commit": "83a53f2dd66afa9fcece6629135d04012a05639b",
+  "fixed_commit": "5153efea0bc8e9f0cd6094d558d467e44622405b",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": [],
+  "trigger_conditions": [
+    "num_experts >= 2",
+    "--moe-router-topk 1",
+    "no --moe-router-pre-softmax (default)"
+  ],
+  "root_cause": "topk-then-softmax with k=1: softmax of single value is always 1.0, producing zero gradient for the router. Router weights never learn.",
+  "detection_method": "value_invariant",
+  "invariant": "Router routing probabilities must have non-trivial distribution. All probs == 1.0 means zero gradient = bug.",
+  "fixed_behavior": "Raises ValueError requiring --moe-router-pre-softmax when topk=1",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: all routing probs are 1.0 (trivial softmax)",
+    "fixed": "ValueError: Please use --moe-router-pre-softmax when topk is 1."
+  }
+}

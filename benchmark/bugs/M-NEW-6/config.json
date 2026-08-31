@@ -1,0 +1,1 @@
+{"bug_id":"M-NEW-6","framework":"megatron-lm","repo":"NVIDIA/Megatron-LM","title":"group_limited_topk uses num_groups instead of topk in inner topk","fixed_commit":"325e7c801","buggy_commit":"325e7c801~1","category":"routing","severity":"high","gpu_needed":2}

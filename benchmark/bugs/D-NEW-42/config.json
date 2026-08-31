@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-42",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO3 checkpoint silently omits frozen (requires_grad=False) parameters from saved state",
+  "fixed_commit": "dd8df20f",
+  "buggy_commit": "dd8df20f~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/3205",
+  "category": "checkpoint",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3", "model has parameters with requires_grad=False (e.g. frozen embedding, LoRA-tuned model)"],
+  "root_cause": "ZeRO3's checkpoint logic only iterated trainable parameters when assembling the per-rank state and the zero_to_fp32 reconstruction script. Frozen parameters were never written to the checkpoint at all, so resuming with a fresh model whose frozen tensors are random-initialised silently trains from corrupted weights with no warning.",
+  "detection_method": "structural_invariant",
+  "invariant": "For every nn.Parameter p in module.named_parameters(), the saved checkpoint must contain a tensor or fragment whose name matches p (regardless of p.requires_grad).",
+  "diff_summary": "Add FROZEN_PARAM_SHAPES / FROZEN_PARAM_FRAGMENTS to checkpoint constants, save frozen params as separate fragments in BF16/ZeRO3 checkpoints, and extend zero_to_fp32 to merge them back."
+}

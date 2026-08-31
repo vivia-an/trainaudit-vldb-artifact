@@ -1,0 +1,21 @@
+{
+  "bug_id": "O-NEW-30",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "MoE load-balance and z-loss aux losses logged without all-reduce, so each rank reports its local value",
+  "fixed_commit": "6d736da1",
+  "buggy_commit": "6d736da1~1",
+  "category": "metric_tracking",
+  "severity": "medium",
+  "gpu_needed": 8,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": [
+    "MoE block_type",
+    "moe_loss_weight > 0 (load-balance loss enabled) or moe_zloss_weight > 0",
+    "data-parallel training (any world_size > 1)"
+  ],
+  "root_cause": "In Trainer the cross-entropy and z-loss were reduced across all ranks before logging, but lb_batch_loss (MoE load-balancing loss) and moe_z_batch_loss were missed. Each rank logged its local value, so the wandb metric reflected only rank 0's mini-batch instead of the global mean, giving misleading load-balance behavior and misreporting MoE training health.",
+  "detection_method": "cross_rank_equality",
+  "invariant": "after the metric reduction block, lb_batch_loss and moe_z_batch_loss must be identical on every rank (mean across ranks)",
+  "diff_summary": "added two if blocks that call dist.reduce(loss, 0) and div_(get_world_size()) for lb_batch_loss and moe_z_batch_loss when not None"
+}

@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-25",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "SamplingInstanceSource cache write race — concurrent ladder runs overwrite each other's index files",
+  "fixed_commit": "56872b9a",
+  "buggy_commit": "56872b9a~1",
+  "category": "data_processing",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Multiple training jobs share the same work_dir",
+    "SamplingInstanceSource used; rank-0 builds the cached indices file"
+  ],
+  "root_cause": "Local rank-0 always rewrote the indices file at startup. Concurrent jobs sharing the work directory raced via tmp_path.replace, leaving training reading partially-written or shuffled indices. Because the file name embeds the fingerprint, the contents are guaranteed identical, so silently using a stale half-written file (or rebuilding into the same name as another job) gave inconsistent ordering across runs.",
+  "detection_method": "runtime_check",
+  "invariant": "If the deterministic-fingerprint indices file already exists, the rank must not rewrite it; cross-rank reads of the file must agree.",
+  "diff_summary": "Skip the rank-0 write when the source_sample_path already exists on disk."
+}

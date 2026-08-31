@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-79",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "WarmupLR / LRRangeTest / OneCycle do not initialize optimizer group lr at construction — first step uses original lr",
+  "fixed_commit": "85b7469e",
+  "buggy_commit": "85b7469e~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/6597",
+  "category": "lr_scheduler",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["any DeepSpeed LRScheduler in {WarmupLR, LRRangeTest, OneCycle}", "user reads lr_scheduler.get_last_lr() / param_group['lr'] before the first step()", "optimizer.param_groups[0]['lr'] differs from scheduler's intended initial lr (which is min_lr / warmup_min_lr, typically 0)"],
+  "root_cause": "WarmupLR.__init__ stored its desired schedule but never wrote min_lr into self.optimizer.param_groups[0]['lr']. As a result, when the engine's first optimizer.step() runs (before lr_scheduler.step() which by convention is called after), the optimizer uses whatever lr the user instantiated the optimizer with — typically the peak lr — for one full step instead of the scheduler's warmup_min_lr (e.g. 0). With a typical 1e-4 peak lr and 0 warmup_min_lr, the first parameter update is therefore ~10000x larger than intended, often catastrophic for early training stability.",
+  "detection_method": "value_invariant",
+  "invariant": "After lr_scheduler construction (with last_batch_iteration == -1), every optimizer.param_groups[i]['lr'] must equal scheduler.get_lr()[i].",
+  "diff_summary": "In WarmupLR/LRRangeTest/OneCycle/WarmupCosineLR __init__, when last_batch_iteration == -1 call update_lr(optimizer.param_groups, self.get_lr()) and store self._last_lr.",
+  "silent_check": "Buggy code leaves the optimizer's lr at its construction value — a valid finite float. optimizer.step() takes a normal step using that value. No exception, just a single oversized update that the user might explain as 'first-step instability'."
+}

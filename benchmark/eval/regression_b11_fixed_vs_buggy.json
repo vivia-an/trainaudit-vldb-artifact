@@ -1,0 +1,12 @@
+{
+  "commit_a": "005afe12",
+  "commit_b": "005afe12~1",
+  "rc_a": 127,
+  "rc_b": 127,
+  "rules_a": {},
+  "rules_b": {},
+  "new_at_b": {},
+  "fixed_at_b": {},
+  "persistent": {},
+  "regression": false
+}

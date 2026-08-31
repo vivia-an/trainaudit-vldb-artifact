@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-48",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Pipeline + ZeRO: gradient accumulation boundary flag never propagated, ZeRO does early reduction every micro-step",
+  "fixed_commit": "b712babe",
+  "buggy_commit": "b712babe~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/1264",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["PP", "DP"],
+  "trigger_conditions": ["pipeline parallel + ZeRO stage 2 or 3", "gradient_accumulation_steps > 1"],
+  "root_cause": "DeepSpeedEngine.allreduce_gradients drove ZeRO's overlapping_partition_gradients_reduce_epilogue, but never told the optimizer whether the engine was at a real GAS boundary. ZeRO's internal `is_gradient_accumulation_boundary` therefore stayed at its default and reduction kicked off on every micro-batch, silently destroying accumulation correctness for PP+ZeRO.",
+  "detection_method": "function_call_counting",
+  "invariant": "self.optimizer.is_gradient_accumulation_boundary must equal engine.is_gradient_accumulation_boundary() at the entry of allreduce_gradients (one True per GAS, GAS-1 Falses).",
+  "diff_summary": "In allreduce_gradients, set self.optimizer.is_gradient_accumulation_boundary = self.is_gradient_accumulation_boundary() before invoking ZeRO's reduce epilogue."
+}

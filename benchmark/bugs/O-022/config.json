@@ -1,0 +1,11 @@
+{
+  "bug_id": "O-022",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "SourceMixtureDatasetConfig overrides global random seed",
+  "category": "data_loading",
+  "root_cause": "build() calls random.seed(self.seed), corrupting global RNG state",
+  "detection_method": "source_analysis",
+  "invariant": "build() must not call global random.seed()",
+  "reproduction_status": "reproduced"
+}

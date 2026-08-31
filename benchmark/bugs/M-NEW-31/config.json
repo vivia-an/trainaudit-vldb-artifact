@@ -1,0 +1,21 @@
+{
+  "bug_id": "M-NEW-31",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "LinearWithFrozenWeight backward skips TP all-reduce of dgrad when TP>1",
+  "fixed_commit": "5fffdfc73",
+  "buggy_commit": "5fffdfc73~1",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["TP"],
+  "trigger_conditions": [
+    "ColumnParallelLinear/RowParallelLinear with frozen weights (requires_grad=False on weight)",
+    "tensor_model_parallel_size > 1",
+    "asynchronous all-reduce path"
+  ],
+  "root_cause": "LinearWithFrozenWeight.forward did not save/forward the allreduce_dgrad flag; backward then computed grad_input = grad_output @ weight without performing the cross-TP all-reduce that the dgrad needs. Downstream layers received TP-rank-local input gradients instead of the summed gradient, silently producing wrong weights for the upstream trainable layers.",
+  "detection_method": "cross_rank_equality",
+  "invariant": "After LinearWithFrozenWeight.backward in column-parallel mode, grad_input must be identical across TP ranks (post all-reduce).",
+  "diff_summary": "Added allreduce_dgrad parameter to LinearWithFrozenWeight.forward; saved on ctx; backward now calls all_reduce on grad_input when ctx.allreduce_dgrad is True."
+}

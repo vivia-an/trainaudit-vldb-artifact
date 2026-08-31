@@ -1,0 +1,27 @@
+id: P10
+name: Config-Implied Coupling
+type: C
+rule_r: "If config c sets flag/value f, then for every coupled attribute, kwarg, or component\
+  \ a in the dependency map D(f), the runtime state must satisfy a == D(f).expected. Equivalently:\
+  \ the implication c.f \u21D2 \u03C6(a) must hold at every check stage."
+scope_sigma: "(config_field, dependent_attr) pairs declared by framework: e.g. fp16 \u21D2\
+  \ GradScaler present, FSDP+FusedAdam \u21D2 flatten-grads flag, ZeRO stage \u21D2 ckpt layout,\
+  \ EOS id \u21D2 tokenizer.eos_id, comm_dtype \u21D2 allreduce dtype, scheduler.type \u21D2\
+  \ correct class instantiation."
+mode_m: C
+precond_rho: Inspected at engine/optimizer/scheduler build time (after config parsing, before
+  training-loop entry); for runtime-derived couplings (e.g. kwarg routing, branch choice),
+  re-checked on every forward/backward where f is read.
+example_bugs:
+- B12
+- D-010
+- D-012
+- D-015
+- D-NEW-12
+- D-NEW-13
+- D-NEW-18
+- D-NEW-19
+covers_count_estimate: 45
+related_existing_pattern: "Generalises P6 (structural integrity = config\u21D2module-shape)\
+  \ to config\u21D2any-attribute. P6 covers the param/module sub-case; P10 captures dtype,\
+  \ kwargs, control flow, scheduler routing, etc."

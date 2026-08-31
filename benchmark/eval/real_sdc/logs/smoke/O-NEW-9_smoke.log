@@ -1,0 +1,26 @@
+Warning: Permanently added '[183.242.150.6]:32462' (ED25519) to the list of known hosts.
+===== TrainAudit on O-NEW-9 BUGGY (167a7ac8~1) =====
+
+============================================================
+[O-NEW-9] Token ID truncation check:
+  Injected IDs: [np.uint32(100), np.uint32(50000), np.uint32(65535), np.uint32(65536), np.uint32(70000), np.uint32(100000)]
+  Loaded IDs:   [np.uint32(100), np.uint32(50000), np.uint32(65535), np.uint32(0), np.uint32(4464), np.uint32(34464)]
+[O-NEW-9] BUG DETECTED: token IDs truncated
+  ID 65536 → 0
+  ID 70000 → 4464
+  ID 100000 → 34464
+============================================================
+
+[O-NEW-9] BUG DETECTED: detect.py:builtin (no trainaudit rule fired — fallback to detect.py verdict)
+
+===== TrainAudit on O-NEW-9 FIXED (167a7ac8) =====
+
+============================================================
+[O-NEW-9] Token ID truncation check:
+  Injected IDs: [np.uint32(100), np.uint32(50000), np.uint32(65535), np.uint32(65536), np.uint32(70000), np.uint32(100000)]
+  Loaded IDs:   [np.uint32(100), np.uint32(50000), np.uint32(65535), np.uint32(65536), np.uint32(70000), np.uint32(100000)]
+[O-NEW-9] CLEAN: token IDs preserved
+============================================================
+
+[O-NEW-9] CLEAN: no trainaudit rule fired; detect.py reported no bug
+

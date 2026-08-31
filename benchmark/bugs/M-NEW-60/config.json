@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-60",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Attention.set_save_original_input gate is FP8-only and missed for NVFP4, so attention activations are cached as the FP4-quantized tensor instead of the original input",
+  "fixed_commit": "ab77b3ddc9",
+  "buggy_commit": "ab77b3ddc9~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/4067",
+  "category": "te_integration",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["TP"],
+  "trigger_conditions": [
+    "Attention with TE linear_proj (TELinear)",
+    "config.fp4 enabled (NVFP4) without config.fp8",
+    "selective recompute (recompute_granularity=selective)"
+  ],
+  "root_cause": "Attention.__init__ guarded set_save_original_input on the linear_proj only when config.fp8 and recipe != delayed. With FP4 training, the guard never fired so linear_proj kept the FP4-quantized tensor cache. When selective recompute later invoked the saved tensor for backward, it operated on the quantized tensor instead of the bf16 original input, producing a recompute that mismatches the forward.",
+  "detection_method": "config_invariant",
+  "invariant": "set_save_original_input must be called on TELinear modules whenever (config.fp8 with non-delayed recipe and TE>=2.6.0dev0) OR (config.fp4 and TE>=2.7.0.dev0).",
+  "diff_summary": "Extend the FP8-only guard around set_save_original_input to also cover FP4 (config.fp4 and is_te_min_version('2.7.0.dev0')).",
+  "silent_check": "Saving the FP4-quantized cache is a valid tensor-saving operation; no exception fires during forward or backward; the recompute simply uses lower-precision saved activations and produces wgrads with reduced numerical fidelity."
+}

@@ -1,0 +1,1 @@
+{"bug_id":"D-NEW-18","framework":"deepspeed","repo":"microsoft/DeepSpeed","title":"ZeRO-1/2 CPU-offload gradient loss with multiple backward() per step","fixed_commit":"aeb10bb1","buggy_commit":"aeb10bb1~1","category":"gradient_corruption","severity":"high","gpu_needed":2}

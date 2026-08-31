@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-58",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Asymmetric int8 dequantize hard-codes output dtype to half — silently downcasts when caller asks for float",
+  "fixed_commit": "0baf79ea",
+  "buggy_commit": "0baf79ea~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/7283",
+  "category": "quantization",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["asymmetric quantization", "dequantize template instantiated with T=float (fp32 output)"],
+  "root_cause": "In quantization_utils.h::dequantize for the asymmetric path, the result line was `return conversion::to<__half>(val_deq_f);` regardless of the output template parameter T. When the kernel is instantiated with T=float, the float-typed val_deq_f gets cast to __half and back to float, throwing away ~13 bits of mantissa. The kernel still writes to the fp32 output tensor (correct shape, correct dtype), only with severely truncated precision.",
+  "detection_method": "value_invariant",
+  "invariant": "For asymmetric dequantize<float>(int8 in, scale, offset), output must equal float(in)*scale + offset to within fp32 precision (relative error <1e-6), not within fp16 precision (relative error ~1e-3).",
+  "diff_summary": "Change `conversion::to<__half>(val_deq_f)` to `conversion::to<T>(val_deq_f)` so the dequantize result keeps the requested precision.",
+  "silent_check": "Buggy CUDA kernel runs to completion, writes a finite tensor of the requested fp32 dtype/shape; only the values have ~3 decimal digits of precision instead of ~7. No assert, no NaN."
+}

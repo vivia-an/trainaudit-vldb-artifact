@@ -1,0 +1,21 @@
+{
+  "bug_id": "M-NEW-28",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE expert_bias silently downcast to bf16 by Float16Module wrapper",
+  "fixed_commit": "8dd03a39c",
+  "buggy_commit": "8dd03a39c~1",
+  "category": "dtype",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["EP"],
+  "trigger_conditions": [
+    "Mixed-precision training (bf16 or fp16)",
+    "MoE TopKRouter with expert_bias (aux-loss-free routing)",
+    "Float16Module wraps the model"
+  ],
+  "root_cause": "Float16Module.cuda() converts all parameters and buffers to the working dtype. The router's expert_bias buffer was therefore demoted to bf16 each iteration; subsequent in-place updates of expert_bias accumulated in bf16, losing precision and silently distorting load-balancing-free routing decisions.",
+  "detection_method": "dtype_invariant",
+  "invariant": "After each forward, TopKRouter.expert_bias.dtype must be torch.float32.",
+  "diff_summary": "Added _maintain_float32_expert_bias method that re-casts self.expert_bias.data to fp32 if it has been demoted; called at the start of TopKRouter.forward."
+}

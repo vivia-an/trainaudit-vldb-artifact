@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-49",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Final linear-decay scheduler uses wrong start/end factors (decays from 1.0 to alpha_f instead of alpha_f to alpha_f^2)",
+  "fixed_commit": "1c67f80d",
+  "buggy_commit": "1c67f80d~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/65",
+  "category": "scheduler/learning_rate",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["FSDP", "DP"],
+  "trigger_conditions": [
+    "scheduler concatenates cosine-with-warmup followed by linear final decay",
+    "Training enters the post-cosine linear segment (global_step > t_max)"
+  ],
+  "root_cause": "The final linear decay segment is meant to take over after a cosine schedule has already decayed the LR to alpha_f * base_lr. The buggy version constructed `LinearLR(start_factor=1.0, end_factor=alpha_f)` which jumps the LR back up to the base learning rate at the handoff, and then decays only to alpha_f over the tail. The correct settings continue from `alpha_f` down to `alpha_f**2`. Result is a silent LR spike + wrong final LR.",
+  "detection_method": "lr_schedule_continuity_check",
+  "invariant": "scheduler.get_last_lr() must be continuous across the cosine-to-linear handoff at step=t_max",
+  "diff_summary": "Set start_factor=alpha_f and end_factor=alpha_f**2 for the final LinearLR",
+  "silent_check": "LinearLR accepts the wrong factors without complaint; LR values change but stay finite, so optimizer.step proceeds and training continues with a silently corrupted schedule."
+}

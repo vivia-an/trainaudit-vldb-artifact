@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-66",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO-3 CPU offload set_local_grad does not refresh norm_for_param_grads — gradient clipping uses pre-clipping norm",
+  "fixed_commit": "b9af5d8d",
+  "buggy_commit": "b9af5d8d~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/7302",
+  "category": "gradient_clipping",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3", "offload_optimizer (CPU)", "user calls safe_set_local_grad to modify a partition's gradient between backward and step (e.g. external clipping/sanitizing)"],
+  "root_cause": "set_local_grad copies the supplied tensor into the fp32 partition's grad slot but does not update self.norm_for_param_grads[param_id]. With CPU offload, scaled_global_grad_norm is later computed as the L2-aggregate of these cached per-param norms (because the actual grad lives in pinned CPU memory). The aggregate therefore reflects pre-modification gradients, while unscale_and_clip_grads applies a clip factor based on this stale norm to the modified grads — silent mis-clipping. Note that scaled_global_grad_norm also drives the loss-scale-aware clip decision in optimizer.step.",
+  "detection_method": "value_invariant",
+  "invariant": "Whenever fp32 grad partition for param p is overwritten via set_local_grad, norm_for_param_grads[p] must equal _constant_buffered_norm2 of the new gradient.",
+  "diff_summary": "In _set_fp32_grad_state_partition (CPU offload branch), update self.norm_for_param_grads[param_id] = self._constant_buffered_norm2(value).",
+  "silent_check": "All updates write valid finite tensors. The clipping decision is just based on a stale (typically larger) norm, so clip factor is wrong but always finite — optimizer.step proceeds, no exception."
+}

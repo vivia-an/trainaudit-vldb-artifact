@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-22",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "muP attention scale uses 1/d instead of sqrt(base_d)/d, mismatching the SP scale at the base width",
+  "fixed_commit": "a428542c",
+  "buggy_commit": "a428542c~1",
+  "category": "attention",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "model.use_mup=true",
+    "scaled-dot-product attention path (not flash varlen)"
+  ],
+  "root_cause": "Under muP the attention scale was 1/q.size(-1), which differs from the standard parameterization scale 1/sqrt(d) even at the base width. This silently changes the attention temperature for the base model relative to SP. Fix uses sqrt(mup_base_n_heads)/q.size(-1) so that the scale matches SP exactly when n_heads == mup_base_n_heads and tracks muP scaling rules for wider models.",
+  "detection_method": "value_invariant",
+  "invariant": "when use_mup=true and n_heads==mup_base_n_heads, attn_scale must equal 1/sqrt(head_dim) (the SP scale)",
+  "diff_summary": "introduced mup_base_n_heads config field and replaced attn_scale=1/q.size(-1) with sqrt(mup_base_n_heads)/q.size(-1) in the muP branch of OLMoBlock.attention"
+}

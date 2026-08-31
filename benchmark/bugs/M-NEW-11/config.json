@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-11",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "FusedAdam.use_decoupled_grad not set for Megatron-FSDP, gradients silently ignored",
+  "fixed_commit": "0447347ce",
+  "buggy_commit": "0447347ce~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/4427",
+  "category": "optimizer",
+  "severity": "critical",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "use_megatron_fsdp=True",
+    "use_precision_aware_optimizer=True",
+    "TE FusedAdam available"
+  ],
+  "root_cause": "When Megatron-FSDP is paired with FusedAdam, gradients are written to param.decoupled_grad rather than param.grad. FusedAdam's use_decoupled_grad flag was never set to True, so the optimizer kept reading param.grad (which is None or stale), silently skipping the actual gradient update.",
+  "detection_method": "runtime_hook",
+  "invariant": "When using Megatron-FSDP with FusedAdam, optimizer.use_decoupled_grad must be True and at least one parameter must have a non-zero decoupled_grad before optimizer.step().",
+  "diff_summary": "Added setattr(optimizer.optimizer, 'use_decoupled_grad', True) right after master_weights override in get_megatron_optimizer."
+}

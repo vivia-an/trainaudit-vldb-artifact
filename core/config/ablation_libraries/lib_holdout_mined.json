@@ -1,0 +1,1597 @@
+{
+  "constraints": {
+    "data_parallel": {
+      "backward后DP参数cksum一致性检查": {
+        "name": "model-after-backward阶段DP参数cksum一致性检查",
+        "description": "在model-after-backward阶段，检查所有data parallel组内requires_grad=True参数的cksum跨rank一致性。具体来说，遍历model.parameters()中requires_grad=True的参数，比较同一param_name在各dp_rank上的param_cksum值。DDP训练中参数应始终保持bit-for-bit一致；若发现cksum不一致，表明T3注入导致单rank参数被add/scale/zero污染。通过model.parameters()+requires_grad=True双重过滤自动排除BN running_stats等buffer的误报。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "optimizer前DP参数cksum一致性检查": {
+        "name": "model-before-optimizer-step阶段DP参数cksum一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查所有data parallel组内nn.Parameter的cksum一致性。梯度all-reduce已完成但optimizer尚未更新参数，若某DP rank的cksum与其他rank不一致，表明参数污染（如注入攻击导致）已穿越梯度同步持续到optimizer之前，需触发异常。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-before-optimizer-step'",
+          "param_is_buffer": "= false"
+        }
+      },
+      "optimizer后DP参数cksum一致性检查": {
+        "name": "model-after-optimizer-step阶段DP参数cksum一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查所有data parallel组内参数的cksum一致性。T3注入污染单个DP rank参数后，optimizer.step()中权重衰减项直接依赖当前参数值，导致污染rank与干净rank产生不同的参数更新量，T8时刻仍可检测到跨DP不一致。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "optimizer前DP主梯度cksum一致性检查": {
+        "name": "model-before-optimizer-step阶段DP主梯度cksum一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查同一DP group内所有requires_grad=True参数的main_grad cksum跨DP rank一致性。DP all-reduce后所有rank的main_grad应bit-exact一致，任何不一致表明梯度同步异常或被篡改。约束要求fp32_allreduce=True（避免bf16 all-reduce非确定性）和distributed_optimizer=False（避免reduce-scatter梯度分片）。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-before-optimizer-step'",
+          "distributed_optimizer": "= False",
+          "fp32_allreduce": "= True"
+        }
+      },
+      "optimizer后DP参数更新量Δθ一致性检查": {
+        "name": "model-after-optimizer-step阶段DP参数更新量跨rank一致性检查",
+        "description": "在model-after-optimizer-step阶段，跨所有DP rank检查参数更新量Δθ（即θ_T8与θ_T6之差）的cksum一致性。AdamW的decoupled weight decay使Δθ依赖于优化前参数值（Δθ=-α×(m̂_t/(√v̂_t+ε)+λ×θ_{t-1})），被注入污染的rank因θ_{t-1}不同而产生不同的Δθ，跨rank cksum比较可同步检测异常。前提条件：weight_decay>0且use_distributed_optimizer=False；wd=0时Δθ独立于θ，约束退化。与现有T8参数值cksum互补——检测optimizer.step()行为正确性而非终端状态。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "note": "需要同一步的T6(model-before-optimizer-step)和T8(model-after-optimizer-step) dump数据以计算Δθ",
+          "parameter_filter": "requires_grad=True",
+          "min_step": 1
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-optimizer-step'",
+          "weight_decay": "> 0",
+          "use_distributed_optimizer": "= false"
+        }
+      },
+      "optimizer后DPexp_avg一致性检查": {
+        "name": "model-after-optimizer-step阶段DP组内Adam优化器exp_avg跨rank一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查所有data parallel组内Adam优化器一阶动量状态exp_avg的cksum一致性。exp_avg更新仅依赖梯度而非参数值，T5 all-reduce后梯度跨DP同步，因此即使T3注入污染了单rank参数权重，exp_avg理论上仍应保持跨DP一致。若检测到不一致，表明梯度同步被绕过或优化器内部状态本身被篡改——这是现有参数cksum和梯度cksum约束无法覆盖的异常类型。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-optimizer-step'",
+          "optimizer": "= 'Adam'"
+        }
+      },
+      "DP优化器step计数器跨rank一致性检查": {
+        "name": "model-after-optimizer-step阶段DP组内Adam优化器step计数器跨rank一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查所有data parallel组内Adam/AdamW优化器state dict中step计数器的跨rank一致性。step计数器为0维float32 tensor标量，在每次optimizer.step()时递增。若跨rank不一致，表明分布式训练同步机制存在严重异常或optimizer.step()调用次数在DP rank间出现分化。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "optimizer后DP Adam exp_avg_sq一致性检查": {
+        "name": "model-after-optimizer-step阶段DP组内Adam优化器exp_avg_sq跨rank一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查所有DP组内requires_grad=True参数的Adam优化器exp_avg_sq（二阶矩/方差估计）跨rank一致性。exp_avg_sq更新公式为v_t = β2·v_{t-1} + (1-β2)·g_t²，对梯度平方变化敏感。T3注入污染参数→T7 optimizer.step()将污染传播至exp_avg_sq→T8可检测DP不一致。特别对scale注入具有平方放大效应（s=10时变化9900%），与exp_avg（一阶矩）形成互补检测。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-optimizer-step'",
+          "optimizer": "= 'Adam/AdamW'",
+          "optimizer_state_sharding": "= 'disabled'"
+        }
+      },
+      "backward后DP梯度存在性跨rank一致性检查": {
+        "name": "model-after-backward阶段DP组内梯度存在性跨rank一致性检查",
+        "description": "在model-after-backward阶段，检查DP组内所有requires_grad=True参数的梯度存在性跨rank一致性。具体来说，对每个参数名收集其grad是否为NULL的布尔状态，同一DP组内所有rank的状态必须完全相同（全部为NULL或全部为非NULL）。若发现某个参数的grad NULL状态在DP组内不一致，表明存在backward计算完整性问题。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "optimizer前DP参数FP16FP32差异度一致性检查": {
+        "name": "model-before-optimizer-step阶段DP组内FP16参数与FP32主参数cksum差异度跨rank一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查DP组内每个可优化参数的FP16模型参数cksum与FP32 master参数cksum差异度的跨rank一致性。具体来说，对每rank计算delta=|fp16_cksum-fp32_cksum|/max(|fp32_cksum|,epsilon)，正常训练下所有DP rank的delta仅包含FP32→FP16确定性截断误差（约0.05%）且跨rank一致。T3注入污染单个rank的FP16参数但不影响FP32 master params，导致该rank的delta异常增大。此约束依赖dump机制可访问optimizer.param_groups中的FP32 master params（与Adam状态约束#6/#7/#8共享前提）。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "precision_mode": "fp16",
+          "note": "仅适用于FP16混合精度训练（非BF16），参数需在optimizer.param_groups中有FP32 master copy"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "optimizer前DP梯度存在性跨rank一致性检查": {
+        "name": "model-before-optimizer-step阶段DP组内梯度存在性跨rank一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查同一DP group内所有rank对相同参数（requires_grad=true，非MoE expert参数）的main_grad存在性一致性。若某参数的main_grad在DP组内部分rank上为NULL而其他rank上非NULL，表明DP梯度同步机制出现异常或存在注入攻击导致的计算破坏。注意：MoE expert参数因top-k路由导致合法存在性差异需排除；requires_grad=false参数梯度始终为NULL也需排除。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "= 'model-before-optimizer-step'",
+          "dp": "> 1"
+        }
+      },
+      "optimizer后DP参数FP16_FP32映射差异度检查": {
+        "name": "model-after-optimizer-step阶段DP组内FP16参数与FP32主参数cksum差异度跨rank一致性检查",
+        "description": "在model-after-optimizer-step阶段，optimizer.step()已完成FP32主参数的Adam更新并通过_copy_main_params_to_model_params()复制回FP16/BF16模型参数。检查每个requires_grad=True参数的FP16/BF16值cksum与对应FP32主参数值cksum（经同精度cast后）之间的差异度在DP组内所有rank上是否一致。若某rank差异度异常，表明FP32→FP16/BF16的copy-back同步过程出现错误。排除DistributedOptimizer模式（ZeRO-1下非拥有分片无有效FP32主参数）。基于IEEE 754保证FP32→BF16/FP16 cast确定性，不产生BF16特有假阳性。T3注入污染场景下，正常梯度all-reduce+optimizer更新+copy-back后所有rank差异度应恢复一致；若持续注入导致累积偏移，差异度不一致可被检测。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "= 'model-after-optimizer-step'",
+          "dp": "> 1",
+          "use_distributed_optimizer": "= false",
+          "fp16_or_bf16": "= true"
+        }
+      },
+      "backward后DP组内FP16-FP32参数cksum差异度一致性检查": {
+        "name": "model-after-backward阶段DP组内FP16参数与FP32主参数cksum差异度跨rank一致性检查",
+        "description": "在model-after-backward阶段，检查DP组内所有rank的FP16参数与FP32主参数cksum差异度是否一致。具体来说，对每个参数计算FP16权重cksum与FP32主参数（cast到FP16后）cksum的差异，比较该差异值在DP组内所有rank是否一致。若某rank差异度显著偏离，表明该rank存在FP16参数注入污染或FP32主参数异常。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "note": "仅适用于--fp16(APEX O2)模式。FP32主参数需在T4 dump中可访问或通过上一step完整checkpoint推导。"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'",
+          "mixed_precision": "= 'fp16'"
+        }
+      },
+      "optimizer前DP参数梯度norm比值一致性检查": {
+        "name": "model-before-optimizer-step阶段DP参数与主梯度norm比值跨rank一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查DP组内各rank的FP32参数norm与主梯度norm的比值一致性。具体来说，对于requires_grad=True且主梯度norm大于epsilon的参数，计算||fp32_param||₂/||main_grad||₂比值，跨DP rank比较。若发现比值不一致，表明参数或梯度存在跨rank异常（如backward后参数注入）。零梯度参数（||main_grad||₂ ≤ 1e-12）单独标记但排除在比值比较之外。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "epsilon": 1e-12,
+          "norm_type": "L2",
+          "gradient_source": "main_grad"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "backward后DP梯度cksum一致性检查": {
+        "name": "model-after-backward阶段DP组内梯度cksum跨rank一致性检查",
+        "description": "在model-after-backward阶段，当gradient_accumulation_steps>1且overlap_grad_reduce=False时，检查所有DP组内requires_grad=True参数的本地累积梯度cksum一致性。该阶段梯度为所有MBS累积后的本地梯度（尚未执行all-reduce跨rank同步）。若某rank在MBS循环中参数被注入污染（T3），后续MBS forward使用污染参数产生不同激活值，导致该rank累积梯度cksum与其他clean rank产生偏差。gas=1时检测效力有限（单MBS backward使用clean参数），overlap_grad_reduce=True时检测变为概率性。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "min_gradient_accumulation_steps": 2,
+          "note": "仅在gradient_accumulation_steps>1且overlap_grad_reduce=False时具备确定性检测能力"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "gas": "> 1",
+          "stage": "= 'model-after-backward'",
+          "overlap_grad_reduce": "= False"
+        }
+      },
+      "backward后DP参数结构一致性检查": {
+        "name": "model-after-backward阶段DP组内参数结构跨rank一致性检查",
+        "description": "在model-after-backward阶段，检查data parallel组内所有训练参数的shape、dtype和numel跨rank一致性。具体来说，对每个参数比较DP组内所有rank的shape各维度、dtype和元素数量是否全部一致。该约束与cksum类检查正交——结构完整性（shape/dtype/numel）与值完整性互补，共同构成DP训练正确性的必要条件。在注入场景中作为轻量级结构基线：T3注入污染参数值（由cksum约束#1检测），而此约束验证参数结构未被意外修改。需排除optimizer FP32主参数（仅检查requires_grad=True的模型参数），以及在ep_size>1时排除MoE专家参数（*.experts.*）以避免EP-DP重叠配置的假阳性。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "optimizer后DP优化器状态键结构一致性检查": {
+        "name": "model-after-optimizer-step阶段DP组内优化器状态键结构跨rank一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查同一DP组内所有rank的优化器state_dict['state']中每个param_id的键集合是否完全一致。具体来说，对每个共同param_id，比较各rank上该param_id的state字典键集合（如SGD的{'momentum_buffer'}或Adam的{'exp_avg','exp_avg_sq','step'}），使用共同键交集比较避免因优化器类型差异导致的误报。键集合不一致表明不同rank的优化器状态结构不同，是数值一致性检查的前提条件。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "optimizer后DP SGD momentum buffer cksum一致性检查": {
+        "name": "model-after-optimizer-step阶段DP组内SGD优化器momentum_buffer跨rank一致性检查",
+        "description": "在model-after-optimizer-step阶段，当使用SGD优化器且momentum>0时，检查同一DP组内所有rank的optimizer.state_dict()['state']中每个param_id的momentum_buffer cksum是否一致。momentum_buffer存储历史梯度指数移动平均，若某rank参数被注入污染，其梯度更新方向偏离，导致momentum_buffer逐步与其他rank不一致。本约束与Adam优化器的exp_avg/exp_avg_sq/step约束对称，填补SGD场景的状态一致性检测空白。仅在所有rank共同存在momentum_buffer键时触发。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-optimizer-step'",
+          "optimizer_type": "= 'sgd'",
+          "momentum": "> 0"
+        }
+      },
+      "optimizer前DP组内FP32主参数cksum一致性检查": {
+        "name": "model-before-optimizer-step阶段DP组内FP32主参数cksum一致性检查",
+        "description": "在model-before-optimizer-step阶段（all-reduce完成后、optimizer.step()执行前），检查Megatron分布式优化器中FP32主参数（master parameters，存储在fp32_from_fp16_groups缓冲区中）的cksum在DP组内所有rank上是否完全一致。FP32主参数保持上一轮optimizer step的结果，使用all-reduce后的一致梯度更新得到，应在所有DP rank间严格一致。此检查独立于FP16模型参数cksum检查和FP16-FP32差异度检查，提供FP32主参数维度的完整性验证。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "backward后DP损失缩放因子跨rank一致性检查": {
+        "name": "model-after-backward阶段DP组内损失缩放因子跨rank一致性检查",
+        "description": "在model-after-backward阶段，检查data parallel组内训练器损失缩放因子(loss_scale)的跨rank一致性。具体来说，FP16混合精度训练中动态loss_scale在backward后根据梯度溢出检测结果进行更新，若跨DP的overflow all-reduce通信存在缺陷，不同rank可能做出不同的loss_scale调整决策，导致训练异步。若发现loss_scale不一致，表明DP组内训练控制状态出现分歧。注意：此约束仅适用于FP16混合精度训练且使用动态loss scaling的场景；BF16/FP32训练不使用loss scaling，静态loss scale场景下该检查空洞为真但仍成立。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "= 'model-after-backward'",
+          "dp": "> 1"
+        }
+      },
+      "backward后到optimizer前DP参数值跨阶段不变性检查": {
+        "name": "model-after-backward至model-before-optimizer-step阶段DP组内参数值跨阶段不变性检查",
+        "description": "在model-after-backward至model-before-optimizer-step窗口，检查DP组内各rank参数值的跨阶段不变性。由于此窗口仅执行梯度all-reduce而不修改参数，每个rank上参数cksum应在两阶段间保持一致。若某rank上cksum不一致，表明参数在all-reduce过程中被异常修改。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1"
+        }
+      },
+      "forward后DP参数cksum一致性检查": {
+        "name": "model-after-forward阶段DP组内参数cksum跨rank一致性检查",
+        "description": "在model-after-forward阶段，检查data parallel组内参数的cksum跨rank一致性。若发现不一致，表明前序步骤的注入污染已通过梯度all-reduce和optimizer.step传播并跨步骤残留到当前forward阶段。检查范围限定于requires_grad=True且参数名不含expert/moe的模型参数。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "LIKE 'model-after-forward%'",
+          "dp": "> 1",
+          "step": ">= 2"
+        }
+      },
+      "optimizer后DP FP16参数跨阶段变化量一致性检查": {
+        "name": "model-after-optimizer-step阶段DP组内FP16参数跨阶段变化量一致性检查",
+        "description": "在model-after-optimizer-step阶段，针对requires_grad=True的FP16参数（混合精度训练场景），检查各DP rank上参数从model-before-optimizer-step到model-after-optimizer-step的实际cksum变化量是否跨rank一致。具体来说，对每个参数计算Δ_cksum = cksum(FP16_T8) - cksum(FP16_T6)，所有DP rank的Δ_cksum应一致。若某rank的FP16参数在backward后optimizer前被异常修改（如T3注入污染），则T8被FP32 master覆盖后该rank的Δ_cksum将异常偏离其他rank，从而暴露DP不一致。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "forward后至backward后DP参数跨阶段不变性检查": {
+        "name": "model-after-forward至model-after-backward阶段DP组内参数值跨阶段不变性检查",
+        "description": "在model-after-forward至model-after-backward阶段，检查同一micro-batch内data parallel组中各rank参数cksum的跨阶段不变性。backward_step()仅计算梯度不修改参数.data，T1(after-forward)和T4(after-backward)之间参数应bit-exact一致。若某rank的T1≠T4，表明backward_step()内发生了异常参数修改（注入）。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1"
+        }
+      },
+      "forward后DP-FP32主参数cksum一致性检查": {
+        "name": "model-after-forward阶段DP组内FP32主参数cksum跨rank一致性检查",
+        "description": "在model-after-forward阶段，检查所有DP组内FP32 master parameter weights的cksum一致性。Forward阶段不修改任何参数，FP32 masters应反映上一optimizer.step()的同步结果，跨rank必须完全一致。若发现cksum不一致，表明存在跨rank参数同步异常或注入攻击跨迭代传播。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-forward-mbs-*'"
+        }
+      },
+      "optimizer前DP梯度all-reduce正确性检查": {
+        "name": "model-before-optimizer-step阶段DP组内梯度all-reduce正确性检查",
+        "description": "在model-before-optimizer-step阶段，检查DP组内各rank的FP32主梯度是否等于model-after-backward阶段同一DP组所有rank主梯度的算术均值。具体来说，若某rank的T6梯度与T4跨rank均值偏差超过FP32容差(1e-7)，表明all-reduce操作存在通信错误或梯度在同步过程中被篡改。",
+        "type": "validity",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "tolerance": "1e-7",
+          "precision": "FP32"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "model-after-optimizer-step阶段DP组内FP32主参数cksum一致性检查": {
+        "name": "model-after-optimizer-step阶段DP组内FP32主参数cksum跨rank一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查data parallel组内FP32主参数（fp32_from_fp16_params）的cksum跨rank一致性。FP32主参数仅在optimizer.step()中基于all-reduce后的一致梯度更新，因此在非分片混合精度训练中更新后应在DP组内保持一致。若检测到不一致，表明存在optimizer state级别的污染或参数同步异常。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "note": "约束仅在非分片混合精度模式下有效；纯FP32训练和分片优化器模式下自动跳过"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-optimizer-step'",
+          "optimizer_sharding": "= 'NO_SHARD'",
+          "precision_mode": "= 'mixed_precision'"
+        }
+      },
+      "before-optimizer-step阶段DPAdam状态一致性检查": {
+        "name": "model-before-optimizer-step阶段DP组内Adam优化器状态跨rank一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查所有DP组内Adam优化器状态（exp_avg一阶矩估计、exp_avg_sq二阶矩估计、step更新计数）的cksum跨rank一致性。具体来说，T6时刻的Adam状态来自上一轮optimizer.step()的结果（迭代n-1），在本轮T7 optimizer.step()覆盖前是最后的验证窗口。若exp_avg、exp_avg_sq或step在DP组内cksum不一致，表明存在迭代间静默状态损坏（如内存位翻转、checkpoint恢复不完整、分布式race condition）。与T8 after-optimizer-step的Adam状态检查互补：T6验证历史状态完整性，T8验证当前更新一致性。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "min_step": 1,
+          "state_fields": [
+            "exp_avg",
+            "exp_avg_sq",
+            "step"
+          ],
+          "note": "不适用于DistributedOptimizer(ZeRO)场景，因各rank持有不重叠的参数状态分片"
+        },
+        "applicable_conditions": {
+          "stage": "= 'model-before-optimizer-step'",
+          "dp": "> 1",
+          "optimizer": "= 'Adam'",
+          "step": "> 0",
+          "use_distributed_optimizer": "= false"
+        }
+      },
+      "optimizer前DP学习率跨rank一致性检查": {
+        "name": "model-before-optimizer-step阶段所有DP组内优化器学习率跨rank一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查所有DP组内optimizer.param_groups的学习率(lr)跨rank一致性。LR是优化器的核心超参数，在所有DP rank上必须保持相同；任何rank间的LR差异表明步数计数器不同步、scheduler状态不一致或训练配置错误。T3注入污染参数值不直接影响LR，此约束作为独立于参数污染的超参数一致性baseline检查。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "= 'model-before-optimizer-step'",
+          "dp": "> 1"
+        }
+      },
+      "forward后DP参数requires_grad一致性检查": {
+        "name": "model-after-forward阶段DP组内参数requires_grad跨rank一致性检查",
+        "description": "在model-after-forward阶段，检查同一PP stage内所有DP rank间各参数requires_grad属性的一致性。requires_grad是PyTorch参数核心元属性，决定参数是否参与梯度计算；该属性独立于参数数值，提供与cksum检测正交的元数据层验证能力。若发现DP rank间requires_grad不一致，表明存在模型初始化错误、参数冻结配置bug或参数对象损坏。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-forward'"
+        }
+      },
+      "forward后DP组内loss值一致性检查": {
+        "name": "model-after-forward阶段DP组内loss值跨rank一致性检查",
+        "description": "在model-after-forward阶段，检查所有data parallel组内loss值的跨rank一致性。loss通过forward_step()计算，为FP32标量。在注入测试环境下（相同数据、相同参数、确定性操作），loss应在所有DP rank上位精确相等。loss不一致表明forward计算前存在参数注入或数据分发异常。注意：此约束不检测T3（backward后）注入，因loss在T1已计算完毕。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-forward'"
+        }
+      },
+      "optimizer后DP组内loss_scale跨rank一致性检查": {
+        "name": "model-after-optimizer-step阶段DP组内损失缩放因子跨rank一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查所有DP组内GradScaler的loss_scale值跨rank一致性。在FP16动态loss scaling训练中，optimizer.step()后GradScaler.update()根据梯度健康状况调整scale值，若某rank因T3注入导致梯度异常而触发与其他rank不同的scale调整，将产生跨rank不一致。此约束覆盖T4→T8检测窗口，与T4的loss_scale检查互补。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-optimizer-step'",
+          "precision": "= 'fp16'"
+        }
+      },
+      "forward后DP组内global_step跨rank一致性检查": {
+        "name": "model-after-forward阶段DP组内global_step跨rank一致性检查",
+        "description": "在model-after-forward阶段，检查同一data parallel组内所有rank的global_step（args.iteration）一致性。具体来说，forward_step()完成后iteration尚未被optimizer.step()递增，所有DP rank应处于相同训练步数。若发现不一致，表明存在同步故障（如从错误checkpoint恢复或gradient_accumulation边界bug——见Megatron-LM PR #637）。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-forward'"
+        }
+      },
+      "forward后DP组内FP16-FP32参数cksum差异度一致性检查": {
+        "name": "model-after-forward阶段DP组内FP16参数与FP32主参数cksum差异度跨rank一致性检查",
+        "description": "在model-after-forward阶段，检查所有DP rank上FP16模型参数cksum与FP32主参数cksum之间的归一化差异度一致性。差异度定义为|FP16_cksum - FP32_cksum| / max(|FP16_cksum|, |FP32_cksum|, ε)，反映FP32→FP16同步后的量化误差模式。注入导致的参数Δ（通过FP32主参数跨迭代持久化）会改变FP16截断关系，使差异度在污染rank上偏离干净rank。此检查填补了after-forward阶段FP16-FP32关系验证的空白（after-backward、before-optimizer、after-optimizer阶段已有同类检查）。注意：受浮点ULP限制，sub-ULP注入无法检测，此为所有浮点cksum方法的共性限制。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "= 'model-after-forward'",
+          "dp": "> 1",
+          "mixed_precision": "true",
+          "distributed_optimizer": "false"
+        }
+      },
+      "backward后DP组内FP32主参数cksum一致性检查": {
+        "name": "model-after-backward阶段DP组内FP32主参数cksum跨rank一致性检查",
+        "description": "在model-after-backward阶段，检查所有data parallel组内FP32主参数（来自optimizer.fp32_from_float16_groups）的cksum跨rank一致性。FP32主参数仅在optimizer.step()时更新，在after-backward阶段应保持训练开始时的干净状态。若发现FP32主参数cksum跨rank不一致，表明存在非step()路径的FP32异常修改，为严重系统bug。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "note": "--bf16模式下跳过（模型参数即FP32，无独立FP32主参数副本）"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "optimizer前DP组内SGD momentum_buffer cksum一致性检查": {
+        "name": "model-before-optimizer-step阶段DP组内SGD优化器momentum_buffer跨rank一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查DP组内SGD优化器（momentum>0）momentum_buffer的cksum跨rank一致性。具体来说，梯度all-reduce完成后、optimizer.step()执行前，对每个参数获取optimizer.state中的momentum_buffer，计算cksum并跨DP rank比较。若cksum不一致，表明存在all-reduce绕过、优化器状态直接损坏或DP rank间optimizer配置不一致。该约束仅在非分布式优化器模式（use_distributed_optimizer=False）且step>0时生效，与after-optimizer-step的momentum检查形成互补（pre-step历史累积异常 vs post-step当前更新异常）。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-before-optimizer-step'",
+          "use_distributed_optimizer": "= False",
+          "optimizer_type": "= 'SGD'",
+          "optimizer_momentum": "> 0",
+          "step": "> 0"
+        }
+      }
+    },
+    "tensor_parallel": {
+      "backward后TP参数cksum跨DP一致性检查": {
+        "name": "model-after-backward阶段TP参数cksum跨DP一致性检查",
+        "description": "在model-after-backward阶段，检查同一TP-index下所有DP rank的参数cksum一致性。按TP-index分组，组内所有DP rank的同名requires_grad=True参数cksum必须一致。若发现不一致，表明存在未同步的参数修改或外部注入异常（如T3注入污染单个DP rank的param.data）。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "tp": ">= 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "optimizer后TP参数cksum跨DP一致性检查": {
+        "name": "model-after-optimizer-step阶段TP参数cksum跨DP一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查同一TP-index下所有DP rank的参数cksum一致性。按TP-index分组，组内所有DP rank的同名requires_grad=True参数cksum必须一致。若发现不一致，表明T3注入污染经T7 optimizer.step()传播固化后产生了跨DP参数差异。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "tp": ">= 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "optimizer前TP参数main_grad cksum跨DP一致性检查": {
+        "name": "model-before-optimizer-step阶段TP参数main_grad cksum跨DP一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查所有data parallel组内TP参数all-reduced梯度(main_grad)的cksum一致性。该约束验证梯度DP同步的正确性：all-reduce后main_grad应在所有DP rank上一致。在注入场景中，首轮注入不污染梯度（backward基于干净参数），但从第二轮起，forward使用DP不一致的污染参数导致loss发散，进而梯度跨DP不一致，可通过此约束检测。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "tp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "optimizer前TP参数cksum跨DP一致性检查": {
+        "name": "model-before-optimizer-step阶段TP参数cksum跨DP一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查所有TP参数在data parallel组内的cksum一致性。具体来说，在梯度all-reduce完成后、optimizer step前，验证每个TP参数的cksum在所有DP rank间是否一致。若发现不一致，表明参数注入污染在梯度同步后仍然存在，确认异常未受all-reduce影响。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "tp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "optimizer后TP参数更新方向跨DP一致性检查": {
+        "name": "model-after-optimizer-step阶段TP参数更新方向跨DP一致性检查",
+        "description": "在model-after-optimizer-step阶段，对TP参数计算相对于model-before-optimizer-step阶段的更新方向sign(param_T8 - param_T6)，并检查该更新方向在所有data parallel组内跨rank的一致性。若发现某DP rank的更新方向与其他rank不同，表明optimizer.step()的更新路径在该rank上分叉，可能由参数注入或外部修改导致。与cksum值检测互补：sign检测对近零参数的小幅扰动更敏感。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "cross_stage": "T6_to_T8",
+          "comparison": "sign_delta"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "tp": "> 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "optimizer后TP参数Adam状态跨DP一致性检查": {
+        "name": "model-after-optimizer-step阶段TP参数Adam optimizer state跨DP一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查所有TP参数（attention、mlp、layernorm、embedding、output_layer等层参数）的Adam/AdamW optimizer state中exp_avg（一阶矩）和exp_avg_sq（二阶矩）的cksum在DP ranks间的一致性。基于Adam更新公式 m_t=β₁·m_{t-1}+(1-β₁)·g_t 和 v_t=β₂·v_{t-1}+(1-β₂)·g_t²，正常训练下同一TP位置的不同DP rank应具有一致的optimizer state。若检测到不一致，表明存在持续多步的参数污染导致optimizer state累积发散。注意：此约束在单步注入下存在检测盲区（g_t在注入前计算且all-reduce后一致），仅在≥2步持续注入场景下可检测DP不一致。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "min_step": 2,
+          "note": "单步注入盲区 — 仅≥2步持续注入可检测。仅适用于use_distributed_optimizer=False且使用Adam/AdamW优化器的场景。DistributedOptimizer模式下optimizer state按DP分片，跨DP无重叠无法比较。"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "tp": ">= 1",
+          "stage": "= 'model-after-optimizer-step'",
+          "use_distributed_optimizer": "= false",
+          "optimizer_type": "= 'Adam' | 'AdamW'"
+        }
+      },
+      "forward后TP参数cksum跨DP一致性检查": {
+        "name": "model-after-forward阶段TP参数cksum跨DP一致性检查",
+        "description": "在model-after-forward阶段，检查所有Tensor Parallel模块（ColumnParallelLinear、RowParallelLinear、VocabParallelEmbedding）中requires_grad=True参数的cksum跨DP一致性。具体来说，计算同一TP位置各DP rank的参数cksum并比较，若不一致表明上一迭代注入污染参数经optimizer.step()更新后残留至当前迭代forward阶段，参数在前向过程中只读导致DP不一致无损传播。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "note": "CONDITIONAL - 仅在model-after-forward dump可用时触发"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "tp": ">= 1",
+          "stage": "= 'model-after-forward'"
+        }
+      },
+      "backward后TP参数grad存在性跨DP一致性检查": {
+        "name": "model-after-backward阶段TP参数grad存在性跨DP一致性检查",
+        "description": "在model-after-backward阶段，检查所有data parallel组内TP参数的gradient存在性一致性。对于requires_grad=True的参数，所有DP rank上param.grad应同时为非None或同时为None。若某一DP rank有gradient而另一DP rank为None，表明autograd计算异常或TP通信故障。与参数cksum约束互补——cksum检测数值正确性，grad存在性检测计算完整性。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "= 'model-after-backward'",
+          "dp": "> 1",
+          "tp": "> 1"
+        }
+      },
+      "model-before-optimizer-step阶段TP参数optimizer state跨DP一致性检查": {
+        "name": "model-before-optimizer-step阶段TP参数optimizer state跨DP一致性检查",
+        "description": "在model-before-optimizer-step阶段（T6），optimizer state（Adam的exp_avg和exp_avg_sq）尚未被当前step的optimizer.step()更新，仍保持上一步训练结束时的状态。由于上一步结束时所有DP rank的参数和梯度均一致，optimizer state也应跨DP一致。此约束检测optimizer state是否在optimizer执行前被独立污染（与#6互补：#6在T8检测optimizer更新后被污染参数扩散影响的状态，本约束在T6检测optimizer执行前的基准状态）。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "model-before-optimizer-step",
+          "dp": "> 1",
+          "tp": ">= 1",
+          "use_distributed_optimizer": false,
+          "optimizer_type": "adam",
+          "min_step": 1
+        }
+      },
+      "backward后TP参数grad符号跨DP一致性检查": {
+        "name": "model-after-backward阶段TP参数grad符号模式跨DP一致性检查",
+        "description": "在model-after-backward阶段，检查TP参数的gradient符号模式跨DP一致性。具体来说，对requires_grad=True且grad非None的参数，逐元素提取grad符号(+1/0/-1)并构建分布向量，比较不同DP rank间符号分布的余弦相似度。若某DP rank的符号模式显著偏离其他rank，表明存在参数注入异常。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "method": "sign_pattern",
+          "similarity_metric": "cosine",
+          "threshold_source": "running_baseline_n_steps"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'",
+          "tp": ">= 1"
+        }
+      },
+      "backward后TP参数grad_cksum跨DP一致性检查": {
+        "name": "model-after-backward阶段TP参数grad cksum跨DP一致性检查",
+        "description": "在model-after-backward阶段，检查所有TP参数梯度（.grad）的cksum在相同TP rank索引、不同DP rank间的一致性。若DP组内同一TP shard的grad cksum不一致，表明上一迭代的参数污染已传播至梯度计算，提供defense-in-depth检测能力。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "tp": ">= 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "forward后TP非切分参数跨TP一致性检查": {
+        "name": "model-after-forward阶段非切分TP参数跨TP一致性检查",
+        "description": "在model-after-forward阶段，检查同一DP rank内不同TP rank间非切分参数（LayerNorm.weight/bias、非切分bias等）的cksum一致性。Megatron TP中非切分参数在所有TP rank上持有完整相同副本（来源[1][2]），经相同前向传播后参数值应bit-exact一致。若发现不一致，表明某TP rank参数被独立篡改或存在TP通信异常。注意：此约束在TP组内（同DP rank内检测），与现有跨DP约束正交互补。检测盲区：T3注入同时污染DP rank内所有TP rank，此约束无法检测该模式。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-after-forward'"
+        }
+      },
+      "backward后非切分TP参数grad cksum跨TP一致性检查": {
+        "name": "model-after-backward阶段非切分TP参数梯度cksum跨TP一致性检查",
+        "description": "在model-after-backward阶段，检查非TP切分参数（LayerNorm weight/bias、RMSNorm weight、RowParallelLinear bias）在TP组内的grad_cksum一致性。由于RowParallelLinear后的all-reduce保证TP组内各rank输入一致，且非切分参数在各rank上完全相同，backward产生的梯度应在TP组内完全一致。若TP组内grad_cksum不一致，表明存在TP通信错误或group配置异常。注意：强烈建议设置torch.backends.cudnn.deterministic=True以避免cuDNN非确定性导致的ULP级别假阳性。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "deterministic_requirement": "torch.backends.cudnn.deterministic=True recommended"
+        },
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "optimizer后非切分TP参数cksum跨TP一致性检查": {
+        "name": "model-after-optimizer-step阶段非切分TP参数cksum跨TP一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查非TP切分参数（LayerNorm weight/bias、RMSNorm weight、RowParallelLinear bias）在TP组内的param_cksum一致性。由于TP组内所有rank持有相同非切分参数副本，且接收相同梯度（RowParallelLinear all-reduce保证输入一致），optimizer更新应完全一致，更新后的参数值也应在TP组内完全一致。此约束验证optimizer更新在TP组内的确定性，可检测TP rank间optimizer state不同步或参数更新不一致的异常。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "model-before-optimizer-step阶段非切分TP参数mainGrad cksum跨TP一致性检查": {
+        "name": "model-before-optimizer-step阶段非切分TP参数main_grad cksum跨TP一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查所有非切分TP参数（LayerNorm/RMSNorm weight/bias、RowParallelLinear bias等，需requires_grad=true）的main_grad cksum跨所有TP rank一致性。非切分TP参数在TP组内为完整副本，原始梯度经DP all-reduce和gradient clipping后形成的main_grad在所有TP rank间应完全一致。若dp>1时发现不一致，表明T3注入污染导致不同DP rank的TP组间main_grad出现差异；任意dp下均可检测TP通信实现bug。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "model-after-optimizer-step阶段非切分TP参数optimState跨TP一致性检查": {
+        "name": "model-after-optimizer-step阶段非切分TP参数optimizer state跨TP一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查所有非切分TP参数（LayerNorm/RMSNorm weight/bias、RowParallelLinear bias等）的Adam optimizer states（exp_avg和exp_avg_sq）跨所有TP rank一致性。非切分TP参数在所有TP rank上拥有相同的参数值和梯度更新，Adam optimizer产生的exp_avg和exp_avg_sq应完全一致。若dp>1时发现不一致，表明T3注入污染→T7 optimizer.step()→T8 dump时optimizer state在不同DP rank的TP组间出现差异；任意dp下均可检测TP实现或optimizer bug。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "tp": "> 1",
+          "optimizer": "= 'Adam' | 'AdamW'",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "backward后TP参数dtype跨DP一致性检查": {
+        "name": "model-after-backward阶段TP参数dtype跨DP一致性检查",
+        "description": "在model-after-backward阶段，检查所有TP参数（partitioned和non-partitioned）的dtype在data parallel组内的一致性。dtype作为张量元数据，与cksum等数值属性独立。Megatron-LM的--fp16/--bf16为全局配置，所有DP rank上同一参数的dtype在任意训练阶段均应严格一致。若某参数在不同DP rank上出现dtype差异，表明存在内存破坏（张量头部覆写）、配置同步错误或序列化bug。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "forward后TP参数shape跨DP一致性检查": {
+        "name": "model-after-forward阶段TP参数shape跨DP一致性检查",
+        "description": "在model-after-forward阶段，检查所有data parallel组内TP分片参数的shape一致性。Shape由TP分片公式决定（列并行：[output//tp, input]，行并行：[output, input//tp]），同一TP rank的所有DP副本shape必须完全一致。此约束检测结构性异常（TP配置错误或参数结构损坏），与数值cksum检测互补：shape检测结构基线，cksum检测注入/精度异常。注入验证：T3注入修改参数值但不改变shape，此约束在注入前建立结构不变性基线。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "= 'model-after-forward'",
+          "dp": "> 1"
+        }
+      },
+      "跨stage同rank参数cksum不变性检查": {
+        "name": "跨stage同rank参数不变性：model-after-forward与model-after-backward参数cksum一致性",
+        "description": "检测同一rank上model-after-forward阶段与model-after-backward阶段的参数cksum是否一致。基于Megatron-LM训练原理：forward→backward过程中参数只读，仅optimizer.step()修改参数，前向dump和后向dump的参数值应完全相同。T3注入在backward完成后、model-after-backward dump前修改参数，直接打破此不变性——干净的前向参数与污染的后向参数产生cksum差异。这是注入检测的黄金标准约束：与全部现有单阶段跨rank约束完全正交，是tensor_parallel类别首个跨阶段约束。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage_comparison": "model-after-forward vs model-after-backward（同rank跨阶段比较）",
+          "parameter_filter": "requires_grad=true的所有参数"
+        }
+      },
+      "optimizer后TP参数更新量跨DP一致性检查": {
+        "name": "model-after-optimizer-step阶段所有TP参数更新量跨DP一致性检查",
+        "description": "在model-after-optimizer-step阶段，对所有TP参数（含切分与非切分，requires_grad=True），计算optimizer step前后的参数更新量（weight delta张量：θ_after - θ_before），验证该更新量张量的cksum在所有DP ranks之间一致。此约束依赖optimizer配置weight_decay > 0（如AdamW），因为weight decay项 -η·λ·θ_{t-1} 使更新量直接依赖被注入污染的参数值，导致跨DP不一致。T3注入→T5 all-reduce同步梯度→T7 AdamW更新量因λ·θ项跨DP不同→T8可检测。对于SGD/vanilla Adam（weight_decay=0），更新量仅依赖all-reduce同步的梯度，跨DP始终一致，此约束不适用。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "min_step": 1,
+          "note": "仅当optimizer配置weight_decay>0时有效；Megatron-LM标准AdamW满足此条件"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "tp": ">= 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "optimizer后TP参数NaNInf有效性检查": {
+        "name": "model-after-optimizer-step阶段TP参数数值有效性检查",
+        "description": "在model-after-optimizer-step阶段，检查所有TP参数的cksum是否为有效数值（非NaN、非Inf）。具体来说，GradScaler仅检测梯度溢出而不检查参数本身的NaN/Inf；当所有DP rank同时出现NaN时，跨rank一致性检查失效。T3 scale注入可在多步累积后导致参数NaN，本约束在参数实际变为NaN时予以捕获。",
+        "type": "validity",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "note": "检测cksum的NaN/Inf状态。NaN cksum表明参数值包含NaN，需区别于cksum为NULL（参数不存在）。通过IEEE 754 NaN≠NaN特性实现检测"
+        },
+        "applicable_conditions": {
+          "stage": "= 'model-after-optimizer-step'",
+          "tp": ">= 1"
+        }
+      },
+      "forward后TP切分参数cksum跨TP差异性检查": {
+        "name": "model-after-forward阶段TP切分参数cksum跨TP差异性检查",
+        "description": "在model-after-forward阶段，检查TP切分参数（ColumnParallelLinear.weight、RowParallelLinear.weight、VocabParallelEmbedding.weight）跨TP rank的cksum差异性。在tp>1条件下，不同TP rank持有参数的不同分片，cksum必须互不相同。若cksum相同则表明TP切分失败，退化为冗余复制。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-after-forward-mbs-0'"
+        }
+      },
+      "backward后TP切分参数grad cksum跨TP差异性检查": {
+        "name": "model-after-backward阶段TP切分参数grad cksum跨TP差异性检查",
+        "description": "在model-after-backward阶段，检查TP切分参数（ColumnParallelLinear.weight、RowParallelLinear.weight等且grad不为NULL）跨TP rank的grad cksum差异性。TP将参数切分到不同rank，每个rank独立计算分片的梯度，grad在不同TP rank上必须互不相同。若相同则表明TP梯度分片异常。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "TP切分参数main_grad跨TP差异性检查": {
+        "name": "model-before-optimizer-step阶段TP切分参数main_grad cksum跨TP差异性检查",
+        "description": "在model-before-optimizer-step阶段，检查同一TP组内不同rank上TP切分参数（ColumnParallelLinear和RowParallelLinear的weight）的main_grad cksum差异性。TP切分参数在每个rank上持有不同权重分片且独立计算梯度，不跨TP同步，因此main_grad cksum应当互不相同。若相同表明TP分片异常。",
+        "type": "validity",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "backward后optimizer前参数跨stage不变性检查": {
+        "name": "跨stage同rank参数不变性：model-after-backward与model-before-optimizer-step参数cksum一致性",
+        "description": "在model-after-backward（T4）到model-before-optimizer-step（T6）之间，训练循环仅执行梯度all-reduce操作，不修改参数权重。检查同一rank上同一参数的cksum在两个stage间的一致性。若不同，表明参数在梯度同步期间被意外修改。注意：跨stage dump需读取相同参数存储（推荐fp32 master参数），避免fp16/fp32副本差异导致误报。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "IN ('model-after-backward', 'model-before-optimizer-step')"
+        }
+      },
+      "beforeOptTP参数optimizerState跨DP一致性检查": {
+        "name": "model-before-optimizer-step阶段TP参数optimizer state跨DP一致性检查",
+        "description": "在model-before-optimizer-step阶段，比较不同DP rank上相同TP rank位置的所有参数的optimizer state（exp_avg和exp_avg_sq for Adam）是否一致。若发现不一致，表明optimizer state跨DP产生分歧，可能源于注入污染参数后经过完整optimizer.step()导致的状态传播。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "optimizer后TP切分参数cksum跨TP差异性检查": {
+        "name": "model-after-optimizer-step阶段TP切分参数cksum跨TP差异性检查",
+        "description": "在model-after-optimizer-step阶段，检查TP切分参数（ColumnParallelLinear/RowParallelLinear/VocabParallelEmbedding的weight）在TP组内的cksum差异性。由于TP切分参数在TP维度被分片，不同TP rank持有不同列/行索引范围的权重子矩阵，且optimizer.step()独立更新每个TP rank的本地分片，因此同一DP rank组内不同TP rank间的cksum值应互不相同。若T3注入污染单DP rank参数，经T7 optimizer.step()放大差异后，T8 dump时跨TP差异性模式异常可被捕获。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "optimizer后TP参数optimizer state数值有效性检查": {
+        "name": "model-after-optimizer-step阶段TP参数optimizer state数值有效性检查",
+        "description": "在model-after-optimizer-step阶段，检查所有可训练TP参数的optimizer state数值有效性。具体来说，对exp_avg（一阶矩）和exp_avg_sq（二阶矩）执行NaN/Inf检测，任一DP rank出现异常值即判定训练异常。与cksum一致性检查互补：cksum检测值是否相同，本约束检测值是否合法。T3单步注入后T8 optimizer state由clean all-reduced grad驱动更新，跨DP一致且clean；本约束主要防御多步注入的级联NaN传播及全局训练发散。参数范围限定为requires_grad=True的可训练参数。",
+        "type": "validity",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "= 'model-after-optimizer-step'",
+          "dp": ">= 1",
+          "tp": ">= 1"
+        }
+      },
+      "backward后TP参数数值有效性跨DP一致性检查": {
+        "name": "model-after-backward阶段TP参数数值有效性跨DP一致性检查",
+        "description": "在model-after-backward阶段，检查所有TP参数的NaN/Inf数值有效性在DP rank间的一致性。若发现某个DP rank的参数含NaN或Inf而其他rank不含，表明存在单rank参数污染异常（如注入攻击）。此约束仅在NaN/Inf-producing注入时成立；非NaN注入由现有cksum约束互补覆盖。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "step前TP参数数值有效性跨DP一致性检查": {
+        "name": "model-before-optimizer-step阶段TP参数数值有效性跨DP一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查所有TP参数的NaN/Inf数值有效性在DP rank间的一致性。若发现某个DP rank的参数含NaN或Inf而其他rank不含，表明存在单rank参数污染异常（如注入攻击）。此约束是optimizer更新前最后防线，可防止NaN参数在Adam更新中永久污染optimizer state（exp_avg/exp_avg_sq）。此约束仅在NaN/Inf-producing注入时成立；非NaN注入由现有cksum约束互补覆盖。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "model-after-backward阶段非切分TP参数cksum跨TP一致性检查": {
+        "name": "model-after-backward阶段非切分TP参数cksum跨TP一致性检查",
+        "description": "在model-after-backward阶段，检查同一TP组内非切分参数（如LayerNorm.weight/bias、普通bias项）的cksum跨TP rank一致性。backward仅计算梯度不修改参数值，若跨TP非切分参数cksum不一致则表明存在参数异常修改（如T3注入导致同一节点内不同TP rank的非切分参数值不一致）。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "forward后TP参数数值有效性DP一致性检查": {
+        "name": "model-after-forward阶段TP参数数值有效性跨DP一致性检查",
+        "description": "在model-after-forward阶段，检查所有可训练TP参数（requires_grad=True）的NaN/Inf状态跨DP一致性。若某DP rank参数含NaN/Inf而其他rank不含，表明上一步梯度注入污染已跨步传播至权重，排除frozen参数避免误报。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-forward'"
+        }
+      },
+      "model-before-optimizer-step阶段非切分TP参数optimizerState跨TP一致性检查": {
+        "name": "model-before-optimizer-step阶段非切分TP参数optimizer state跨TP一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查同一TP组内所有非切分TP参数（如LayerNorm、RMSNorm、bias、position embedding）的optimizer state跨rank一致性。使用cksum比较方法，在同一TP组内所有rank上计算非切分参数optimizer state tensor（Adam的exp_avg/exp_avg_sq或SGD的momentum）的cksum并验证完全一致。非切分参数在TP组内每个rank持有完整副本且独立维护optimizer state，应bit-identical。若发现跨TP不一致，表明前一次迭代中的参数异常已通过optimizer.step()传播至optimizer state。与T8的optimizer state检查形成时序互补：T6反映optimizer更新前基线，T8反映更新后终态。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "min_step": 1
+        },
+        "applicable_conditions": {
+          "stage": "= 'model-before-optimizer-step'",
+          "tp": "> 1"
+        }
+      },
+      "optimizer前非切分TP参数cksum跨TP一致性检查": {
+        "name": "model-before-optimizer-step阶段非切分TP参数cksum跨TP一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查TP组内非切分参数的cksum跨TP rank一致性。具体来说，对于不参与TP切分的参数（如layernorm.weight、layernorm.bias、bias项、非VocabParallel的embedding等），其在同一DP rank内所有TP rank上的cksum必须一致。若发现不一致，表明存在参数注入污染或TP同步机制异常。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "model-after-optimizer-step阶段TP切分参数optimizer state跨TP差异性检查": {
+        "name": "model-after-optimizer-step阶段TP切分参数optimizer state跨TP差异性检查",
+        "description": "在model-after-optimizer-step阶段，检查TP切分参数（如ColumnParallelLinear.weight、RowParallelLinear.weight）的Adam optimizer state（exp_avg和exp_avg_sq）在同一DP rank内不同TP rank间的差异性。由于TP切分参数各rank持有不同参数shard，计算不同梯度进而产生不同的optimizer state，exp_avg和exp_avg_sq的cksum在TP rank间应互不相同。若发现cksum重复，表明TP分片机制可能被破坏或存在状态共享异常。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "min_step": 1,
+          "optimizer_type": [
+            "Adam",
+            "AdamW",
+            "FusedAdam"
+          ]
+        },
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "backward后TP参数grad shape跨DP一致性检查": {
+        "name": "model-after-backward阶段TP参数grad shape跨DP一致性检查",
+        "description": "在model-after-backward阶段，检查同一data parallel组内所有TP参数的gradient shape一致性。遍历requires_grad=True且grad不为None的参数，比较其grad.shape在各DP rank间是否完全相同。若部分rank的grad为None而其他rank存在grad，报告为grad存在性异常；若所有rank的grad均为None则跳过（PP interleaved中间状态）。shape作为tensor元数据，同一DP组内必须完全相同，否则表明DP rank间模型结构出现差异。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "backward后TP参数计数跨DP一致性检查": {
+        "name": "model-after-backward阶段TP参数计数跨DP一致性检查",
+        "description": "在model-after-backward阶段，检查所有DP rank上TP参数的总计数是否一致。参数计数是模型结构完整性的基线指标，训练过程中参数不应被添加或删除。该约束与值cksum校验正交互补，检查结构元数据而非数值属性。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "backward后TP参数requires_grad跨DP一致性检查": {
+        "name": "model-after-backward阶段TP参数requires_grad跨DP一致性检查",
+        "description": "在model-after-backward阶段，检查所有TP参数requires_grad属性在DP组内的一致性。requires_grad决定参数是否参与梯度计算和优化器更新，若跨DP不一致将导致不同rank执行不同的优化路径。该约束检查参数布尔元数据属性，与cksum值校验正交互补。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "optimizer前TP参数optimizer state数值有效性跨DP一致性检查": {
+        "name": "model-before-optimizer-step阶段TP参数optimizer state数值有效性跨DP一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查所有TP管理参数的Adam optimizer state（exp_avg和exp_avg_sq）数值有限性跨DP一致性。若发现任何DP rank的exp_avg或exp_avg_sq包含NaN/Inf，或各rank有限性状态不一致，表明梯度污染通过Adam EMA机制永久扩散至optimizer state。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "note": "适用于非分片optimizer state（optimizer_state_sharding=False）且使用Adam/AdamW优化器场景"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "model-before-optimizer-step阶段TP参数param-main_grad ratio跨DP一致性检查": {
+        "name": "model-before-optimizer-step阶段TP参数param-to-main_grad ratio跨DP一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查TP参数param_cksum与main_grad_cksum的比值跨DP一致性。由于T5 all-reduce后main_grad在DP rank间bit-exact一致，而T3注入污染的参数值在污染DP rank上不一致，ratio=param_cksum/main_grad_cksum在污染与干净DP rank间产生可检测差异。与现有cksum值一致性检查不同，本约束检测参数与梯度的关系一致性。排除main_grad_cksum≈0的参数以避免除零。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "epsilon": 1e-12,
+          "note": "ABS(main_grad_cksum) > epsilon 过滤零梯度参数，排除frozen params和PP边界参数"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "optimizer后TP参数main_grad cksum跨DP一致性检查": {
+        "name": "model-after-optimizer-step阶段所有DP组内TP参数main_grad cksum一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查所有data parallel组内TP参数main_grad的cksum一致性。由于optimizer.step()对所有优化器(Adam/AdamW/SGD/DistributedFusedAdam)均不修改main_grad（只读操作），main_grad在step后应保持all-reduce后的跨DP一致状态。若zero_grad已被调用，main_grad为零值张量，cksum仍应跨DP一致。仅检查optimizer state中存在非NULL main_grad的参数，frozen参数自动跳过。不一致表明all-reduce失败、optimizer异常修改main_grad或内存损坏。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "= 'model-after-optimizer-step'",
+          "dp": "> 1",
+          "tp": ">= 1"
+        }
+      },
+      "model-after-forward阶段TP参数dtype跨DP一致性检查": {
+        "name": "model-after-forward阶段DP组内TP参数dtype一致性检查",
+        "description": "在model-after-forward阶段，检查data parallel组内所有TP参数的dtype一致性。具体来说，同一参数名称在所有DP rank上应具有相同的dtype属性值。若发现不一致，表明存在混合精度配置错误、AMP wrapper异常或模型初始化不一致。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "LIKE 'model-after-forward-mbs-%'",
+          "dp": "> 1",
+          "tp": ">= 1"
+        }
+      },
+      "optimizer前后同rank参数shape一致性检查": {
+        "name": "model-before-optimizer-step与model-after-optimizer-step阶段同rank参数shape一致性检查",
+        "description": "在model-before-optimizer-step与model-after-optimizer-step阶段之间，检查同一rank上所有参数（含requires_grad=False的冻结参数）的shape（维度）是否保持一致。optimizer.step()仅执行原地逐元素更新（如param.add_(-lr*grad)），作为PyTorch框架级别保证不能改变tensor shape；Megatron mixed precision流程中_copy_main_params_to_model_params()使用copy_()强制shape一致。任何shape不匹配表明内存损坏、参数元数据篡改或框架bug。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "IN ('model-before-optimizer-step', 'model-after-optimizer-step')"
+        }
+      },
+      "backward后TP参数param-grad关联跨DP一致性检查": {
+        "name": "model-after-backward阶段TP参数param-grad关联性跨DP一致性检查",
+        "description": "在model-after-backward阶段，检查所有DP组内requires_grad=True的TP参数的param_cksum与grad_cksum的跨DP关联一致性。验证跨DP rank的param_cksum唯一值数量不超过grad_cksum唯一值数量。注入攻击在T3污染单个DP rank的param但不影响T2已用干净param计算的grad，产生(param跨DP不一致, grad跨DP一致)的异常模式——正常训练中不可能出现此模式，因为grad是param的函数。仅适用于requires_grad=True且grad_cksum非NULL的参数。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'"
+        }
+      },
+      "optimizer-step前TP切分参数opt state跨TP差异性检查": {
+        "name": "model-before-optimizer-step阶段TP切分参数optimizer state跨TP差异性检查",
+        "description": "在model-before-optimizer-step阶段，对于TP切分参数（跨TP rank的param_cksum存在差异的参数，即ColumnParallelLinear和RowParallelLinear的权重分片），验证Adam optimizer state各分量在不同TP rank间存在差异性。TP切分参数的不同rank持有不同分片，其optimizer state必然不同。仅适用于optimizer state已初始化（exp_avg_cksum和exp_avg_sq_cksum非NULL）且tp>1的场景。通过动态识别切分参数（跨TP param_cksum存在差异 vs 一致）来精确过滤非切分参数如LayerNorm。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-before-optimizer-step'"
+        }
+      },
+      "backward后TP参数grad-to-param ratio跨DP一致性检查": {
+        "name": "model-after-backward阶段TP参数grad-to-param ratio跨DP一致性检查",
+        "description": "在model-after-backward阶段（backward_step完成后、gradient all-reduce前），检查所有DP组内TP参数的本地梯度与参数比值（grad_cksum/param_cksum）的一致性。若某DP rank的ratio与其他ranks不一致，表明该rank的参数被异常修改（如注入攻击）导致其本地梯度偏离正常值。与before-optimizer-step的param-to-main_grad ratio检查互补——本约束在all-reduce前检测本地梯度-参数关系，后者在all-reduce后检测全局梯度-参数关系。限制条件：overlap_grad_reduce必须关闭，排除grad为空和param_cksum≈0的参数。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "epsilon": "1e-8",
+          "skip_condition": "abs(param_cksum) <= epsilon OR grad is None OR NOT requires_grad"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'",
+          "overlap_grad_reduce": "= False"
+        }
+      },
+      "backward后TP参数梯度余弦跨DP一致性检查": {
+        "name": "model-after-backward阶段TP参数-梯度余弦相似度跨DP一致性检查",
+        "description": "在model-after-backward阶段，检查所有DP组内TP参数的参数-梯度余弦相似度跨DP一致性。具体来说，对每个requires_grad=True且grad L2范数大于1e-10的参数tensor，计算cos(p,g)=⟨p,g⟩/(||p||₂·||g||₂)，该值应在同一DP组内所有rank间保持一致。T3注入修改param但不修改grad（grad在T2用干净参数算出），导致p异g同使cos跨DP变化，从而检测注入异常。注意：uniform scale注入(param*=c)不改变cos，此场景依赖已有cksum约束互补覆盖；零梯度参数通过L2范数过滤自动跳过。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "tolerance": 1e-05,
+          "grad_norm_threshold": 1e-10,
+          "note": "uniform scale注入盲区依赖cksum互补检测；零梯度参数通过范数过滤"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward'",
+          "step": ">= 1"
+        }
+      },
+      "model-after-optimizer-step阶段非切分TP参数optimizer state跨TP一致性检查": {
+        "name": "model-after-optimizer-step阶段非切分TP参数optimizer state跨TP一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查同一DP组内非TP切分参数（layernorm.weight/bias, embedding.weight, bias项等）的Adam optimizer state（exp_avg一阶矩和exp_avg_sq二阶矩）cksum跨TP rank一致性。非切分参数在TP组内被完整复制，parameters和gradients在TP组内一致，Adam更新为确定性操作，故optimizer state应在所有TP rank间完全一致。若发现不一致，表明存在TP通信异常或optimizer state更新路径bug。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-after-optimizer-step'",
+          "step": ">= 1"
+        }
+      },
+      "forward后非切分TP参数shape跨TP一致性检查": {
+        "name": "model-after-forward阶段非切分TP参数shape跨TP一致性检查",
+        "description": "在model-after-forward阶段，检查同一DP组内所有非TP切分参数的shape跨TP rank一致性。非切分参数（layernorm.weight/bias、rmsnorm.weight、norm.weight/bias、position_embeddings.weight、final_layernorm.weight/bias、pooler.dense.weight/bias等）在TP模式下完整复制不参与分片，其shape（ndim和各维度大小）应在所有TP rank间严格相等。shape不一致表明TP配置错误、模型定义偏差或参数注册异常。word_embeddings和lm_head因vocab_parallel时合法分片已从检测范围排除。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "note": "word_embeddings和lm_head因vocab_parallel合法分片已排除，此为反例验证后精炼结果"
+        },
+        "applicable_conditions": {
+          "tp": "> 1",
+          "stage": "= 'model-after-forward'"
+        }
+      },
+      "backward后optimizer前TP非切分参数grad-main_grad符号保持率跨DP一致性检查": {
+        "name": "model-after-backward与model-before-optimizer-step阶段间TP非切分参数grad到main_grad符号保持率跨DP一致性检查",
+        "description": "在model-after-backward和model-before-optimizer-step阶段，检查TP非切分参数（如LayerNorm参数）的local grad符号到all-reduced main_grad符号的保持率跨DP一致性。对于每个DP rank，计算|grad|>0的参数中sign(grad_T4)==sign(main_grad_T6)的比例。正常训练中此比例在所有DP rank间高度一致（自然噪声对称分布），但T3注入污染单个DP rank的参数后，该rank的grad符号系统性异常，导致符号保持率显著偏离其他rank。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "epsilon": 1e-12,
+          "threshold": 0.05
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "tp": ">= 1",
+          "stage": "= cross-stage: model-after-backward + model-before-optimizer-step",
+          "parameter_type": "= TP非切分参数"
+        }
+      },
+      "optimizer后TP切分与非切分参数统计量比率跨DP一致性检查": {
+        "name": "model-after-optimizer-step阶段TP切分与非切分参数统计量比率跨DP一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查TP切分参数组（ColumnParallel+RowParallel: attention qkv/dense, mlp dense_h_to_4h/dense_4h_to_h）与非切分参数组（layernorm weight/bias）的参数绝对值均值比率跨DP一致性。具体来说，T3注入修改单DP rank参数后，经过gradient all-reduce和Adam optimizer step，TP切分参数（大矩阵，参与TP通信）与TP非切分参数（layernorm，本地操作）因规模差异对注入产生不对称响应，导致G_split/(G_replicated+ε)比率在注入DP rank上偏离。若比率在DP rank间不一致，表明存在参数注入导致的TP切分/非切分结构性偏移异常。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "optimizer后TP参数Δparam-grad对齐度跨DP一致性检查": {
+        "name": "model-after-optimizer-step阶段TP参数Δparam与main_grad方向对齐度跨DP一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查TP参数的Δparam（optimizer step更新量，即θ_T8减θ_T6）与main_grad方向的对齐度cos(Δparam, -main_grad)跨DP组一致性。具体来说，add或zero注入污染T3参数后经all-reduce扩散至整个DP组，导致optimizer state累积偏差，Δparam方向偏离正常，对齐度在污染DP组与清洁DP组间出现显著差异。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "threshold": "relative_tolerance",
+          "min_step": 1
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "optimizer前TP参数shape跨DP一致性检查": {
+        "name": "model-before-optimizer-step阶段TP参数shape跨DP一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查所有TP参数（切分和非切分）的tensor shape跨DP rank一致性。若同一参数在不同DP rank上shape不同，表明存在内存损坏、框架bug或参数对象异常替换。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1"
+        }
+      },
+      "backward到optimizer前DP all-reduce梯度求和恒等式检查": {
+        "name": "model-after-backward到model-before-optimizer-step阶段DP all-reduce梯度求和恒等式验证",
+        "description": "在model-after-backward(T4)到model-before-optimizer-step(T6)跨阶段，验证DP all-reduce操作的数学正确性。对于所有参数，验证恒等式：dp_size × Σ_{所有DP rank} main_grad cksum(T6) == Σ_{所有DP rank} grad cksum(T4)。该恒等式源于DP all-reduce的average语义，main_grad为所有DP rank的grad之平均。若all-reduce被篡改、通信损坏或grad在传输中丢失，恒等式将不成立。注入若破坏通信缓冲区可被间接检测。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "tolerance": "1e-5"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "stage": "= 'model-after-backward AND model-before-optimizer-step'"
+        }
+      }
+    },
+    "pipeline_parallel": {
+      "PPbackward后参数跨DP cksum一致性检查": {
+        "name": "model-after-backward阶段PP参数跨DP cksum一致性检查",
+        "description": "在model-after-backward阶段，检查pipeline parallel组内所有可训练参数跨DP rank的cksum一致性。具体来说，backward_step()仅计算梯度不修改参数权重，因此T4时同一PP stage的所有DP rank上参数应完全一致。若cksum不一致，表明存在参数被异常修改（如T3注入攻击导致单DP rank参数被污染）。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "= 'model-after-backward'",
+          "dp": "> 1",
+          "pp": "> 1",
+          "parameter_replication": "= true"
+        }
+      },
+      "optimizer前PP主梯度跨DP cksum一致性检查": {
+        "name": "model-before-optimizer-step阶段PP参数main_grad跨DP cksum一致性检查",
+        "description": "在model-before-optimizer-step阶段，检查pipeline parallel持有参数的main_grad cksum跨DP一致性。具体来说，在finalize_model_grads()完成梯度all-reduce后、optimizer.step()前，同一PP stage的DP组内所有rank的main_grad cksum应完全一致。若不一致，表明梯度同步异常或all-reduce未正确完成。仅检测requires_grad=True且main_grad非空的参数。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "= 'model-before-optimizer-step'",
+          "pp": "> 1",
+          "dp": "> 1",
+          "overlap_grad_reduce": "= False"
+        }
+      },
+      "optimizer后PP参数跨DP cksum一致性检查": {
+        "name": "model-after-optimizer-step阶段PP参数跨DP cksum一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查PP参数跨DP rank的cksum一致性。T3注入污染参数后，optimizer.step()将污染参数与正常梯度结合产生错误更新，导致被注入DP rank的参数偏离正确值，且该偏差随时间累积放大。若发现DP间cksum不一致，表明存在从注入传播至optimizer step的深层参数异常。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "pp": "> 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "optimizer后PP参数更新量跨DP cksum一致性检查": {
+        "name": "model-after-optimizer-step阶段PP参数更新量(Δparam)跨DP cksum一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查PP参数相对于model-before-optimizer-step阶段的更新量(Δparam = param_T8 - param_T6)的DP一致性。具体来说，AdamW的weight_decay项(-lr×wd×param_old)直接依赖参数值，当T3注入导致参数DP不一致时，不同DP rank的更新量产生分歧。若发现Δparam的cksum在DP组内不一致，表明存在参数污染通过weight_decay传导至更新量的异常。注意：此约束仅对weight_decay>0的参数有效（如线性层权重、attention投影权重），对wd=0参数（如LayerNorm、bias）不适用。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "dp": "> 1",
+          "pp": ">= 1",
+          "stage": "= 'model-after-optimizer-step'"
+        }
+      },
+      "model-after-optimizer-step阶段PP参数Adam优化器状态跨DP cksum一致性检查": {
+        "name": "model-after-optimizer-step阶段PP参数Adam优化器状态(exp_avg/exp_avg_s2)跨DP cksum一致性检查",
+        "description": "在model-after-optimizer-step阶段，检查同一PP stage内不同DP rank的Adam优化器内部状态exp_avg和exp_avg_s2的cksum一致性。具体来说，注入(T3)污染单一DP rank参数→forward产生不同loss→backward产生不同梯度→optimizer.step()使用不同梯度更新EMA状态→exp_avg/exp_avg_s2在DP rank间产生差异。EMA累积效应(β₁=0.9)使差异在多步训练后逐轮放大。若检测到同一PP stage内不同DP rank的exp_avg或exp_avg_s2 cksum不一致，表明存在参数注入或同步异常。此约束与参数值检查、参数更新量检查、梯度检查互补，提供第4维度的独立检测信号。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "min_step": 1,
+          "note": "需use_distributed_optimizer=False确保每个DP rank持有完整优化器状态副本"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "pp": ">= 1",
+          "stage": "= 'model-after-optimizer-step'",
+          "optimizer_type": "IN ('Adam', 'AdamW')",
+          "use_distributed_optimizer": "= false"
+        }
+      },
+      "forward后PP参数跨DP cksum一致性检查": {
+        "name": "model-after-forward-mbs阶段PP参数跨DP cksum一致性检查",
+        "description": "在model-after-forward-mbs-{i}阶段，检查同一PP stage内所有DP rank上可训练参数(requires_grad=True)的cksum一致性。由于GPT/LLaMA的forward pass对参数是严格只读的（LayerNorm/RMSNorm无running stats、FP32→FP16 cast确定性、gradient checkpointing只读、Dropout仅修改激活值），任何cksum差异绝对意味着参数被异常修改。该约束填补了pipeline_parallel类别中forward阶段检测的空白，覆盖现有backward/optimizer约束无法检测的iteration间隙注入窗口（T8→下一轮T1）。注入测试：在T3对某DP rank参数执行add(+0.01) → optimizer.step()后δ保留 → 下一轮forward dump中检测cksum不一致。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "LIKE 'model-after-forward-mbs-%'",
+          "dp": "> 1",
+          "pp": ">= 1"
+        }
+      },
+      "backward后PP非attention参数main_grad跨DP cksum检查": {
+        "name": "model-after-backward阶段PP非attention参数gradient(main_grad)跨DP cksum一致性检查",
+        "description": "在model-after-backward阶段，检查pipeline parallel中非attention参数（MLP/LayerNorm/Embedding）的main_grad在data parallel组内的cksum一致性。具体来说，此阶段gradient all-reduce尚未执行，同一PP stage内所有DP rank应基于相同数据和模型参数产生相同梯度；排除attention参数是由于FlashAttention的backward具有已知非确定性，可能导致strict cksum假阳性。若发现非attention参数的gradient cksum不一致，表明存在梯度计算异常或外部注入。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {
+          "cksum_target": "main_grad",
+          "parameter_filter": "exclude self_attention/attention",
+          "note": "FlashAttention backward非确定性排除attention参数；启用deterministic算法时可扩展至全参数"
+        },
+        "applicable_conditions": {
+          "dp": "> 1",
+          "pp": ">= 1",
+          "stage": "= 'model-after-backward'"
+        }
+      }
+    },
+    "zero_optimization": {},
+    "model_integrity": {
+      "layer-count-matches-config": {
+        "name": "配置num_layers与参数名层索引数量一致性检查",
+        "description": "静态结构检查(P6)：从coredump参数名解析transformer层索引个数，须与训练配置num_layers一致。不依赖T3注入；用于检测层数/分片结构静默错误。",
+        "type": "validity",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "IN ('model-after-backward', 'model-after-forward', 'initialization')",
+          "check": "count(distinct layer_index from param_name) == config.num_layers"
+        }
+      },
+      "emb-init-std-bound": {
+        "name": "embedding初始化std与d_model关系检查",
+        "description": "静态/初始化检查(P9)：embedding权重在initialization阶段的std应满足配置声明的缩放（如与sqrt(d_model)相关）。非T3注入路径。",
+        "type": "validity",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "= 'initialization' OR LIKE 'model-after-initialization%'",
+          "param_name": "LIKE '%embed%'"
+        }
+      },
+      "checkpoint-preserve-rng": {
+        "name": "checkpoint save/load后RNG状态一致性检查",
+        "description": "B-light：比较type=rng_state在checkpoint-save与checkpoint-load的cpu/cuda_rng_state_cksum须一致。字段来自dump_rng_state埋点。",
+        "type": "consistency",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "IN ('checkpoint-save', 'checkpoint-load')",
+          "type": "= 'rng_state'"
+        }
+      },
+      "process-group-size-correct": {
+        "name": "并行process group规模与拓扑元数据一致性检查",
+        "description": "B-light：parallel_metadata中的dp/tp/pp/world_size须与启动拓扑一致且组规模合法。字段来自dump_parallel_metadata。",
+        "type": "validity",
+        "logic": "",
+        "tables": [
+          "coredump"
+        ],
+        "params": {},
+        "applicable_conditions": {
+          "stage": "IN ('parallel-metadata', 'initialization')",
+          "type": "= 'parallel_metadata'"
+        }
+      }
+    },
+    "training_progress": {}
+  },
+  "metadata": {
+    "version": "1.2",
+    "description": "预定义的分布式训练数据一致性检查约束",
+    "last_updated": "2026-07-13",
+    "constraint_types": {
+      "consistency": "一致性约束，检查数据在不同节点间的一致性",
+      "validity": "有效性约束，检查数据的有效性和合理性",
+      "completeness": "完整性约束，检查数据的完整性",
+      "partition": "分区约束，检查数据分片的正确性"
+    },
+    "applicable_condition_operators": [
+      "> 1",
+      ">= 1",
+      ">= 2",
+      "= 1",
+      "!= 0"
+    ],
+    "protocol": "strict re-mining holdout",
+    "exclusion_list": "logs/holdout_mining/EXCLUSION_LIST.json",
+    "phase1_template_seeds": true
+  }
+}

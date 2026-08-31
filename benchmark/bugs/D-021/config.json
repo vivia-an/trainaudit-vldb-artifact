@@ -1,0 +1,20 @@
+{
+  "bug_id": "D-021",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO3 uses default_stream instead of current_stream for gradient reduce",
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/7898",
+  "buggy_commit": "49a82a0d8c560636d4d12ee9ebffd5f188ed544c",
+  "fixed_commit": "be60451f6a2946c833d5ca984e080a00511e7e12",
+  "category": "communication",
+  "severity": "high",
+  "gpu_needed": 0,
+  "root_cause": "reduce_and_partition_stream.wait_stream uses default_stream() instead of current_stream()",
+  "detection_method": "source_analysis",
+  "invariant": "ZeRO3 reduce must wait on current_stream(), not default_stream()",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: ZeRO3 reduce must wait on current_stream()",
+    "fixed": "CLEAN"
+  }
+}

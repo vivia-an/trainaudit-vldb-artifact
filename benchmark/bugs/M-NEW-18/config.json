@@ -1,0 +1,20 @@
+{
+  "bug_id": "M-NEW-18",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "use_decoupled_grad set wrong for bf16 + use_precision_aware_optimizer",
+  "fixed_commit": "972553db3",
+  "buggy_commit": "972553db3~1",
+  "category": "optimizer",
+  "severity": "high",
+  "gpu_needed": 2,
+  "trigger_conditions": [
+    "use_precision_aware_optimizer=True",
+    "main_params_dtype=torch.bfloat16",
+    "no FP8 (or DS FP8 only)"
+  ],
+  "root_cause": "The condition for enabling FusedAdam master_weights was 'if config.main_params_dtype != torch.float32 or config.fp8_recipe == \"delayed\"'. This was True for bf16 main params even when the higher-level path (e.g. TE-managed master weights) should have owned them, double-managing master copies and silently using wrong precision in the optimizer step.",
+  "detection_method": "config_invariant",
+  "invariant": "FusedAdam master_weights flag must equal config.use_precision_aware_optimizer_no_fp8_or_ds_fp8.",
+  "diff_summary": "Replaced 'main_params_dtype != fp32 or fp8_recipe == delayed' with the new helper config.use_precision_aware_optimizer_no_fp8_or_ds_fp8."
+}

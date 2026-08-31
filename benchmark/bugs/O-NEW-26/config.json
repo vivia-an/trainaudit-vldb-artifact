@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-26",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "global_step not reset when restore_dataloader=False, so resumed runs keep the checkpoint's step counter",
+  "fixed_commit": "7b443229",
+  "buggy_commit": "7b443229~1",
+  "category": "control_flow",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "training resumes from a checkpoint with cfg.restore_dataloader=False",
+    "training is supposed to start a new run from the saved weights"
+  ],
+  "root_cause": "When the user sets restore_dataloader=False to start from saved weights but a fresh dataset, restore_checkpoint() resets epoch and token counters but forgot to reset global_step. The optimizer/LR scheduler then starts at the checkpoint's step (e.g., 50000) instead of 0, silently skipping warmup and using a much smaller LR than expected.",
+  "detection_method": "value_invariant",
+  "invariant": "when cfg.restore_dataloader is False after restore_checkpoint(), self.global_step must equal 0",
+  "diff_summary": "added self.global_step = 0 alongside the existing self.epoch = 0 / self.global_train_tokens_seen = 0 reset block"
+}

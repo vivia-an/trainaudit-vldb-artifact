@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-38",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "DataConfig defaults memmap_dtype to uint16 silently, so vocab_size > 2^16 truncates token ids on load",
+  "fixed_commit": "19e3af15",
+  "buggy_commit": "19e3af15~1",
+  "category": "data_processing",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "model.vocab_size > 65536 (e.g. 100k+ tokenizer)",
+    "MemMap dataset built from train_config without an explicit dtype"
+  ],
+  "root_cause": "Before this commit MemMapDataset was constructed without passing a memmap_dtype, defaulting to uint16. When the actual on-disk file was uint32 (because vocab_size > 2^16), reading two-byte chunks silently produced wrong token ids without any type error. Fix exposes effective_memmap_dtype on DataConfig and threads it through build_memmap_dataset.",
+  "detection_method": "config_invariant",
+  "invariant": "MemMapDataset(memmap_dtype) must equal np.uint32 (or wider) when train_config.model.vocab_size > 2**16",
+  "diff_summary": "added DataConfig.memmap_dtype field and effective_memmap_dtype property; passed train_config.data.effective_memmap_dtype into MemMapDataset() in build_memmap_dataset"
+}

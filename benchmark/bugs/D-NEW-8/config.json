@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-8",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "WarmupLR ignores optimizer LR, always uses hardcoded 0.001",
+  "fixed_commit": "22cf1a44",
+  "category": "lr_schedule",
+  "severity": "high",
+  "gpu_needed": 0,
+  "root_cause": "warmup_max_lr defaults to 0.001 instead of inheriting from optimizer param_groups",
+  "detection_method": "value_invariant",
+  "invariant": "After warmup, LR must equal optimizer's configured LR, not a hardcoded default",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: warmup targets 0.001 not 0.005",
+    "fixed": "CLEAN: warmup correctly targets optimizer lr=0.005"
+  }
+}

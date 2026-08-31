@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-14",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "GatedDeltaNet A_log/dt_bias initialized as empty (uninit memory) and miss the GDN-prescribed init",
+  "fixed_commit": "8c2e38a7",
+  "buggy_commit": "8c2e38a7~1",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Hybrid model includes GatedDeltaNet sequence mixer",
+    "Block init relied on the generic InitMethod path"
+  ],
+  "root_cause": "GatedDeltaNet's A_log was initialized via torch.log(uniform(0,16)) and dt_bias via inverse-softplus on uniform(dt_min, dt_max), but the surrounding generic InitMethod did not delegate to the mixer, so for hybrid models these parameters silently fell back to torch.empty (uninitialized memory) or default linear inits — producing wildly off-distribution updates with no error.",
+  "detection_method": "value_invariant",
+  "invariant": "After init, GDN A_log lies in log(uniform(0,16)) and dt_bias is the inverse-softplus of dt sampled in [dt_min, dt_max]; their distribution must be checkable against this prescription.",
+  "diff_summary": "Add SequenceMixer.init_weights abstract and delegate attention/GDN init to the concrete subclass so GDN's recurrent-state parameters are sampled from the prescribed distributions instead of torch.empty."
+}

@@ -1,0 +1,11 @@
+{
+  "bug_id": "O-016",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Initial LR not set in optimizer param_groups",
+  "category": "lr_schedule",
+  "root_cause": "Missing initial_lr in param_groups breaks LR scheduler after checkpoint resume",
+  "detection_method": "structural_invariant",
+  "invariant": "After optimizer construction, all param_groups must contain initial_lr",
+  "reproduction_status": "reproduced"
+}

@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-12",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "CUDA-graph warmup overwrites MoE router expert_bias persistent buffer",
+  "fixed_commit": "481efd020",
+  "buggy_commit": "481efd020~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/4433",
+  "category": "moe",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["EP"],
+  "trigger_conditions": [
+    "MoE router with aux-loss-free routing (uses expert_bias)",
+    "CUDA graphs enabled",
+    "graph capture warmup runs the router forward"
+  ],
+  "root_cause": "_CudaGraphRunner saved/restored parameter grads before graph warmup, but did not save persistent buffers. The router's expert_bias buffer is updated in-place each forward by _apply_expert_bias(); warmup forward passes mutated it, and the post-capture state diverged from the pre-capture state, silently corrupting routing for latent MoE models.",
+  "detection_method": "value_invariant",
+  "invariant": "After _CudaGraphRunner warmup completes, every persistent buffer of base_module must equal its pre-warmup value (bitwise).",
+  "diff_summary": "Added buffer_backup = [b.clone() for b in self.base_module.buffers()] before warmup and restore loop after warmup."
+}

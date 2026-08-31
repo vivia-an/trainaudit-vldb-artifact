@@ -1,0 +1,35 @@
+Warning: Permanently added '[183.242.150.6]:32054' (ED25519) to the list of known hosts.
+===== TrainAudit on D-NEW-9 BUGGY (40009eb1~1) =====
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+[2026-05-17 23:47:04,498] [INFO] [real_accelerator.py:203:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-17 23:47:04,690] [INFO] [real_accelerator.py:203:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[93m [WARNING] [0m async_io requires the dev libaio .so object and headers but these were not found.
+[93m [WARNING] [0m async_io: please install the libaio-dev package with apt
+[93m [WARNING] [0m If libaio is already installed (perhaps from source), try setting the CFLAGS and LDFLAGS environment variables to where it can be found.
+[93m [WARNING] [0m Please specify the CUTLASS repo directory as environment variable $CUTLASS_PATH
+[93m [WARNING] [0m sparse_attn requires a torch version >= 1.5 and < 2.0 but detected 2.11
+[93m [WARNING] [0m using untested triton version (3.6.0), only 1.0.0 is known to be compatible
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:47: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @autocast_custom_fwd
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:66: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  @autocast_custom_bwd
+[D-NEW-9] BUG DETECTED: bf16_lp_grad_clear_invariant: accumulate_hp_grads_and_remove_lp invoked _update_hp_grad with clear_lp_grads=False (should be True per the hook's name 'remove_lp')
+
+===== TrainAudit on D-NEW-9 FIXED (40009eb1) =====
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+[2026-05-17 23:47:15,493] [INFO] [real_accelerator.py:203:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-17 23:47:15,689] [INFO] [real_accelerator.py:203:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[93m [WARNING] [0m async_io requires the dev libaio .so object and headers but these were not found.
+[93m [WARNING] [0m async_io: please install the libaio-dev package with apt
+[93m [WARNING] [0m If libaio is already installed (perhaps from source), try setting the CFLAGS and LDFLAGS environment variables to where it can be found.
+[93m [WARNING] [0m Please specify the CUTLASS repo directory as environment variable $CUTLASS_PATH
+[93m [WARNING] [0m sparse_attn requires a torch version >= 1.5 and < 2.0 but detected 2.11
+[93m [WARNING] [0m using untested triton version (3.6.0), only 1.0.0 is known to be compatible
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:47: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @autocast_custom_fwd
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:66: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  @autocast_custom_bwd
+[D-NEW-9] CLEAN: accumulate_hp_grads_and_remove_lp passes clear_lp_grads=True
+

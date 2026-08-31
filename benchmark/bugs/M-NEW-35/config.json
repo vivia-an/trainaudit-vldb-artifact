@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-35",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE GroupedGEMM produces wrong outputs without sequence_parallel even when TP>1",
+  "fixed_commit": "28c8dd71f",
+  "buggy_commit": "28c8dd71f~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/issues/109",
+  "category": "moe",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["TP", "EP"],
+  "trigger_conditions": [
+    "MoE with GroupedGEMM experts",
+    "tensor_model_parallel_size > 1",
+    "sequence_parallel=False"
+  ],
+  "root_cause": "ColumnParallelLinear/RowParallelLinear set explicit_expert_comm based on (config.sequence_parallel or self.expert_parallel). MoEAllGatherTokenDispatcher used the same predicate to decide whether to do the gather/scatter for expert routing. With TP>1 but SP=False (and EP=1), neither condition was True, so expert tokens were never gathered across TP ranks and each TP rank produced wrong (incomplete) MoE outputs.",
+  "detection_method": "value_invariant",
+  "invariant": "When tensor_model_parallel_size > 1, MoE token gather/scatter must run regardless of sequence_parallel and expert_parallel flags.",
+  "diff_summary": "Replaced 'config.sequence_parallel or self.expert_parallel' with 'config.tensor_model_parallel_size > 1 or self.expert_parallel' in ColumnParallelLinear, RowParallelLinear, and MoEAllGatherTokenDispatcher; added training-time error if MoE+TP without SP."
+}

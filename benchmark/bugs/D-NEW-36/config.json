@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-36",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO step uses post-decay loss_scale to unscale grad norm instead of prev_scale used during backward",
+  "fixed_commit": "fe728e3e",
+  "buggy_commit": "fe728e3e~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/2695",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 1 or 2", "fp16 with dynamic loss scaling", "step where loss_scale was just halved due to overflow / scale-window"],
+  "root_cause": "In DeepSpeedZeroOptimizer.step, _global_grad_norm was computed as scaled_global_grad_norm / self.loss_scale. But self.loss_scale is the *new* scale (already updated for this step), while the gradients that produced scaled_global_grad_norm were scaled by the *previous* scale (prev_scale). Dividing by the wrong scale silently skews the global grad norm used for clipping.",
+  "detection_method": "value_invariant",
+  "invariant": "self._global_grad_norm * prev_scale must equal scaled_global_grad_norm for the step (i.e. unscaling uses the same factor that backward applied).",
+  "diff_summary": "Divide scaled_global_grad_norm by prev_scale (captured before the loss-scale update) instead of self.loss_scale."
+}

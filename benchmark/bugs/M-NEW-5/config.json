@@ -1,0 +1,1 @@
+{"bug_id":"M-NEW-5","framework":"megatron-lm","repo":"NVIDIA/Megatron-LM","title":"MoE aux loss not scaled by num_tokens in per_token_loss mode","fixed_commit":"87d9d2506","buggy_commit":"87d9d2506~1","category":"loss_scaling","severity":"high","gpu_needed":2}

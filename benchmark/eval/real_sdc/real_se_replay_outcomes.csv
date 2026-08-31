@@ -1,0 +1,22 @@
+case_id,in_current_set,buggy_verdict,fixed_verdict,buggy_detail,fixed_detail,log
+B11,yes,DETECTED,CLEAN,BUG DETECTED: clip_grad_norm_ used torch.max -> coef floor at 1.0,CLEAN: post-clip grad norm <= max_norm,logs/smoke/B11_smoke.log
+B12,yes,DETECTED,CLEAN,BUG DETECTED:,CLEAN: all param_groups carry initial_lr,logs/smoke/B12_smoke.log
+B1,yes,DETECTED,CLEAN,BUG DETECTED: router init never entered get_cuda_rng_tracker().fork(<data-parallel>),CLEAN: router init wrapped in data-parallel RNG tracker fork,logs/smoke/B1_smoke.log
+B3,yes,DETECTED,CLEAN,BUG DETECTED: communication_data_type returns float32 despite bf16 enabled,CLEAN: communication_data_type returns bfloat16,logs/smoke/B3_smoke.log
+B8,yes,DETECTED,CLEAN,BUG DETECTED: argument equals num_experts (not ep_size),CLEAN: argument equals ep_size,logs/smoke/B8_smoke.log
+D-029,yes,DETECTED,CLEAN,BUG DETECTED: moe_cpu_offload_grad_norm_device_invariant: _average_expert_grad_norms passed device='cpu' tensor to dist.all_reduce (should be on accelerator und,CLEAN: _average_expert_grad_norms moved scaled_norm_tensor to accelerator before all_reduce,logs/smoke/D-029_smoke.log
+D-NEW-49,no,,,,,logs/smoke/D-NEW-49_smoke.log
+D-NEW-9,yes,DETECTED,CLEAN,BUG DETECTED: bf16_lp_grad_clear_invariant: accumulate_hp_grads_and_remove_lp invoked _update_hp_grad with clear_lp_grads=False (should be True per the hook's n,CLEAN: accumulate_hp_grads_and_remove_lp passes clear_lp_grads=True,logs/smoke/D-NEW-9_smoke.log
+LC1,no,CLEAN,CLEAN,CLEAN: no rule fired in this run,CLEAN: no rule fired in this run,logs/smoke/LC1_smoke.log
+M-010,yes,DETECTED,CLEAN,BUG DETECTED (expected),CLEAN (expected),logs/smoke/M-010_smoke.log
+M-020,yes,DETECTED,ASSERT_FIRED,BUG DETECTED (expected),ASSERT fired (expected — bug prevented),logs/smoke/M-020_smoke.log
+M-NEW-33,yes,DETECTED,CLEAN,"BUG DETECTED: chained_optimizer_param_groups_resync_invariant: chained_optimizers=2, parent.param_groups tags after load_state_dict=['stale_A', 'stale_B'], fres","CLEAN: ChainedOptimizer.load_state_dict rebuilds self.param_groups: chained_optimizers=2, parent.param_groups tags after load_state_dict=['fresh_A', 'fresh_B'],",logs/smoke/M-NEW-33_smoke.log
+O-005,yes,DETECTED,CLEAN,1/17 rules violated,0/17 rules violated,logs/smoke/O-005_smoke.log
+O-040,yes,DETECTED,CLEAN,"BUG DETECTED: olmo_core_a100_peak_flops_2x_invariant: device_peak_flops_per_second=1.560e+14, target_buggy=1.560e+14, target_fixed=3.120e+14 — A100 fallback use","CLEAN: A100 fallback uses 624e12 dense spec: device_peak_flops_per_second=3.120e+14, target_buggy=1.560e+14, target_fixed=3.120e+14",logs/smoke/O-040_smoke.log
+O-NEW-2,no,,CLEAN,,CLEAN: Causal mask is correct (position 0 avg=0.0000),logs/smoke/O-NEW-2_smoke.log
+O-NEW-3,yes,DETECTED,CLEAN,BUG DETECTED: olmo_zloss_mean_reduction_invariant: cross_entropy_loss raised RuntimeError on Bool mask mean (mean(): could not infer output dtype. Input dtype m,"CLEAN: z_loss is a 0-dim scalar tensor: reduction='mean', compute_z_loss=True; loss.ndim=0, z_loss.ndim=0, z_loss.shape=()",logs/smoke/O-NEW-3_smoke.log
+O-NEW-5,yes,DETECTED,CLEAN,"BUG DETECTED: olmo_emb_init_std_sqrt_dmodel_invariant: d_model=256, init_std=0.02, actual_emb_std=0.0197, target_buggy=0.0200, target_fixed=0.3200 — emb std 16x","CLEAN: init_weights for ModuleType.emb scaled by sqrt(d_model): d_model=256, init_std=0.02, actual_emb_std=0.3156, target_buggy=0.0200, target_fixed=0.3200",logs/smoke/O-NEW-5_smoke.log
+O-NEW-9,yes,DETECTED,CLEAN,BUG DETECTED: token IDs truncated,CLEAN: token IDs preserved,logs/smoke/O-NEW-9_smoke.log
+OC-NEW-22,yes,DETECTED,CLEAN,"BUG DETECTED: rope_packed_doc_position_reset_invariant: signature_has_cu_doc_lens=False, forward_accepts_cu_doc_lens=False — RotaryEmbedding.forward signature l","CLEAN: RotaryEmbedding.forward supports cu_doc_lens for packed-doc position reset: signature_has_cu_doc_lens=True, forward_accepts_cu_doc_lens=True",logs/smoke/OC-NEW-22_smoke.log
+OC-NEW-2,yes,DETECTED,CLEAN,1/17 rules violated,0/17 rules violated,logs/smoke/OC-NEW-2_smoke.log
+OC-NEW-6,no,,,,,logs/smoke/OC-NEW-6_smoke.log

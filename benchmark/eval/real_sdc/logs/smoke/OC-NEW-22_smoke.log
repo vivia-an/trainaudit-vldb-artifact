@@ -1,0 +1,9 @@
+Warning: Permanently added '[183.242.150.6]:32462' (ED25519) to the list of known hosts.
+===== TrainAudit on OC-NEW-22 BUGGY (df72f4ee~1) =====
+HEAD is now at 98eeb254 Fix minimal doc_lens repro to use sequence_mixer API
+[OC-NEW-22] BUG DETECTED: rope_packed_doc_position_reset_invariant: signature_has_cu_doc_lens=False, forward_accepts_cu_doc_lens=False — RotaryEmbedding.forward signature lacks cu_doc_lens; packed documents get global positions
+
+===== TrainAudit on OC-NEW-22 FIXED (df72f4ee) =====
+HEAD is now at df72f4ee Fix RoPE positions to reset at document boundaries when using doc_lens
+[OC-NEW-22] CLEAN: RotaryEmbedding.forward supports cu_doc_lens for packed-doc position reset: signature_has_cu_doc_lens=True, forward_accepts_cu_doc_lens=True
+

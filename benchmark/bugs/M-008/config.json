@@ -1,0 +1,28 @@
+{
+  "bug_id": "M-008",
+  "framework": "megatron-lm",
+  "title": "Loss not decreasing when using overlap-param-gather with overlap-grad-reduce",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/663",
+  "buggy_commit": "be8011a73981b0724d0740da0a69e032a941dbb8",
+  "fixed_commit": "75120dbf069703d21e34f0cb031fb4a3c1ac5315",
+  "fix_date": "2024-03-04",
+  "category": "optimizer_state",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": [
+    "DP"
+  ],
+  "trigger_conditions": [
+    "--fp16 (requires loss scaler)",
+    "--use-distributed-optimizer",
+    "--overlap-grad-reduce",
+    "--overlap-param-gather"
+  ],
+  "root_cause": "All-gather handle list in DistributedOptimizer not properly initialized. Causes stale handles, which makes FP16 loss scaler always detect inf, setting LR=0 and skipping all parameter updates.",
+  "detection_method": "loss_trend",
+  "invariant": "After warmup, learning_rate > 0 and loss must decrease. All iterations skipped or LR=0 = bug.",
+  "fixed_behavior": "Loss decreases normally with proper optimizer step execution",
+  "notes": "Must use --fp16 (not --bf16). BF16 doesn't use loss scaler so the bug doesn't manifest. Uses --initial-loss-scale 1 to avoid initial overflow with mock data.",
+  "reproduction_status": "failed",
+  "failure_reason": "crash bug, not silent error"
+}

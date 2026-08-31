@@ -1,0 +1,653 @@
+[
+  {
+    "constraint_name": "优化器更新后DP参数跨rank一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "优化器更新后，参数 'module.module.decoder.layers.0.mlp.linear_fc1.weight' 在DP rank 0和1之间的权重校验和不一致，存在2个不同的校验和，违反了跨rank一致性约束。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "反向传播阶段梯度跨并行组一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: Referenced column \"data\" not found in FROM clause!\nCandidate bindings: \"dp_rank\", \"tp_rank\", \"param_name\", \"step\"\n\nLINE 1: ...) as all_grad_cksums, array_agg(DISTINCT (CAST(json_extract(data, '$.tp') AS INTEGER) || '_' || CAST(json_extract(data...\n                                                                       ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "shared_experts权重一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "shared_experts权重一致性检查通过，未发现DP通信组间权重不一致的违规情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "DP requires_grad一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "DP requires_grad一致性检查失败：参数 'module.module.decoder.layers.0.mlp.linear_fc1.weight' 在 step 1 时，不同 dp_rank 上的 requires_grad 属性不一致，存在 True 和 False 两种值，可能导致训练不一致。",
+    "n_violations": 4
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数shape一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内参数的shape一致性检查通过，未发现shape不一致的违规情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP参数dtype一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有data parallel组内requires_grad=true的参数的dtype一致性检查通过，未发现dtype不一致的违规情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP optimizer_state一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有数据并行（DP）组内的optimizer_state（如momentum、variance等优化器内部状态）均保持一致，未发现任何不一致性违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-backward阶段DP参数cksum一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-backward阶段，所有data parallel组内参数的cksum一致性检查通过，未发现参数不一致的情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP主梯度cksum一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有data parallel组内参数的main_grad cksum一致性检查通过，未发现同步异常或外部注入错误。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-backward阶段DP参数requires_grad一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-backward阶段，所有data parallel组内参数的requires_grad属性一致，未发现同步异常或外部注入错误。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-optimizer-step阶段DP optimizer_state_dict一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-after-optimizer-step阶段，检测到DP组间优化器状态不一致：参数'module.module.decoder.layers.0.mlp.linear_fc1.weight'在step=1时，两个DP rank（0和1）的checksum不同，表明优化器状态未同步，可能导致训练发散或不可复现。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP参数requires_grad一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "所有DP组内参数的requires_grad属性一致，未发现同步异常或外部注入错误。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-backward阶段DP optimizer_state_dict一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-backward阶段，所有data parallel组内requires_grad=True参数的optimizer_state_dict一致性检查通过，未发现参数污染或同步异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP optimizer_state_dict内部状态shape/dtype一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内optimizer_state_dict内部状态的shape和dtype一致性检查通过，未发现不一致情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP参数grad存在性一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有data parallel组内requires_grad=true的参数的grad存在性在所有DP rank上完全一致，未发现不一致性违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP参数分布统计（均值/方差）一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: In a DISTINCT aggregate, ORDER BY expressions must appear in the argument list",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数requires_grad一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有数据并行（DP）组内参数的requires_grad属性一致性检查通过，未发现不一致情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-backward阶段DP optimizer_state_dict全量一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-backward阶段，所有数据并行组内的optimizer_state_dict完全一致，未发现同步异常或外部注入错误。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP optimizer_state_dict全量一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-after-backward阶段，DP组内optimizer_state_dict存在全量字节级别不一致，参数'module.module.decoder.layers.0.mlp.linear_fc1.weight'在step 1时，8条记录中有5个不同的校验和，表明DP组内各rank的优化器状态未同步。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP参数分布极值/分位数一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有DP组内浮点参数的极值（min/max）和分位数（25%、50%、75%）在DP rank间完全一致，未检测到任何不一致性违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数requires_grad一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内参数的requires_grad属性一致，未发现同步异常或外部注入错误。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP分片参数分片互异性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有DP rank的分片参数互异性检查通过，未发现任何两个rank的分片内容相同的情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP optimizer_state_dict lr一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内optimizer_state_dict['lr']字段一致性检查通过，未发现lr值不一致的异常情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP参数高阶统计量一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有data parallel组内requires_grad=True权重参数的偏度和峰度高阶统计量一致，未发现分布异常或注入攻击迹象。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP参数requires_grad属性一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有Data Parallel组内参数的requires_grad属性一致，未发现不一致情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward及相关阶段DP参数分布形态一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward、model-before-optimizer-step、model-after-optimizer-step阶段，所有data parallel组内requires_grad=True权重参数的分布直方图、熵、偏度、峰度等分布形态统计量均一致，未发现隐蔽的参数污染或注入异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-optimizer-step阶段DP参数分布统计量一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-optimizer-step阶段，所有DP组内requires_grad=True参数的分布统计量在各DP rank间一致，未检测到参数同步异常或污染。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数分布形态一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有数据并行组内requires_grad参数的分布形态（直方图、偏度、峰度等高阶统计量）一致，未检测到任何分布形态不一致的违规情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP optimizer_state_dict bitwise一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-before-optimizer-step阶段，检测到DP rank 0和1之间的optimizer_state_dict存在bitwise不一致，具体参数为module.module.decoder.layers.0.mlp.linear_fc1.weight，其校验和不同，表明存在数值差异。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数requires_grad属性一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内训练参数（requires_grad=True）的requires_grad属性一致性检查通过，未发现任何违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内requires_grad=true且dtype为float32/float16/bfloat16的参数在bitwise级别上完全一致，未发现任何精度损坏、NaN/Inf或存储异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内requires_grad=True且为浮点类型参数的bitwise-level一致性检查通过，未发现任何bit级差异。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP分片参数bitwise-level互异性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "检测到所有99个分片参数在DP rank间bitwise完全一致，违反了互异性约束，表明存在同步异常或参数污染。",
+    "n_violations": 10
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP参数高阶统计量容忍性一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: In a DISTINCT aggregate, ORDER BY expressions must appear in the argument list",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP optimizer_state_dict嵌套bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-before-optimizer-step阶段，DP组内optimizer_state_dict存在bitwise-level不一致，具体表现为参数module.module.decoder.layers.0.mlp.linear_fc1.weight在step 1时，dp_ranks [0, 1]的校验和不一致，表明存在同步异常或外部干预。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数高阶统计量一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内参数的高阶统计量（skewness、kurtosis）一致性检查通过，未发现同步异常或单rank注入导致的分布形态异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP optimizer_state_dict bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-before-optimizer-step阶段，DP组内optimizer_state_dict存在bitwise-level不一致性，具体表现为参数'module.module.decoder.layers.0.mlp.linear_fc1.weight'在step 1时，两个DP rank的checksum值不同，表明存在同步异常或潜在攻击。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-before-optimizer-step阶段，DP rank 0和1之间的参数'module.module.decoder.layers.0.mlp.linear_fc1.weight'的bitwise-level一致性检查失败，存在两个不同的校验和，表明参数不一致。",
+    "n_violations": 4
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数高阶统计量一致性检查（容忍阈值/屏蔽机制）",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内requires_grad=true参数的分布高阶统计量（偏度、峰度）在容忍阈值范围内一致，未检测到单rank注入导致的分布异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP分片参数bitwise互异性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有DP组内被标记为expert/embedding分片的参数在bitwise-level上互异，未发现同步异常或分片污染。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP optimizer_state_dict.lr一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内optimizer_state_dict的lr字段一致性检查通过，未发现不一致情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数高阶统计量一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内requires_grad=true的权重参数的高阶统计量（skewness、kurtosis）在DP rank间一致，未检测到DP不一致异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP optimizer_state_dict嵌套状态bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-before-optimizer-step阶段，检测到DP组内optimizer_state_dict的bitwise-level不一致性：参数'module.module.decoder.layers.0.mlp.linear_fc1.weight'在step 1时，rank 0和rank 1的校验和不一致，表明存在同步异常或外部注入错误。",
+    "n_violations": 6
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP optimizer_state_dict全量bitwise一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内optimizer_state_dict的bitwise一致性检查通过，未发现任何不一致的优化器状态数据。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP optimizer_state_dict核心嵌套状态bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-before-optimizer-step阶段，检测到DP组内optimizer_state_dict核心嵌套状态存在bitwise-level不一致，具体为参数module.module.decoder.layers.0.mlp.linear_fc1.weight在step 1时，两个DP rank（0和1）的校验和不一致，表明存在同步异常或潜在注入攻击。",
+    "n_violations": 5
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP参数bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-after-backward阶段，参数module.module.decoder.layers.0.mlp.linear_fc1.weight在DP组内存在bitwise-level不一致，共检测到5种不同的校验和，涉及8条记录，DP rank 0和1之间数据不一致，表明存在数据并行一致性异常。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP全量参数requires_grad一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-before-optimizer-step阶段，发现数据并行（DP）rank 0和1之间参数requires_grad属性不一致，具体为module.module.decoder.layers.0.mlp.linear_fc1.weight在step 1时，rank 0的requires_grad为True，rank 1的为False，违反了DP全量参数requires_grad一致性约束。",
+    "n_violations": 4
+  },
+  {
+    "constraint_name": "model-before-backward阶段DP optimizer_state_dict嵌套状态bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-backward阶段，所有数据并行rank的optimizer_state_dict中嵌套状态（如momentum、variance、step等）在bitwise级别上完全一致，未发现同步异常或静默数据损坏。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP optimizer_state_dict bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-after-backward阶段，DP组内optimizer_state_dict的bitwise一致性检查失败，发现参数'module.module.decoder.layers.0.mlp.linear_fc1.weight'在step 1存在5种不同的校验和，表明DP组内各rank的优化器状态不一致，存在同步异常或外部注入错误。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP optimizer_state_dict['step']一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内optimizer_state_dict['step']字段的bitwise-level一致性检查通过，未发现训练步数漂移问题。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数分布高阶统计量一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内requires_grad=True参数的分布高阶统计量（skewness、kurtosis）一致性检查通过，未发现参数分布异常或注入攻击迹象。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP全参数requires_grad一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有data parallel组内参数的requires_grad属性一致，未发现同步异常或外部注入错误。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数高阶统计量一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内DP rank间的高阶统计量（skewness、kurtosis）一致性检查通过，未发现分布异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数requires_grad bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-before-optimizer-step阶段，参数module.module.decoder.layers.0.mlp.linear_fc1.weight的requires_grad属性在DP rank 0和1之间不一致，存在bitwise-level违反一致性约束的情况。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP参数分布高阶统计量一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "model-after-backward阶段DP参数分布高阶统计量一致性检查通过，未发现任何DP rank间参数分布高阶统计量不一致的违规记录。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP参数requires_grad属性bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有数据并行组内参数的requires_grad属性在bitwise-level上完全一致，未发现任何同步异常或外部注入错误。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数分布高阶统计量一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-before-optimizer-step阶段，DP组内参数'module.module.decoder.layers.0.mlp.linear_fc1.weight'的高阶统计量（checksum）不一致，存在同步异常或参数污染。",
+    "n_violations": 5
+  },
+  {
+    "constraint_name": "model-before-backward阶段DP参数requires_grad属性bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-backward阶段，所有data parallel组内参数的requires_grad属性在所有DP rank上bitwise-level完全一致，未发现不一致情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-optimizer-step阶段DP参数requires_grad属性bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-optimizer-step阶段，所有data parallel组内参数的requires_grad属性在bitwise级别上完全一致，未发现任何不一致性违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-backward阶段DP参数requires_grad属性bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-after-backward阶段，所有data parallel组内参数的requires_grad属性在bitwise级别上完全一致，未发现任何不一致性违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-before-backward阶段DP主权重bitwise-level一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在model-before-backward阶段，所有data parallel组内主权重参数（param.weight）的bitwise-level一致性检查通过，未发现任何不一致情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "冻结参数不更新（requires_grad=false）检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "冻结参数在优化器步骤后未发生意外更新，一致性检查通过。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "冻结参数梯度严格为空",
+    "constraint_type": "ConstraintType.VALIDITY",
+    "status": "pass",
+    "summary": "所有冻结参数（requires_grad=false）的梯度相关字段均为空，未发现冻结失效情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "grad/main_grad 的形状与类型匹配",
+    "constraint_type": "ConstraintType.VALIDITY",
+    "status": "pass",
+    "summary": "所有梯度数据的形状和类型均与对应主梯度一致，未发现不匹配的违规记录。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "权重共享（weight tying）一致性检查（嵌入-输出）",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "权重共享一致性检查通过，所有并行策略下的嵌入层与输出层权重校验和一致。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "模型初始化阶段TP参数分布一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "模型初始化阶段TP参数分布一致性检查通过，所有TP rank间的参数初始数值分布保持一致，未发现初始化同步异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "checkpoint恢复阶段全参数cksum/shape/dtype完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "检查点恢复阶段全参数一致性检查通过，所有参数在数值、形状和数据类型上均与保存时一致。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "backward阶段SP分片参数通信后全局一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "backward阶段SP分片参数通信后全局一致性检查通过，所有SP分片参数通过AllGather等通信操作重组后与预期全局参数严格一致，未发现通信异常或分片拼接错误。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer-step阶段多维并行optimizer state与参数shape/dtype及分布一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "optimizer-step阶段多维并行optimizer state与参数shape/dtype及分布一致性检查通过，未发现任何违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段TP下shared_experts参数分片一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "所有TP rank上shared_experts参数的分片分布完全一致，未发现分片不一致的违规情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段DP LayerNorm状态统计量一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "forward阶段DP LayerNorm状态统计量一致性检查通过，未发现数据并行组内running_mean/running_var等统计量的不一致情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer-step阶段参数与optimizer state一一对应完整性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "fail",
+    "summary": "完整性检查失败：发现199个参数缺少对应的optimizer state，表明模型参数与optimizer state未同步，可能导致训练异常或内存泄漏。",
+    "n_violations": 2
+  },
+  {
+    "constraint_name": "forward/backward阶段全局tied参数同步完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: Referenced column \"data\" not found in FROM clause!\nCandidate bindings: \"dp\", \"param_name\", \"step\"\n\nLINE 1: ... cksum) AS all_cksums, array_agg(DISTINCT CAST(json_extract(data, '$.tp') AS INTEGER)) AS tp_ranks, array_agg(DISTINCT...\n                                                                       ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "训练全程参数requires_grad属性不变性完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "检测到参数 'module.module.decoder.layers.0.mlp.linear_fc1.weight' 的 requires_grad 属性在训练过程中从 False 变为 True，违反了训练全程参数 requires_grad 属性不变性完整性检查。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "forward/backward阶段未分片普通参数DP组间cksum一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "所有未分片普通参数在DP组间的cksum一致性检查通过，未发现不一致。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer-step及checkpoint恢复后未分片参数optimizer state shape/dtype一致性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: Referenced column \"param_name\" not found in FROM clause!\nCandidate bindings: \"data\"\n\nLINE 1: ... JSON_EXTRACT(data, '$.pp') = 1), optimizer_states AS (SELECT param_name, step, stage, JSON_EXTRACT_STRING(data, '$.type...\n                                                                         ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward阶段未分片参数requires_grad属性并行组一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "所有并行组（DP/TP/PP/SP）中，未被分片的参数的requires_grad属性完全一致，未发现初始化、通信或checkpoint恢复异常。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward阶段PP激活张量跨stage通信完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "所有pipeline stage边界的激活张量在跨stage通信后，shape、dtype和cksum在发送端与接收端完全一致，未发现通信错误或数据不一致问题。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward阶段未分片参数分布一致性完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "在forward/backward阶段，所有未分片参数在不同并行组间的数值分布（均值、方差）一致性检查通过，未发现持续性统计量偏差。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "训练全程未分片参数requires_grad属性全局一致性完整性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "fail",
+    "summary": "未分片参数 requires_grad 属性在 DP 组间不一致，存在漂移风险，可能导致训练发散。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "forward阶段未分片参数requires_grad全局不变性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "forward阶段所有未分片参数的requires_grad属性在全局范围内保持一致，未发现任何不一致或动态修改的情况。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer-step阶段未分片参数optimizer state同步完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "optimizer-step阶段未分片参数optimizer state同步完整性检查通过，所有未分片参数的optimizer state在并行组间保持一致且与参数值同步。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward阶段未分片参数requires_grad属性全程不变性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "所有未分片参数在forward/backward阶段的requires_grad属性全程保持不变，与初始化状态一致，未检测到动态修改。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward阶段分片参数分片元数据全局一致性与完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "forward/backward阶段分片参数分片元数据全局一致性与完整性检查通过，未发现任何违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "optimizer-step及checkpoint恢复阶段未分片参数全局数值一致性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "在model-after-optimizer-step阶段，参数'module.module.decoder.layers.0.mlp.linear_fc1.weight'在DP rank 0和1之间出现数值不一致，存在2个不同的checksum值，违反了bitwise一致性约束。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "全阶段多维并行未分片参数requires_grad全局一致性与不变性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "fail",
+    "summary": "检测到参数 'module.module.decoder.layers.0.mlp.linear_fc1.weight' 在optimizer-step前后阶段，其requires_grad属性在dp_rank 0和1之间不一致，且阶段间发生翻转，违反了全局一致性与不变性约束。",
+    "n_violations": 1
+  },
+  {
+    "constraint_name": "forward阶段未分片参数requires_grad属性checkpoint一致性完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "所有未分片参数在checkpoint恢复后，其requires_grad属性与保存时完全一致，未发现属性漂移。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "model-after-optimizer-step阶段未分片参数optimizer state与requires_grad属性严格对应性完整性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "error",
+    "summary": "检查过程中出错: Binder Error: Referenced column \"data\" not found in FROM clause!\nCandidate bindings: \"dp\", \"grad_type\", \"grad_shape\", \"param_name\", \"step\"\n\nLINE 1: ..., grad_cksum, grad_shape, grad_type, CASE WHEN json_extract(data, '$.requires_grad') = false AND (grad_cksum IS NOT...\n                                                                       ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段分片参数元数据与物理属性一致性完整性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "pass",
+    "summary": "forward阶段分片参数元数据与物理属性一致性完整性检查通过，未发现任何违规数据。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward阶段分片参数分片边界与拼接顺序完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "forward阶段分片参数的分片边界与拼接顺序完整性检查通过，未发现任何违规数据。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward阶段分片参数全局元数据一致性完整性检查",
+    "constraint_type": "ConstraintType.CONSISTENCY",
+    "status": "pass",
+    "summary": "forward/backward阶段分片参数全局元数据一致性完整性检查通过，未发现任何违规。",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward/optimizer-step阶段分片参数物理内存与元数据一致性完整性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "error",
+    "summary": "检查过程中出错: Parser Error: syntax error at or near \",\"\n\nLINE 1: ... param_name, step, stage, tp_rank, dp_rank, pp_rank, offset, length, stride, COUNT(*) OVER (PARTITION BY param_name...\n                                                                      ^",
+    "n_violations": 0
+  },
+  {
+    "constraint_name": "forward/backward/optimizer-step及checkpoint恢复阶段未分片参数requires_grad与optimizer state严格对应完整性检查",
+    "constraint_type": "ConstraintType.COMPLETENESS",
+    "status": "pass",
+    "summary": "所有未分片参数的requires_grad属性与optimizer state存在性严格对应，完整性检查通过。",
+    "n_violations": 0
+  }
+]

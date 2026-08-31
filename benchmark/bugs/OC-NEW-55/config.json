@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-55",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "H-Net ratio loss averaged over padded positions — wrong target ratio under variable-length batches",
+  "fixed_commit": "bfe115a2",
+  "buggy_commit": "bfe115a2~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/bfe115a2",
+  "category": "loss",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["BLTDistillTransformer with H-Net ratio loss", "batches containing padded byte positions"],
+  "root_cause": "true_ratio = boundary_mask.float().mean() and average_prob = exp(boundary_logprobs).mean() averaged over the full padded byte tensor instead of over byte_mask-valid positions. Padded zero entries shrank both quantities toward 0, biasing the ratio loss target away from the true content ratio.",
+  "detection_method": "constraint:masked_mean",
+  "invariant": "Any loss-target statistic over a variable-length sequence must be (x*mask).mean() / mask.mean(), not x.mean().",
+  "diff_summary": "Replace .float().mean() calls with (x * byte_mask).float().mean() / byte_mask.mean() for both true_ratio and average_prob.",
+  "silent_check": "Forward and backward succeed — ratio loss is finite, just biased; the model trains with a slightly wrong boundary-rate objective without any error."
+}

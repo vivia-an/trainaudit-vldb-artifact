@@ -1,0 +1,3 @@
+arm,l1,l2,l3,l4,validated_yield,deploy_entries,real_se_detected,real_se_total,fixed_fp,fixed_total
+catalog,420,5334,3436,357,0.0669,45,17,18,0,17
+free_form,780,10500,3600,210,0.0200,29,11,18,2,17

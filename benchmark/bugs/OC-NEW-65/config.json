@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-65",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "DataCollator routed academic/technical sources to a non-existent 4th expert label",
+  "fixed_commit": "e2879310",
+  "buggy_commit": "e2879310~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/e2879310",
+  "category": "data",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": ["FlexOLMo SFT with expert routing labels", "data sources containing 'academic'/'technical_writing'/'tutorial'/'nonfiction'/'faq'"],
+  "root_cause": "_source_name_to_expert_label produced a one-hot at index 3 for academic/technical sources, but the deployed model only had 3 active experts (indices 0..2 plus a masked duplicate). The label tensor pointed to an unused expert slot, so router supervision was silently directed to a slot the router never produced gradient for.",
+  "detection_method": "constraint:expert_label_range",
+  "invariant": "Expert label one-hot indices must lie within the active expert range of the model; 'general' must subsume any source not assigned to a specialized expert.",
+  "diff_summary": "Drop the academic/technical fallthrough into label[3]; route all non-math, non-code sources into the General expert (label[1]).",
+  "silent_check": "Buggy collator yields valid float tensors of shape (4,) and the rest of the pipeline accepts them — training proceeds, but router supervision for academic data is silently misdirected."
+}

@@ -1,0 +1,101 @@
+{
+ "n_test": 78,
+ "C_schema": 0.9231,
+ "C_joint": 0.9103,
+ "novelty_rate": 0.0385,
+ "verdict_histogram": {
+  "MATCH": 72,
+  "INSUFFICIENT_EVIDENCE": 2,
+  "SINGLETON_NEW_RELATION": 3,
+  "UNOBSERVABLE": 1
+ },
+ "per_framework": {
+  "deepspeed": {
+   "n": 26,
+   "C_schema": 0.923,
+   "C_joint": 0.923
+  },
+  "megatron-lm": {
+   "n": 23,
+   "C_schema": 1.0,
+   "C_joint": 1.0
+  },
+  "olmo": {
+   "n": 15,
+   "C_schema": 0.8,
+   "C_joint": 0.8
+  },
+  "olmo-core": {
+   "n": 14,
+   "C_schema": 0.929,
+   "C_joint": 0.857
+  }
+ },
+ "compression": {
+  "n_templates": 35,
+  "n_singletons_in_catalog": 24,
+  "distinct_templates_used_in_test": 23,
+  "test_support_per_template": {
+   "T08": 8,
+   "T11": 7,
+   "T18": 6,
+   "T04": 6,
+   "T09": 5,
+   "T05": 4,
+   "T23": 4,
+   "T07": 4,
+   "T01": 3,
+   "T10": 3,
+   "T24": 3,
+   "T27": 3,
+   "T28": 2,
+   "T03": 2,
+   "T26": 2,
+   "T25": 2,
+   "T16": 2,
+   "T35": 1,
+   "T32": 1,
+   "T22": 1,
+   "T17": 1,
+   "T06": 1,
+   "T15": 1
+  },
+  "catalog_support_per_template": {
+   "T01": 13,
+   "T02": 4,
+   "T03": 17,
+   "T04": 18,
+   "T05": 28,
+   "T06": 3,
+   "T07": 18,
+   "T08": 28,
+   "T09": 11,
+   "T10": 13,
+   "T11": 16,
+   "T12": 4,
+   "T13": 4,
+   "T14": 4,
+   "T15": 4,
+   "T16": 7,
+   "T17": 4,
+   "T18": 15,
+   "T19": 2,
+   "T20": 3,
+   "T21": 2,
+   "T22": 4,
+   "T23": 7,
+   "T24": 3,
+   "T25": 7,
+   "T26": 9,
+   "T27": 14,
+   "T28": 4,
+   "T29": 2,
+   "T30": 2,
+   "T31": 2,
+   "T32": 2,
+   "T33": 2,
+   "T34": 2,
+   "T35": 2
+  }
+ }
+}

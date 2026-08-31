@@ -1,0 +1,23 @@
+{
+  "bug_id": "O-NEW-70",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "MoE load-balancing loss not divided by num_micro_batches in gradient accumulation loop",
+  "fixed_commit": "fbe84372",
+  "buggy_commit": "fbe84372~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/541",
+  "category": "loss_computation/moe",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["FSDP", "DP"],
+  "trigger_conditions": [
+    "block_type=moe (MegaBlocks-based MoE block)",
+    "moe_expert_choice=False (load-balancing loss path active)",
+    "Gradient accumulation with num_micro_batches > 1"
+  ],
+  "root_cause": "Inside the per-micro-batch loop the buggy code added the full `batched_load_balancing_loss(self.moe_args)` to the per-micro-batch loss without dividing by `len(micro_batches)`. Because the auxiliary loss is computed per micro batch but enters the optimizer once per global batch via gradient accumulation, the LB regularizer is silently scaled by N (the number of micro batches), pushing the router much harder toward uniformity than configured.",
+  "detection_method": "loss_component_magnitude_check",
+  "invariant": "Sum of LB-loss contributions over a global batch must equal `batched_load_balancing_loss` evaluated once on the global batch (independent of micro-batch count)",
+  "diff_summary": "Divide load-balancing loss by len(micro_batches) before adding to loss; track running lb_batch_loss separately",
+  "silent_check": "Adding a finite scalar to the loss never raises; backward and optimizer.step proceed normally; only the magnitude of the auxiliary regularization is silently inflated."
+}

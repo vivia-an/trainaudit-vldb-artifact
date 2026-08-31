@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-60",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Universal checkpoint stage3 multi-machine load uses local_rank instead of global DP rank for partition slicing",
+  "fixed_commit": "47b3fb5e",
+  "buggy_commit": "47b3fb5e~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/7601",
+  "category": "checkpointing",
+  "severity": "critical",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3", "multi-node training (more than one node)", "load_universal_checkpoint=True"],
+  "root_cause": "load_hp_checkpoint_state used `local_rank = dist.get_local_rank()` (per-node rank 0..gpus_per_node-1) and then narrowed the loaded flat tensor at offset `local_rank * partitioned_numel`. With 2 nodes × 4 GPUs (world=8, dp=8), the local_rank wraps to 0..3 on each node, so global ranks 0 and 4 both load the SAME slice (offset 0), 1 and 5 both load slice 1, etc. Half the parameters never get the correct partition; training resumes from a hash of two unrelated weight slices.",
+  "detection_method": "value_invariant",
+  "invariant": "After load_hp_checkpoint_state on rank r, checkpoint_state_partition must equal loaded_checkpoint_state.narrow(0, r * partitioned_numel, partitioned_numel) where r is the rank within self.dp_process_group.",
+  "diff_summary": "Replace local_rank = dist.get_local_rank() with rank = dist.get_rank(group=self.dp_process_group); use rank in the narrow.",
+  "silent_check": "narrow(0, local_rank * size, size) is always within the padded tensor bounds, so no IndexError; the loaded partition is just the wrong slice. Loss after resume increases abnormally — user reports 'loss explodes after multi-node resume', but no exception is raised."
+}

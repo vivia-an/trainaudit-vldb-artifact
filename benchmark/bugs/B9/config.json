@@ -1,0 +1,24 @@
+{
+  "bug_id": "B9",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "single_all_to_all routes uneven-head path on second all2all when divisibility fails",
+  "issue_url": "https://github.com/deepspeedai/DeepSpeed/pull/6797",
+  "fixed_commit": "ecb4bf32",
+  "buggy_commit": "ecb4bf32~1",
+  "category": "sequence_parallel",
+  "severity": "high",
+  "gpu_needed": 2,
+  "trigger_conditions": [
+    "DeepSpeed sequence-parallel single_all_to_all with scatter_idx<2 (second all2all)",
+    "num_heads % seq_world_size != 0",
+    "get_num_kv_heads() is None at call time"
+  ],
+  "root_cause": "Buggy gate `if get_num_kv_heads() is not None or num_heads % seq_world_size != 0` routes to uneven_heads_all2all even on the second all2all when divisibility fails. Uneven path does not produce correct output for second all2all.",
+  "detection_method": "branch_observe_uneven_heads_all2all",
+  "invariant": "On second all2all (scatter_idx<2) with divisibility failure and kv_heads None, must NOT take uneven_heads_all2all path",
+  "expected_output": {
+    "buggy": "BUG DETECTED: uneven_heads_all2all called on second all2all",
+    "fixed": "CLEAN: regular path (which asserts on divisibility)"
+  }
+}

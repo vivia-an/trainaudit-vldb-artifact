@@ -1,0 +1,23 @@
+{
+  "bug_id": "B3",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "DeepSpeedEngine.communication_data_type defaults to fp32 when only bfloat16 is enabled",
+  "issue_url": "https://github.com/microsoft/DeepSpeed/issues/2071",
+  "fixed_commit": "d56268f3",
+  "buggy_commit": "d56268f3~1",
+  "category": "communication_dtype",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "trigger_conditions": [
+    "bf16 enabled",
+    "no explicit communication_data_type in config"
+  ],
+  "root_cause": "DeepSpeedEngine.communication_data_type returned torch.float32 when bf16_enabled but no explicit comm dtype, so allreduce/reduce ran in fp32 silently breaking bf16 contract. Fix: return torch.bfloat16 when bfloat16_enabled.",
+  "detection_method": "engine_method_value_check",
+  "invariant": "engine.communication_data_type() must be torch.bfloat16 when only bf16 is enabled",
+  "expected_output": {
+    "buggy": "BUG DETECTED: communication_data_type returns torch.float32",
+    "fixed": "CLEAN: communication_data_type returns torch.bfloat16"
+  }
+}

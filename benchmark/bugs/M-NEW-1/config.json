@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-1",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE aux loss sigmoid computed in bf16 instead of fp32",
+  "fixed_commit": "5f668c10e",
+  "category": "dtype",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "trigger_conditions": [
+    "num_experts >= 2",
+    "--moe-router-score-function sigmoid",
+    "--bf16"
+  ],
+  "root_cause": "torch.sigmoid(logits) where logits is bf16 → precision loss in routing scores",
+  "detection_method": "dtype_invariant",
+  "invariant": "sigmoid in compute_routing_scores_for_aux_loss must receive fp32 input",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: 2 bf16 sigmoid calls",
+    "fixed": "CLEAN: 2 fp32 sigmoid calls"
+  }
+}

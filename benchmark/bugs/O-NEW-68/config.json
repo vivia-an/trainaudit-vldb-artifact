@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-68",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Fused cross_entropy path passes lse_square_scale=0 so z-loss term is silently dropped",
+  "fixed_commit": "ee51e0a4",
+  "buggy_commit": "ee51e0a4~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/588",
+  "category": "loss_computation",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["FSDP", "DP"],
+  "trigger_conditions": [
+    "softmax_auxiliary_loss=True (z-loss enabled)",
+    "fused_loss=True (FlashAttention CrossEntropyLoss path)"
+  ],
+  "root_cause": "In `fused_loss_fn` the call to FlashAttention's CrossEntropyLoss hard-coded `lse_square_scale=0.0`. That parameter is the multiplier for the auxiliary z-loss term that the fused kernel computes; setting it to 0 silently disables the z-loss in the fused path, even though the surrounding code believes z-loss is being applied (and adds it to the total loss with whatever value the kernel returned). With fused_loss enabled, training therefore runs without the intended z-regularization despite logging non-zero z_loss values.",
+  "detection_method": "loss_component_magnitude_check",
+  "invariant": "z_loss returned by fused_loss_fn must have the same magnitude as z_loss returned by the python reference cross_entropy_loss for the same inputs",
+  "diff_summary": "Pass `lse_square_scale=z_loss_multiplier` to the FlashAttention CE call (also expose z_loss_multiplier as configurable)",
+  "silent_check": "lse_square_scale=0.0 is a perfectly legal value for the fused kernel; the call returns finite (loss, z_loss) tuples and training proceeds, only the z-loss regularizer is silently zero."
+}

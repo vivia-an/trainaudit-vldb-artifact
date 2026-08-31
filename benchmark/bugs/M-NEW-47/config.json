@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-47",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "prepare_input_tensors_for_wgrad_compute does not enforce all_gathered_input.contiguous(), so wgrad GEMM reads a non-contiguous strided tensor as if it were contiguous",
+  "fixed_commit": "e14ae44b47",
+  "buggy_commit": "e14ae44b47~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/2822",
+  "category": "te_integration",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["TP"],
+  "trigger_conditions": [
+    "Sequence parallel + TP > 1 with non-contiguous gathered activations (e.g. NeMo SFT QAT codepath)",
+    "Gradient accumulation fusion enabled"
+  ],
+  "root_cause": "prepare_input_tensors_for_wgrad_compute only called grad_output.contiguous() and assumed all_gathered_input was already contiguous. Some upstream paths (NeMo SFT QAT inputs, some reshape/transpose chains) hand in a strided tensor, but fused_weight_gradient_mlp_cuda.wgrad_gemm_accum_* indexes the buffer via flat data_ptr arithmetic. The kernel reads the wrong elements yet the tensor metadata looks valid, so the wgrad accumulation produces silently incorrect numbers.",
+  "detection_method": "value_invariant",
+  "invariant": "all_gathered_input.is_contiguous() must be True at the entry of prepare_input_tensors_for_wgrad_compute.",
+  "diff_summary": "Add all_gathered_input = all_gathered_input.contiguous() right after grad_output.contiguous().",
+  "silent_check": "Calling a CUDA kernel with a non-contiguous input does not raise from CUDA; the kernel reads garbage strides but completes; wgrad values are arbitrarily wrong but finite, and training proceeds normally."
+}

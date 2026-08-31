@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-61",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "ff_out nn.Linear constructed without device=init_device, breaking meta-init flow",
+  "fixed_commit": "a2f15176",
+  "buggy_commit": "a2f15176~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/280",
+  "category": "model_init/fsdp",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "init_device='meta'",
+    "FSDP enabled (lazy materialization expected)"
+  ],
+  "root_cause": "When building the readout `ff_out`, every other Linear in the model passed `device=config.init_device` so it could be created on the meta device and later materialized by FSDP with the configured init. The buggy version omitted this kwarg for `ff_out`, so it was always built on the default device with default kaiming init, escaping the init pipeline. The readout therefore carries the wrong init scale and lives on the wrong device until FSDP later moves it.",
+  "detection_method": "module_device_check",
+  "invariant": "After model construction, every learnable parameter's device must equal config.init_device",
+  "diff_summary": "Add `device=config.init_device` to ff_out's nn.Linear",
+  "silent_check": "nn.Linear without device kwarg succeeds and uses CPU default init; nothing raises and FSDP later places the param on GPU—the only effect is silently using a different init distribution."
+}

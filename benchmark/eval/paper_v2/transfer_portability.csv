@@ -1,0 +1,12 @@
+item,value
+source_framework_count,2
+source_framework_names,"Megatron-LM, DeepSpeed"
+target_framework_count,2
+target_framework_names,"OLMo, OLMo-core"
+transfer_cases,10
+schema_observable_cases,8
+detected_observable_cases,8
+unobservable_cases,2
+direct_A0_reuse_detections,7
+other_detected_cases,1
+case_level_false_positives,0

@@ -1,0 +1,20 @@
+{
+  "bug_id": "O-NEW-16",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "torch.device('mps') used as boolean check is always truthy, forces every run into MPS/CPU mode",
+  "fixed_commit": "14f5db21",
+  "buggy_commit": "14f5db21~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/804",
+  "category": "control_flow",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "scripts/train.py used as entrypoint",
+    "any backend (CUDA/MPS/CPU)"
+  ],
+  "root_cause": "The condition `if torch.device('mps')` is always True because torch.device(...) returns a non-None Device object. As a result the script unconditionally rewrites init_device to 'mps' and disables distributed training even on CUDA hosts. Fix replaces the call with torch.backends.mps.is_available() and a corresponding CPU check.",
+  "detection_method": "config_invariant",
+  "invariant": "after script bootstrap, cfg.distributed_strategy and cfg.model.init_device must reflect the actual available backend (CUDA when torch.cuda.is_available())",
+  "diff_summary": "replaced `torch.device('mps')` and `torch.device('cpu')` truthiness checks with torch.backends.mps.is_available() and (not cuda and not mps) availability checks"
+}

@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-29",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Mamba hybrid PP layer selection ignores uneven first/last stage configuration",
+  "fixed_commit": "d10eb6fc8",
+  "buggy_commit": "d10eb6fc8~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/3399",
+  "category": "sharding",
+  "severity": "critical",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["PP"],
+  "trigger_conditions": [
+    "Mamba/MambaHybrid model (e.g. Nemotron3-nano)",
+    "Pipeline parallelism enabled with num_layers_in_first_pipeline_stage or num_layers_in_last_pipeline_stage set",
+    "Uneven layer distribution across PP stages"
+  ],
+  "root_cause": "MambaStack._select_layers_for_pipeline_parallel computed offset = pp_rank * (num_layers // pp_size), which assumed even partitioning. When num_layers_in_first/last_pipeline_stage was used, MambaStack disagreed with TransformerLayer.get_transformer_layer_offset about which layers belong to each PP rank, silently mismatching layer types/weights vs. checkpoints and corrupting the SSM/attention layer order.",
+  "detection_method": "structural_invariant",
+  "invariant": "On every PP rank, MambaStack's selected layer offsets must equal those produced by get_transformer_layer_offset for the same uneven PP configuration.",
+  "diff_summary": "Replaced the simple num_layers // pp_size split with branching that mirrors get_transformer_layer_offset for first/last/middle stages when num_layers_in_first_pipeline_stage or num_layers_in_last_pipeline_stage is set."
+}

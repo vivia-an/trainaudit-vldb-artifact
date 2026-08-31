@@ -1,0 +1,93 @@
+{
+  "prototypes": [
+    {
+      "id": "proto-tol/module.fwd.post/output.l2_norm_above_p1_9.787e-01",
+      "desc": "output.l2_norm at module.fwd.post must be > p1-learned (9.787e-01)"
+    },
+    {
+      "id": "proto-tol/module.fwd.post/output.abs_max_above_p1_3.040e-02",
+      "desc": "output.abs_max at module.fwd.post must be > p1-learned (3.040e-02)"
+    },
+    {
+      "id": "proto-tol/optim.step.pre/total_grad_l2_above_p1_9.167e-01",
+      "desc": "total_grad_l2 at optim.step.pre must be > p1-learned (9.167e-01)"
+    },
+    {
+      "id": "proto-tol/comm.pre/tensor_pre.l2_norm_above_p1_3.082e+00",
+      "desc": "tensor_pre.l2_norm at comm.pre must be > p1-learned (3.082e+00)"
+    },
+    {
+      "id": "proto-tol/comm.post/tensor_post.l2_norm_above_p1_3.082e+00",
+      "desc": "tensor_post.l2_norm at comm.post must be > p1-learned (3.082e+00)"
+    }
+  ],
+  "rows": [
+    {
+      "trace": "small_hybrid_moe (dead block-0 MoE)",
+      "kind": "BUG",
+      "proto_id": "proto-tol/module.fwd.post/output.l2_norm_above_p1_9.787e-01",
+      "fire": 147
+    },
+    {
+      "trace": "small_hybrid_moe (dead block-0 MoE)",
+      "kind": "BUG",
+      "proto_id": "proto-tol/module.fwd.post/output.abs_max_above_p1_3.040e-02",
+      "fire": 147
+    },
+    {
+      "trace": "small_hybrid_moe (dead block-0 MoE)",
+      "kind": "BUG",
+      "proto_id": "proto-tol/optim.step.pre/total_grad_l2_above_p1_9.167e-01",
+      "fire": 20
+    },
+    {
+      "trace": "small_hybrid_moe (dead block-0 MoE)",
+      "kind": "BUG",
+      "proto_id": "proto-tol/comm.pre/tensor_pre.l2_norm_above_p1_3.082e+00",
+      "fire": 12
+    },
+    {
+      "trace": "small_hybrid_moe (dead block-0 MoE)",
+      "kind": "BUG",
+      "proto_id": "proto-tol/comm.post/tensor_post.l2_norm_above_p1_3.082e+00",
+      "fire": 8
+    },
+    {
+      "trace": "dense reordered_norm long (transient block-0 attn)",
+      "kind": "BUG",
+      "proto_id": "proto-tol/module.fwd.post/output.l2_norm_above_p1_9.787e-01",
+      "fire": 606
+    },
+    {
+      "trace": "dense reordered_norm long (transient block-0 attn)",
+      "kind": "BUG",
+      "proto_id": "proto-tol/module.fwd.post/output.abs_max_above_p1_3.040e-02",
+      "fire": 575
+    },
+    {
+      "trace": "dense reordered_norm long (transient block-0 attn)",
+      "kind": "BUG",
+      "proto_id": "proto-tol/optim.step.pre/total_grad_l2_above_p1_9.167e-01",
+      "fire": 88
+    },
+    {
+      "trace": "dense reordered_norm long (transient block-0 attn)",
+      "kind": "BUG",
+      "proto_id": "proto-tol/comm.pre/tensor_pre.l2_norm_above_p1_3.082e+00",
+      "fire": 100
+    },
+    {
+      "trace": "dense reordered_norm long (transient block-0 attn)",
+      "kind": "BUG",
+      "proto_id": "proto-tol/comm.post/tensor_post.l2_norm_above_p1_3.082e+00",
+      "fire": 100
+    }
+  ],
+  "healthy_FP_total": {
+    "proto-tol/module.fwd.post/output.l2_norm_above_p1_9.787e-01": 270,
+    "proto-tol/module.fwd.post/output.abs_max_above_p1_3.040e-02": 271,
+    "proto-tol/optim.step.pre/total_grad_l2_above_p1_9.167e-01": 1,
+    "proto-tol/comm.pre/tensor_pre.l2_norm_above_p1_3.082e+00": 44,
+    "proto-tol/comm.post/tensor_post.l2_norm_above_p1_3.082e+00": 44
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-3",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "z_loss mean reduction divides by mask fraction instead of masked mean",
+  "fixed_commit": "a57f380332e7021755d0a36cf79406b4423cf361",
+  "buggy_commit": "a57f3803~1",
+  "category": "loss_computation",
+  "severity": "high",
+  "gpu_needed": 0,
+  "root_cause": "z_squared / mask.mean() instead of (z_squared * mask).mean() — wrong reduction",
+  "detection_method": "runtime_check",
+  "invariant": "z_loss with mean reduction should be a scalar; buggy version returns unreduced tensor"
+}

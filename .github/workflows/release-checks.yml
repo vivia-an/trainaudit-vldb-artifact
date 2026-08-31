@@ -1,0 +1,22 @@
+name: release-checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install release dependencies
+        run: bash scripts/install_release_env.sh
+      - name: Run release checks
+        run: bash scripts/check_release.sh

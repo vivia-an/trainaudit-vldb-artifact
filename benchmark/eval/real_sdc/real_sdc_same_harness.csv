@@ -1,0 +1,103 @@
+case_id,original_bug_id,tool,phase,verdict,detected,violation_count,total_checks,fail_kind,seed,gpu_count,command,log_path
+B1,B1,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/B1_smoke.log
+B1,B1,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/B1_smoke.log
+B1,B1,traincheck,buggy,DETECTED,True,1,316,,0,2,traincheck: surrogate=B1,benchmark/eval/real_sdc/logs/smoke/B1_smoke.log
+B1,B1,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=B1,benchmark/eval/real_sdc/logs/smoke/B1_smoke.log
+B1,B1,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=B1,benchmark/eval/real_sdc/logs/smoke/B1_smoke.log
+B1,B1,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=B1,benchmark/eval/real_sdc/logs/smoke/B1_smoke.log
+B3,B3,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/B3_smoke.log
+B3,B3,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/B3_smoke.log
+B3,B3,traincheck,buggy,CLEAN,False,0,439,,0,2,traincheck: surrogate=B3,benchmark/eval/real_sdc/logs/smoke/B3_smoke.log
+B3,B3,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=B3,benchmark/eval/real_sdc/logs/smoke/B3_smoke.log
+B3,B3,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=B3,benchmark/eval/real_sdc/logs/smoke/B3_smoke.log
+B3,B3,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=B3,benchmark/eval/real_sdc/logs/smoke/B3_smoke.log
+B8,B8,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/B8_smoke.log
+B8,B8,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/B8_smoke.log
+B8,B8,traincheck,buggy,DETECTED,True,2,433,,0,2,traincheck: surrogate=B8,benchmark/eval/real_sdc/logs/smoke/B8_smoke.log
+B8,B8,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=B8,benchmark/eval/real_sdc/logs/smoke/B8_smoke.log
+B8,B8,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=B8,benchmark/eval/real_sdc/logs/smoke/B8_smoke.log
+B8,B8,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=B8,benchmark/eval/real_sdc/logs/smoke/B8_smoke.log
+B11,B11,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/B11_smoke.log
+B11,B11,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/B11_smoke.log
+B11,B11,traincheck,buggy,DETECTED,True,11,604,,0,2,traincheck: surrogate=B11,benchmark/eval/real_sdc/logs/smoke/B11_smoke.log
+B11,B11,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=B11,benchmark/eval/real_sdc/logs/smoke/B11_smoke.log
+B11,B11,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=B11,benchmark/eval/real_sdc/logs/smoke/B11_smoke.log
+B11,B11,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=B11,benchmark/eval/real_sdc/logs/smoke/B11_smoke.log
+B12,B12,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/B12_smoke.log
+B12,B12,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/B12_smoke.log
+B12,B12,traincheck,buggy,DETECTED,True,24,478,,0,2,traincheck: surrogate=B12,benchmark/eval/real_sdc/logs/smoke/B12_smoke.log
+B12,B12,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=B12,benchmark/eval/real_sdc/logs/smoke/B12_smoke.log
+B12,B12,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=B12,benchmark/eval/real_sdc/logs/smoke/B12_smoke.log
+B12,B12,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=B12,benchmark/eval/real_sdc/logs/smoke/B12_smoke.log
+M-020,M-020,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/M-020_smoke.log
+M-020,M-020,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/M-020_smoke.log
+M-020,M-020,traincheck,buggy,CLEAN,False,0,757,,0,2,traincheck: surrogate=M-020,benchmark/eval/real_sdc/logs/smoke/M-020_smoke.log
+M-020,M-020,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=M-020,benchmark/eval/real_sdc/logs/smoke/M-020_smoke.log
+M-020,M-020,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=M-020,benchmark/eval/real_sdc/logs/smoke/M-020_smoke.log
+M-020,M-020,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=M-020,benchmark/eval/real_sdc/logs/smoke/M-020_smoke.log
+M-010,M-010,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/M-010_smoke.log
+M-010,M-010,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: reproduce.sh,benchmark/eval/real_sdc/logs/smoke/M-010_smoke.log
+M-010,M-010,traincheck,buggy,CLEAN,False,0,199,,0,2,traincheck: surrogate=CF1 (P4 surrogate),benchmark/eval/real_sdc/logs/smoke/M-010_smoke.log
+M-010,M-010,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=CF1 (P4 surrogate),benchmark/eval/real_sdc/logs/smoke/M-010_smoke.log
+M-010,M-010,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=CF1 (P4 surrogate),benchmark/eval/real_sdc/logs/smoke/M-010_smoke.log
+M-010,M-010,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=CF1 (P4 surrogate),benchmark/eval/real_sdc/logs/smoke/M-010_smoke.log
+O-005,O-005,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/O-005_smoke.log
+O-005,O-005,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/O-005_smoke.log
+O-005,O-005,traincheck,buggy,FAIL,False,,,infer crash,0,2,traincheck: surrogate=O-005,benchmark/eval/real_sdc/logs/smoke/O-005_smoke.log
+O-005,O-005,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=O-005,benchmark/eval/real_sdc/logs/smoke/O-005_smoke.log
+O-005,O-005,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=O-005,benchmark/eval/real_sdc/logs/smoke/O-005_smoke.log
+O-005,O-005,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=O-005,benchmark/eval/real_sdc/logs/smoke/O-005_smoke.log
+O-NEW-9,O-NEW-9,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/O-NEW-9_smoke.log
+O-NEW-9,O-NEW-9,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/O-NEW-9_smoke.log
+O-NEW-9,O-NEW-9,traincheck,buggy,CLEAN,False,0,260,,0,2,traincheck: surrogate=O-NEW-9,benchmark/eval/real_sdc/logs/smoke/O-NEW-9_smoke.log
+O-NEW-9,O-NEW-9,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=O-NEW-9,benchmark/eval/real_sdc/logs/smoke/O-NEW-9_smoke.log
+O-NEW-9,O-NEW-9,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=O-NEW-9,benchmark/eval/real_sdc/logs/smoke/O-NEW-9_smoke.log
+O-NEW-9,O-NEW-9,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=O-NEW-9,benchmark/eval/real_sdc/logs/smoke/O-NEW-9_smoke.log
+OC-NEW-2,OC-NEW-2,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/OC-NEW-2_smoke.log
+OC-NEW-2,OC-NEW-2,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/OC-NEW-2_smoke.log
+OC-NEW-2,OC-NEW-2,traincheck,buggy,DETECTED,True,18,506,,0,2,traincheck: surrogate=OC-NEW-2,benchmark/eval/real_sdc/logs/smoke/OC-NEW-2_smoke.log
+OC-NEW-2,OC-NEW-2,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=OC-NEW-2,benchmark/eval/real_sdc/logs/smoke/OC-NEW-2_smoke.log
+OC-NEW-2,OC-NEW-2,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=OC-NEW-2,benchmark/eval/real_sdc/logs/smoke/OC-NEW-2_smoke.log
+OC-NEW-2,OC-NEW-2,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=OC-NEW-2,benchmark/eval/real_sdc/logs/smoke/OC-NEW-2_smoke.log
+D-029,D-029,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/D-029_smoke.log
+D-029,D-029,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/D-029_smoke.log
+D-029,D-029,traincheck,buggy,CLEAN,False,0,601,,0,2,traincheck: surrogate=OF1 (P1 surrogate),benchmark/eval/real_sdc/logs/smoke/D-029_smoke.log
+D-029,D-029,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=OF1 (P1 surrogate),benchmark/eval/real_sdc/logs/smoke/D-029_smoke.log
+D-029,D-029,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=OF1 (P1 surrogate),benchmark/eval/real_sdc/logs/smoke/D-029_smoke.log
+D-029,D-029,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=OF1 (P1 surrogate),benchmark/eval/real_sdc/logs/smoke/D-029_smoke.log
+D-NEW-9,D-NEW-9,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/D-NEW-9_smoke.log
+D-NEW-9,D-NEW-9,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/D-NEW-9_smoke.log
+D-NEW-9,D-NEW-9,traincheck,buggy,CLEAN,False,0,440,,0,2,traincheck: surrogate=TA1 (P13 surrogate),benchmark/eval/real_sdc/logs/smoke/D-NEW-9_smoke.log
+D-NEW-9,D-NEW-9,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=TA1 (P13 surrogate),benchmark/eval/real_sdc/logs/smoke/D-NEW-9_smoke.log
+D-NEW-9,D-NEW-9,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=TA1 (P13 surrogate),benchmark/eval/real_sdc/logs/smoke/D-NEW-9_smoke.log
+D-NEW-9,D-NEW-9,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=TA1 (P13 surrogate),benchmark/eval/real_sdc/logs/smoke/D-NEW-9_smoke.log
+O-NEW-5,O-NEW-5,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/O-NEW-5_smoke.log
+O-NEW-5,O-NEW-5,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/O-NEW-5_smoke.log
+O-NEW-5,O-NEW-5,traincheck,buggy,CLEAN,False,0,363,,0,2,traincheck: surrogate=ID1 (P9 surrogate),benchmark/eval/real_sdc/logs/smoke/O-NEW-5_smoke.log
+O-NEW-5,O-NEW-5,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=ID1 (P9 surrogate),benchmark/eval/real_sdc/logs/smoke/O-NEW-5_smoke.log
+O-NEW-5,O-NEW-5,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=ID1 (P9 surrogate),benchmark/eval/real_sdc/logs/smoke/O-NEW-5_smoke.log
+O-NEW-5,O-NEW-5,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=ID1 (P9 surrogate),benchmark/eval/real_sdc/logs/smoke/O-NEW-5_smoke.log
+O-NEW-3,O-NEW-3,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/O-NEW-3_smoke.log
+O-NEW-3,O-NEW-3,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/O-NEW-3_smoke.log
+O-NEW-3,O-NEW-3,traincheck,buggy,CLEAN,False,0,187,,0,2,traincheck: surrogate=LN1 (P16 surrogate),benchmark/eval/real_sdc/logs/smoke/O-NEW-3_smoke.log
+O-NEW-3,O-NEW-3,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=LN1 (P16 surrogate),benchmark/eval/real_sdc/logs/smoke/O-NEW-3_smoke.log
+O-NEW-3,O-NEW-3,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=LN1 (P16 surrogate),benchmark/eval/real_sdc/logs/smoke/O-NEW-3_smoke.log
+O-NEW-3,O-NEW-3,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=LN1 (P16 surrogate),benchmark/eval/real_sdc/logs/smoke/O-NEW-3_smoke.log
+O-040,O-040,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/O-040_smoke.log
+O-040,O-040,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/O-040_smoke.log
+O-040,O-040,traincheck,buggy,CLEAN,False,0,4,,0,2,traincheck: surrogate=CW1 (P15 surrogate),benchmark/eval/real_sdc/logs/smoke/O-040_smoke.log
+O-040,O-040,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=CW1 (P15 surrogate),benchmark/eval/real_sdc/logs/smoke/O-040_smoke.log
+O-040,O-040,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=CW1 (P15 surrogate),benchmark/eval/real_sdc/logs/smoke/O-040_smoke.log
+O-040,O-040,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=CW1 (P15 surrogate),benchmark/eval/real_sdc/logs/smoke/O-040_smoke.log
+M-NEW-33,M-NEW-33,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/M-NEW-33_smoke.log
+M-NEW-33,M-NEW-33,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/M-NEW-33_smoke.log
+M-NEW-33,M-NEW-33,traincheck,buggy,CLEAN,False,0,4,,0,2,traincheck: surrogate=SC1 (P14 surrogate),benchmark/eval/real_sdc/logs/smoke/M-NEW-33_smoke.log
+M-NEW-33,M-NEW-33,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=SC1 (P14 surrogate),benchmark/eval/real_sdc/logs/smoke/M-NEW-33_smoke.log
+M-NEW-33,M-NEW-33,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=SC1 (P14 surrogate),benchmark/eval/real_sdc/logs/smoke/M-NEW-33_smoke.log
+M-NEW-33,M-NEW-33,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=SC1 (P14 surrogate),benchmark/eval/real_sdc/logs/smoke/M-NEW-33_smoke.log
+OC-NEW-22,OC-NEW-22,trainaudit,buggy,DETECTED,True,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/OC-NEW-22_smoke.log
+OC-NEW-22,OC-NEW-22,trainaudit,reference_fixed,CLEAN,False,,,,0,2,trainaudit: trainaudit_run.sh,benchmark/eval/real_sdc/logs/smoke/OC-NEW-22_smoke.log
+OC-NEW-22,OC-NEW-22,traincheck,buggy,CLEAN,False,0,4,,0,2,traincheck: surrogate=PE1 (P11 surrogate),benchmark/eval/real_sdc/logs/smoke/OC-NEW-22_smoke.log
+OC-NEW-22,OC-NEW-22,traincheck,reference_fixed,CLEAN,False,,,,0,2,traincheck: surrogate=PE1 (P11 surrogate),benchmark/eval/real_sdc/logs/smoke/OC-NEW-22_smoke.log
+OC-NEW-22,OC-NEW-22,naive,buggy,CLEAN,False,,,,0,2,naive: surrogate=PE1 (P11 surrogate),benchmark/eval/real_sdc/logs/smoke/OC-NEW-22_smoke.log
+OC-NEW-22,OC-NEW-22,naive,reference_fixed,CLEAN,False,,,,0,2,naive: surrogate=PE1 (P11 surrogate),benchmark/eval/real_sdc/logs/smoke/OC-NEW-22_smoke.log

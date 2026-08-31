@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-46",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Interleaved 1F1B forgets to wait on async P2P send before deallocating the source buffer, sending corrupted activations to the next pipeline stage",
+  "fixed_commit": "260cba7133",
+  "buggy_commit": "260cba7133~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/4047",
+  "category": "pipeline",
+  "severity": "critical",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["PP"],
+  "trigger_conditions": [
+    "Interleaved 1F1B pipeline (--num-layers-per-virtual-pipeline-stage)",
+    "deallocate_pipeline_outputs=True",
+    "Async P2P sends (overlap_p2p_communication)"
+  ],
+  "root_cause": "forward_backward_pipelining_with_interleaving issued an isend to the next stage and immediately called deallocate_output_tensor without waiting on send_next_wait_handle. Because isend's HtoD copy is asynchronous, the destination buffer on the next rank could end up with whatever value happened to be left in memory by the time the deallocation reuse cycle began. Training continued with subtly corrupted forward activations propagated down the pipeline.",
+  "detection_method": "function_call_counting",
+  "invariant": "Whenever deallocate_pipeline_outputs=True, every send_next isend handle must have wait() called before deallocate_output_tensor on the same output_tensor.",
+  "diff_summary": "Insert send_next_wait_handle.wait() and reset to None right before deallocate_output_tensor in both branches of the interleaved loop.",
+  "silent_check": "isend returns a future that, when not waited on, simply does not raise; deallocate_output_tensor frees storage that may have been already copied or may be partially copied; the next stage receives a tensor of the correct shape and dtype but with random contents from a recycled buffer, training proceeds without exception."
+}

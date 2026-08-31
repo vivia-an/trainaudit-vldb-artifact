@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-75",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "CPU Adam/Adagrad uses params.size(0) instead of numel() — only the first row of multi-dim params gets updated",
+  "fixed_commit": "0cd64bd4",
+  "buggy_commit": "0cd64bd4~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/3109",
+  "category": "optimizer",
+  "severity": "critical",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["DeepSpeedCPUAdam or CPU Adagrad", "any tensor parameter with ndim >= 2 (e.g. linear weights, embedding tables)"],
+  "root_cause": "ds_adam_step / ds_adagrad_step (and the *_plus_copy variants) passed `params_c.size(0)` (the size of the FIRST dimension only) as the element count to the kernel's Step_8. For a Linear weight of shape (out, in), only `out` elements are stepped instead of `out*in`. The kernel happily walks `size(0)` floats from the data pointer (which is in-bounds) and writes back only those — the other (size(0)*(size(1)-1) ... ) elements never receive an update.",
+  "detection_method": "value_invariant",
+  "invariant": "After CPU Adam step, every element of every parameter tensor must change by exactly the Adam-prescribed update (within fp32 tolerance) — none should remain at its prior value.",
+  "diff_summary": "Replace `params_c.size(0)` with `params_c.numel()` in ds_adam_step, ds_adam_step_plus_copy, ds_adagrad_step, ds_adagrad_step_plus_copy.",
+  "silent_check": "Kernel reads/writes within the first size(0) elements of valid contiguous memory — no segfault, no CUDA error. Loss curve diverges from a baseline run that uses GPU Adam, but no exception is raised."
+}

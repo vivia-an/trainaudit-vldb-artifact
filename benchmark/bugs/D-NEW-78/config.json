@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-78",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO-1/2/3 allreduce_bucket hard-codes communication_data_type=fp16 — bf16 grads silently downcast for reduction",
+  "fixed_commit": "e419f7cb",
+  "buggy_commit": "e419f7cb~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/2145",
+  "category": "communication",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["bf16 model with ZeRO 1/2/3", "user explicitly sets communication_data_type to bfloat16 (or relies on the engine to match it to the model dtype)"],
+  "root_cause": "DeepSpeedZeroOptimizer.allreduce_bucket and DeepSpeedZeroOptimizer_Stage3.allreduce_bucket had a default-valued kwarg `communication_data_type=torch.float16`. The caller never passed self.communication_data_type, so all reductions converted bf16 grads to fp16 before the all-reduce. fp16 has 1 bit less mantissa than bf16 and a 5-bit exponent vs bf16's 8 — values outside fp16's range (>~65k or <~6e-5) become Inf/0, the rest lose ~half their relative precision. Reduced gradients are therefore systematically degraded relative to the user-configured comm dtype.",
+  "detection_method": "value_invariant",
+  "invariant": "Inside allreduce_bucket, the dtype of tensor_to_allreduce must equal self.communication_data_type configured by the user (not torch.float16).",
+  "diff_summary": "Drop the default-fp16 kwarg from allreduce_bucket; assign communication_data_type = self.communication_data_type at the start of the method. Also stage_1_and_2 was patched to also cast the asynchronous all-reduce slices through tensor_to_reduce when comm dtype != tensor dtype.",
+  "silent_check": "tensor.to(torch.float16) succeeds for finite bf16 values producing valid fp16, all-reduce completes, copy back to bf16 succeeds — only some values lose precision or saturate to Inf/0 silently. No exception, no overflow flag triggered."
+}

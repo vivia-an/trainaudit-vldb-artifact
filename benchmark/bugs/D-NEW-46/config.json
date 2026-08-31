@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-46",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO optimizer.step() called once during initialization, increments Adam step counter before any real update",
+  "fixed_commit": "18179807",
+  "buggy_commit": "18179807~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/5104",
+  "category": "optimizer",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 1/2/3 or BF16_Optimizer", "client constructs optimizer through deepspeed.initialize"],
+  "root_cause": "All ZeRO/BF16 wrappers eagerly called the inner optimizer's step() during construction in order to materialize state tensors. This silently incremented the Adam state[`step`] counter for every param before any real backward pass, so the bias-correction terms were off by one (and beta1^t / beta2^t for the first few real steps were wrong) compared to vanilla PyTorch.",
+  "detection_method": "value_invariant",
+  "invariant": "Right after deepspeed.initialize, optimizer.state[p]['step'] must equal 0 for every parameter p (no fake step has run).",
+  "diff_summary": "Replace the eager optimizer.step() in initialization with a lazy_init_hp_params_optimizer_state hook that runs after the first real step to link hp params to optimizer state."
+}

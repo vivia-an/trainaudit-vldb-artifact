@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-44",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "MOE save_checkpoint with TP > 1 only writes mp_rank_00_model_states.pt — non-zero TP ranks lose non-MoE weights",
+  "fixed_commit": "a84d07c5",
+  "buggy_commit": "a84d07c5~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/5157",
+  "category": "moe",
+  "severity": "critical",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["EP", "TP"],
+  "trigger_conditions": ["MoE model", "tensor parallel size > 1", "expert parallel enabled"],
+  "root_cause": "_save_moe_checkpoint short-circuited with `if exp_dp_rank != 0: return` before saving the per-mp-rank model_states.pt files. With TP > 1, only the rank that was both expert-DP-zero and mp-rank-zero ever wrote model_states.pt; all other TP shards were skipped, so resuming silently loaded mp_rank_00 onto every TP rank, training all TP ranks with the same shard.",
+  "detection_method": "function_call_counting",
+  "invariant": "After save_checkpoint with MoE+TP, exactly one mp_rank_XX_model_states.pt must exist for every X in [0, tp_world_size).",
+  "diff_summary": "Restructure the early-return so non-MoE-state writing (model_states.pt) still runs on data_parallel_rank == 0 even when exp_dp_rank != 0."
+}

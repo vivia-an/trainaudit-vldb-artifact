@@ -1,0 +1,24 @@
+{
+  "bug_id": "B13",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "OLMoSequentialBlock attn_norm overwrites residual stream",
+  "issue_url": "https://github.com/allenai/OLMo/pull/680",
+  "fixed_commit": "562c0fe0",
+  "buggy_commit": "562c0fe0~1",
+  "category": "residual_connection",
+  "severity": "critical",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "block_type='sequential'",
+    "norm_after=False (pre-LN, default)"
+  ],
+  "root_cause": "OLMoSequentialBlock.forward did `x = self.attn_norm(x)` clobbering residual stream so identity path uses normed x.",
+  "detection_method": "residual_stream_invariance",
+  "invariant": "After calling self.attn_norm, the residual variable x must equal original input, not the normed version",
+  "expected_output": {
+    "buggy": "BUG DETECTED: residual closer to normed than to original input",
+    "fixed": "CLEAN: residual = original input"
+  },
+  "related_existing": "O-002"
+}

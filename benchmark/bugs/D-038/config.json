@@ -1,0 +1,16 @@
+{
+  "bug_id": "D-038",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Grad norm NaN handling uses wrong tensor operation (logical_or)",
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/7171",
+  "buggy_commit": "b8cc1eb078095347b46ef83c441203803bb52418",
+  "fixed_commit": "1f706621f15b5df83f3bcff1e21dd0bbcfc1614b",
+  "category": "numerical",
+  "severity": "medium",
+  "gpu_needed": 0,
+  "root_cause": "inf_or_nan = norm_is_nan.logical_or(norm_is_inf) computes scalar-tensor op incorrectly",
+  "detection_method": "source_analysis",
+  "invariant": "NaN/inf check must use Python or/and, not tensor logical_or on scalar results",
+  "reproduction_status": "reproduced"
+}

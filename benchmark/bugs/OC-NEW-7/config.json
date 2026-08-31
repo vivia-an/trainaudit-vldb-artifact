@@ -1,0 +1,1 @@
+{"bug_id":"OC-NEW-7","framework":"olmo-core","repo":"allenai/OLMo-core","title":"soft_target_probs silently truncated to int by custom as_tensor","fixed_commit":"b9d161bf","buggy_commit":"b9d161bf~1","category":"data_processing","severity":"critical","gpu_needed":0}

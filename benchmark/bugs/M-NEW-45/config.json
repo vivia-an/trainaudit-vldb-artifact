@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-45",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "TEGroupedMLP fused-ops backward_dw skips _trigger_wgrad_accumulation_and_reduce_hooks on the original linear modules, so DDP never zeros param.grad and AccumulateGrad double-counts",
+  "fixed_commit": "bd698d13cf",
+  "buggy_commit": "bd698d13cf~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/4311",
+  "category": "te_integration",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": [
+    "TE GroupedLinear with fused operations (TEGroupedMLP fused path)",
+    "DDP overlap_grad_reduce enabled (reduce-scatter wgrad hooks)",
+    "MoE training with multiple microbatches"
+  ],
+  "root_cause": "_make_fused_ops creates new GroupedLinear instances for the fused FC1/activation/FC2 path. backward_dw was called on the new instances, but DDP had registered the wgrad-accumulate-and-reduce hooks on the ORIGINAL self.linear_fc1/fc2 modules. Hooks therefore never fired, param.grad was not cleared, and AccumulateGrad performed an additional in-place add into main_grad on the next iteration, silently double-counting expert weight gradients.",
+  "detection_method": "function_call_counting",
+  "invariant": "After every TEGroupedMLP.backward_dw call, _trigger_wgrad_accumulation_and_reduce_hooks must be invoked exactly once on linear_fc1 and once on linear_fc2.",
+  "diff_summary": "After fused_children backward_dw calls, add explicit self.linear_fc2._trigger_wgrad_accumulation_and_reduce_hooks() and self.linear_fc1._trigger_wgrad_accumulation_and_reduce_hooks().",
+  "silent_check": "The new GroupedLinear instances do produce wgrads that flow into main_grad; nothing raises; the only effect is that main_grad accumulates one extra copy per step, slowly inflating the effective learning rate for expert weights."
+}

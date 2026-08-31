@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-35",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO3 InflightParamRegistry shared between train and eval coordinators causes stale handles on mode switch",
+  "fixed_commit": "9377921a",
+  "buggy_commit": "9377921a~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/3884",
+  "category": "control_flow",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3", "alternating model.train()/model.eval() inside a step", "overlap_comm or prefetch enabled"],
+  "root_cause": "The training and eval PartitionedParameterCoordinators were both constructed with the same shared InflightParamRegistry. When the engine switched modes, in-flight allgather handles registered under one coordinator were observed by the other, which would either re-issue allgather on a still-inflight param or wait on a handle that was never going to fire — leading to silently-stale parameter values during the first iteration after the switch.",
+  "detection_method": "structural_invariant",
+  "invariant": "Each PartitionedParameterCoordinator must own a private InflightParamRegistry; the registry instance held by the train coordinator must not be the same Python object as the eval coordinator's.",
+  "diff_summary": "Replace the single module-level registry with a {True: InflightParamRegistry(), False: InflightParamRegistry()} dict keyed by training flag, and pass the per-mode registry to each coordinator."
+}

@@ -1,0 +1,468 @@
+@misc{trainaudit-supplement,
+  year         = {2026},
+  title        = {{TrainAudit}: full version},
+  howpublished = {\url{https://github.com/vivia-an/trainaudit-vldb-artifact/blob/vldb-2027-artifact-v1.0.1/paper/appendix_supplement.pdf}}
+}
+
+@misc{B1,
+  title        = {Megatron: {SwitchMLP} router weights are not synchronized within the tensor parallelism group},
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/issues/599}{Megatron issue \#599}}
+}
+@misc{B2,
+  title        = {Megatron: {LinearWithFrozenWeight} backward fix when {TP} \textgreater{} 1},
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/commit/5fffdfc737f14297bc3781dfc9e273199d1df52e}{Megatron commit \#5fffdfc}}
+}
+@misc{B3,
+  title        = {DeepSpeed: {FP16} used for all reduce even if {BFLOAT16} is enabled},
+  howpublished = {\href{https://github.com/deepspeedai/DeepSpeed/issues/2071}{DeepSpeed issue \#2071}}
+}
+@misc{B4,
+  title        = {Megatron: {Fix} for get\_data\_parallel\_src\_rank},
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/commit/9ad1944db1f97000377dc5aee36dcd656b1ae4a2}{Megatron commit \#9ad1944}}
+}
+@misc{B5,
+  title        = {Megatron: {Fix} scaling down expert grads},
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/commit/3373641ff1093073181e219265e8c8ee58d8587c}{Megatron commit \#3373641}}
+}
+@misc{B6,
+  title        = {Megatron: {Fix} bug in distopt allgathers with interleaved pipeline parallelism for old {MCore}},
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/pull/483}{Megatron PR \#483}}
+}
+@misc{B7,
+  title        = {Megatron: {Fix} bug when eval, dropout\_p turns to 0 forever},
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/pull/411}{Megatron PR \#411}}
+}
+@misc{B8,
+  title        = {DeepSpeed: {Fix} misuse of num\_experts as expert parallel group size (ep\_size)},
+  howpublished = {\href{https://github.com/deepspeedai/DeepSpeed/pull/7551}{DeepSpeed PR \#7551}}
+}
+@misc{B9,
+  title        = {DeepSpeed: {Uneven} head sequence parallelism},
+  howpublished = {\href{https://github.com/deepspeedai/DeepSpeed/issues/6774}{DeepSpeed issue \#6774}}
+}
+@misc{B10,
+  title        = {DeepSpeed: {Fix} gradient accumulation for {Z2+offload}},
+  howpublished = {\href{https://github.com/deepspeedai/DeepSpeed/pull/6550}{DeepSpeed PR \#6550}}
+}
+@misc{B11,
+  title        = {DeepSpeed: {Fix} gradient clipping},
+  howpublished = {\href{https://github.com/deepspeedai/DeepSpeed/pull/5150}{DeepSpeed PR \#5150}}
+}
+@misc{B12,
+  title        = {OLMo-core: {Fix} setting peak LR on restarts},
+  howpublished = {\href{https://github.com/allenai/OLMo-core/pull/27}{OLMo-core PR \#27}}
+}
+@misc{B13,
+  title        = {OLMo: Ensure attn\_norm does not affect the residual stream},
+  howpublished = {\href{https://github.com/allenai/OLMo/pull/680}{OLMo PR \#680}}
+}
+@misc{B14,
+  title        = {OLMo: Fix mean reduction in cross entropy loss},
+  howpublished = {\href{https://github.com/allenai/OLMo/pull/523}{OLMo PR \#523}}
+}
+@misc{B15,
+  title        = {OLMo: {Fix} Z-loss calculation},
+  howpublished = {\href{https://github.com/allenai/OLMo/pull/634}{OLMo PR \#634}}
+}
+@misc{ye2026megatronMuonRouting,
+  author       = {Zhengmao Ye},
+  title        = {Fix Incorrect Optimizer Routing for Tied {Word Embeddings} on
+                  the {MTP}-Only Last {PP} Stage with {Muon}},
+  year         = {2026},
+  month        = may,
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/pull/4642}
+                  {{NVIDIA} Megatron-{LM} pull request \#4642}},
+  note         = {Accessed: 2026-08-30}
+}
+@inproceedings{narayanan2021efficient,
+  author    = {Narayanan, Deepak and Shoeybi, Mohammad and Casper, Jared and LeGresley, Patrick and Patwary, Mostofa and Korthikanti, Vijay and Vainbrand, Dmitri and Kashinkunti, Prethvi and Bernauer, Julie and Catanzaro, Bryan and Phanishayee, Amar and Zaharia, Matei},
+  title     = {Efficient Large-Scale Language Model Training on {GPU} Clusters Using Megatron-{LM}},
+  booktitle = {Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis},
+  series    = {SC '21},
+  year      = {2021},
+  pages     = {1--15},
+  publisher = {Association for Computing Machinery},
+  address   = {St. Louis, Missouri},
+}
+@inproceedings{jiang2025traincheck,
+  author    = {Jiang, Yuxuan and Zhou, Ziming and Xu, Boyu and Liu, Beijie and Xu, Runhui and Huang, Peng},
+  title     = {Training with Confidence: Catching Silent Errors in Deep Learning Training with Automated Proactive Checks},
+  booktitle = {Proceedings of the 19th {USENIX} Symposium on Operating Systems Design and Implementation ({OSDI} '25)},
+  year      = {2025},
+  pages     = {313--329},
+  address   = {Boston, MA, USA},
+  publisher = {{USENIX} Association},
+  month     = jul,
+  url       = {https://www.usenix.org/conference/osdi25/presentation/jiang},
+  isbn      = {978-1-939133-47-2},
+}
+@misc{zang2025towards,
+      title={Towards Understanding Bugs in Distributed Training and Inference Frameworks for Large Language Models},
+      author={Xiao Yu and Haoxuan Chen and Feifei Niu and Xing Hu and Jacky Wai Keung and Xin Xia},
+      year={2025},
+      eprint={2506.10426},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE}
+}
+@article{chen2023understanding,
+  author    = {Chen, Junjie and Liang, Yihua and Shen, Qingchao and Jiang, Jiajun and Li, Shuochuan},
+  title     = {Toward Understanding Deep Learning Framework Bugs},
+  journal   = {ACM Trans. Softw. Eng. Methodol.},
+  volume    = {32},
+  number    = {6},
+  year      = {2023},
+  pages     = {156:1--156:32},
+  publisher = {ACM}
+}
+@inproceedings{liu2024investigating,
+  author    = {Hong, Shuo and Sun, Hailong and Gao, Xiang and Tan, Shin Hwei},
+  title     = {Investigating and Detecting Silent Bugs in PyTorch Programs},
+  booktitle = {2024 IEEE International Conference on Software Analysis, Evolution and Reengineering (SANER)},
+  year      = {2024},
+  publisher = {IEEE},
+  doi       = {10.1109/SANER60148.2024.00035}
+}
+@article{silent_bug_2024,
+author = {Tambon, Florian and Nikanjam, Amin and An, Le and Khomh, Foutse and Antoniol, Giuliano},
+title = {Silent bugs in deep learning frameworks: an empirical study of Keras and TensorFlow},
+year = {2023},
+issue_date = {Jan 2024},
+publisher = {Kluwer Academic Publishers},
+address = {USA},
+volume = {29},
+number = {1},
+issn = {1382-3256},
+url = {https://doi.org/10.1007/s10664-023-10389-6},
+doi = {10.1007/s10664-023-10389-6},
+journal = {Empirical Softw. Engg.},
+month = nov,
+numpages = {34},
+keywords = {Deep learning, Bug analysis, Empirical study, Keras, TensorFlow}
+}
+@misc{shoeybi2019megatron,
+  title     = {{Megatron-LM}: Training Multi-Billion Parameter Language Models Using Model Parallelism},
+  author    = {Shoeybi, Mohammad and Patwary, Mostofa and Puri, Raul and LeGresley, Patrick and Casper, Jared and Catanzaro, Bryan},
+  year      = {2019},
+  eprint    = {1909.08053},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.CL},
+  url       = {https://arxiv.org/abs/1909.08053},
+}
+@inproceedings{rasley2020deepspeed,
+  title={{DeepSpeed}: System Optimizations Enable Training Deep Learning Models with Over 100 Billion Parameters},
+  author={Rasley, Jeff and Rajbhandari, Samyam and Ruwase, Olatunji and He, Yuxiong},
+  booktitle={Proceedings of the 26th ACM SIGKDD international conference on knowledge discovery \& data mining},
+  pages={3505--3506},
+  year={2020},
+  publisher={ACM},
+  address={Virtual Event},
+  doi={10.1145/3394486.3406703}
+}
+@inproceedings{rajbhandari2020zero,
+  title={{ZeRO}: Memory Optimizations Toward Training Trillion Parameter Models},
+  author={Rajbhandari, Samyam and Rasley, Jeff and Ruwase, Olatunji and He, Yuxiong},
+  booktitle={SC20: International Conference for High Performance Computing, Networking, Storage and Analysis},
+  pages={1--16},
+  year={2020},
+  publisher={IEEE},
+  address={Atlanta, GA, USA},
+  doi={10.1109/SC41405.2020.00024}
+}
+@inproceedings{micikevicius2018mixed,
+  title={Mixed Precision Training},
+  author={Micikevicius, Paulius and Narang, Sharan and Alben, Jonah and Diamos, Gregory and Elsen, Erich and Garcia, David and Ginsburg, Boris and Houston, Michael and Kuchaiev, Oleksii and Venkatesh, Ganesh and others},
+  booktitle={International Conference on Learning Representations},
+  year={2018},
+  publisher={OpenReview.net},
+  address={Vancouver, BC, Canada},
+  url={https://openreview.net/forum?id=r1gs9JgRZ},
+  numpages={10}
+}
+@article{li2020pytorch,
+  title={PyTorch distributed: experiences on accelerating data parallel training},
+  author={Li, Shen and Zhao, Yanli and Varma, Rohan and Salpekar, Omkar and Noordhuis, Pieter and Li, Teng and Paszke, Adam and Smith, Jeff and Vaughan, Brian and Damania, Pritam and others},
+  journal={Proceedings of the VLDB Endowment},
+  volume={13},
+  number={12},
+  pages={3005--3018},
+  year={2020},
+  publisher={VLDB Endowment},
+  doi={10.14778/3415478.3415530}
+}
+@inproceedings{pascanu2013difficulty,
+  title={On the difficulty of training recurrent neural networks},
+  author={Pascanu, Razvan and Mikolov, Tomas and Bengio, Yoshua},
+  booktitle={Proceedings of the 30th International Conference on Machine Learning},
+  pages={1310--1318},
+  year={2013},
+  publisher={PMLR},
+  address={Atlanta, GA, USA},
+  series={Proceedings of Machine Learning Research},
+  volume={28}
+}
+@article{ernst2007daikon,
+  title={The Daikon system for dynamic detection of likely invariants},
+  author={Ernst, Michael D and Perkins, Jeff H and Guo, Philip J and McCamant, Stephen and Pacheco, Carlos and Tschantz, Matthew S and Xiao, Chen},
+  journal={Science of computer programming},
+  volume={69},
+  number={1-3},
+  pages={35--45},
+  year={2007},
+  publisher={Elsevier},
+  doi={10.1016/j.scico.2007.01.015}
+}
+@article{wang2018training,
+  title={Training deep neural networks with 8-bit floating point numbers},
+  author={Wang, Naigang and Choi, Jungwook and Brand, Daniel and Chen, Chia-Yu and Gopalakrishnan, Kailash},
+  journal={Advances in neural information processing systems},
+  volume={31},
+  pages={7675--7684},
+  year={2018},
+  url={https://papers.nips.cc/paper/7997-training-deep-neural-networks-with-8-bit-floating-point-numbers}
+}
+@inproceedings{grant2018inferring,
+  title={Inferring and asserting distributed system invariants},
+  author={Grant, Stewart and Cech, Hendrik and Beschastnikh, Ivan},
+  booktitle={Proceedings of the 40th International Conference on Software Engineering},
+  pages={1149--1159},
+  year={2018},
+  publisher={ACM},
+  address={Gothenburg, Sweden},
+  doi={10.1145/3180155.3180199}
+}
+@inproceedings{jiang2024megascale,
+  title={{MegaScale}: Scaling Large Language Model Training to More Than 10,000 {GPUs}},
+  author={Jiang, Ziheng and Lin, Haibin and Zhong, Yinmin and Huang, Qi and Chen, Yangrui and Zhang, Zhi and Peng, Yanghua and Li, Xiang and Xie, Cong and Nong, Shibiao and Jia, Yulu and He, Sun and Chen, Hongmin and Bai, Zhihao and Hou, Qi and Yan, Shipeng and Zhou, Ding and Sheng, Yiyao and Jiang, Zhuo and Xu, Haohan and Wei, Haoran and Zhang, Zhang and Nie, Pengfei and Zou, Leqi and Zhao, Sida and Xiang, Liang and Liu, Zherui and Li, Zhe and Jia, Xiaoying and Ye, Jianxi and Jin, Xin and Liu, Xin},
+  booktitle={Proceedings of the 21st USENIX Symposium on Networked Systems Design and Implementation},
+  series={NSDI '24},
+  year={2024}
+}
+@misc{ttrace2025,
+  title={{TTrace}: Lightweight Error Checking and Diagnosis for Distributed Training},
+  author={Jiang, Haitian and Zhu, Shaowei and Zhang, Zhen and Song, Zhenyu and Fu, Xinwei and Jia, Zhen and Wang, Yida and Li, Jinyang},
+  year={2025},
+  eprint={2506.09280},
+  archivePrefix={arXiv},
+  primaryClass={cs.DC},
+  url={https://arxiv.org/abs/2506.09280},
+}
+@misc{trainverify2025,
+  title={{TrainVerify}: Equivalence-Based Verification for Distributed {LLM} Training},
+  author={Lu, Yunchi and Miao, Youshan and Tan, Cheng and Huang, Peng and Zhu, Yi and Zhang, Xian and Yang, Fan},
+  year={2025},
+  eprint={2506.15961},
+  archivePrefix={arXiv},
+  primaryClass={cs.LG}
+}
+@inproceedings{pei2023can,
+  title={Can Large Language Models Reason about Program Invariants?},
+  author={Pei, Kexin and Bieber, David and Shi, Kensen and Sutton, Charles and Yin, Pengcheng},
+  booktitle={Proceedings of the 40th International Conference on Machine Learning},
+  pages={27496--27520},
+  year={2023},
+  series={Proceedings of Machine Learning Research},
+  volume={202},
+  publisher={PMLR},
+  address={Honolulu, HI, USA},
+  url={https://proceedings.mlr.press/v202/pei23a.html}
+}
+@article{qure2024,
+  title     = {{QURE}: {AI}-Assisted and Automatically Verified {UDF} Inlining},
+  author    = {Siddiqui, Tarique and K\"{o}nig, Arnd Christian and Cao, Jiashen and Yan, Cong and Lahiri, Shuvendu K.},
+  journal   = {Proc. ACM Manag. Data},
+  volume    = {3},
+  number    = {1},
+  articleno = {66},
+  numpages  = {26},
+  year      = {2025},
+  month     = {feb},
+  publisher = {ACM},
+  doi       = {10.1145/3709716}
+}
+@article{fan2008cfd,
+  author    = {Wenfei Fan and Floris Geerts and Xibei Jia and Anastasios Kementsietsidis},
+  title     = {Conditional Functional Dependencies for Capturing Data Inconsistencies},
+  journal   = {ACM Transactions on Database Systems (TODS)},
+  volume    = {33},
+  number    = {2},
+  pages     = {6:1--6:48},
+  year      = {2008},
+  doi       = {10.1145/1366102.1366103}
+}
+@article{chu2013discovering,
+  author    = {Xu Chu and Ihab F. Ilyas and Paolo Papotti},
+  title     = {Discovering Denial Constraints},
+  journal   = {Proceedings of the VLDB Endowment (PVLDB)},
+  volume    = {6},
+  number    = {13},
+  pages     = {1498--1509},
+  year      = {2013},
+  doi       = {10.14778/2536258.2536262}
+}
+@inproceedings{song2021autovalidate,
+  author    = {Jie Song and Yeye He},
+  title     = {Auto-Validate: Unsupervised Data Validation Using Data-Domain Patterns Inferred from Data Lakes},
+  booktitle = {Proceedings of the 2021 International Conference on Management of Data (SIGMOD)},
+  pages     = {1678--1691},
+  year      = {2021},
+  publisher = {ACM},
+  address   = {Xi'an, China},
+  doi       = {10.1145/3448016.3457250}
+}
+@article{schelter2018deequ,
+  author    = {Sebastian Schelter and Dustin Lange and Philipp Schmidt and Meltem Celikel and Felix Biessmann and Andreas Grafberger},
+  title     = {Automating Large-Scale Data Quality Verification},
+  journal   = {Proceedings of the VLDB Endowment (PVLDB)},
+  volume    = {11},
+  number    = {12},
+  pages     = {1781--1794},
+  year      = {2018},
+  doi       = {10.14778/3229863.3229867}
+}
+@inproceedings{dallachiesa2013nadeef,
+  author    = {Dallachiesa, Michele and Ebaid, Amr and Eldawy, Ahmed and Elmagarmid, Ahmed K. and Ilyas, Ihab F. and Ouzzani, Mourad and Tang, Nan},
+  title     = {{NADEEF}: A Commodity Data Cleaning System},
+  booktitle = {Proceedings of the 2013 ACM SIGMOD International Conference on Management of Data},
+  pages     = {541--552},
+  year      = {2013},
+  publisher = {ACM},
+  address   = {New York, NY, USA},
+  doi       = {10.1145/2463676.2465327}
+}
+@inproceedings{mahdavi2019raha,
+  author    = {Mahdavi, Mohammad and Abedjan, Ziawasch and Castro Fernandez, Raul and Madden, Samuel and Ouzzani, Mourad and Stonebraker, Michael and Tang, Nan},
+  title     = {{Raha}: A Configuration-Free Error Detection System},
+  booktitle = {Proceedings of the 2019 International Conference on Management of Data},
+  pages     = {865--882},
+  year      = {2019},
+  publisher = {ACM},
+  address   = {Amsterdam, The Netherlands},
+  doi       = {10.1145/3299869.3324956}
+}
+@inproceedings{yoon2016dbsherlock,
+  author    = {Yoon, Dong Young and Niu, Ning and Mozafari, Barzan},
+  title     = {{DBSherlock}: A Performance Diagnostic Tool for Transactional Databases},
+  booktitle = {Proceedings of the 2016 International Conference on Management of Data},
+  pages     = {1599--1614},
+  year      = {2016},
+  publisher = {ACM},
+  address   = {San Francisco, CA, USA},
+  doi       = {10.1145/2882903.2915218}
+}
+@article{papenbrock2015functional,
+  author    = {Papenbrock, Thorsten and Ehrlich, Jens and Marten, Jannik and Neubert, Tommy and Rudolph, Jan-Peer and Sch\"{o}nberg, Martin and Zwiener, Jakob and Naumann, Felix},
+  title     = {Functional Dependency Discovery: An Experimental Evaluation of Seven Algorithms},
+  journal   = {Proc. VLDB Endow.},
+  volume    = {8},
+  number    = {10},
+  pages     = {1082--1093},
+  year      = {2015},
+  publisher = {VLDB Endowment},
+  doi       = {10.14778/2794367.2794377}
+}
+@article{pena2019dcfinder,
+  author    = {Pena, Eduardo H. M. and de Almeida, Eduardo C. and Naumann, Felix},
+  title     = {Discovery of Approximate (and Exact) Denial Constraints},
+  journal   = {Proc. VLDB Endow.},
+  volume    = {13},
+  number    = {3},
+  pages     = {266--278},
+  year      = {2019},
+  publisher = {VLDB Endowment},
+  doi       = {10.14778/3368289.3368293}
+}
+@article{rekatsinas2017holoclean,
+  author    = {Rekatsinas, Theodoros and Chu, Xu and Ilyas, Ihab F. and R\'{e}, Christopher},
+  title     = {{HoloClean}: Holistic Data Repairs with Probabilistic Inference},
+  journal   = {Proc. VLDB Endow.},
+  volume    = {10},
+  number    = {11},
+  pages     = {1190--1201},
+  year      = {2017},
+  publisher = {VLDB Endowment},
+  doi       = {10.14778/3137628.3137631}
+}
+@article{tang2024gptuner,
+  author    = {Lao, Jiale and Wang, Yibo and Li, Yufei and Wang, Jianping and Zhang, Yunjia and Cheng, Zhiyuan and Chen, Wanghu and Tang, Mingjie and Wang, Jianguo},
+  title     = {{GPTuner}: A Manual-Reading Database Tuning System via {GPT}-Guided Bayesian Optimization},
+  journal   = {Proc. VLDB Endow.},
+  volume    = {17},
+  number    = {8},
+  pages     = {1939--1952},
+  year      = {2024},
+  publisher = {VLDB Endowment},
+  doi       = {10.14778/3659437.3659449}
+}
+@article{zhou2024dbot,
+  author    = {Zhou, Xuanhe and Li, Guoliang and Sun, Zhaoyan and Liu, Zhiyuan and Chen, Weize and Wu, Jianming and Liu, Jiesi and Feng, Ruohang and Zeng, Guoyang},
+  title     = {{D-Bot}: Database Diagnosis System Using Large Language Models},
+  journal   = {Proc. VLDB Endow.},
+  volume    = {17},
+  number    = {10},
+  pages     = {2514--2527},
+  year      = {2024},
+  publisher = {VLDB Endowment},
+  doi       = {10.14778/3675034.3675043}
+}
+@article{chen2025autotest,
+  author    = {Chen, Qixu and He, Yeye and Wong, Raymond Chi-Wing and Cui, Weiwei and Ge, Song and Zhang, Haidong and Zhang, Dongmei and Chaudhuri, Surajit},
+  title     = {{Auto-Test}: Learning Semantic-Domain Constraints for Unsupervised Error Detection in Tables},
+  journal   = {Proc. ACM Manag. Data},
+  volume    = {3},
+  number    = {3},
+  articleno = {133},
+  numpages  = {27},
+  year      = {2025},
+  publisher = {ACM},
+  doi       = {10.1145/3725396}
+}
+@misc{dixit2021silent,
+  author    = {Harish Dattatraya Dixit and Sneha Pendharkar and Matt Beadon and Chris Mason and Tejasvi Chakravarthy and Bharath Muthiah and Sriram Sankar},
+  title     = {Silent Data Corruptions at Scale},
+  year      = {2021},
+  eprint    = {2102.11245},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.AR},
+  url       = {https://arxiv.org/abs/2102.11245},
+}
+@inproceedings{hochschild2021cores,
+  author    = {Peter H. Hochschild and Paul Turner and Jeffrey C. Mogul and Rama Govindaraju and Parthasarathy Ranganathan and David E. Culler and Amin Vahdat},
+  title     = {Cores That Don't Count},
+  booktitle = {Proceedings of the Workshop on Hot Topics in Operating Systems ({HotOS})},
+  year      = {2021},
+  pages     = {9--16},
+  publisher = {ACM},
+  address   = {Ann Arbor, MI, USA},
+  doi       = {10.1145/3458336.3465297},
+}
+@inproceedings{chen2021deployment,
+  author    = {Zhenpeng Chen and Huihan Yao and Yiling Lou and Yanbin Cao and Yuanqiang Liu and Haoyu Wang and Xuanzhe Liu},
+  title     = {An Empirical Study on Deployment Faults of Deep Learning Based Mobile Applications},
+  booktitle = {Proceedings of the 43rd International Conference on Software Engineering (ICSE)},
+  pages     = {674--685},
+  year      = {2021},
+  publisher = {IEEE}
+}
+@article{arasu2006cql,
+  title   = {The {CQL} Continuous Query Language: Semantic Foundations and Query Execution},
+  author  = {Arasu, Arvind and Babu, Shivnath and Widom, Jennifer},
+  journal = {The VLDB Journal},
+  volume  = {15},
+  number  = {2},
+  pages   = {121--142},
+  year    = {2006},
+  publisher = {Springer},
+  doi     = {10.1007/s00778-004-0147-z}
+}
+@inproceedings{lou2025t2c,
+  author    = {Lou, Chang and Parikesit, Dimas Shidqi and Huang, Yujin and
+               Yang, Zhewen and Diwangkara, Senapati and Jing, Yuzhuo and
+               Kistijantoro, Achmad Imam and Yuan, Ding and Nath, Suman and
+               Huang, Peng},
+  title     = {Deriving Semantic Checkers from Tests to Detect Silent Failures
+               in Production Distributed Systems},
+  booktitle = {Proceedings of the 19th {USENIX} Symposium on Operating Systems
+               Design and Implementation ({OSDI} '25)},
+  year      = {2025},
+  publisher = {USENIX Association}
+}

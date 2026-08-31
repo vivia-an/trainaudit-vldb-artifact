@@ -1,0 +1,47 @@
+===== TrainAudit on BUGGY (6e330ba2~1) =====
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+sys:1: UserWarning: Full backward hook is firing when gradients are computed with respect to module outputs since no inputs require gradients. See https://docs.pytorch.org/docs/main/generated/torch.nn.Module.html#torch.nn.Module.register_full_backward_hook for more details.
+[B12] scheduler construction error = KeyError: "param 'initial_lr' is not specified in param_groups[0] when resuming scheduler with last_epoch >= 0.\nThis typically happens when:\n1. You're trying to resume training from a checkpoint but haven't properly loaded the optimizer state\n2. You're using last_epoch >= 0 for a fresh training run (not recommended)"
+=== 1/11 violations ===
+  [ok       ] T0-checkpoint-preserve-rng: no checkpoint.call events (rule passive)
+  [ok       ] T0-clip-grad-bounded: all 0 clip_grad calls bounded by max_norm
+  [ok       ] T0-dtype-propagation: checked 6 non-cast layer outputs (passive at T0; full join with pre-event is a T1 feature)
+  [VIOLATION] T0-initial-lr-present: 1 scheduler-resume(s) found param_groups without initial_lr
+  [ok       ] T0-build-has-modules: build snapshot has parameters and modules (1 snapshots)
+  [ok       ] T0-no-nan-inf: no NaN/Inf detected
+  [ok       ] T0-norm-output-unit-rms: all 0 normalizer outputs within RMS [0.5,2.0]
+  [ok       ] T0-optim-lr-positive: all 1 param_groups have positive lr
+  [ok       ] T0-optim-step-counter-monotonic: state['step'] monotonic across 3 optim.step events
+  [ok       ] T0-softmax-degenerate: checked 0 softmax/router outputs, none degenerate
+  [ok       ] T0-token-id-in-vocab: no dataloader.batch events captured (rule passive)
+
+[B12/trainaudit] BUG DETECTED via 1 rule(s):
+   - T0-initial-lr-present: 1 scheduler-resume(s) found param_groups without initial_lr
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W505 22:30:37.805957204 ProcessGroupNCCL.cpp:5178] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+
+===== TrainAudit on FIXED (6e330ba2) =====
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+sys:1: UserWarning: Full backward hook is firing when gradients are computed with respect to module outputs since no inputs require gradients. See https://docs.pytorch.org/docs/main/generated/torch.nn.Module.html#torch.nn.Module.register_full_backward_hook for more details.
+[B12] scheduler construction error = None
+=== 0/11 violations ===
+  [ok       ] T0-checkpoint-preserve-rng: no checkpoint.call events (rule passive)
+  [ok       ] T0-clip-grad-bounded: all 0 clip_grad calls bounded by max_norm
+  [ok       ] T0-dtype-propagation: checked 6 non-cast layer outputs (passive at T0; full join with pre-event is a T1 feature)
+  [ok       ] T0-initial-lr-present: all 1 scheduler.init events compatible
+  [ok       ] T0-build-has-modules: build snapshot has parameters and modules (1 snapshots)
+  [ok       ] T0-no-nan-inf: no NaN/Inf detected
+  [ok       ] T0-norm-output-unit-rms: all 0 normalizer outputs within RMS [0.5,2.0]
+  [ok       ] T0-optim-lr-positive: all 1 param_groups have positive lr
+  [ok       ] T0-optim-step-counter-monotonic: state['step'] monotonic across 3 optim.step events
+  [ok       ] T0-softmax-degenerate: checked 0 softmax/router outputs, none degenerate
+  [ok       ] T0-token-id-in-vocab: no dataloader.batch events captured (rule passive)
+
+[B12/trainaudit] CLEAN: no rule violations
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W505 22:30:46.402385001 ProcessGroupNCCL.cpp:5178] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+

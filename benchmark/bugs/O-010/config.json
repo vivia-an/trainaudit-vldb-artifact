@@ -1,0 +1,11 @@
+{
+  "bug_id": "O-010",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "SkipStepAdamW step state never incremented",
+  "category": "optimizer_state",
+  "root_cause": "optimizer step counter stays at 0, biasing Adam bias correction",
+  "detection_method": "value_invariant",
+  "invariant": "After N optimizer.step() calls, state['step'] must equal N",
+  "reproduction_status": "reproduced"
+}

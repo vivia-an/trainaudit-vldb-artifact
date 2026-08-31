@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-57",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "_CudagraphReplayNode treats fp4_enabled as fp8 only, skipping the per-module FP-recipe restoration on FP4 paths so saved scaling factors drift each replay",
+  "fixed_commit": "2ad8b76b53",
+  "buggy_commit": "2ad8b76b53~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/4180",
+  "category": "cuda_graph",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["TP"],
+  "trigger_conditions": [
+    "FP4 (NVFP4) training enabled (config.fp4 set, fp4_recipe DelayedScaling)",
+    "CUDA graphs enabled with FP4 modules"
+  ],
+  "root_cause": "_CudagraphReplayNode.forward only checked runner.fp8_enabled when deciding whether to set is_first_microbatch and restore the per-module DelayedScaling recipe. With FP4 active but FP8 inactive, the recipe restore branch was skipped, so each replay used a stale amax history. Every step shifted the FP4 scale away from the target, causing slowly drifting numerics.",
+  "detection_method": "config_invariant",
+  "invariant": "If runner.fp4_enabled, the per-module DelayedScaling recipe restoration must execute identically to the runner.fp8_enabled path.",
+  "diff_summary": "Change the gate from 'if runner.fp8_enabled' to 'if runner.fp8_enabled or runner.fp4_enabled' in _CudagraphReplayNode.forward.",
+  "silent_check": "FP4 with stale amax history produces numerically valid (no NaN) outputs; the captured graph replays without error; only the long-term scale drift slowly degrades model accuracy."
+}

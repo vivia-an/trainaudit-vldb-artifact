@@ -1,0 +1,10 @@
+held-out 249 | done 0 | to run 249
+  50/249
+  100/249
+  150/249
+  200/249
+  249/249
+
+COVERAGE B2 (re-mine): 138/249 = 55.4%
+propose calls=249 judge calls=247
+tokens: propose in/out 46436/524296, judge in/out 133860/287451

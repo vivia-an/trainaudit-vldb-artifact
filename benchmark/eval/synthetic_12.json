@@ -1,0 +1,19 @@
+{
+  "name": "synthetic_12",
+  "policy": "T0+T1 surrogate self-test on CPU",
+  "n": 12,
+  "bugs": [
+    "B1",
+    "B11",
+    "B12",
+    "B13",
+    "M-012",
+    "M-014",
+    "M-020",
+    "M-024",
+    "M-NEW-5",
+    "O-NEW-1",
+    "OC-NEW-2",
+    "OC-NEW-3"
+  ]
+}

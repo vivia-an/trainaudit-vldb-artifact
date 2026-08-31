@@ -1,0 +1,20 @@
+{
+  "bug_id": "O-NEW-36",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "all_sums_norms_numels concatenated along last dim and reduced wrongly, mixing sums/norms/numels into one slot",
+  "fixed_commit": "909d3107",
+  "buggy_commit": "909d3107~1",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 8,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "FSDP distributed training",
+    "collect_param_metrics path that combines sums, norms, and numels into one all-reduce"
+  ],
+  "root_cause": "all_sums.unsqueeze(-1), all_norms.unsqueeze(-1), all_numels.unsqueeze(-1) were concatenated on dim=-1 and then reduced. After dist.reduce, all_sums_norms_numels.split(1) split per-parameter rows instead of separating the three categories, so the per-param avg metrics became a meaningless mix of sums/norms/numels.",
+  "detection_method": "structural_invariant",
+  "invariant": "after dist.reduce and split(1), the three pieces all_sums/all_norms/all_numels must each have shape (num_params,)",
+  "diff_summary": "changed unsqueeze(-1)/dim=-1 to unsqueeze(0)/dim=0 so the concat stacks along a new leading dimension and split(1) cleanly returns the three category tensors"
+}

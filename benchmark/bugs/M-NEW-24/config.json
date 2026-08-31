@@ -1,0 +1,20 @@
+{
+  "bug_id": "M-NEW-24",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "group_limited_topk used hardcoded k=2 instead of num_groups/group_topk",
+  "fixed_commit": "e85385a76",
+  "buggy_commit": "e85385a76~1",
+  "category": "moe",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["EP"],
+  "trigger_conditions": [
+    "MoE with moe_router_group_topk set",
+    "num_groups configured (group-limited routing)"
+  ],
+  "root_cause": "group_limited_topk computed group_scores as scores.view(num_tokens, num_groups, -1).topk(2, dim=-1)[0].sum(dim=-1) — the k=2 was hardcoded instead of using num_groups//group_topk. This produced wrong group scores and therefore wrong group selection for token-to-expert routing in DeepSeek-style models.",
+  "detection_method": "value_invariant",
+  "invariant": "group_scores must equal sum of top-(num_groups//group_topk) routing scores within each group (correctness check on the topk k value).",
+  "diff_summary": "Changed .topk(2, dim=-1) to .topk(num_groups // group_topk, dim=-1) in group_limited_topk."
+}

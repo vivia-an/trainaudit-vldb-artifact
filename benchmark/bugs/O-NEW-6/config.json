@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-6",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Flash attention input layout wrong — head and sequence dims swapped",
+  "fixed_commit": "2f706197",
+  "buggy_commit": "2f706197~1",
+  "category": "attention",
+  "severity": "critical",
+  "gpu_needed": 0,
+  "root_cause": "flash_attn expects (B,S,H,D) but receives (B,H,S,D) without transpose",
+  "detection_method": "runtime_hook",
+  "invariant": "flash_attn input dim1 must be seq_len, not num_heads"
+}

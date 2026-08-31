@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-42",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "BLT distill metric not divided by num_micro_batches when grad_accum_steps>1",
+  "fixed_commit": "23a0d396",
+  "buggy_commit": "23a0d396~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/23a0d396",
+  "category": "metrics",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["TransformerBLTTrainModule", "grad_accum_steps > 1"],
+  "root_cause": "batch_metrics accumulated detached metric tensors across micro-batches without dividing by num_micro_batches, so logged BLT decoder losses were inflated by the gradient accumulation factor while training itself proceeded normally.",
+  "detection_method": "constraint:metric_normalization",
+  "invariant": "Per-batch logged metrics should equal the average over micro-batches, not the sum.",
+  "diff_summary": "Divide each per-micro-batch metric value by num_micro_batches when accumulating into batch_metrics.",
+  "silent_check": "Buggy code raises nothing — training continues, metrics are simply inflated by num_micro_batches, which a user might never notice if they don't compare against single-microbatch runs."
+}

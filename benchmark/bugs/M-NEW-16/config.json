@@ -1,0 +1,21 @@
+{
+  "bug_id": "M-NEW-16",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "mxfp8 reuse_grad_buf zeros wrong buffer (grad_data instead of param_data)",
+  "fixed_commit": "c2c36f77c",
+  "buggy_commit": "c2c36f77c~1",
+  "category": "gradient_sync",
+  "severity": "critical",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": [
+    "reuse_grad_buf_for_mxfp8_param_ag=True",
+    "overlap_param_gather=True",
+    "MXFP8 recipe with multiple buckets"
+  ],
+  "root_cause": "After all-gather of params completed for a bucket, the code zeroed bucket.grad_data to prepare for gradient accumulation. Because grad/param buffers share storage and one grad buffer may correspond to multiple param buffers, this also wiped out param data of other buckets that had not yet completed all-gather, silently corrupting weights.",
+  "detection_method": "value_invariant",
+  "invariant": "After bucket finish_param_sync, no other bucket's param_data within the same buffer should be all zeros (unless intentionally so).",
+  "diff_summary": "Replaced bucket.grad_data.zero_() with bucket.param_data.zero_() in two places, and removed the conditional skipping buffer.reset() in DDP zero_grad_buffer."
+}

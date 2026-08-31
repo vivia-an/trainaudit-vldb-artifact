@@ -1,0 +1,21 @@
+{
+  "bug_id": "O-NEW-32",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Reduced sums/norms not divided by num_model_replicas in HSDP, optimizer metrics inflated by replica count",
+  "fixed_commit": "7bd4d914",
+  "buggy_commit": "7bd4d914~1",
+  "category": "gradient_sync",
+  "severity": "medium",
+  "gpu_needed": 8,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "HSDP with num_model_replicas > 1",
+    "collect_param_metrics=True",
+    "param-norm metrics being logged"
+  ],
+  "root_cause": "After the dist.all_reduce(SUM) in HYBRID_SHARD, identical replica contributions are summed N times. The original code consumed those sums directly, so per-param avg metrics and grad_norm metrics ended up N times larger than the true value. Fix divides the all-reduced tensor (all_sums_norms_numels and all_norms) by self.num_model_replicas before splitting and using.",
+  "detection_method": "value_scaling_check",
+  "invariant": "for HSDP with N replicas, sum_after_all_reduce / N must equal the true global sum; per_param_avg_metrics computed from this should match a reference single-replica run",
+  "diff_summary": "added all_sums_norms_numels = all_sums_norms_numels / self.num_model_replicas (and all_norms /= num_model_replicas in the no-collect branch) right after the all_reduce sum"
+}

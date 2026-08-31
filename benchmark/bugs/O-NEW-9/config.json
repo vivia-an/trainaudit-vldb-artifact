@@ -1,0 +1,1 @@
+{"bug_id":"O-NEW-9","framework":"olmo","repo":"allenai/OLMo","title":"Token IDs silently truncated to 16-bit by modulo 2^16","fixed_commit":"167a7ac8","buggy_commit":"167a7ac8~1","category":"data_processing","severity":"critical","gpu_needed":0}

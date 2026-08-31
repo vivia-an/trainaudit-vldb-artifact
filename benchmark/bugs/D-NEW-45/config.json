@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-45",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO3 backward hook closure captures stale group index `i` — gradient routed to wrong reduction bucket",
+  "fixed_commit": "2cbfb89a",
+  "buggy_commit": "2cbfb89a~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/4520",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3", "multiple parameter groups"],
+  "root_cause": "create_reduce_and_remove_grad_hooks built the per-param backward hook via `wrapper(param, i)` where `i` was the loop index over groups. Because `i` was Python-late-bound inside the closure, every hook fired with the same final value of `i`, routing earlier groups' gradients into the last group's reduction bucket. The fix removes the unused `i` argument entirely (the bucket is determined from the param itself).",
+  "detection_method": "structural_invariant",
+  "invariant": "For every backward hook registered for parameter p in group i, the hook must call reduce_independent_p_g_buckets_and_remove_grads(p) without binding to a stale group index.",
+  "diff_summary": "Drop the unused `i` parameter from wrapper / reduce_independent_p_g_buckets_and_remove_grads / reduce_ready_partitions_and_remove_grads in stage3.py."
+}

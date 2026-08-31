@@ -1,0 +1,16 @@
+{
+  "bug_id": "D-040",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Zero-sized microbatches for incomplete minibatches at DP boundary",
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/5118",
+  "buggy_commit": "2b411103adc080bc72f7a49b33ededea6bb487f8",
+  "fixed_commit": "a7864846a4c7c9c7c0a4ab463293d595767bf4b8",
+  "category": "data_loading",
+  "severity": "medium",
+  "gpu_needed": 0,
+  "root_cause": "get_start_end_idx doesn't account for batch_len < dp_size * micro_batch_size",
+  "detection_method": "source_analysis",
+  "invariant": "Microbatch slicing must handle incomplete last batch (batch_len parameter)",
+  "reproduction_status": "reproduced"
+}

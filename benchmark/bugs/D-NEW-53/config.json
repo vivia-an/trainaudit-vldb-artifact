@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-53",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "AutoEP ZeRO-2 forgets to scale per-rank loss by EP-group size — expert gradients undercount by factor ep_size",
+  "fixed_commit": "fae0276f",
+  "buggy_commit": "fae0276f~1",
+  "pr_url": "https://github.com/deepspeedai/DeepSpeed/pull/7950",
+  "category": "moe",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": ["AutoEP MoE layer present", "ZeRO stage 2", "expert_parallel_size > 1"],
+  "root_cause": "AutoEP runs one logical batch across an EP group (each EP rank sees a slice of tokens), so each rank's scalar loss is only 1/ep_size of the logical-batch loss. The buggy DeepSpeedEngine.backward() does not multiply the loss by ep_size before backward, so reduced expert gradients end up scaled by 1/ep_size relative to the equivalent ZeRO-2 / ep_size=1 baseline. Optimizer.step then applies effectively-shrunk gradients, biasing every step.",
+  "detection_method": "value_invariant",
+  "invariant": "For matched (DP=N, EP=1) vs (DP=N/ep, EP=ep) AutoEP runs with identical logical batch and seed, post-step expert weights must be approximately equal (within fp32 tolerance).",
+  "diff_summary": "Compute self._autoep_output_grad_scale = ep_world_size in _configure_distributed_model; in backward() multiply loss and gas_scaled_loss by this factor before optimizer.backward().",
+  "silent_check": "Buggy code feeds an unmodified (smaller) loss tensor through loss.backward(); gradients are valid finite tensors, just systematically too small by a constant factor. No assert/exception is raised — only training-curve divergence vs the ep=1 reference."
+}

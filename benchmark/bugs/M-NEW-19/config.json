@@ -1,0 +1,21 @@
+{
+  "bug_id": "M-NEW-19",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE sigmoid score adds expert_bias before sigmoid normalization, distorting probs",
+  "fixed_commit": "eec34ff3a",
+  "buggy_commit": "eec34ff3a~1",
+  "category": "moe",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["EP"],
+  "trigger_conditions": [
+    "score_function='sigmoid'",
+    "expert_bias provided (e.g. aux-loss-free routing)",
+    "use_pre_softmax flag interaction"
+  ],
+  "root_cause": "topk_softmax_with_capacity sigmoid branch added expert_bias inside logits_fp32 BEFORE applying sigmoid, then later applied sigmoid only on a different branch. Result: expert_bias was added to raw logits and saturated through sigmoid, producing wrong scores while top_indices were still computed on the biased pre-sigmoid scores.",
+  "detection_method": "value_invariant",
+  "invariant": "Final routing scores must equal sigmoid(logits.float()) gathered at top_indices; expert_bias must only affect routing selection, not the probability values used for combining expert outputs.",
+  "diff_summary": "Refactored sigmoid branch to first compute scores=sigmoid(logits.float()), then add expert_bias only into a temporary scores_for_routing for top_indices selection, then gather original scores."
+}

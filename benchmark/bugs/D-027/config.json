@@ -1,0 +1,20 @@
+{
+  "bug_id": "D-027",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Residual MoE softmax applied on wrong dimension",
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/2110",
+  "buggy_commit": "69b7c970d262bdc248d87061ceb2c3431c6dbd78",
+  "fixed_commit": "b4513f63107bb54bef694de2612260f72e8b0eaf",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 0,
+  "root_cause": "softmax(coef, dim=1) should be dim=-1 for correct expert coefficient normalization",
+  "detection_method": "source_analysis",
+  "invariant": "softmax dim must be -1 (expert dim), not hardcoded 1",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: softmax dim must be -1 (expert dim)",
+    "fixed": "CLEAN"
+  }
+}

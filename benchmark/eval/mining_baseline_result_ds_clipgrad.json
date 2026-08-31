@@ -1,0 +1,570 @@
+{
+  "n_hypotheses": 6,
+  "n_predicates_l2": 88,
+  "n_predicates_accepted_l3": 54,
+  "n_predicates_rejected_l3": 34,
+  "schema_hookpoints": [
+    "module.fwd.pre",
+    "comm.post",
+    "module.fwd.post",
+    "comm.pre",
+    "module.bwd",
+    "optim.step.pre",
+    "optim.step.post",
+    "dataloader.batch",
+    "build.snapshot"
+  ],
+  "schema_field_count": 186,
+  "accepted": [
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/tsb/no_nan_inf",
+      "desc": "No traced tensor may contain NaN or Inf.",
+      "template": "TENSOR_STAT_BOUND",
+      "family": "F8"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/comm.post/tensor_post.l2_norm_positive",
+      "desc": "$.tensor_post.l2_norm > 0 at comm.post (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/module.fwd.post/output.l2_norm_positive",
+      "desc": "$.output.l2_norm > 0 at module.fwd.post (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/module.fwd.post/output.max_positive",
+      "desc": "$.output.max > 0 at module.fwd.post (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/comm.pre/tensor_pre.l2_norm_positive",
+      "desc": "$.tensor_pre.l2_norm > 0 at comm.pre (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/dataloader.batch/fields.input_ids.max_positive",
+      "desc": "$.fields.input_ids.max > 0 at dataloader.batch (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/dataloader.batch/fields.index.max_positive",
+      "desc": "$.fields.index.max > 0 at dataloader.batch (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/dataloader.batch/fields.index.min_positive",
+      "desc": "$.fields.index.min > 0 at dataloader.batch (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/dataloader.batch/input_ids.max_positive",
+      "desc": "$.input_ids.max > 0 at dataloader.batch (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/module.fwd.pre/module_id_positive",
+      "desc": "$.module_id > 0 at module.fwd.pre (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/comm.post/group_size_positive",
+      "desc": "$.group_size > 0 at comm.post (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/comm.post/tensor_post.l2_norm_positive",
+      "desc": "$.tensor_post.l2_norm > 0 at comm.post (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/module.fwd.post/module_id_positive",
+      "desc": "$.module_id > 0 at module.fwd.post (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/module.fwd.post/output.l2_norm_positive",
+      "desc": "$.output.l2_norm > 0 at module.fwd.post (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/module.fwd.post/output.abs_max_positive",
+      "desc": "$.output.abs_max > 0 at module.fwd.post (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/module.fwd.post/output.max_positive",
+      "desc": "$.output.max > 0 at module.fwd.post (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/comm.pre/group_size_positive",
+      "desc": "$.group_size > 0 at comm.pre (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/comm.pre/tensor_pre.l2_norm_positive",
+      "desc": "$.tensor_pre.l2_norm > 0 at comm.pre (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/module.bwd/module_id_positive",
+      "desc": "$.module_id > 0 at module.bwd (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/optim.step.pre/n_params_positive",
+      "desc": "$.n_params > 0 at optim.step.pre (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/optim.step.pre/total_grad_l2_positive",
+      "desc": "$.total_grad_l2 > 0 at optim.step.pre (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/optim.step.pre/total_param_l2_positive",
+      "desc": "$.total_param_l2 > 0 at optim.step.pre (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/optim.step.post/total_param_l2_positive",
+      "desc": "$.total_param_l2 > 0 at optim.step.post (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/optim.step.post/state_step_min_positive",
+      "desc": "$.state_step_min > 0 at optim.step.post (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/optim.step.post/state_step_max_positive",
+      "desc": "$.state_step_max > 0 at optim.step.post (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/optim.step.post/state_step_n_params_positive",
+      "desc": "$.state_step_n_params > 0 at optim.step.post (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/dataloader.batch/fields.input_ids.abs_max_positive",
+      "desc": "$.fields.input_ids.abs_max > 0 at dataloader.batch (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/dataloader.batch/fields.input_ids.max_positive",
+      "desc": "$.fields.input_ids.max > 0 at dataloader.batch (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/dataloader.batch/fields.input_ids.mean_positive",
+      "desc": "$.fields.input_ids.mean > 0 at dataloader.batch (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/dataloader.batch/fields.index.abs_max_positive",
+      "desc": "$.fields.index.abs_max > 0 at dataloader.batch (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/dataloader.batch/fields.index.max_positive",
+      "desc": "$.fields.index.max > 0 at dataloader.batch (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/dataloader.batch/fields.index.min_positive",
+      "desc": "$.fields.index.min > 0 at dataloader.batch (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/dataloader.batch/fields.index.mean_positive",
+      "desc": "$.fields.index.mean > 0 at dataloader.batch (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/dataloader.batch/input_ids.abs_max_positive",
+      "desc": "$.input_ids.abs_max > 0 at dataloader.batch (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/dataloader.batch/input_ids.max_positive",
+      "desc": "$.input_ids.max > 0 at dataloader.batch (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/dataloader.batch/input_ids.mean_positive",
+      "desc": "$.input_ids.mean > 0 at dataloader.batch (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/build.snapshot/model.n_parameters_positive",
+      "desc": "$.model.n_parameters > 0 at build.snapshot (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/build.snapshot/model.n_modules_positive",
+      "desc": "$.model.n_modules > 0 at build.snapshot (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/build.snapshot/optimizer.n_param_groups_positive",
+      "desc": "$.optimizer.n_param_groups > 0 at build.snapshot (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H3",
+      "pred_id": "hyp/cross_rank_equal/replica_cksum",
+      "desc": "Replica params must have equal cksum across replica group.",
+      "template": "STRUCTURAL_PRESENCE",
+      "family": "F1"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/tsb/no_nan_inf",
+      "desc": "No traced tensor may contain NaN or Inf.",
+      "template": "TENSOR_STAT_BOUND",
+      "family": "F8"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/comm.post/tensor_post.l2_norm_positive",
+      "desc": "$.tensor_post.l2_norm > 0 at comm.post (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/module.fwd.post/output.l2_norm_positive",
+      "desc": "$.output.l2_norm > 0 at module.fwd.post (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/module.fwd.post/output.max_positive",
+      "desc": "$.output.max > 0 at module.fwd.post (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/comm.pre/tensor_pre.l2_norm_positive",
+      "desc": "$.tensor_pre.l2_norm > 0 at comm.pre (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/dataloader.batch/fields.input_ids.max_positive",
+      "desc": "$.fields.input_ids.max > 0 at dataloader.batch (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/dataloader.batch/fields.index.max_positive",
+      "desc": "$.fields.index.max > 0 at dataloader.batch (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/dataloader.batch/fields.index.min_positive",
+      "desc": "$.fields.index.min > 0 at dataloader.batch (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/dataloader.batch/input_ids.max_positive",
+      "desc": "$.input_ids.max > 0 at dataloader.batch (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/sp/build_has_modules",
+      "desc": "Build snapshot must have parameters and modules.",
+      "template": "STRUCTURAL_PRESENCE",
+      "family": "F4"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/param/sp/comm.pre/group_size_nonzero",
+      "desc": "$.group_size > 0 at comm.pre (parametric structural).",
+      "template": "STRUCTURAL_PRESENCE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/param/sp/comm.pre/tensor_pre.l2_norm_nonzero",
+      "desc": "$.tensor_pre.l2_norm > 0 at comm.pre (parametric structural).",
+      "template": "STRUCTURAL_PRESENCE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/param/sp/comm.post/group_size_nonzero",
+      "desc": "$.group_size > 0 at comm.post (parametric structural).",
+      "template": "STRUCTURAL_PRESENCE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/param/sp/comm.post/tensor_post.l2_norm_nonzero",
+      "desc": "$.tensor_post.l2_norm > 0 at comm.post (parametric structural).",
+      "template": "STRUCTURAL_PRESENCE",
+      "family": "F-PARAM"
+    }
+  ],
+  "rejected_summary": [
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/comm.post/tensor_post.max_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[22, 22, 22]"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/comm.post/tensor_post.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[2145, 1137, 801]"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/module.fwd.post/output.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[11214, 10206, 5502]"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/comm.pre/tensor_pre.max_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[22, 22, 22]"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/comm.pre/tensor_pre.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[2145, 1137, 801]"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/dataloader.batch/fields.input_ids.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[1, 1, 1]"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/dataloader.batch/input_ids.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[1, 1, 1]"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/comm.post/tensor_post.abs_max_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[1, 1, 1]"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/comm.post/tensor_post.max_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[22, 22, 22]"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/comm.post/tensor_post.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[2145, 1137, 801]"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/comm.post/tensor_post.mean_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[568, 64, 64]"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/module.fwd.post/output.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[11214, 10206, 5502]"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/module.fwd.post/output.mean_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[4310, 4529, 2639]"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/comm.pre/tensor_pre.abs_max_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[1, 1, 1]"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/comm.pre/tensor_pre.max_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[22, 22, 22]"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/comm.pre/tensor_pre.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[2145, 1137, 801]"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/comm.pre/tensor_pre.mean_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[568, 64, 64]"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/dataloader.batch/fields.input_ids.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[1, 1, 1]"
+    },
+    {
+      "hyp_id": "H2",
+      "pred_id": "hyp/param/pfc/dataloader.batch/input_ids.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[1, 1, 1]"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/comm.post/tensor_post.max_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[22, 22, 22]"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/comm.post/tensor_post.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[2145, 1137, 801]"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/module.fwd.post/output.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[11214, 10206, 5502]"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/comm.pre/tensor_pre.max_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[22, 22, 22]"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/comm.pre/tensor_pre.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[2145, 1137, 801]"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/dataloader.batch/fields.input_ids.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[1, 1, 1]"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/param/tsb/dataloader.batch/input_ids.min_positive",
+      "reason": "fired on 3/3 healthy traces; counts=[1, 1, 1]"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/param/sp/comm.pre/tensor_pre.abs_max_nonzero",
+      "reason": "fired on 3/3 healthy traces; counts=[1, 1, 1]"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/param/sp/comm.pre/tensor_pre.max_nonzero",
+      "reason": "fired on 3/3 healthy traces; counts=[22, 22, 22]"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/param/sp/comm.pre/tensor_pre.min_nonzero",
+      "reason": "fired on 3/3 healthy traces; counts=[2145, 1137, 801]"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/param/sp/comm.pre/tensor_pre.mean_nonzero",
+      "reason": "fired on 3/3 healthy traces; counts=[568, 64, 64]"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/param/sp/comm.post/tensor_post.abs_max_nonzero",
+      "reason": "fired on 3/3 healthy traces; counts=[1, 1, 1]"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/param/sp/comm.post/tensor_post.max_nonzero",
+      "reason": "fired on 3/3 healthy traces; counts=[22, 22, 22]"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/param/sp/comm.post/tensor_post.min_nonzero",
+      "reason": "fired on 3/3 healthy traces; counts=[2145, 1137, 801]"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/param/sp/comm.post/tensor_post.mean_nonzero",
+      "reason": "fired on 3/3 healthy traces; counts=[568, 64, 64]"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"bug_id":"M-NEW-8","framework":"megatron-lm","repo":"NVIDIA/Megatron-LM","title":"config.softmax_scale ignored in attention forward paths","fixed_commit":"ff6a40b09","buggy_commit":"ff6a40b09~1","category":"attention","severity":"medium","gpu_needed":2}

@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-56",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Latent MoE backward_dw never calls fc1_latent_proj/fc2_latent_proj.backward_dw, so gradient for the latent projection weights is silently zero",
+  "fixed_commit": "a4008d0f2f",
+  "buggy_commit": "a4008d0f2f~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/2977",
+  "category": "moe",
+  "severity": "critical",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["TP", "EP"],
+  "trigger_conditions": [
+    "MoE layer with config.moe_latent_size set (latent MoE / DeepSeek-style projection)",
+    "Fine-grained backward_dw scheduling (separate routed_experts and shared_experts paths)"
+  ],
+  "root_cause": "MoELayer.backward_dw only invoked self.experts.backward_dw() and (when shared_experts requested) self.shared_experts.backward_dw(). The new latent projection layers fc1_latent_proj/fc2_latent_proj were never asked to compute their weight gradients, so their main_grad stayed at zero across every microbatch. The optimizer happily applied (lr * 0) to those parameters every step, freezing them at their initialization.",
+  "detection_method": "function_call_counting",
+  "invariant": "When config.moe_latent_size is set, fc1_latent_proj.backward_dw and fc2_latent_proj.backward_dw must each be called once per backward pass through the MoE layer.",
+  "diff_summary": "Add fc1_latent_proj.backward_dw() in the shared_experts branch and fc2_latent_proj.backward_dw() (in the comm stream) in the routed_experts branch.",
+  "silent_check": "Calling experts.backward_dw is a normal pytorch op; nothing raises when the latent projections are simply never reached; their main_grad remains zero, optimizer steps without warning, and the latent projection layer never learns."
+}

@@ -1,0 +1,7 @@
+>>> CF1
+[CF1] CLEAN: traincheck:0/199 failed
+>>> CM1
+[CM1] CLEAN: traincheck:0/4 failed
+>>> OF1
+[OF1] CLEAN: traincheck:0/601 failed
+DONE batch d1prime_new; results in /volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/eval/traincheck_surrogates/batch_d1prime_new_results.txt

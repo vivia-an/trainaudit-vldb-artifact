@@ -1,0 +1,23 @@
+{
+  "bug_id": "B15",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Trainer.train_micro_batch divides z_loss by num_micro_batches instead of batch_size_in_tokens",
+  "issue_url": "https://github.com/allenai/OLMo/pull/634",
+  "fixed_commit": "d7994c86",
+  "buggy_commit": "d7994c86~1",
+  "category": "loss_scaling",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "softmax_auxiliary_loss = True",
+    "num_micro_batches != batch_size_in_tokens"
+  ],
+  "root_cause": "z_loss = z_loss / num_micro_batches scales auxiliary loss by gradient accumulation count, not by token count. With T=batch_size_in_tokens >> num_micro_batches, z_loss dominates loss and corrupts training.",
+  "detection_method": "value_compare_after_train_micro_batch",
+  "invariant": "z_loss returned by train_micro_batch must equal raw_z_loss / batch_size_in_tokens (same divisor as ce_loss)",
+  "expected_output": {
+    "buggy": "BUG DETECTED: z_loss/raw differs from 1/batch_size_in_tokens",
+    "fixed": "CLEAN: z_loss/raw == 1/batch_size_in_tokens"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-59",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO++ all_to_all_quant_reduce hard-codes gpu_per_node=16 — wrong intra-node split on every non-16-GPU node",
+  "fixed_commit": "f0463b4d",
+  "buggy_commit": "f0463b4d~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/4085",
+  "category": "communication",
+  "severity": "high",
+  "gpu_needed": 8,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3 with zero_quantized_gradients=true (qgZ)", "any node-local-world-size != 16 (e.g. 8 GPUs/node, single node multi-GPU, etc.)"],
+  "root_cause": "csrc/quantization/pt_binding.cpp::quantized_reduction had `const int gpu_per_node = 16;` hard-coded. The Python wrapper all_to_all_quant_reduce passes the actual local_world_size, but the C++ side ignored it. Buffer slicing inside the kernel (sz.back() / gpu_per_node, in_groups / gpu_per_node, elems_per_in_tensor / gpu_per_node) is therefore done with the wrong divisor on any non-16-GPU node — rows of the quantized intermediate get attributed to the wrong intra-node rank, producing wrong reduced gradients.",
+  "detection_method": "structural_invariant",
+  "invariant": "Inside quantized_reduction, the divisor used to compute elems_per_in_tensor must equal the actual intra-node world size (devices_per_node argument), not a constant.",
+  "diff_summary": "Plumb devices_per_node through quantized_reduction binding; replace all `gpu_per_node` literals with the parameter; pass local_world_size from Python.",
+  "silent_check": "Buggy code performs valid CUDA kernels with valid (but wrongly-shaped) tensor views — when 8/node, divisor 16 produces a half-size buffer and reduction completes without out-of-bounds (the kernel reads/writes valid memory in the still-allocated buffer); the all_to_all uses the smaller buffer too, no shape-mismatch error. Result: gradients are silently wrong, no exception."
+}

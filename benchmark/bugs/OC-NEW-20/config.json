@@ -1,0 +1,20 @@
+{
+  "bug_id": "OC-NEW-20",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Expert/router gradients zeroed unconditionally in train_batch — first-half mask applied even when freeze_experts is off",
+  "fixed_commit": "d4f3b5ee",
+  "buggy_commit": "d4f3b5ee~1",
+  "category": "moe",
+  "severity": "critical",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["EP", "DP"],
+  "trigger_conditions": [
+    "TransformerTrainModule (parent class) used directly without FreezeTransformerTrainModule",
+    "Model contains parameters whose names contain 'experts' or 'router'"
+  ],
+  "root_cause": "The base TransformerTrainModule.train_batch unconditionally walked named_parameters and zeroed the first half of expert and router gradients. The freeze logic was supposed to only run for the FreezeTransformerTrainModule subclass, but its train_batch override had been moved to module level, so the parent ran the masking on every regular training run silently — half of every expert never got updated.",
+  "detection_method": "value_invariant",
+  "invariant": "When freeze_experts is unset/'none', no expert or router parameter gradient may be force-zeroed by the train module.",
+  "diff_summary": "Gate the masked_fill block behind getattr(self, 'freeze_experts', 'first_half') == 'first_half' so the parent class no longer freezes experts by default."
+}

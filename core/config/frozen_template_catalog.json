@@ -1,0 +1,1811 @@
+{
+ "meta": {
+  "stage": "FROZEN",
+  "n_cases": 314,
+  "date": "2026-07-16",
+  "notes": "Batch 08 (11 cases, final development batch) admitted TWO new recurring templates, both §4 promotions of earlier singletons. T34 training-step-budget-data-sufficiency (count_frequency_match): earlier singleton OC-NEW-63 (integer-floored per-source instance counts must still cover training_steps*batch_size) joined by O-NEW-66 (IterableDataset budget passed in raw optimizer steps, not max_steps*device_train_batch_size, so the loader exhausts after ~1/batch_size of planned training; start_step also unscaled) — same normalized objects (data-pipeline example budget vs the configured training step budget in examples), O-NEW-66's coined 'proportionality' resolved to count_frequency_match from the relation statement (the observable is a discrete example count against steps*batch_size) following batch-01..07 precedent, remaining differences pure precondition guards (§2), one executable sufficiency predicate, two mutually independent incidents (different repos and fixes). T35 frozen-parameter-update-exclusion (exclusivity): earlier singleton D-NEW-43 (requires_grad=False parameters must be excluded from trainable partitions and optimizer state) joined by OC-NEW-49 (stage-1 distillation froze only 'teacher.*', missing shared 'blocks.*' parameters, which trained against gradients including teacher-path contributions) — same relation operator and objects (designated-frozen parameter set vs gradient-update application), freeze-mechanism differences pure precondition guards (§2), one executable exclusion predicate, independent incidents; T22's converse-obligation counterexample pointer refreshed from 'singleton D-NEW-43' to T35 (textual cross-reference only, no core edit). 7/11 matched existing templates via guard/precondition extensions (§2); no core schema relation of any template was modified. Operator re-resolutions from relation_statement following batch-01..07 precedent: state_freshness -> value_scaling_consistency for D-NEW-66 (ZeRO-3 CPU-offload cached per-parameter gradient norms not refreshed after safe_set_local_grad overwrites a partition's gradient, so the applied clip factor does not reflect the gradients actually being clipped — T09's clip-coefficient-vs-reference-recomputation obligation); equality_across_ranks -> ordering for M-NEW-62 (hybrid Mamba VPP forward returned the aliased hidden_states instead of the make_viewless_tensor copy, so the underlying buffer was reused before the async isend completed and the next stage received corrupted activations — a producer-consumer completion hazard matching T10's async-send-complete-before-dealloc/reuse clause; PP stages are not a replication group, so T01 roles do not fit per §3.2). Other guard-extension matches: B5 -> T08 (DistributedDataParallel.finish_grad_sync must apply the same 1/dp_world_size averaging to MoE expert grad buffers as to dense grad buffers; independent of T08's edp-divisor support M-NEW-9, different defect and fix); O-NEW-18, D-NEW-74 and D-NEW-25 -> T11 (muP resume must restore each param group's muP-scaled lr/weight_decay via the tagged mup_lr/mup_weight_decay values, not reset every group to the base config value; ZeRO-3 NVMe optimizer offload must persist per-rank state to rank-exclusive paths so each rank reloads exactly its own shard, no shared-directory last-writer-wins; load_module_only under bf16 must run refresh_fp32_params — not gated on fp16_enabled — so fp32 master partitions equal the upcast loaded 16-bit module weights, per T11's derived-caches-refreshed clause and T28's within-run-only merge boundary — three mutually independent incidents). Same-incident check (§4.1): M-NEW-28 (Float16Module wrapper downcasts the MoE fp32 router expert_bias buffer to bf16) is evidently the same incident as the T05 support whose defect T05's schema predicate already records verbatim (dtype(expert_bias at forward)==fp32) and counts ONCE, listed in positive_examples with support_count unchanged, following the M-015/M-030 and B2/M-NEW-31 precedent. Two singletons appended and retained: OC-NEW-45 (structural_integrity; a constructed layer's effective head dimension must equal the dimension implied by the configured d_model/n_heads when the layer derives its own internal layout — a derived structural consistency between config and constructed module, not a single user-configured knob (T18, cf. T32's merge boundary) nor layer-to-stage assignment (T32) per §3.2; medium-confidence extraction) and O-NEW-35 (exclusivity; normalization-layer parameters must be routed exclusively to the no-decay param group under no_decay_norm_and_bias — the '.norm.' substring classifier misses q_norm/k_norm/ff_norm leaf weights; the excluded object is weight-decay application to still-trainable norm gains, not T35's frozen-parameter update exclusion: merging would require unrelated no-update vs no-decay OR branches (§3.3), and objects differ from T19/T20/T30 and exclusivity singletons O-NEW-51/OC-NEW-26/O-NEW-15 per §3.2). No operator_alias_map extension was needed; all coined operators were already mapped. support_count counts mutually independent incidents (§4.1).",
+  "batch_02_stopping_rule_snapshot": {
+   "new_recurring_templates": 0,
+   "matched_share": 0.96,
+   "new_singleton_share": 0.04,
+   "core_relation_modified": false
+  },
+  "batch_03_stopping_rule_snapshot": {
+   "new_recurring_templates": 1,
+   "matched_share": 0.72,
+   "new_singleton_share": 0.24,
+   "core_relation_modified": false
+  },
+  "batch_04_stopping_rule_snapshot": {
+   "new_recurring_templates": 0,
+   "matched_share": 0.92,
+   "new_singleton_share": 0.08,
+   "core_relation_modified": false
+  },
+  "batch_05_stopping_rule_snapshot": {
+   "new_recurring_templates": 3,
+   "matched_share": 0.76,
+   "new_singleton_share": 0.12,
+   "core_relation_modified": false
+  },
+  "batch_06_stopping_rule_snapshot": {
+   "new_recurring_templates": 0,
+   "matched_share": 0.92,
+   "new_singleton_share": 0.08,
+   "core_relation_modified": false
+  },
+  "batch_07_stopping_rule_snapshot": {
+   "new_recurring_templates": 1,
+   "matched_share": 0.88,
+   "new_singleton_share": 0.08,
+   "core_relation_modified": false
+  },
+  "batch_08_stopping_rule_snapshot": {
+   "new_recurring_templates": 2,
+   "matched_share": 0.64,
+   "new_singleton_share": 0.18,
+   "core_relation_modified": false
+  },
+  "frozen_date": "2026-07-16",
+  "frozen_from": "development/catalog_after_batch_08.json",
+  "frozen_note": "Frozen at end of development stream. Pre-registered stopping rule never triggered (see development/stopping_rule_evaluation.json); catalog frozen at stream exhaustion, which is a protocol-relevant fact reported in the experiment report."
+ },
+ "operator_alias_map": {
+  "equality_across_ranks": "equality_across_ranks",
+  "invariance_across_config": "reference_equivalence",
+  "reference_equivalence": "reference_equivalence",
+  "selection_correctness": "reference_equivalence",
+  "implementation_equivalence": "reference_equivalence",
+  "config_state_consistency": "config_effectiveness",
+  "config_runtime_consistency": "config_effectiveness",
+  "config_honoring": "config_effectiveness",
+  "value_scaling_consistency": "value_scaling_consistency",
+  "proportionality": "value_scaling_consistency",
+  "initialization_conformance": "value_scaling_consistency",
+  "dtype_preservation": "dtype_preservation",
+  "conservation": "conservation",
+  "ordering": "ordering",
+  "restoration_after_reload": "restoration_after_reload",
+  "state_freshness": "restoration_after_reload",
+  "boundedness": "boundedness",
+  "monotonicity": "monotonicity",
+  "count_frequency_match": "count_frequency_match",
+  "exclusivity": "exclusivity",
+  "index_consistency": "index_consistency",
+  "gradient_flow": "gradient_flow",
+  "determinism": "determinism",
+  "idempotency": "determinism",
+  "state_preservation": "state_preservation",
+  "sampling_uniformity": "sampling_uniformity",
+  "copy_consistency": "copy_consistency",
+  "structural_integrity": "structural_integrity"
+ },
+ "templates": [
+  {
+   "template_id": "T01",
+   "name": "cross-rank-replica-equality",
+   "semantic_obligation": "State that the parallelism recipe declares replicated (parameters, reduced gradients, loss-scale/overflow state, RNG for dropout, derived grad-norm scalars, broadcast training batches) must be bit/checksum-equal across all ranks of its replication group at the same step.",
+   "relation_operator": "equality_across_ranks",
+   "semantic_objects": [
+    "replicated training state",
+    "replication group"
+   ],
+   "schema_predicate": "FORALL x in replicated_state, FORALL r1,r2 in replica_group(x): checksum(x, r1, step) == checksum(x, r2, step)",
+   "permitted_topology_guards": [
+    "DP>1",
+    "EP>1 and DP>1",
+    "DP>1 and TP>1",
+    "DP>1 and PP>1",
+    "PP>1",
+    "TP>1"
+   ],
+   "permitted_preconditions": [
+    "ZeRO-1/2 with reduce_scatter",
+    "gradient accumulation over micro-batches",
+    "MoE gate/expert params under ZeRO or distributed optimizer",
+    "fp16 dynamic loss scaler",
+    "model-parallel RNG initialization",
+    "skip-step optimizer decision statistic (loss) all-reduced before consumption",
+    "MoE router/gate creation with perform_initialization=False (else-branch must not re-randomize the weight outside the RNG fork)",
+    "training-batch broadcast must originate from the true first global rank of the DP group under non-contiguous DP-group layouts (e.g. PP>1), not a contiguity-assuming rank formula",
+    "MoE (EP+DP) expert gradients under MultiGroupDistributedDataParallel must go through wired per-bucket grad reduce (view-based batching, comm-dtype downcast applied, no zeroed partial buckets) so post-reduction gradients agree across DP ranks",
+    "tied word-embedding replicas across pipeline stages (share-embeddings-and-output-weights, incl. MTP-only last stage) must be routed to the same optimizer so every tied copy receives an identical update each step (no AdamW-vs-Muon split routing)",
+    "TP linear with frozen weight (linear_with_frozen_weight path) must all-reduce grad_input across the TP group in backward so the activation gradient is identical on all TP ranks"
+   ],
+   "permitted_phases": [
+    "init",
+    "backward",
+    "optimizer_step",
+    "data_loading"
+   ],
+   "positive_examples": [
+    "D-003",
+    "D-011",
+    "D-031",
+    "D-035",
+    "M-018",
+    "M-021",
+    "D-NEW-61",
+    "OC-NEW-43",
+    "M-NEW-26",
+    "B4",
+    "OC-NEW-27",
+    "M-NEW-MUON-MTP",
+    "B2",
+    "M-NEW-31"
+   ],
+   "counterexamples": [
+    "TP/EP-sharded tensors that are intentionally different per rank must not be compared as replicas",
+    "Local per-rank gradients inspected before the reduction collective has run"
+   ],
+   "merge_boundary": "Must not absorb logged-metric reduction consistency (T02): metrics are legitimately rank-local until the explicit reduce, so a merged predicate would flag legal executions (§3.5).",
+   "support_count": 13
+  },
+  {
+   "template_id": "T02",
+   "name": "logged-metric-reduction-consistency",
+   "semantic_obligation": "A metric reported to logs must be the designated cross-rank reduction of the per-rank values, hence identical on every rank, whenever distributed metric logging is enabled.",
+   "relation_operator": "equality_across_ranks",
+   "semantic_objects": [
+    "logged metric",
+    "cross-rank reduction result"
+   ],
+   "schema_predicate": "FORALL r1,r2: logged_metric(m, r1, step) == logged_metric(m, r2, step) AND logged_metric(m, r, step) == designated_reduce({local_metric(m, r', step) : r' in world})",
+   "permitted_topology_guards": [
+    "DP>1"
+   ],
+   "permitted_preconditions": [
+    "distributed metric/optimizer-metric collection enabled",
+    "MoE aux-loss/z-loss logging with world_size>1",
+    "reduction operands must live on the collective's device"
+   ],
+   "permitted_phases": [
+    "forward",
+    "optimizer_step",
+    "any"
+   ],
+   "positive_examples": [
+    "O-014",
+    "O-NEW-29",
+    "O-NEW-30",
+    "M-NEW-7"
+   ],
+   "counterexamples": [
+    "Per-rank local metric values differing before the explicit all-reduce point",
+    "Deliberately rank-local diagnostics documented as unreduced"
+   ],
+   "merge_boundary": "Must not absorb T01: the compared object is a reporting artifact, not training state, and its violation corrupts observability rather than the model (§3.2 different semantic roles).",
+   "support_count": 4
+  },
+  {
+   "template_id": "T03",
+   "name": "config-invariant-execution-equivalence",
+   "semantic_obligation": "Outputs, gradients, and converged loss must be invariant (within tolerance) to performance-only execution configuration: parallel degree, sequence divisibility, compile mode, activation recompute, FSDP wrapping/init pathway, communication bucket size, attention-backend selection, and CUDA-graph capture/replay.",
+   "relation_operator": "reference_equivalence",
+   "semantic_objects": [
+    "computation output under active configuration",
+    "same computation under reference configuration"
+   ],
+   "schema_predicate": "max_abs_diff(output(cfg, x, w), output(cfg_ref, x, w)) <= tol, for identical inputs x and weights w, where cfg and cfg_ref differ only in a performance-neutral knob (CP/SP degree, torch.compile on/off, recompute on/off, sharding/wrapping layout, bucket size, meta-vs-direct init, attention backend, CUDA-graph replay vs eager)",
+   "permitted_topology_guards": [
+    "TP>1",
+    "CP>1",
+    "SP>1",
+    "DP>1",
+    "FSDP",
+    "any"
+   ],
+   "permitted_preconditions": [
+    "sequence length not divisible by world size",
+    "context/sequence parallel attention",
+    "torch.compile over collectives or FSDP set_ ops",
+    "activation checkpointing combined with FSDP wrapping",
+    "param_init_fn with sync_module_states",
+    "configurable reduce_bucket_size",
+    "sequence-parallel all-to-all head redistribution with num_heads not divisible by seq_world_size",
+    "attention backend selection (flex vs SDPA) must be numerically equivalent, e.g. flex upcast to fp32 to match the SDPA reference",
+    "CUDA-graph capture combined with activation recompute (tensor_parallel.checkpoint) of the same module: replay output must equal the eager reference (recompute must not run during warmup/capture and record stale activations/RNG states)",
+    "ZeRO-3 quantized-gradient (qgZ) all-to-all reduction must slice communication buffers by the actual node-local world size (no hard-coded GPUs-per-node count), matching the unquantized allreduce reference within quantization error",
+    "ZeRO-1/2 with use_multi_rank_bucket_allreduce=False: the single-destination reduce path must produce gradients on the receiving rank equivalent to the bucket-allreduce path (the passed destination rank must not be silently overridden to None)",
+    "FP4 (NVFP4) DelayedScaling with CUDA graphs enabled and FP8 inactive: per-module scaling-recipe state (amax history/scales) must be saved/restored around each replay so its evolution equals the eager reference (fp4_enabled must not be gated as fp8-only)",
+    "MoE GroupedGEMM with TP>1, sequence_parallel=False and EP=1: expert tokens must be gathered across TP ranks before expert computation so expert outputs match the TP=1 reference"
+   ],
+   "permitted_phases": [
+    "init",
+    "forward",
+    "backward"
+   ],
+   "positive_examples": [
+    "D-004",
+    "D-039",
+    "M-002",
+    "M-009",
+    "M-029",
+    "O-018",
+    "O-027",
+    "O-035",
+    "O-036",
+    "O-037",
+    "B9",
+    "OC-NEW-59",
+    "M-NEW-51",
+    "D-NEW-59",
+    "D-NEW-23",
+    "M-NEW-57",
+    "M-NEW-35"
+   ],
+   "grounding_concerns": [
+    "O-036: witness requires a paired reference-init run; root cause not isolated in the evidence"
+   ],
+   "counterexamples": [
+    "Bitwise differences within numerical tolerance caused by legitimate reduction reordering across configurations",
+    "Loss-curve differences caused by knobs that are documented to change semantics (e.g. different global batch size)"
+   ],
+   "merge_boundary": "Must not absorb T04 spec-reference-conformance: T03's witness is a paired run of the same code under another config (including a second attention backend), while T04 needs an external spec/implementation oracle - no single observable signal covers the merged set (§3.4).",
+   "support_count": 17
+  },
+  {
+   "template_id": "T04",
+   "name": "spec-reference-conformance",
+   "semantic_obligation": "A computed quantity (attention output/gradient, attention scale, normalization formula, routing selection/dispatch, LR schedule, RoPE numerics, gated-FFN activation) must equal the value mandated by its authoritative specification or reference implementation.",
+   "relation_operator": "reference_equivalence",
+   "semantic_objects": [
+    "computed value",
+    "authoritative spec or reference-implementation value"
+   ],
+   "schema_predicate": "|computed(q, x) - spec_reference(q, x)| <= tol, where spec_reference is an analytic formula or an independent reference implementation evaluated on identical inputs/weights",
+   "permitted_topology_guards": [
+    "any",
+    "TP>1",
+    "EP>1"
+   ],
+   "permitted_preconditions": [
+    "MLA/yarn attention scaling",
+    "TE fused attention backward on deep models",
+    "group-limited top-k routing configured",
+    "local vs TE layer spec for ViT",
+    "warmup scheduler backend mapping",
+    "RMSNorm forward",
+    "HF-parity RoPE dtype",
+    "muP attention scale must equal sqrt(mup_base_n_heads)/head_dim (matching 1/sqrt(d) at base width) on the SDP path",
+    "sqrt-decay LR schedule must follow the closed form 1-sqrt(1-progress)",
+    "MoE base-layer top-k>1 token-to-expert dispatch must preserve the (token, expert_slot) layout of the reference routing indices (no dimension-collapsing fancy indexing)",
+    "SwiGLU-configured FFN must compute the gated reference silu(w1(h)) * w3(h); the gating branch must not be dropped (e.g. F.silu misused with a second positional argument)",
+    "MLA YaRN softmax scale must be computed from mscale_all_dim (not mscale) when the two config fields differ, per the YaRN mscale formula",
+    "HF-parity Qwen3 RMSNorm: the affine weight multiply must run in the input dtype (cast back before multiply) to match the HF reference implementation",
+    "reference-clone model configs must apply the reference architecture's per-head QK normalization axis (use_head_qk_norm), not the per-channel default",
+    "post-warmup LR must follow the intended warmup+decay reference curve: the trainer's scheduler mapping must select the decaying variant (WarmupDecayLR, not WarmupLR)",
+    "Post-LN (norm_after) sequential block: the attention normalization must be applied to the attention output immediately before the residual add, per the Post-LN reference formula, not to the QKV projection output"
+   ],
+   "permitted_phases": [
+    "forward",
+    "backward",
+    "optimizer_step"
+   ],
+   "positive_examples": [
+    "M-022",
+    "M-032",
+    "M-035",
+    "M-NEW-24",
+    "M-NEW-40",
+    "O-017",
+    "O-NEW-1",
+    "O-NEW-64",
+    "OC-NEW-10",
+    "O-NEW-22",
+    "OC-NEW-3",
+    "M-NEW-34",
+    "OC-NEW-29",
+    "M-NEW-39",
+    "OC-NEW-18",
+    "OC-NEW-53",
+    "O-NEW-63",
+    "O-NEW-24"
+   ],
+   "grounding_concerns": [
+    "M-022: violation observable only against an external reference implementation; extractor notes no runtime anomaly is raised",
+    "M-032: evidence gives only 'abnormal loss patterns'; low-confidence extraction",
+    "OC-NEW-53: extractor reports none_runtime — divergence observable only against the external reference implementation's attention scores; medium confidence"
+   ],
+   "counterexamples": [
+    "Implementations that intentionally deviate from a reference with documented semantics (e.g. a configured non-standard softmax scale)",
+    "Tolerance-level numeric differences between fused and unfused kernels"
+   ],
+   "merge_boundary": "Must not absorb T03: comparing against an external oracle is a different observable-signal class than comparing the same code under two configs (§3.4); must not absorb T18, whose reference is the user's own configured value, not an algorithm spec (§3.2).",
+   "support_count": 18
+  },
+  {
+   "template_id": "T05",
+   "name": "designated-dtype-fidelity",
+   "semantic_obligation": "Every tensor must carry its designated dtype at its point of use: gradients accumulate/reduce/communicate in the designated dtype, registered buffers and inputs retain their declared dtype, gathered partition and collective receive buffers carry the sender's/each parameter's own dtype, recomputed activations match the original dtype, and precision-exempt modules execute in their pinned dtype.",
+   "relation_operator": "dtype_preservation",
+   "semantic_objects": [
+    "tensor at use point",
+    "designated dtype"
+   ],
+   "schema_predicate": "FORALL (t, site) in dtype_constrained_uses: dtype(t, site) == designated_dtype(t, mixed_precision_recipe)  -- e.g. dtype(allreduce_operand)==fp32, dtype(grad at optimizer.step)==fp32, dtype(expert_bias at forward)==fp32, dtype(router_input after jitter)==model_dtype, dtype(recomputed_activation)==dtype(saved_activation), dtype(allgather_partition_buffer)==dtype(each param), dtype(broadcast_recv_buffer)==dtype(sent tensor), dtype(grad_communication)==configured communication_data_type, compute_dtype(pinned_bf16_module GEMMs)==bf16",
+   "permitted_topology_guards": [
+    "DP>1",
+    "EP>1",
+    "FSDP",
+    "PP>1",
+    "any",
+    "SP>1"
+   ],
+   "permitted_preconditions": [
+    "BF16/fp16 mixed precision with fp32 accumulation recipe",
+    "ZeRO-3 coalesced all-gather under autocast",
+    "grad_accum dtype differing from model dtype",
+    "full-precision eval of an FSDP model",
+    "activation-checkpointing recomputation",
+    "large world size bf16 reduction",
+    "ZeRO-3 zero_quantized_nontrainable_weights policy at zero.Init (trainable full-precision, nontrainable quantized per config)",
+    "fused linear cross-entropy loss must accumulate gradient in the fp32 accumulation dtype of the unfused baseline",
+    "zero.Init parameter dtype cast must leave each nn.Parameter carrying the configured target dtype (and remain the same Parameter object the model references)",
+    "ZeRO-3 mixed-dtype param-group allgather buffer must use each parameter's own dtype (single flat buffer must not truncate/alias larger-dtype params)",
+    "PP loss-aggregation broadcast: non-last stages must allocate the receive buffer with the sender's loss dtype (bf16 bytes must not be written into an fp32 buffer)",
+    "ZeRO gradient allreduce bucket must honor the configured communication_data_type (no hard-coded fp16 downcast of bf16 gradients, which saturates out-of-range values)",
+    "layers explicitly pinned keep-in-bf16 must stay excluded from FP8/FP4 cast paths, including inside CUDA-graph capture with global low-precision training enabled",
+    "ZeRO-3 reduce-scatter buffer must be cast to the configured communication_data_type exactly when it differs from the model dtype (no inverted cast gate)",
+    "extra-large (bucket-exceeding) parameter reduction buffer must be allocated in the configured communication dtype, not param.dtype, so its gradient participates in reduction",
+    "gradient-accumulation flat buffers must be allocated in the configured grad_accum_dtype (bf16 optimizer without ZeRO must not hard-code fp32 accumulation storage with a step-time downcast)",
+    "sequence-parallel communication buffers must honor the configured seq_parallel_communication_data_type (the consumed config key must match the user-facing spelling, no silent ignore)",
+    "modules re-wrapped by a sharding framework (FSDP/FSDP2) after construction must cast input activations using the live parameter dtype at forward time, not a construction-time dtype snapshot",
+    "cached rotary sin/cos tables under bf16/fp16 mixed precision must be cast to the query/key compute dtype at the point of application",
+    "model built via the config-DSL recipe path must materialize parameters in the configured mixed-precision dtype (params_dtype derived from mixed_precision_dtype), matching the legacy CLI path",
+    "data-pipeline as_tensor conversion must preserve the floating-point dtype of non-bool numpy arrays (soft-label probabilities must not be truncated to int)",
+    "fp32 residual stream through bias-dropout-add must retain fp32: the compute branch is upcast to the residual dtype, the residual is never downcast to the branch dtype"
+   ],
+   "permitted_phases": [
+    "forward",
+    "backward",
+    "optimizer_step",
+    "eval",
+    "init",
+    "any",
+    "data_loading"
+   ],
+   "positive_examples": [
+    "D-028",
+    "D-036",
+    "D-042",
+    "D-045",
+    "D-NEW-62",
+    "M-012",
+    "M-024",
+    "O-004",
+    "O-028",
+    "O-031",
+    "O-034",
+    "D-NEW-26",
+    "OC-NEW-31",
+    "D-NEW-40",
+    "D-NEW-47",
+    "D-NEW-34",
+    "D-NEW-39",
+    "D-NEW-78",
+    "M-NEW-58",
+    "D-NEW-27",
+    "D-NEW-19",
+    "D-NEW-50",
+    "D-NEW-12",
+    "OC-NEW-28",
+    "O-NEW-4",
+    "M-NEW-64",
+    "OC-NEW-1",
+    "M-NEW-3",
+    "M-NEW-28"
+   ],
+   "counterexamples": [
+    "Intentional low-precision reduction explicitly configured and documented by the recipe",
+    "Autocast-driven downcasts at sites the recipe designates as low-precision"
+   ],
+   "merge_boundary": "Must not absorb T06 storage-dtype-interpretation: the on-disk mismatch is invisible to any runtime dtype tag and is witnessed only by file-size arithmetic, so no single observable signal covers the merged set (§3.4).",
+   "support_count": 28
+  },
+  {
+   "template_id": "T06",
+   "name": "storage-dtype-interpretation-match",
+   "semantic_obligation": "The dtype used to read an on-disk token dataset must equal the dtype the file was written with, so token ids are not silently reinterpreted.",
+   "relation_operator": "dtype_preservation",
+   "semantic_objects": [
+    "dataset reader dtype configuration",
+    "on-disk token storage dtype"
+   ],
+   "schema_predicate": "itemsize(configured_reader_dtype) == file_size_bytes / token_count AND max(observed_token_id) consistent with tokenizer vocab_size (vocab_size > 2^16 implies itemsize >= 4)",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "vocab_size > 65536 with dataset built without explicit reader dtype",
+    "memmap/packed token file loading",
+    "PerFileChunkedInstanceSource without explicit token_dtype (default uint16 reinterprets uint32 file bytes for vocab>65535)"
+   ],
+   "permitted_phases": [
+    "data_loading"
+   ],
+   "positive_examples": [
+    "O-NEW-38",
+    "OC-NEW-16",
+    "OC-NEW-23"
+   ],
+   "counterexamples": [
+    "Datasets legitimately stored as uint16 for vocabularies below 65536",
+    "Files whose header/metadata declares the dtype and matches the reader"
+   ],
+   "merge_boundary": "Must not absorb T05: the constrained object is a storage-interpretation config, not a runtime tensor, and its violation never shows in any runtime dtype tag (§3.2, §3.4).",
+   "support_count": 3
+  },
+  {
+   "template_id": "T07",
+   "name": "gradient-accumulation-conservation",
+   "semantic_obligation": "The accumulated gradient must equal the exact sum of all per-micro-batch (per-rank) gradient contributions: starting from a zeroed buffer, each contribution added exactly once to its designated destination, with no foreign bytes (e.g. uninitialized padding) mixed in.",
+   "relation_operator": "conservation",
+   "semantic_objects": [
+    "gradient accumulation buffer",
+    "per-micro-batch gradient contributions"
+   ],
+   "schema_predicate": "FORALL p: accum_grad(p, after N micro_steps) == SUM_{i=1..N} grad_i(p), with accum_grad(p, 0) == 0, each grad_i added exactly once to the designated buffer of p's partition owner, and padding_region(comm_buffer) == 0",
+   "permitted_topology_guards": [
+    "DP>1",
+    "PP>1",
+    "any"
+   ],
+   "permitted_preconditions": [
+    "ZeRO-1/2/3 with CPU offload",
+    "gradient accumulation steps > 1",
+    "immediate grad-update hooks on pipeline non-last stages",
+    "reduce-scatter partition padding",
+    "accumulation outside no_sync with CPU offloading",
+    "buffer-reuse first-iteration zeroing",
+    "DistributedOptimizer fp32 master shard views (must be detached from autograd, no duplicate grad chain)",
+    "ZeRO-2 round_robin_gradients partition-owner bookkeeping aligned with actual reduction destination",
+    "ZeRO-1/2 contiguous_gradients partial-bucket flush (averaging extent limited to valid elements)",
+    "sparse-gradient allreduce results written back into param.grad",
+    "reuse_grad_buf_for_mxfp8_param_ag with overlap_param_gather: main-param bytes copied into the shared param/grad buffer must not remain in main_grad at the start of the first accumulation (first iteration before the forward_pre_hook is registered)",
+    "ZeRO-2 contiguous_gradients=False: the extra-large-param reduction reference must be cleared/refreshed each iteration so no previous-iteration gradient enters the reduction",
+    "ZeRO-2 CPU-offload copy-vs-accumulate gating keyed to micro_step_id: copy into the offloaded buffer only on the first micro-step, accumulate on every subsequent micro-step of the same global step",
+    "bf16 model with grad_accum_dtype=fp32 under ZeRO-1 CPU offload: extra-large (bucket-exceeding) param reduction must consume the accumulated fp32 gradient buffer (get_gradient_for_reduction), not raw bf16 param.grad",
+    "Megatron-FSDP DTensor params with gradient_accumulation_fusion: main_grad must be reconstructed in-place (weight.get_main_grad()) each iteration so fused wgrad accumulates into the live buffer, not a stale one",
+    "grouped-linear fused-ops backward_dw under DDP overlap_grad_reduce: wgrad accumulate-and-reduce hooks must fire on the parameter-owning modules so param.grad is cleared and each microbatch's expert wgrad enters main_grad exactly once (no AccumulateGrad double count)",
+    "multi-param-group sharded (ZeRO-3) backward hooks must bind each parameter's own group index (no Python late-bound closure) so every gradient is routed into its owning group's reduction bucket"
+   ],
+   "permitted_phases": [
+    "backward",
+    "init"
+   ],
+   "positive_examples": [
+    "D-012",
+    "D-017",
+    "D-NEW-65",
+    "D-NEW-71",
+    "M-040",
+    "O-029",
+    "M-NEW-54",
+    "D-NEW-31",
+    "D-NEW-70",
+    "D-NEW-38",
+    "M-NEW-38",
+    "D-NEW-51",
+    "D-NEW-18",
+    "B10",
+    "D-NEW-28",
+    "M-NEW-17",
+    "D-NEW-13",
+    "M-NEW-45",
+    "D-NEW-45"
+   ],
+   "counterexamples": [
+    "A configured averaging (not summing) accumulation mode where the divisor is documented",
+    "Gradients legitimately reset to zero at accumulation-boundary steps"
+   ],
+   "merge_boundary": "Must not absorb T08 scale-factor-consistency: a wrong multiplicative factor is a different relation operator (scaling equality) than a missing/extra/duplicated additive term (§3.1).",
+   "support_count": 18
+  },
+  {
+   "template_id": "T08",
+   "name": "scale-factor-consistency",
+   "semantic_obligation": "Every scaled or normalized quantity in the loss/gradient/metric path must carry exactly the factor mandated by its specification (parallel degree, token/sample count, micro-batch count, loss scale, mask-valid position count), applied exactly once.",
+   "relation_operator": "value_scaling_consistency",
+   "semantic_objects": [
+    "scaled quantity (loss, gradient, or accumulated metric)",
+    "specified normalization factor"
+   ],
+   "schema_predicate": "applied_scale(q, step) == spec_scale(q; dp_size, cp_size, sp_size, edp_size, num_tokens, num_micro_batches, loss_scale, sample_counts, mask_valid_counts), and the factor is applied exactly once (magnitude_ratio(q, reference) == 1)",
+   "permitted_topology_guards": [
+    "DP>1",
+    "EP>1",
+    "TP>1",
+    "CP>1",
+    "EP>1 and DP>1",
+    "any",
+    "PP>1",
+    "DP>1 and CP>1",
+    "single-rank"
+   ],
+   "permitted_preconditions": [
+    "fp16/bf16 loss scaling",
+    "MoE bucket/aux-loss coefficients",
+    "sequence-parallel gradient averaging",
+    "per-token loss normalization",
+    "incomplete minibatch at DP boundary",
+    "metric accumulation over micro-batches",
+    "instance-masked batches under sum-then-allreduce DP loss averaging (kept-token-count weighting)",
+    "engine backward must apply each loss-scaling factor (loss scale, gradient-accumulation scale) to the loss exactly once, no double-scaling",
+    "MoE load-balancing aux loss must be divided by num_micro_batches under gradient accumulation",
+    "MoE expert-gradient averaging divisor must be dp_world_size, not the smaller edp_world_size, when ep_size != dp_size",
+    "multi-bucket gradient buffers: the 1/dp_size scaling must divide each bucket's own span exactly once, not the whole joint buffer once per bucket (cumulative (1/dp_size)^num_buckets)",
+    "ratio-loss target statistics on variable-length padded batches must be masked means over mask-valid positions only, not means over the full padded tensor",
+    "MoE aux-loss metric under TP>1 must not carry a tp_world_size factor and must be reduced over the designated group",
+    "DSA indexer auxiliary loss must include the 1/num_microbatches divisor under gradient accumulation (calculate_per_token_loss=False)",
+    "every component of a weighted-sum combined loss must be normalized by the same divisor (token count) as its sibling components (finalize applied to each component, no raw-sum entering the weighted sum)",
+    "MoE load-balancing aux loss must carry the num_tokens factor under calculate_per_token_loss mode",
+    "manual scale_loss/backward API path must apply the same expert-parallel output-gradient scale as engine.backward (expert-grad parity across the two API paths)",
+    "AutoEP MoE under ZeRO-2: the per-rank loss must carry the ep_size factor before backward so reduced expert gradients match the ep_size=1 baseline",
+    "encoder-decoder pipeline boundary with encoder TP < decoder TP: cross-stage gradients received from multiple decoder TP ranks must be averaged, not summed (no TP-fanout inflation of the boundary gradient)",
+    "z-loss under reduction='mean' with labels containing ignore_index must equal the scalar masked mean of z_squared over non-ignored tokens (masked-mean formula, not a vector-by-scalar mis-division)",
+    "sample-mean loss (calculate_per_token_loss=False) with context parallelism: the gradient scaling divisor must equal dp_size*cp_size, matching the span of the gradient reduction collective",
+    "softmax_auxiliary_loss z-loss must be normalized by batch_size_in_tokens, not num_micro_batches",
+    "multi-granularity combined losses: each component must be divided by the position count of its own granularity (byte positions for byte-level losses, patch positions for the patch loss)",
+    "MoE expert gradient buffers under DP grad sync (finish_grad_sync) must receive the same 1/dp_world_size averaging as the dense grad buffers (expert_grads must not be left unscaled, dp_world_size× larger than intended)"
+   ],
+   "permitted_phases": [
+    "forward",
+    "backward",
+    "data_loading"
+   ],
+   "positive_examples": [
+    "D-013",
+    "D-026",
+    "D-034",
+    "D-037",
+    "D-040",
+    "M-003",
+    "M-004",
+    "M-033",
+    "OC-NEW-42",
+    "M-NEW-20",
+    "OC-NEW-41",
+    "D-NEW-17",
+    "O-NEW-70",
+    "D-NEW-55",
+    "M-NEW-42",
+    "OC-NEW-55",
+    "M-NEW-9",
+    "M-NEW-44",
+    "OC-NEW-56",
+    "M-NEW-5",
+    "D-NEW-73",
+    "D-NEW-53",
+    "M-NEW-22",
+    "B14",
+    "M-NEW-43",
+    "B15",
+    "OC-NEW-58",
+    "B5"
+   ],
+   "counterexamples": [
+    "A documented change of normalization convention (e.g. per-token vs per-sequence loss) reflected consistently in config",
+    "Loss-scale growth/decay behaving per the dynamic loss-scaling policy"
+   ],
+   "merge_boundary": "Must not absorb T09: T09's object is the derived global-norm/clip metric, not a quantity in the training path; merging would mix distinct object roles (§3.2). Must not absorb T27 init-time statistics (§3.2).",
+   "support_count": 28
+  },
+  {
+   "template_id": "T09",
+   "name": "gradient-norm-computation-fidelity",
+   "semantic_obligation": "The reported/applied global gradient norm, logged per-parameter reduction metrics, and clip coefficient must equal a reference recomputation over the actual gradient tensors, with the correct group divisor, correct cross-group reduction form (sqrt of summed squares), and epsilon applied exactly once globally, and over the complete set of contributing gradients.",
+   "relation_operator": "value_scaling_consistency",
+   "semantic_objects": [
+    "reported global gradient norm, logged reduction metrics, and clip coefficient",
+    "reference recomputation from actual gradients"
+   ],
+   "schema_predicate": "|reported_grad_norm(step) - norm(actual_grads(step))| / norm(actual_grads(step)) <= tol AND clip_coef(step) == max_norm / (global_norm(step) + eps) with eps added exactly once globally and normalization by dp_size/replica_count (not world_size), cross-group combination as sqrt(sum of squared local norms), and grads_for_norm covering every trainable parameter with a gradient",
+   "permitted_topology_guards": [
+    "DP>1",
+    "TP>1",
+    "FSDP",
+    "HSDP",
+    "PP>1",
+    "any"
+   ],
+   "permitted_preconditions": [
+    "CPU-offload gradient clipping",
+    "precision-aware optimizer gradient source (decoupled_grad)",
+    "DTensor sharded clipping",
+    "TP-enabled norm normalization",
+    "HSDP all-reduced (SUM) param/grad-norm metrics must be divided by num_model_replicas before use",
+    "FP8 non-delayed/DS-scaling precision-aware path must not read a None decoupled_grad, leaving grads_for_norm empty and reporting grad_norm=0",
+    "cross-PP-stage total gradient norm must be the L2 reduction (square, all-reduce, sqrt), not a sum of per-stage rank-local norms",
+    "distributed-tensor grad norm returned by clip_grad_norm_ must be unwrapped to its full value before metric recording (the metric system must not apply an extra cross-rank reduction)",
+    "fp16 fused-optimizer global grad norm under TP: every TP rank's slices of genuinely TP-sliced parameters must contribute to the norm (replicated params counted once), not only tp_rank 0",
+    "FSDP HYBRID_SHARD grad-norm/metric reductions must span each replica's shard process group (explicit process_group argument), not WORLD, so every gradient is counted exactly once across model replicas",
+    "ZeRO-3 with CPU optimizer offload and gradients externally overwritten via safe_set_local_grad between backward and step: cached per-parameter gradient norms (norm_for_param_grads) must be refreshed so the applied clip factor reflects the gradients actually being clipped, not the pre-modification norms"
+   ],
+   "permitted_phases": [
+    "optimizer_step"
+   ],
+   "positive_examples": [
+    "D-016",
+    "M-NEW-67",
+    "O-032",
+    "O-038",
+    "O-NEW-32",
+    "M-NEW-69",
+    "OC-NEW-24",
+    "OC-NEW-38",
+    "O-NEW-31",
+    "D-NEW-64",
+    "O-NEW-14",
+    "D-NEW-66"
+   ],
+   "counterexamples": [
+    "Norm values that differ across steps because gradients genuinely changed",
+    "Configured norm types other than L2 computed per their own spec"
+   ],
+   "merge_boundary": "Must not absorb T08: the constrained object is a derived monitoring/clipping metric recomputable inside the run, not a training-path tensor scale (§3.2).",
+   "support_count": 11
+  },
+  {
+   "template_id": "T10",
+   "name": "producer-consumer-completion-ordering",
+   "semantic_obligation": "Any consumer of shared state (collective, forward read, deallocation, bucket copy, state snapshot) must be ordered after the producing operation has completed across CUDA streams, async collective handles, and async completion callbacks, and must only observe handles belonging to its own coordinator.",
+   "relation_operator": "ordering",
+   "semantic_objects": [
+    "state-producing operation",
+    "state-consuming operation",
+    "shared state/buffer"
+   ],
+   "schema_predicate": "FORALL (prod, cons, buf) in hazard_pairs: happens_before(complete(prod(buf)), start(cons(buf)))  -- includes: grad write before reduce-scatter, param all-gather before forward read, wgrad before all-reduce, init before DDP bucket copy, async send complete before dealloc/reuse, async bookkeeping callback complete before state_dict snapshot, own-coordinator allgather complete before parameter consumption on mode switch",
+   "permitted_topology_guards": [
+    "DP>1",
+    "PP>1",
+    "DP>1 and PP>1",
+    "any"
+   ],
+   "permitted_preconditions": [
+    "non-default backward CUDA stream",
+    "overlap-grad-reduce / overlap-param-gather",
+    "interleaved 1F1B with async P2P and output deallocation",
+    "DDP init on separate stream",
+    "buffer reuse for fp8 param gather",
+    "zero-bubble PP with FSDP manual accumulation",
+    "async bookkeeping op whose completion callback (add_done_callback) mutates state; the callback must complete before _join_bookkeeping_ops returns and before any state_dict() snapshot",
+    "ZeRO-3 prefetch/overlap_comm with alternating model.train()/model.eval() coordinators: each coordinator must consume only its own in-flight allgather handles (no shared InflightParamRegistry across mode switches, else forward reads stale parameter values)",
+    "ZeRO-3 asynchronous reduce_and_partition_stream must synchronize against the stream that produced the gradients (current stream), not default_stream, before reading the bucket",
+    "ZeRO-1/2 overlap_comm: the compute stream must wait on the reduction stream before the next gradient bucket is written into the shared ipg buffer an in-flight allreduce is still reading",
+    "virtual/hybrid pipeline inter-stage isend must transmit the viewless copy actually produced by make_viewless_tensor (result must be the returned tensor), so the sender's underlying buffer is not reused before the asynchronous send completes"
+   ],
+   "permitted_phases": [
+    "init",
+    "forward",
+    "backward",
+    "checkpoint_save"
+   ],
+   "positive_examples": [
+    "D-021",
+    "M-007",
+    "M-019",
+    "M-026",
+    "M-031",
+    "M-034",
+    "M-NEW-46",
+    "O-030",
+    "OC-NEW-36",
+    "D-NEW-35",
+    "D-NEW-16",
+    "D-NEW-69",
+    "M-NEW-62"
+   ],
+   "counterexamples": [
+    "Overlapped communication correctly synchronized via stream waits/handle waits before consumption",
+    "Deallocation of a buffer after its send handle has been waited on"
+   ],
+   "merge_boundary": "Must not absorb D-022-style sort-key ordering: merging checkpoint shards in numeric order is a value-ordering (sort correctness) relation over file names, not a happens-before between concurrent operations - roles differ (§3.2) and no single race-witness signal covers both (§3.4).",
+   "support_count": 13
+  },
+  {
+   "template_id": "T11",
+   "name": "checkpoint-restore-state-equality",
+   "semantic_obligation": "After checkpoint load, every element of training state (parameters, optimizer moments, LR/scheduler fields, RNG, derived caches) must equal the value it had at save, keyed to the correct parameter; derived caches must be refreshed to match the restored primaries, and the load path must apply no additional transformation to already-transformed saved values.",
+   "relation_operator": "restoration_after_reload",
+   "semantic_objects": [
+    "restored training state",
+    "saved training state"
+   ],
+   "schema_predicate": "FORALL k in state_keys: value_after_load(k) == value_at_save(k), with key mapping preserved under renames, derived caches (e.g. secondary param shards) refreshed to match restored primaries, and no re-applied transformation on load (idempotent load)",
+   "permitted_topology_guards": [
+    "DP>1",
+    "any",
+    "EP>1 and SP>1",
+    "TP>1 and EP>1"
+   ],
+   "permitted_preconditions": [
+    "ZeRO++ secondary tensors after gather/load",
+    "ZeRO-3 universal checkpoint with multiple subgroups",
+    "load_optimizer_state with changed block_group_size",
+    "load_state_dict between forward and backward under FSDP FULL_SHARD",
+    "initial_lr present in restored param_groups",
+    "ZeRO++ secondary partition must be refreshed/invalidated after the primary ds_tensor changes (weight load, checkpoint resume) before it feeds any allgather",
+    "ChainedOptimizer with multiple sub-optimizers must restore every sub-optimizer via split_state_dict (state_dicts[1:] must not be left None, silently skipping expert-optimizer load)",
+    "muP checkpoint resume: set_base_shapes must not re-apply width rescaling to already-muP-scaled restored parameters (mup_rescale_params=False on from_checkpoint)",
+    "sharded (ZeRO-3) checkpoint save must include requires_grad=False frozen parameters so they restore bitwise on load",
+    "MoE checkpoint replication-factor metadata must record the sequence-parallel-adjusted expert-DP world size so resume re-shards each rank's exact saved expert slice",
+    "ZeRO-1/2 elastic checkpoint re-flattening of merged optimizer state must honor the nccl_start_alignment_factor * world_size padding used at save so per-rank slices restore to the correct parameters under a changed world size",
+    "MoE checkpoint save with expert parallelism and TP>1 must write every TP rank's non-expert model-states shard (not only mp_rank_00, no exp_dp_rank short-circuit) so each TP rank restores its own saved shard",
+    "muP resume per-group hyperparameters: the restart lr/initial_lr/weight_decay reset must restore each param group's muP-scaled values (tagged mup_lr/mup_weight_decay), not the single base config value for every group",
+    "ZeRO-3 NVMe optimizer offload: each rank's offloaded optimizer state must be saved to and reloaded from a rank-exclusive location (no shared-directory last-writer-wins overwrite) so every rank restores exactly its own shard",
+    "load_checkpoint(load_module_only=True) under bf16: refresh_fp32_params must run (not gated on fp16_enabled) so the fp32 master partitions equal the upcast loaded 16-bit module weights before training resumes"
+   ],
+   "permitted_phases": [
+    "checkpoint_load",
+    "checkpoint_save"
+   ],
+   "positive_examples": [
+    "D-024",
+    "D-044",
+    "M-017",
+    "O-016",
+    "O-026",
+    "O-NEW-33",
+    "D-NEW-57",
+    "M-NEW-65",
+    "O-NEW-17",
+    "D-NEW-42",
+    "D-NEW-54",
+    "D-NEW-22",
+    "D-NEW-44",
+    "O-NEW-18",
+    "D-NEW-74",
+    "D-NEW-25"
+   ],
+   "grounding_concerns": [
+    "M-017: witness is loss deviation vs an uninterrupted reference run; the failing sub-state (optimizer vs RNG) is not isolated in the evidence"
+   ],
+   "counterexamples": [
+    "State intentionally overridden at load by an explicit user flag (that is T18's obligation, not a restore violation)",
+    "Optimizer state legitimately re-initialized when the user requests a fresh optimizer"
+   ],
+   "merge_boundary": "Must not absorb T13 dataloader reset: 'equal to saved value' and 'reset to defined initial value' are unrelated OR branches (§3.3).",
+   "support_count": 16
+  },
+  {
+   "template_id": "T12",
+   "name": "checkpoint-save-completeness",
+   "semantic_obligation": "A saved checkpoint must contain the complete expected inventory: every parameter key, every optimizer-state key, and one shard/file per rank or partition group of the active topology.",
+   "relation_operator": "count_frequency_match",
+   "semantic_objects": [
+    "saved checkpoint artifact inventory",
+    "expected live-state inventory"
+   ],
+   "schema_predicate": "set(keys(saved_state_dict)) == set(keys(expected_state)) AND count(saved_shard_files) == expected_shard_count(topology) AND FORALL g in partition_groups: saved(g) exists",
+   "permitted_topology_guards": [
+    "TP>1",
+    "DP>1",
+    "single-rank"
+   ],
+   "permitted_preconditions": [
+    "MoE checkpoint save with TP>1",
+    "MiCS partition groups",
+    "FSDP use_orig_params + FULL_SHARD inner-module state_dict",
+    "early-iteration save before optimizer state populated"
+   ],
+   "permitted_phases": [
+    "checkpoint_save"
+   ],
+   "positive_examples": [
+    "D-043",
+    "D-046",
+    "M-042",
+    "O-033"
+   ],
+   "counterexamples": [
+    "Sharded checkpoints that deliberately store each param on exactly one owner rank per the format spec",
+    "Optimizer state legitimately absent when save is configured model-only"
+   ],
+   "merge_boundary": "Must not absorb T11: inventory/count diff at save time is a different observable than value equality after reload; a merged predicate would need unrelated branches (§3.3, §3.4).",
+   "support_count": 4
+  },
+  {
+   "template_id": "T13",
+   "name": "dataloader-bookkeeping-reset",
+   "semantic_obligation": "Data-loader bookkeeping (start index, iteration position) must be re-initialized to its defined starting value at run/epoch boundaries so the realized sample order matches the schedule.",
+   "relation_operator": "restoration_after_reload",
+   "semantic_objects": [
+    "data-loader bookkeeping state",
+    "run or epoch boundary"
+   ],
+   "schema_predicate": "at each boundary b: loader_position(after b) == defined_initial(b)  -- start_index == 0 at a new epoch; bookkeeping reset between repeated runs so sample_order(run_i) == sample_order(run_j)",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "resume with restore_dataloader=False entering a new epoch",
+    "LM evaluator run repeatedly within a session",
+    "multi-epoch training (max_epochs>1) crossing an epoch boundary mid-run",
+    "evaluator reusing a loader across multiple passes with eval_duration truncating each pass: position counters (tokens/batches processed) must be reset to zero at each eval-pass start (reset(), not only reshuffle())"
+   ],
+   "permitted_phases": [
+    "data_loading",
+    "eval"
+   ],
+   "positive_examples": [
+    "O-006",
+    "O-019",
+    "O-NEW-53",
+    "O-NEW-27",
+    "OC-NEW-35"
+   ],
+   "counterexamples": [
+    "Mid-epoch resume that intentionally restores (not resets) the saved loader position",
+    "Shuffled epochs where order differs by design across epochs"
+   ],
+   "merge_boundary": "Must not absorb T11: reset-to-initial vs equal-to-saved are unrelated OR branches over different state roles (§3.3, §3.2).",
+   "support_count": 4
+  },
+  {
+   "template_id": "T14",
+   "name": "scaling-scalar-finiteness",
+   "semantic_obligation": "Every scalar that multiplies or divides losses/gradients (loss scale, clip coefficient, loss-normalization denominator) must be finite and its denominator nonzero at every use.",
+   "relation_operator": "boundedness",
+   "semantic_objects": [
+    "loss/gradient scaling or normalization scalar"
+   ],
+   "schema_predicate": "FORALL s in scaling_scalars(step): isfinite(s) AND (s used as denominator IMPLIES s > 0)",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "fp16 mixed precision loss scale input validation",
+    "NaN/inf handling in gradient clipping",
+    "instance masking where a batch can be fully masked"
+   ],
+   "permitted_phases": [
+    "forward",
+    "backward",
+    "optimizer_step"
+   ],
+   "positive_examples": [
+    "D-007",
+    "D-038",
+    "O-015",
+    "OC-NEW-4"
+   ],
+   "counterexamples": [
+    "Dynamic loss scale legitimately halving after a genuine overflow",
+    "Large-but-finite scale values within the configured range"
+   ],
+   "merge_boundary": "Must not absorb T08: finiteness/positivity is a bound relation, not equality to a specified factor - different relation operator (§3.1). Must not absorb T29: T29's bounded object is a router gating-probability tensor, not a loss/gradient scaling scalar (§3.2).",
+   "support_count": 4
+  },
+  {
+   "template_id": "T15",
+   "name": "counter-monotonic-progress",
+   "semantic_obligation": "Cumulative training counters (optimizer step count, global FLOPs) must advance monotonically by their defined increment and never stall at zero, reset per step, or wrap through integer overflow.",
+   "relation_operator": "monotonicity",
+   "semantic_objects": [
+    "cumulative training counter"
+   ],
+   "schema_predicate": "FORALL steps t: counter(t+1) >= counter(t) AND counter(t+1) - counter(t) == defined_increment(t) (no stall at 0, no per-step reset/overwrite, no negative wrap)",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "SkipStepAdamW-style optimizers maintaining state['step']",
+    "long runs where accumulated FLOPs exceed 32/64-bit ranges",
+    "cumulative FLOPs/speed monitoring across checkpoint restarts",
+    "sharded/low-precision engine construction must not invoke an eager optimizer.step() that pre-increments state['step'] before any real update (counter must equal the number of completed updates)"
+   ],
+   "permitted_phases": [
+    "optimizer_step",
+    "any"
+   ],
+   "positive_examples": [
+    "O-010",
+    "O-025",
+    "O-NEW-13",
+    "D-NEW-46"
+   ],
+   "counterexamples": [
+    "Step counter intentionally not advanced on a legitimately skipped (overflow) step",
+    "Counters reset at documented run boundaries"
+   ],
+   "merge_boundary": "Must not absorb T22 parameter-update-effectiveness: the object is a scalar counter, not a parameter tensor, and the witness is counter arithmetic, not parameter checksums (§3.2).",
+   "support_count": 4
+  },
+  {
+   "template_id": "T16",
+   "name": "positional-encoding-position-fidelity",
+   "semantic_obligation": "The positional (rotary) encoding applied to each token must equal the spec encoding of that token's intended global position under the configured layout, including per-document resets, per-batch-element document boundaries, and context-parallel shard mappings.",
+   "relation_operator": "index_consistency",
+   "semantic_objects": [
+    "applied positional encoding",
+    "token's intended global position"
+   ],
+   "schema_predicate": "FORALL tokens t on rank r: applied_rope(t, r) == rope_spec(intended_position(t), layout_cfg)  -- intended_position honors supplied position_ids, each batch element's own document boundaries, and CP shard-to-position mapping; layout_cfg honors interleaved vs half-half",
+   "permitted_topology_guards": [
+    "CP>1",
+    "any"
+   ],
+   "permitted_preconditions": [
+    "--reset-position-ids with packed sequences",
+    "context-parallel sequence chunking",
+    "rotary_interleaved=True with yarn embeddings",
+    "per-block CP-sharded RoPE buffers",
+    "batched packed documents (batch_size>1) with per-element cu_doc_lens",
+    "non-fused RotaryEmbedding path in packed mode: attention must forward the provided cu_doc_lens to the rotary module so positions restart at each document boundary",
+    "multimodal rotary embedding (mrope) under CP>1: the per-rank slice must be taken along the sequence axis with the correct cp_group so each rank's rotary positions cover exactly its own sequence partition"
+   ],
+   "permitted_phases": [
+    "forward"
+   ],
+   "positive_examples": [
+    "M-011",
+    "M-028",
+    "M-037",
+    "O-011",
+    "OC-NEW-13",
+    "OC-NEW-12",
+    "M-NEW-61"
+   ],
+   "counterexamples": [
+    "Contiguous 0..L-1 positions when no resets or sharding are configured",
+    "Different-but-equivalent cached buffer layouts that produce identical per-token angles"
+   ],
+   "merge_boundary": "Must not absorb M-027 sample-index integrity: dataset sample selection plays a different semantic role than token positional encoding and has a disjoint observable (§3.2).",
+   "support_count": 7
+  },
+  {
+   "template_id": "T17",
+   "name": "loss-parameter-gradient-connectivity",
+   "semantic_obligation": "Every trainable parameter on an active loss path must receive a nonzero gradient: no loss term may be detached from the autograd graph and no routing or masking construction may make the gradient identically zero.",
+   "relation_operator": "gradient_flow",
+   "semantic_objects": [
+    "trainable parameter",
+    "loss computation graph"
+   ],
+   "schema_predicate": "FORALL p in trainable_params_on_active_loss_path: grad_norm(p, step) > 0 (over a window of steps), AND requires_grad_graph(loss) reaches p, AND no post-backward mask zeroes grad(p) unless its freeze/mask mode is active",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "top-k=1 routing with post-topk softmax",
+    "combined losses built from possibly-detached tensors (soft-CE branches)",
+    "parameter-group freeze masking present but freeze mode off",
+    "regularizer term (e.g. PoE z_loss with a nonzero multiplier) added to the combined loss must be attached to the autograd graph, not emitted as a detached metric tensor"
+   ],
+   "permitted_phases": [
+    "backward"
+   ],
+   "positive_examples": [
+    "M-014",
+    "OC-NEW-9",
+    "OC-NEW-20",
+    "OC-NEW-8"
+   ],
+   "counterexamples": [
+    "Parameters intentionally frozen (requires_grad=False)",
+    "Experts receiving zero gradient at a step because no tokens routed to them"
+   ],
+   "merge_boundary": "Must not absorb T22: zero gradient at the loss side vs a nonzero gradient that never becomes a parameter update are witnessed by different signals (grad norm vs parameter delta) (§3.2, §3.4). Must not absorb T26 missing-invocation counting (M-NEW-56): the extracted relation there is an exactly-once event count per boundary, with zero grad only as the downstream witness (§3.1).",
+   "support_count": 4
+  },
+  {
+   "template_id": "T18",
+   "name": "configured-value-effectiveness",
+   "semantic_obligation": "The runtime-effective value of a user-configured setting (LR schedule overrides, softmax scale, optimizer-state layout mode, device/backend selection, named data-mix identifier, module construction flags) must equal the configured value once the configuration is accepted.",
+   "relation_operator": "config_effectiveness",
+   "semantic_objects": [
+    "user-configured value",
+    "runtime-effective value"
+   ],
+   "schema_predicate": "FORALL knob k in accepted_config: effective(k, runtime) == configured(k)  -- e.g. lr_used(first_step_after_load) == scheduler(new_config), applied_softmax_scale == config.softmax_scale, checkpoint_optimizer_layout == layout(configured_optimizer_mode), device(model_params) and world_size match the launched config, resolved_corpus_path == path(named_mix), constructed_module_flags == configured flags",
+   "permitted_topology_guards": [
+    "any",
+    "single-rank"
+   ],
+   "permitted_preconditions": [
+    "checkpoint resume with --override-opt_param-scheduler",
+    "config.softmax_scale specified",
+    "bf16 without ZeRO checkpoint layout",
+    "startup device/backend auto-detection on CUDA-capable hosts",
+    "named data-mix enum resolved to a corpus path",
+    "QK-norm construction: q_norm and k_norm elementwise_affine must both equal the configured attention_layer_norm_with_affine (no hard-coded True on one branch breaking q/k symmetry)",
+    "fused cross-entropy z-loss path: the effective lse_square_scale must equal the configured z-loss multiplier when softmax_auxiliary_loss is enabled (no hard-coded 0.0)",
+    "on-disk dataset index cache reused across runs: the cache fingerprint must cover every layout-determining setting (sequence_length, bos_token_id) so served instances match the configured sequence layout",
+    "token embedding construction must use the configured embedding_size (not vocab_size) when weight_tying=False, matching the output projection width",
+    "sliding-window attention: the realized per-row attention extent must equal the configured window size (no off-by-one)",
+    "config fields must be declared (dataclass) attributes so the serialize/reconstruct override-merge path preserves the user-configured value (e.g. freeze_experts must not silently revert to its default)",
+    "WarmupLR without an explicit warmup_max_lr must inherit the user-configured optimizer param-group learning rate as its peak LR, not a hard-coded default",
+    "group-limited MoE routing: the realized per-token selected-expert count must equal the configured topk (inner topk call must use topk, not num_groups)",
+    "document-boundary/EOS handling must use the configured tokenizer's actual eos_token_id, not a hard-coded token id",
+    "scheduler attachment (WarmupLR/LRRangeTest/OneCycle) must initialize the optimizer param-group lr to the scheduler's step-0 value (warmup_min_lr) at construction, so the first optimizer step before scheduler.step() does not apply the optimizer's construction lr"
+   ],
+   "permitted_phases": [
+    "checkpoint_load",
+    "forward",
+    "optimizer_step",
+    "init",
+    "data_loading"
+   ],
+   "positive_examples": [
+    "M-015",
+    "M-030",
+    "M-NEW-8",
+    "D-NEW-21",
+    "O-NEW-16",
+    "OC-NEW-17",
+    "O-NEW-56",
+    "O-NEW-68",
+    "OC-NEW-64",
+    "O-NEW-57",
+    "OC-NEW-6",
+    "OC-NEW-50",
+    "D-NEW-8",
+    "M-NEW-6",
+    "O-NEW-69",
+    "D-NEW-79"
+   ],
+   "counterexamples": [
+    "Checkpointed values legitimately taking precedence when no override flag is set",
+    "Defaults applied where the user left the knob unset"
+   ],
+   "merge_boundary": "Must not absorb T04: the reference here is the user's own configuration, not an external algorithm spec; merging would conflate oracle sources (§3.2). M-015 and M-030 describe the same override-ignored incident and count once (§4.1).",
+   "support_count": 15
+  },
+  {
+   "template_id": "T19",
+   "name": "packed-sequence-attention-isolation",
+   "semantic_obligation": "When multiple documents are packed into one sequence, attention mass across document boundaries must be exactly zero (block-diagonal mask honored by the backend).",
+   "relation_operator": "exclusivity",
+   "semantic_objects": [
+    "attention mass",
+    "packed-document boundaries"
+   ],
+   "schema_predicate": "FORALL token pairs (i, j) with doc(i) != doc(j): attention(i, j) == 0; equivalently output(doc_d) invariant to co-packed documents",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "transformer_engine backend with block-diagonal attention_mask",
+    "cu_doc_lens provided with sequence packing"
+   ],
+   "permitted_phases": [
+    "forward"
+   ],
+   "positive_examples": [
+    "M-036",
+    "OC-NEW-47"
+   ],
+   "counterexamples": [
+    "Ordinary causal attention within a single document",
+    "Training modes that intentionally allow cross-document context (no packing isolation configured)"
+   ],
+   "merge_boundary": "Must not absorb T20 padding-loss-exclusion: excluded attention mass and excluded loss contributions are different objects with different witnesses (§3.2, §3.4). Must not absorb causal-order exclusivity (now T30): the forbidden set there is defined by temporal order, not packed-document membership, so the difference is not guard-expressible (§2.2, §3.2). Must not absorb worker index partitioning (singleton O-NEW-51): the partitioned object is data-shard assignment, not attention mass (§3.2).",
+   "support_count": 2
+  },
+  {
+   "template_id": "T20",
+   "name": "padding-loss-exclusion",
+   "semantic_obligation": "Padding (ignore-index) token positions must contribute zero to the training loss; the loss mask must exclude exactly the padding positions.",
+   "relation_operator": "exclusivity",
+   "semantic_objects": [
+    "loss contributions",
+    "padding token positions"
+   ],
+   "schema_predicate": "FORALL positions t with token(t) == pad: loss_mask(t) == 0; equivalently count(loss_mask == 0) == count(padding_tokens) per batch",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "cross-entropy API with ignore_index parameter",
+    "padded fixed-sequence-length datasets",
+    "fused-boundary label offsetting on variable-length byte batches: the boundary mask must be ANDed with the byte validity mask so padded positions keep ignore_index and contribute zero loss"
+   ],
+   "permitted_phases": [
+    "forward",
+    "data_loading"
+   ],
+   "positive_examples": [
+    "O-007",
+    "O-023",
+    "OC-NEW-61"
+   ],
+   "counterexamples": [
+    "Sequences without padding, where all positions legitimately contribute",
+    "Masking schemes that intentionally include special tokens per config"
+   ],
+   "merge_boundary": "Must not absorb T19: loss-mask exclusion is witnessed on the loss/mask tensors, not on attention mass; roles and signals differ (§3.2, §3.4). O-023's raw count_frequency_match coding is an equivalent restatement of the same exclusion relation.",
+   "support_count": 3
+  },
+  {
+   "template_id": "T21",
+   "name": "overflow-skip-step-validity",
+   "semantic_obligation": "An optimizer step is skipped if and only if a genuine gradient overflow (non-finite gradient) occurred at that step; skip frequency must match overflow frequency.",
+   "relation_operator": "count_frequency_match",
+   "semantic_objects": [
+    "step-skip events",
+    "genuine gradient-overflow events"
+   ],
+   "schema_predicate": "FORALL steps t: skipped(t) <=> EXISTS g in grads(t): !isfinite(g); over a window: count(skipped) == count(overflow_events)",
+   "permitted_topology_guards": [
+    "DP>1",
+    "any"
+   ],
+   "permitted_preconditions": [
+    "fp16 fused optimizer overflow guard",
+    "fp16 loss scaler with overlapped grad-reduce/param-gather handle initialization"
+   ],
+   "permitted_phases": [
+    "optimizer_step"
+   ],
+   "positive_examples": [
+    "D-015",
+    "M-008"
+   ],
+   "counterexamples": [
+    "Steps correctly skipped during genuine overflow bursts early in fp16 training",
+    "Loss-scale warmup skips consistent with the dynamic scaling policy"
+   ],
+   "merge_boundary": "Must not absorb T22: 'skip iff overflow' and 'non-skipped step must update parameters' would be unrelated OR branches in one predicate (§3.3).",
+   "support_count": 2
+  },
+  {
+   "template_id": "T22",
+   "name": "parameter-update-effectiveness",
+   "semantic_obligation": "A non-skipped optimizer step with finite nonzero gradients must actually change each trainable parameter, and the tensor consumed by forward must be the optimizer-registered object.",
+   "relation_operator": "update_effectiveness",
+   "semantic_objects": [
+    "trainable parameter",
+    "optimizer update application"
+   ],
+   "schema_predicate": "NOT skipped(t) AND grad_norm(p, t) > 0 IMPLIES checksum(p, t+1) != checksum(p, t); AND id(forward_used_tensor(p)) == id(optimizer_registered_param(p))",
+   "permitted_topology_guards": [
+    "single-rank",
+    "any",
+    "DP>1"
+   ],
+   "permitted_preconditions": [
+    "tensors with >= 2^31 elements (size metadata width)",
+    "MoE gate under ZeRO with fp16/bf16 downcast rebinding",
+    "Megatron-FSDP with precision-aware FusedAdam: the optimizer must consume the gradient buffer backward wrote (use_decoupled_grad=True reading param.decoupled_grad, not a None/stale param.grad) so nonzero gradients produce parameter updates",
+    "CPU Adam/Adagrad fused kernels must step every element of ndim>=2 parameters (element count = numel(), not size(0)), so no element with a nonzero gradient is left un-updated"
+   ],
+   "permitted_phases": [
+    "optimizer_step",
+    "forward"
+   ],
+   "positive_examples": [
+    "D-006",
+    "D-NEW-81",
+    "M-NEW-11",
+    "D-NEW-75"
+   ],
+   "counterexamples": [
+    "Frozen parameters that must NOT change (see T35 for the converse obligation)",
+    "Parameters unchanged on steps legitimately skipped by the loss scaler"
+   ],
+   "merge_boundary": "Must not absorb T21: update-effectiveness is conditioned on the step not being skipped; folding skip-validity in would require an unrelated OR branch (§3.3). Must not absorb T28: T28's witness is master-working elementwise agreement at a sync point, not step-over-step parameter change (§3.4).",
+   "support_count": 4
+  },
+  {
+   "template_id": "T23",
+   "name": "unrelated-operation-state-preservation",
+   "semantic_obligation": "A stateful object (residual-stream input, module identity attribute, global RNG state, persistent buffer, shared dataset cache) must retain its value across operations that are not designated writers of that state.",
+   "relation_operator": "state_preservation",
+   "semantic_objects": [
+    "stateful object",
+    "operation not designated to modify it"
+   ],
+   "schema_predicate": "FORALL (x, op) with op NOT IN designated_writers(x): state(x, after op) == state(x, before op)  -- e.g. checksum(block_input) before norm == residual_addend; expert_id after hook registration == expert_id before; global_rng_state after config build == before; expert_bias buffer after graph warmup == before; shared cached loss mask after per-sample padding == before",
+   "permitted_topology_guards": [
+    "single-rank",
+    "EP>1",
+    "any",
+    "PP>1"
+   ],
+   "permitted_preconditions": [
+    "pre-LN sequential block (norm must not clobber the residual variable)",
+    "ZeRO-3 hook registration over modules with custom id attributes",
+    "dataset-config build in a process relying on global RNG determinism",
+    "CUDA-graph capture warmup must save/restore persistent buffers (e.g. MoE router expert_bias), not only parameter grads",
+    "dataset cached loss mask returned by reference: downstream per-sample in-place padding must mutate a private copy (clone), never the shared cache",
+    "DDP enable_cuda_graph parameter-cast capture under interleaved VPP: each stage's captured cast graph must write only its own stage's parameter buffer (no shared-mempool/warmup cross-stage writes)",
+    "reuse_grad_buf_for_mxfp8_param_ag with overlap_param_gather: zeroing bucket grad_data must leave param data of buckets still pending all-gather unchanged in the shared storage"
+   ],
+   "permitted_phases": [
+    "forward",
+    "init",
+    "data_loading",
+    "optimizer_step"
+   ],
+   "positive_examples": [
+    "B13",
+    "O-002",
+    "D-009",
+    "O-022",
+    "M-NEW-12",
+    "M-NEW-41",
+    "M-NEW-53",
+    "M-NEW-16",
+    "O-NEW-8"
+   ],
+   "counterexamples": [
+    "In-place updates performed by the state's designated owner (e.g. optimizer writing parameters)",
+    "Documented in-place activation ops whose consumers all expect the mutated value"
+   ],
+   "merge_boundary": "Must not absorb T11: clobbering by a non-designated writer during live execution is a different relation than restore-equality across a save/load boundary (§3.2). B13, O-002 and O-NEW-8 describe the same residual-clobber incident and count once (§4.1).",
+   "support_count": 7
+  },
+  {
+   "template_id": "T24",
+   "name": "intra-run-recomputation-determinism",
+   "semantic_obligation": "Re-executions of the same logical computation within one step (activation-checkpoint recompute passes, repeated per-subgroup metadata updates) must produce values identical to the original execution.",
+   "relation_operator": "determinism",
+   "semantic_objects": [
+    "re-executed computation output",
+    "original execution output"
+   ],
+   "schema_predicate": "FORALL re-executions e of computation c within step t: value(c, e) == value(c, original)  -- dropout masks under recompute equal the forward masks; bias-correction terms bit-identical across subgroup invocations",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "activation checkpointing with dropout (and torch.compile)",
+    "ZeRO-3 CPU-offloaded Adam with multiple subgroups per step",
+    "FP4 training (config.fp4 set, fp8 unset) with MoE activation recompute: the recompute pass must use the quantization-aware checkpoint path so amax history and scales of the recomputed forward equal the original forward's"
+   ],
+   "permitted_phases": [
+    "backward",
+    "optimizer_step"
+   ],
+   "positive_examples": [
+    "D-005",
+    "D-023",
+    "D-008",
+    "D-NEW-63",
+    "M-NEW-59"
+   ],
+   "counterexamples": [
+    "Runs without recompute where each computation executes once",
+    "Numerically-equal-but-differently-computed paths explicitly documented as tolerance-equivalent"
+   ],
+   "merge_boundary": "Must not absorb T03: the witness here is a self-comparison inside one run (no reference run/config needed) - a different observable-signal class (§3.4). D-005, D-023, and D-NEW-63 describe the same CPUAdam subgroup bias-correction incident (IncrementStep multiplicative vs pow-recompute branch) and count once (§4.1).",
+   "support_count": 3
+  },
+  {
+   "template_id": "T25",
+   "name": "sharded-layout-conformance",
+   "semantic_obligation": "The layout, shape, contiguity, and distribution kind of every tensor an operation touches must equal the layout mandated by the active parallel configuration and the consuming kernel's contract (correct shard slice per rank, CP-adjusted p2p shapes, local vs distributed tensor kind, contiguous buffers at fused-kernel entry, token identity preserved across all-to-all).",
+   "relation_operator": "sharding_layout_consistency",
+   "semantic_objects": [
+    "tensor layout/shape used by an operation",
+    "layout mandated by the parallel configuration"
+   ],
+   "schema_predicate": "FORALL (t, op): layout(t, op) == expected_layout(t, parallel_cfg, op_contract)  -- shape(p2p_buffer) == shape(activation)/cp_size on the sequence dim; rank r consumes slice_r(gate) not full gate; loss tensors combined with the declared local/distributed kind; is_contiguous(t) where op reads via flat pointer arithmetic; all_to_all reshape preserves (batch, seq, head) token identity",
+   "permitted_topology_guards": [
+    "TP>1",
+    "PP>1 and CP>1",
+    "SP>1",
+    "DP>1"
+   ],
+   "permitted_preconditions": [
+    "pipeline schedules with context parallelism",
+    "MoE gate with kv_head < tp_size",
+    "fused-linear loss under TP with FSDP wrappers",
+    "sequence parallel with gradient_accumulation_fusion (gathered activation contiguity at fused wgrad entry)",
+    "sequence-parallel head-scatter all-to-all (scatter_idx>=2) reshape must preserve the (batch, seq, head) identity of every token (round-trip identity), not collapse batch and sequence dims",
+    "DistributedOptimizer bucket-local param_to_index must use the globally padded per-param offsets (not naive numel concatenation) so optimizer read/write slices align with where gradients live",
+    "self-attention output_gate under TP with num_query_groups < tensor_model_parallel_size: each TP rank must apply its own gate slice aligned with its query-group partition, not the full unsliced gate"
+   ],
+   "permitted_phases": [
+    "forward",
+    "backward",
+    "init"
+   ],
+   "positive_examples": [
+    "M-023",
+    "M-039",
+    "O-012",
+    "M-NEW-47",
+    "D-NEW-72",
+    "M-NEW-55",
+    "M-NEW-10"
+   ],
+   "counterexamples": [
+    "Replicated tensors correctly used whole on every rank",
+    "Shapes that legitimately differ across stages per the declared schedule"
+   ],
+   "merge_boundary": "Must not absorb T16: layout of communicated/sharded tensors is a different object role than the token-position index mapping of positional encodings (§3.2).",
+   "support_count": 7
+  },
+  {
+   "template_id": "T26",
+   "name": "exactly-once-side-effect",
+   "semantic_obligation": "A per-boundary required event (aux-loss tracker increment per training step, final-checkpoint save per step, parameter-sync launch per microbatch id, weight-gradient computation launch per trainable submodule per backward pass) must occur exactly once per boundary, including under recompute passes, restarts, pipeline scheduling, and fine-grained backward scheduling.",
+   "relation_operator": "count_frequency_match",
+   "semantic_objects": [
+    "side-effect event",
+    "step/run boundary"
+   ],
+   "schema_predicate": "FORALL boundaries b: count(event, b) == 1  -- tracker_increments(step) == 1 even when recompute reruns the module; saves(final_step) == 1 across restarts and never overwrite an existing valid artifact; param_sync_launches(microbatch_id) == 1 for every id up to total_num_microbatches on each PP rank; backward_dw_invocations(submodule, backward_pass) == 1 for every trainable submodule",
+   "permitted_topology_guards": [
+    "any",
+    "PP>1",
+    "DP>1",
+    "PP>1 and DP>1"
+   ],
+   "permitted_preconditions": [
+    "activation recompute re-running router forward",
+    "training resumed from checkpoint reaching the final step again",
+    "interleaved pipeline parallelism with param_sync_func set and num_model_chunks >= 3",
+    "fine-grained backward_dw scheduling with latent MoE projections (moe_latent_size set): every trainable submodule's weight-gradient computation must be invoked exactly once per backward pass (missing invocation leaves main_grad identically zero)",
+    "MiCS consolidated non-ZeRO checkpoint: exactly one designated rank writes each checkpoint file per save (save_non_zero_checkpoint true only on the designated writer, no all-rank race-overwrite)",
+    "pipeline engine must propagate the gradient-accumulation boundary flag to the sharded optimizer so gradient reduction fires exactly once per accumulation boundary, not once per micro-batch",
+    "adaptive gradient clipping with grad_norm_exp_avg tracking: each step's observed gradient norm must enter the EMA update exactly once (the EMA must never be updated from its own previous value)",
+    "per-layer auxiliary (MTP) loss tracking with log_interval>1: each iteration's loss must be accumulated into the logging-window tracker exactly once, not overwritten by assignment"
+   ],
+   "permitted_phases": [
+    "forward",
+    "checkpoint_save",
+    "backward",
+    "optimizer_step",
+    "any"
+   ],
+   "positive_examples": [
+    "M-NEW-21",
+    "O-039",
+    "B6",
+    "M-NEW-56",
+    "OC-NEW-15",
+    "D-NEW-33",
+    "D-NEW-48",
+    "O-NEW-10",
+    "M-NEW-36"
+   ],
+   "counterexamples": [
+    "Multiple forward passes per step that are all designated to log (documented per-micro-batch logging)",
+    "Periodic checkpoints legitimately saved at every interval boundary"
+   ],
+   "merge_boundary": "Must not absorb T21: exactly-once boundary counting has no overflow condition; merging with skip-iff-overflow would create unrelated OR branches (§3.3).",
+   "support_count": 9
+  },
+  {
+   "template_id": "T27",
+   "name": "init-distribution-conformance",
+   "semantic_obligation": "Parameter statistics immediately after initialization must conform to the configured initialization spec: correct (depth-scaled) standard deviation, correct truncation cutoff, distribution matching a specified target (e.g. teacher embeddings), zero exactly where the spec prescribes zero (and only there), never all-zero or backend-default unless specified, never uninitialized memory.",
+   "relation_operator": "value_scaling_consistency",
+   "semantic_objects": [
+    "parameter statistics at initialization",
+    "configured initialization spec"
+   ],
+   "schema_predicate": "FORALL W in initialized_params: |std(W) - spec_std(W, depth, cfg)| <= tol AND truncation_width(W) == cfg.cutoff_factor AND NOT (spec_std(W) > 0 AND std(W) == 0) AND (spec_zero(W) IMPLIES norm(W) == 0) AND stats(W) inconsistent_with_uninitialized_memory == false",
+   "permitted_topology_guards": [
+    "any",
+    "FSDP"
+   ],
+   "permitted_preconditions": [
+    "depth-scaled output-projection init configured",
+    "muP enabled (readout zero-init interactions)",
+    "optional projections materialized from meta device",
+    "muP coord-check standard-parametrization baseline (infshapes=None) load path",
+    "Mitchell truncated-normal init must honor the configured init_cutoff_factor (not hardcode 3.0)",
+    "distillation byte-embedding init must match the teacher embedding mean/std (te-scaled init assigned to the main embedding weight, not only hash_embeddings)",
+    "hybrid-model GatedDeltaNet mixer state params (A_log/dt_bias) must receive the GDN-prescribed init: the generic InitMethod path must delegate to the mixer, never leave torch.empty uninitialized memory or default linear init",
+    "FSDP meta-device init on torch>=2.1 must apply reset_parameters after materialization (FSDP no longer auto-calls it; params otherwise keep default/zero fill)",
+    "muP readout (output projection) must be zero-initialized: reset_parameters must skip the generic normal init under use_mup",
+    "embedding fan_in initialization combined with a nontrivial embed_scale multiplier: the init std must compensate embed_scale so the scaled embedding magnitude matches the intended scale",
+    "per-projection init std must use the projection's actual fan-in (in_features**-0.5), not a uniform d_model**-0.5, under GQA (n_kv_heads != n_heads) or output projections where in_features != d_model",
+    "block-level MuReadout (ff_proj) under use_mup: block reset_parameters must not unconditionally re-apply generic normal init over the muP-prescribed zero/special readout init",
+    "readout ff_out must be constructed with the configured init_device so the meta-init/FSDP materialization pipeline applies the designed init scale (no default-device kaiming escape)",
+    "isinstance-ordered init dispatch over module subclasses must reach the subclass branch (subclass checked before parent) so subclass-specific projections receive their designated init, never empty-allocation memory values"
+   ],
+   "permitted_phases": [
+    "init"
+   ],
+   "positive_examples": [
+    "O-024",
+    "O-NEW-21",
+    "OC-NEW-66",
+    "O-NEW-62",
+    "O-NEW-40",
+    "OC-NEW-46",
+    "OC-NEW-14",
+    "O-NEW-60",
+    "O-NEW-20",
+    "OC-NEW-32",
+    "OC-NEW-11",
+    "O-NEW-55",
+    "O-NEW-61",
+    "OC-NEW-51"
+   ],
+   "counterexamples": [
+    "Weights specified as zero-init by the architecture (e.g. residual output scaling schemes that document zero init)",
+    "Statistical fluctuation of small tensors within tolerance of spec std"
+   ],
+   "merge_boundary": "Must not absorb T08: the object is init-time weight statistics, not a runtime scaled quantity, and the witness is a one-shot statistical test at init (§3.2, §3.4).",
+   "support_count": 14
+  },
+  {
+   "template_id": "T28",
+   "name": "master-working-weight-copy-fidelity",
+   "semantic_obligation": "At every designated synchronization point between high-precision master parameters and low-precision working parameters (master creation at init; master-to-working cast/gather after optimizer step), each rank's working partition must equal the elementwise cast of its own master partition, with the destination slice selected by that param group's own process group.",
+   "relation_operator": "copy_consistency",
+   "semantic_objects": [
+    "working (low-precision) parameter partition",
+    "master (high-precision) parameter partition"
+   ],
+   "schema_predicate": "FORALL ranks r, params p in partition(r, process_group(param_group(p))): value(working(p), r, after sync_point) == cast(value(master(p), r), working_dtype), and at master creation value(master(p)) == cast(value(source(p)), master_dtype) elementwise",
+   "permitted_topology_guards": [
+    "any",
+    "DP>1 and EP>1",
+    "EP>1"
+   ],
+   "permitted_preconditions": [
+    "mixed-precision master-weight creation (master built directly in params_dtype from source values)",
+    "ZeRO-2 with MoE where expert-parallel param groups use a different process group than the data-parallel group",
+    "layerwise distributed optimizer with expert-DP instance size == 1: param_gather must still be marked dispatched so finish_param_sync runs and working expert params are refreshed from the updated main params (not left stale from the previous step's gather buffer)",
+    "ZeRO-2 CPU-offload (DeepSpeedCPUAdam) fp32-to-16bit writeback must compute partition_id within each param group's own real_dp_process_group (no single outer-scope partition id across groups)"
+   ],
+   "permitted_phases": [
+    "init",
+    "optimizer_step"
+   ],
+   "positive_examples": [
+    "M-025",
+    "D-NEW-29",
+    "M-NEW-14",
+    "D-NEW-30"
+   ],
+   "counterexamples": [
+    "Rounding differences inherent to the designated cast semantics",
+    "Working parameters legitimately not refreshed on steps the loss scaler skipped"
+   ],
+   "merge_boundary": "Must not absorb T05: in both supporting incidents the runtime dtype tag is correct; the witness is elementwise value comparison between master and working copies, which T05's dtype signal cannot express (§3.4). Must not absorb T22: T22 witnesses step-over-step parameter change, T28 witnesses master-working agreement at a sync point (§3.4). Must not absorb T11: the sync point is within-run, not a save/load boundary (§3.2).",
+   "support_count": 4
+  },
+  {
+   "template_id": "T29",
+   "name": "router-gate-probability-range-validity",
+   "semantic_obligation": "MoE router gate/combine weight values consumed downstream (expert selection and weighting, log/divide operations) must lie in the valid probability range: within [0,1] as post-softmax probabilities, and strictly positive wherever they feed a singular function.",
+   "relation_operator": "boundedness",
+   "semantic_objects": [
+    "router gate/combine probability values"
+   ],
+   "schema_predicate": "FORALL g in router_gate_combine_values(step): 0 <= g <= 1 AND (g feeds log/divide IMPLIES g > 0)  -- combine weights must be drawn from post-softmax gate probabilities, never raw logits",
+   "permitted_topology_guards": [
+    "any",
+    "EP>1"
+   ],
+   "permitted_preconditions": [
+    "MoE top-k gating active in forward: expert selection and combine weights must come from post-softmax probabilities, not raw logits",
+    "router gate scores feeding a downstream log/divide must remain strictly positive"
+   ],
+   "permitted_phases": [
+    "forward"
+   ],
+   "positive_examples": [
+    "OC-NEW-30",
+    "D-NEW-1"
+   ],
+   "counterexamples": [
+    "Raw router logits legitimately unbounded before the softmax is applied",
+    "Zero gate probability on experts that received no routing mass, where no log/divide consumes the zero"
+   ],
+   "merge_boundary": "Must not absorb T14: the bounded object is a gating-probability tensor in the routing path, not a loss/gradient scaling scalar (§3.2). Must not absorb singleton D-NEW-67: the fp16 gradient-underflow range object is a gradient tensor, not a gating probability (§3.2).",
+   "support_count": 2
+  },
+  {
+   "template_id": "T30",
+   "name": "static-attention-pattern-mass-exclusion",
+   "semantic_obligation": "Attention mass on (query, key) positions forbidden by the configured static attention pattern (causal order, sliding-window extent) must be exactly zero: the realized mask must implement the full logical conjunction of the pattern's position conditions.",
+   "relation_operator": "exclusivity",
+   "semantic_objects": [
+    "attention mass",
+    "positions forbidden by the configured static attention pattern"
+   ],
+   "schema_predicate": "FORALL (i,j) in forbidden(pattern_cfg): attention(i, j) == 0, where forbidden is the static position relation of the configured pattern (causal: j > i; two-sided sliding window: the elementwise logical AND of both one-sided window conditions)",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "causal attention configured (zero mass on future positions)",
+    "flex-attention two-sided sliding-window mask must be the elementwise logical AND of both window conditions (Python `and` short-circuit on tensors must not reduce it to a one-sided comparison)"
+   ],
+   "permitted_phases": [
+    "forward"
+   ],
+   "positive_examples": [
+    "O-NEW-2",
+    "OC-NEW-48"
+   ],
+   "counterexamples": [
+    "Bidirectional/full attention configured, where the forbidden set is empty",
+    "Positions inside the configured window or in the causal past that legitimately receive mass"
+   ],
+   "merge_boundary": "Must not absorb T19: packed-document forbidden sets are data-dependent (per-batch cu_doc_lens/doc membership), not a static position relation derived from model config, so the difference is not guard-expressible (§2.2, §3.2). Must not absorb window-extent equality (T18, OC-NEW-6): a too-small window places no mass on forbidden positions, so the exclusivity signal cannot witness it — different relation operator and observable (§3.1, §3.4).",
+   "support_count": 2
+  },
+  {
+   "template_id": "T31",
+   "name": "sort-key-order-conformance",
+   "semantic_obligation": "When a collection is consumed in an order defined by a sort key, the realized processing order must equal the order induced by the intended key semantics (numeric rather than lexicographic comparison; no unsigned-integer wraparound when keys are negated for descending sort).",
+   "relation_operator": "ordering",
+   "semantic_objects": [
+    "realized processing order of a collection",
+    "intended sort-key order"
+   ],
+   "schema_predicate": "sequence(processed_items) == sort(items, key=intended_key, direction=cfg)  -- e.g. checkpoint shard files merged in numeric index order parsed from filenames; documents packed in true descending length order (uint length keys negated without unsigned wraparound)",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "checkpoint shard files merged by numeric index parsed from filenames (not lexicographic string order)",
+    "document packing sorted by an unsigned-integer length key (descending sort must not negate uint keys in unsigned arithmetic)"
+   ],
+   "permitted_phases": [
+    "checkpoint_load",
+    "data_loading"
+   ],
+   "positive_examples": [
+    "D-022",
+    "OC-NEW-5"
+   ],
+   "counterexamples": [
+    "Collections legitimately processed in arrival order where no sort key is specified",
+    "Ties under the intended key resolved arbitrarily where the spec admits equal keys"
+   ],
+   "merge_boundary": "Must not absorb T10: the obligation is value-order (sort-key) conformance over a static collection, not a happens-before between concurrent operations — different relation semantics and no shared race-witness signal (§3.1, §3.2, §3.4). Must not absorb singleton O-NEW-65 checkpoint retention: eviction is a membership obligation over the retained set, not an order conformance; merging would require unrelated OR branches (§3.3).",
+   "support_count": 2
+  },
+  {
+   "template_id": "T32",
+   "name": "pipeline-layer-partition-conformance",
+   "semantic_obligation": "The layer-to-pipeline-stage assignment realized at model construction must equal the partition mandated by the pipeline configuration: a monotone boundary cover of all layers with every stage owning at least one layer, and per-rank layer offsets honoring configured uneven first/last-stage layer counts.",
+   "relation_operator": "structural_integrity",
+   "semantic_objects": [
+    "realized layer-to-pipeline-stage assignment",
+    "partition mandated by the pipeline configuration"
+   ],
+   "schema_predicate": "FORALL pp_stage s: owned_layers(s) == spec_partition(num_layers, pp_cfg)(s)  -- spec_partition is a monotone boundary cover with |owned_layers(s)| >= 1 for every stage, and per-rank offsets equal to the configured (possibly uneven first/last-stage) distribution map",
+   "permitted_topology_guards": [
+    "PP>1"
+   ],
+   "permitted_preconditions": [
+    "balanced-partition search (e.g. binary-search partition_balanced) must return a monotone boundary list assigning at least one layer to every stage (no degenerate zero-layer stage)",
+    "hybrid model stacks must compute per-rank layer offsets from the same global offset map as the reference path (honoring num_layers_in_first/last_pipeline_stage), so layer types/weights match the checkpoint"
+   ],
+   "permitted_phases": [
+    "init"
+   ],
+   "positive_examples": [
+    "D-NEW-32",
+    "M-NEW-29"
+   ],
+   "counterexamples": [
+    "Deliberately uneven stage sizes that match the configured first/last-stage layer counts",
+    "Stages legitimately differing in parameter count because they hold auxiliary modules (embedding, head)"
+   ],
+   "merge_boundary": "Must not absorb T25: the constrained object is module-level layer ownership decided at construction, not the layout/shape of a tensor an operation touches (§3.2), and the witness is a per-stage layer inventory/offset comparison, not a tensor layout check (§3.4). Must not absorb T18: the reference is the partition semantics mandated by the pipeline configuration (a derived structural map), not a single user-configured knob value (§3.2).",
+   "support_count": 2
+  },
+  {
+   "template_id": "T33",
+   "name": "supervision-label-index-range-validity",
+   "semantic_obligation": "Label indices consumed by a supervision loss must lie within the valid index range of that loss's target space (offset/fused vocabulary range, active expert range) — or carry the designated ignore_index — in every code path that produces them.",
+   "relation_operator": "boundedness",
+   "semantic_objects": [
+    "supervision label indices",
+    "valid target index range"
+   ],
+   "schema_predicate": "FORALL positions t in supervised_scope: label(t) == ignore_index OR range_offset(target_space_cfg) <= label(t) < range_offset(target_space_cfg) + range_size(target_space_cfg)",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "distillation decoder with fuse_boundaries enabled: boundary-position labels must carry the fused-vocabulary offset in every forward branch (no branch may skip label_offsets)",
+    "collator-generated expert supervision labels must lie within the deployed model's active expert range"
+   ],
+   "permitted_phases": [
+    "forward",
+    "data_loading"
+   ],
+   "positive_examples": [
+    "OC-NEW-65",
+    "OC-NEW-60"
+   ],
+   "counterexamples": [
+    "ignore_index positions deliberately outside the class range",
+    "labels legitimately spanning the full unfused vocabulary when boundary fusing is disabled"
+   ],
+   "merge_boundary": "Must not absorb T14: the bounded object is a supervision target index, not a loss/gradient scaling scalar (§3.2). Must not absorb T29: gate probabilities are continuous routing weights, not integer target indices (§3.2). Must not absorb T20: T20 excludes padding positions from the loss, T33 constrains the value range of included labels — different obligations and witnesses (§3.2, §3.4). Must not absorb singleton D-NEW-67's fp16 gradient value range (§3.2).",
+   "support_count": 2
+  },
+  {
+   "template_id": "T34",
+   "name": "training-step-budget-data-sufficiency",
+   "semantic_obligation": "The number of training examples the data pipeline makes available (total constructed dataset instances, loader yield budget before exhaustion) must cover the configured training plan of training_steps × per-device batch size examples, so training neither exhausts data prematurely nor silently crosses into an unplanned extra epoch.",
+   "relation_operator": "count_frequency_match",
+   "semantic_objects": [
+    "data-pipeline example budget",
+    "configured training step budget in examples (steps × batch size)"
+   ],
+   "schema_predicate": "example_budget(pipeline) >= training_steps * device_train_batch_size, where example_budget is the total constructed dataset instances or the loader's yield budget before exhaustion; any budget or offset derived from a step count (max_steps, start_step) must be scaled by device_train_batch_size, not consumed in raw optimizer steps",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "per-source token budgets converted to instance counts with integer floor: total constructed instances must still cover training_steps*batch_size (dropped remainders must not silently push training into epoch 2)",
+    "IterableDataset sized from max_steps with device_train_batch_size>1: the example budget (and the resume start offset) must be max_steps*device_train_batch_size, not the raw step count"
+   ],
+   "permitted_phases": [
+    "data_loading"
+   ],
+   "positive_examples": [
+    "OC-NEW-63",
+    "O-NEW-66"
+   ],
+   "counterexamples": [
+    "Datasets intentionally smaller than the step budget when epoch cycling/repetition is configured",
+    "A final partial batch legitimately discarded under documented drop_last semantics"
+   ],
+   "merge_boundary": "Must not absorb T12 checkpoint inventory or T26 per-boundary side-effects: the counted object is the data-pipeline example inventory against the training plan (§3.2). Must not absorb singleton D-NEW-49 (declared len(dataloader) vs realized batch count — a metadata/realization match, not plan sufficiency) nor singleton O-021 (per-source mixture-ratio proportions) per §3.2.",
+   "support_count": 2
+  },
+  {
+   "template_id": "T35",
+   "name": "frozen-parameter-update-exclusion",
+   "semantic_obligation": "Parameters designated as frozen — by requires_grad=False or by a configured freeze pattern — must be excluded from every update channel: never placed in trainable partitions or optimizer state, and receiving zero parameter delta while the freeze designation is active.",
+   "relation_operator": "exclusivity",
+   "semantic_objects": [
+    "designated-frozen parameter set",
+    "gradient-update application"
+   ],
+   "schema_predicate": "FORALL p in designated_frozen_params: p NOT IN optimizer_trainable_set AND checksum(p, t+1) == checksum(p, t) for every step t while frozen(p)",
+   "permitted_topology_guards": [
+    "any"
+   ],
+   "permitted_preconditions": [
+    "requires_grad=False parameters under sharded/partitioned optimizers must be excluded from trainable partitions and optimizer state",
+    "name-pattern freeze specifications must match every parameter the designation covers, including modules shared between teacher and student paths whose FQNs live outside the pattern's prefix (e.g. shared 'blocks.*' parameters not matched by a 'teacher.*' pattern)"
+   ],
+   "permitted_phases": [
+    "init",
+    "optimizer_step"
+   ],
+   "positive_examples": [
+    "D-NEW-43",
+    "OC-NEW-49"
+   ],
+   "counterexamples": [
+    "Trainable parameters that must change on non-skipped steps (T22's converse obligation)",
+    "Parameters legitimately unfrozen by a configured schedule once the freeze phase ends"
+   ],
+   "merge_boundary": "Must not absorb T22: T22 obliges updates to occur for trainable parameters; the frozen-exclusion obligation is its converse and merging would require unrelated OR branches (§3.3). Must not absorb T17: T17 witnesses nonzero gradient flow on active-loss parameters, a different object role (§3.2). Must not absorb exclusivity templates over attention mass (T19/T30) or loss masking (T20), nor singletons O-NEW-51 (worker shards), OC-NEW-26 (file names), O-NEW-15 (outlier step gate) and O-NEW-35 (weight-decay group routing of still-trainable params), whose excluded objects differ per §3.2.",
+   "support_count": 2
+  }
+ ],
+ "singletons": [
+  {
+   "case_id": "D-027",
+   "relation_operator": "conservation",
+   "why_not_promoted": "only 1 independent case (softmax coefficients must sum to one over the designated dimension; objects differ from T07's gradient accumulation per §3.2)"
+  },
+  {
+   "case_id": "D-041",
+   "relation_operator": "structural_integrity",
+   "why_not_promoted": "only 1 independent case (checkpoint directory step label must equal internal global_step - label/content consistency, not inventory completeness T12 nor restore equality T11)"
+  },
+  {
+   "case_id": "M-027",
+   "relation_operator": "index_consistency",
+   "why_not_promoted": "only 1 independent case (stored sample index must equal source document index without int32 truncation; data-sample selection role differs from T16's positional encoding per §3.2)"
+  },
+  {
+   "case_id": "O-001",
+   "relation_operator": "structural_integrity",
+   "why_not_promoted": "only 1 independent case (attention and FFN paths must use distinct normalization modules; parameter-aliasing distinctness, not state clobbering T23)"
+  },
+  {
+   "case_id": "O-020",
+   "relation_operator": "sampling_uniformity",
+   "why_not_promoted": "only 1 independent case (downsampling must draw a random subset, not the file prefix; randomness has no shared observable signal with O-021's ratio counts - §3.4)"
+  },
+  {
+   "case_id": "O-021",
+   "relation_operator": "count_frequency_match",
+   "why_not_promoted": "only 1 independent case (realized per-source sample counts must match configured mixture ratios without duplicates; kept separate from O-020 per §3.4)"
+  },
+  {
+   "case_id": "D-NEW-67",
+   "relation_operator": "boundedness",
+   "why_not_promoted": "only 1 independent case (fp16 backward gradients must not systematically underflow to zero when no loss scaler is active; the bounded object is the gradient value range, not a loss/gradient scaling scalar (T14) nor a router gating probability (T29), per §3.2)"
+  },
+  {
+   "case_id": "OC-NEW-21",
+   "relation_operator": "restoration_after_reload",
+   "why_not_promoted": "only 1 independent case (config encode/decode round-trip must reproduce an equivalent config excluding init=False derived fields; the object is serialized configuration, not training state, so not T11 plus guards per §3.2)"
+  },
+  {
+   "case_id": "D-NEW-49",
+   "relation_operator": "count_frequency_match",
+   "why_not_promoted": "only 1 independent case (len(dataloader) must equal the number of batches actually yielded under batch_size/drop_last semantics; metadata-vs-realized count over loader length, objects differ from T12 checkpoint inventory, T26 per-boundary events, and singleton O-021 mixture ratios per §3.2)"
+  },
+  {
+   "case_id": "OC-NEW-25",
+   "relation_operator": "structural_integrity",
+   "why_not_promoted": "only 1 independent case (a shared cached index file must be read as a complete, atomically-written, deterministically-ordered artifact despite concurrent job writers; the object is a filesystem cache artifact under cross-job concurrency - operator differs from T10's happens-before ordering per §3.1, and objects differ from singleton D-041's label/content consistency and singleton O-001's module aliasing per §3.2)"
+  },
+  {
+   "case_id": "O-NEW-51",
+   "relation_operator": "exclusivity",
+   "why_not_promoted": "only 1 independent case (leftover dataloader indices under drop_last=False must partition disjointly and completely across num_workers>1 workers; the partitioned object is per-worker data-shard assignment, sharing no objects or observable with T19 attention mass, T20 loss masking, singleton D-NEW-43 frozen-param exclusion, or singleton O-NEW-2 causal exclusivity, per §3.2/§3.4)"
+  },
+  {
+   "case_id": "M-NEW-13",
+   "relation_operator": "count_frequency_match",
+   "why_not_promoted": "only 1 independent case (the number of tokens entering each expert must equal the router's tokens_per_expert when no quantization requires alignment padding; a token-dispatch count match whose objects differ from T12 checkpoint inventory, T21 skip events, T26 per-boundary side-effects, and count singletons O-021 / D-NEW-49 / OC-NEW-63 per §3.2)"
+  },
+  {
+   "case_id": "O-NEW-65",
+   "relation_operator": "ordering",
+   "why_not_promoted": "only 1 independent case (checkpoint retention must evict oldest first and never delete the just-saved newest checkpoint; a value-ordering over the retention set, not a happens-before race between concurrent operations (T10, §3.2) - and merging with T31's shard-merge sort-key order would require unrelated OR branches over read-order vs eviction-membership obligations per §3.3)"
+  },
+  {
+   "case_id": "M-NEW-32",
+   "relation_operator": "ordering",
+   "why_not_promoted": "only 1 independent case (MoE input jitter must be applied to the router input before gating, not to the logits after; the extractor reports the insertion point is a code-order property with no crisp runtime observable (none_runtime), so it shares no race-witness signal with T10 per §3.4 and no object with T31's sort-key ordering per §3.2)"
+  },
+  {
+   "case_id": "D-NEW-76",
+   "relation_operator": "structural_integrity",
+   "why_not_promoted": "only 1 independent case (init-time parameter broadcasts must stay outside the autograd graph so backward never differentiates through a synchronization op; the constrained object is the autograd-graph structure of parameters after init, not gradient nonzeroness (T17) nor state clobbering (T23), per §3.2)"
+  },
+  {
+   "case_id": "D-NEW-80",
+   "relation_operator": "conservation",
+   "why_not_promoted": "only 1 independent case (per-rank recorded alignment padding must sum to the flattened group's total padding so trimmed optimizer state covers exactly the true parameter elements; the conserved object is partition-padding bookkeeping/optimizer-state extent at checkpoint save, sharing no objects with T07's gradient accumulation buffer or singleton D-027's softmax coefficients per §3.2, and the junk-contamination witness is not T12's key/shard inventory count per §3.1/§3.2)"
+  },
+  {
+   "case_id": "O-NEW-26",
+   "relation_operator": "restoration_after_reload",
+   "why_not_promoted": "only 1 independent case (global_step and LR-schedule state must be reset to 0 at a weights-only fresh-run boundary (restore_dataloader=False); a reset-to-initial obligation like T13 but over the trainer's run counter, not data-loader bookkeeping - objects differ per §3.2 and folding it into T13 would require a core object edit; not T11 equal-to-saved restore, whose merge boundary already marks reset-vs-restore as unrelated OR branches per §3.3)"
+  },
+  {
+   "case_id": "D-NEW-56",
+   "relation_operator": "index_consistency",
+   "why_not_promoted": "only 1 independent case (MoE no-token-drop dispatch/combine locations must be recomputed from the current routing mask after the all-reduce capacity update so dispatch and combine address the same expert slots; raw state_freshness coding resolved to index_consistency from the relation statement — the object is the token-dispatch index vs the current routing mask, not a save/load restore (T11, §3.2), not positional encoding (T16, §3.2), not sample-index truncation (singleton M-027, §3.2), and not a tensor layout mandated by the parallel configuration (T25, §3.2))"
+  },
+  {
+   "case_id": "OC-NEW-26",
+   "relation_operator": "exclusivity",
+   "why_not_promoted": "only 1 independent case (per-rank temp file paths in concurrent preprocessing must be pairwise distinct — a seeded global RNG must not derive identical names on every rank; the exclusive object is a filesystem artifact name, playing a different role than per-worker data-shard assignment (singleton O-NEW-51), attention mass (T19/T30), loss masking (T20), or frozen-param exclusion (singleton D-NEW-43), per §3.2)"
+  },
+  {
+   "case_id": "D-NEW-14",
+   "relation_operator": "count_frequency_match",
+   "why_not_promoted": "only 1 independent case (scheduler get_lr() must return exactly one scalar LR entry per optimizer parameter group under multi-group optimizers; the counted object is the scheduler-output-to-param-group correspondence, differing from T12 checkpoint inventory, T21 skip events, T26 per-boundary side-effects, and count singletons O-021 / D-NEW-49 / OC-NEW-63 / M-NEW-13 per §3.2)"
+  },
+  {
+   "case_id": "O-NEW-11",
+   "relation_operator": "boundedness",
+   "why_not_promoted": "only 1 independent case (attention outputs must remain finite under autocast with masked/padded sequences: the attention mask bias must be representable in the compute dtype (finfo.min, not -inf, before the SDP call); the bounded object is the attention mask bias / attention-output finiteness, not a loss/gradient scaling scalar (T14), a router gate probability (T29), a supervision label index (T33), or an fp16 gradient value range (singleton D-NEW-67), per §3.2)"
+  },
+  {
+   "case_id": "O-NEW-15",
+   "relation_operator": "exclusivity",
+   "why_not_promoted": "only 1 independent case (with a loss/grad-norm outlier detector enabled, the optimizer must step exactly when the batch is NOT flagged as an outlier — the inverted gate silently skips every normal step; the trigger object is a statistical outlier flag, not T21's gradient-overflow event, so this is not T21 plus guards: generalizing T21's overflow object would be a core object edit (§2.2) and would introduce unrelated trigger-policy branches (§3.3); the exclusive objects also differ from singletons D-NEW-43 (frozen-param exclusion), O-NEW-51 (worker shards) and OC-NEW-26 (file names) per §3.2)"
+  },
+  {
+   "case_id": "OC-NEW-45",
+   "relation_operator": "structural_integrity",
+   "why_not_promoted": "only 1 independent case (the constructed layer's effective head dimension must equal the dimension implied by the configured d_model/n_heads when the layer derives its own internal layout; the object is a constructed module's internal dimension vs the config-implied value — a derived structural consistency, not a single user-configured knob (T18, cf. T32's merge boundary, §3.2), not layer-to-pipeline-stage assignment (T32, §3.2), and sharing no objects with structural singletons D-041 (label/content), O-001 (module aliasing), OC-NEW-25 (cache artifact) or D-NEW-76 (autograd graph) per §3.2; medium-confidence extraction)"
+  },
+  {
+   "case_id": "O-NEW-35",
+   "relation_operator": "exclusivity",
+   "why_not_promoted": "only 1 independent case (normalization-layer parameters must be routed exclusively to the no-decay param group when no_decay_norm_and_bias is enabled — the '.norm.' substring classifier misses q_norm/k_norm/ff_norm leaf weights, silently applying weight decay to norm gains; the excluded object is weight-decay application to still-trainable parameters, not T35's frozen-parameter update exclusion: merging would require unrelated no-update vs no-decay OR branches (§3.3); objects also differ from attention mass (T19/T30), loss masking (T20) and exclusivity singletons O-NEW-51/OC-NEW-26/O-NEW-15 per §3.2)"
+  }
+ ],
+ "not_codable": []
+}

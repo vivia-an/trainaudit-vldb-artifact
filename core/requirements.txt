@@ -1,0 +1,6 @@
+# DuckDB is the only non-standard dependency used by the offline trace checks.
+duckdb>=1.0.0
+
+# pyyaml and pydantic are used by the mining pipeline's config loading, not by the checks.
+pyyaml>=6.0
+pydantic>=2.0

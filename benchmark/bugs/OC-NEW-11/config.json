@@ -1,0 +1,20 @@
+{
+  "bug_id": "OC-NEW-11",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Attention claude-init uses d_model**-0.5 instead of actual w.in_features**-0.5 — wrong std for GQA Q/K/V and w_out",
+  "fixed_commit": "b76fa1a7",
+  "buggy_commit": "b76fa1a7~1",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "InitMethod.claude initialization selected",
+    "Attention has separated w_q/w_k/w_v with GQA (n_kv_heads != n_heads) so projections have different output dims",
+    "FusedAttention or w_out where in_features differs from d_model"
+  ],
+  "root_cause": "InitMethod.attention used a single std = d_model**-0.5 for Q/K/V and w_out. Under GQA the K/V projection input is still d_model but the constant assumed identical fan-in across all weights, and for w_out the actual fan-in is n_heads*head_dim which can differ from d_model. Initialization was therefore silently scaled wrong on these layers.",
+  "detection_method": "value_invariant",
+  "invariant": "Init std for each linear layer w must equal w.in_features**-0.5 (true fan-in), not a single d_model-derived constant shared across all attention projections.",
+  "diff_summary": "Compute std per-projection from w.in_features for the claude init method on Q/K/V, fused QKV, and w_out instead of always using d_model**-0.5."
+}

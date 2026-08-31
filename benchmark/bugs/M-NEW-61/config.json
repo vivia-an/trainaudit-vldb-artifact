@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-61",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MultimodalRotaryEmbedding slices rotary embedding along the wrong dimension and omits cp_group when CP is enabled, so each CP rank sees the wrong rotary position embedding",
+  "fixed_commit": "28778d1283",
+  "buggy_commit": "28778d1283~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/3603",
+  "category": "rope",
+  "severity": "critical",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["CP"],
+  "trigger_conditions": [
+    "MultimodalRotaryEmbedding (mrope) used in a multimodal model",
+    "context_parallel_world_size > 1",
+    "Sequence dimension is dim 0 of the post-transpose tensor"
+  ],
+  "root_cause": "After emb.transpose(0, 1).contiguous() the sequence dimension is index 0, but get_pos_emb_on_this_cp_rank was called with seq_dim=1 and no cp_group argument. The wrong axis was sharded across CP ranks, and the default global cp_group fallback was used instead of the configured one. Each CP rank ended up with a rotary slice that does not correspond to its own sequence partition.",
+  "detection_method": "value_invariant",
+  "invariant": "MultimodalRotaryEmbedding output for CP rank r must equal get_pos_emb_on_this_cp_rank(global_emb, seq_dim=0, group=cp_group) for the configured cp_group.",
+  "diff_summary": "Change get_pos_emb_on_this_cp_rank(emb, 1) to get_pos_emb_on_this_cp_rank(emb, 0, parallel_state.get_context_parallel_group()).",
+  "silent_check": "Slicing along axis 1 (head dim) yields a tensor of the right rank/dtype but fewer features per token; the model still runs; only the rotary positional encoding is structurally wrong, distorting attention scores for every token."
+}

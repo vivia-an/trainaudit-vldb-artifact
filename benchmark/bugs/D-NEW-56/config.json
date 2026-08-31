@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-56",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "topkgating drop_tokens=False does not recompute locations after capacity update — dispatch positions stale",
+  "fixed_commit": "770967f5",
+  "buggy_commit": "770967f5~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/7163",
+  "category": "moe",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": ["MoE topkgating", "drop_tokens=False", "expert load varies across ranks"],
+  "root_cause": "When drop_tokens=False, topkgating computes new_capacity via all_reduce(MAX) over expert counts, then assigns capacity=new_capacity. But it forgets to recompute `locations = torch.cumsum(mask, dim=0) - 1` after this capacity update path. The old `locations` from a stale earlier mask is used to scatter tokens into expert slots — so tokens go into the wrong dispatch positions, and the combine_weights matrix maps experts back to the wrong tokens.",
+  "detection_method": "structural_invariant",
+  "invariant": "After the drop_tokens branch in topkgating, locations[i,j] must equal cumsum(mask[:,j])[i] - 1 for every (i,j) where mask[i,j]==1.",
+  "diff_summary": "Add `locations = torch.cumsum(mask, dim=0) - 1` immediately after `capacity = new_capacity` inside the `not drop_tokens` branch.",
+  "silent_check": "Buggy code uses an integer tensor of stale offsets to index a sparse dispatch tensor — the indices are still in range, scatter succeeds, attention is computed on permuted-but-valid tokens. No exception, just wrong gradients."
+}

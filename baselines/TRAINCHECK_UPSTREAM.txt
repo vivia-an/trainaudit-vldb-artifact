@@ -1,0 +1,4 @@
+TrainCheck baseline uses the official implementation, checked out locally at
+  traincheck/TrainCheck
+size: 452M
+We do not vendor it here; see docs/DATA_AVAILABILITY.md.

@@ -1,0 +1,28 @@
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+.trace
+.codex/
+.env
+.env.*
+!.env.example
+*.db
+*.db.wal
+*.duckdb
+*.sqlite
+*.sqlite3
+*.wal
+# TeX intermediates (paper/main.pdf is committed on purpose)
+paper/*.aux
+paper/*.listing
+paper/*.log
+paper/*.out
+paper/*.blg
+paper/*.bbl
+paper/*.synctex.gz
+paper/_minted*/
+
+# Atomic-write staging files; an interrupted run can leave one behind.
+*.csv.tmp
+*.json.tmp

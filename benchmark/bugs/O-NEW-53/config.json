@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-53",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Dataset start_index not reset when starting a new epoch",
+  "fixed_commit": "363a3162",
+  "buggy_commit": "363a3162~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/618",
+  "category": "data_loader/epoch_transition",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "FSDP"],
+  "trigger_conditions": [
+    "max_epochs > 1",
+    "Crossing an epoch boundary mid-training"
+  ],
+  "root_cause": "On epoch rollover the trainer set `self.epoch = epoch + 1` and reset `global_train_examples_seen_this_epoch = 0`, called `dataset.reshuffle()`, but forgot to reset `self.dataset.start_index = 0`. The IterableDataset therefore continued slicing the new (reshuffled) global indices starting from the previous epoch's offset, dropping that prefix of the new epoch and shortening it by the same amount.",
+  "detection_method": "epoch_data_completeness_check",
+  "invariant": "At the start of every epoch the dataset must yield exactly len(dataset) examples in that epoch",
+  "diff_summary": "Add `self.dataset.start_index = 0` before reshuffle on epoch transition",
+  "silent_check": "Slicing past the start of an array is just an empty/short slice—no exception. Training continues with a silently truncated epoch."
+}

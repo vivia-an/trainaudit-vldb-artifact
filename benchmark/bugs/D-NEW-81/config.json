@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-81",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "MoE TopKGate.wg silently rebound to a fresh fp32 Linear under ZeRO+fp16/bf16 — gate weight gradients never applied to the ZeRO-managed parameter",
+  "fixed_commit": "5a2e705b",
+  "buggy_commit": "5a2e705b~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/5156",
+  "category": "moe",
+  "severity": "critical",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": ["MoE layer using TopKGate", "fp16 or bf16 mixed-precision training", "ZeRO stage 1/2/3 (which downcasts model parameters from fp32 to fp16/bf16)"],
+  "root_cause": "TopKGate.__init__ created `self.wg = torch.nn.Linear(...).float()`, registering an fp32 weight with DeepSpeed. When the engine downcasts the model to fp16/bf16, wg.weight becomes fp16/bf16. TopKGate.forward then runs `if self.wg.weight.dtype != torch.float32: self.wg = self.wg.float()` — this creates a brand new Linear module whose weight is a fresh fp32 tensor copy and rebinds self.wg. The new wg.weight is NOT the ZeRO-tracked parameter, so its gradient is never reduced across ranks and the optimizer never updates it. The original (ZeRO-managed) wg.weight stays at its initialization value forever; only the orphan copy receives gradient updates that get thrown away at the end of each step (because the orphan is recreated every forward).",
+  "detection_method": "value_invariant",
+  "invariant": "TopKGate.wg.weight must be the same Python object across forward passes, AND its data_ptr must remain in DeepSpeed's tracked parameter set (no .float() reassignment in forward).",
+  "diff_summary": "Remove the `.float()` from `self.wg = torch.nn.Linear(...).float()` constructor and the in-forward `if dtype != fp32: self.wg = self.wg.float()` block; instead compute logits via `torch.nn.functional.linear(input_fp32, weight=self.wg.weight.float(), bias=None)` so the cast is op-local and the parameter identity is preserved.",
+  "silent_check": "Buggy code creates a new Linear and rebinds self.wg — Python attribute assignment, no exception. Forward returns valid logits, top-k routing is well-defined; loss is finite. Only the gate's parameter never moves from initialization, so routing decisions stay frozen at the initial random state and the model converges to a non-MoE-like local minimum (or never properly diversifies experts), but no error is raised."
+}

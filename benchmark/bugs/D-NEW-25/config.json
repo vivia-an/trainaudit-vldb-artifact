@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-25",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "load_module_only with bf16 silently skips refresh_fp32_params, optimizer trains on uninitialized fp32 weights",
+  "fixed_commit": "870ae041",
+  "buggy_commit": "870ae041~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/4141",
+  "category": "checkpoint",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["bf16 enabled", "load_checkpoint(load_module_only=True, load_optimizer_states=False)"],
+  "root_cause": "Two bugs together: (1) load_zero_checkpoint required load_optimizer_states even when only loading the bf16 module, so it ran with no checkpoint files; (2) inside _load_checkpoint, the call to optimizer.refresh_fp32_params() was guarded by self.fp16_enabled(), so for bf16 the high-precision master weights were never refreshed from the loaded 16-bit module. Training proceeds with default-initialized fp32 master weights.",
+  "detection_method": "value_invariant",
+  "invariant": "After load_checkpoint with load_module_only=True, optimizer.fp32_groups_flat[i] must equal bf16_groups_flat[i].float() for every group i.",
+  "diff_summary": "Drop the load_optimizer_states gate on load_zero_checkpoint and drop the fp16_enabled() gate on optimizer.refresh_fp32_params() so bf16 also refreshes its master copy."
+}

@@ -1,0 +1,148 @@
+[
+ {
+  "run": "deepspeed_zero2",
+  "n_dbs": 2,
+  "n_events": 14594,
+  "n_ranks": 2,
+  "arms": {
+   "full": {
+    "T0-grad-norm-finite": "20/40 optim.step.pre events have non-finite or pathological total_grad_l2",
+    "T0-optim-lr-positive": "2 param_groups have non-positive lr",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 21/39 transitions"
+   },
+   "no_topo": {
+    "T0-grad-norm-finite": "20/40 optim.step.pre events have non-finite or pathological total_grad_l2",
+    "T0-optim-lr-positive": "2 param_groups have non-positive lr",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 21/39 transitions"
+   },
+   "no_precond": {
+    "T0-grad-norm-finite": "20/40 optim.step.pre events have non-finite or pathological total_grad_l2",
+    "T0-norm-output-unit-rms": "1622 normalizer outputs have abnormal RMS",
+    "T0-optim-lr-positive": "2 param_groups have non-positive lr",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 21/39 transitions",
+    "T1-comm-dtype-matches-training": "20 comm op(s) used dtype != declared training_dtype (bfloat16)",
+    "T1-expert-bias-fp32": "4600 router(s) have non-fp32 expert_bias",
+    "T1-multi-backward-per-step-fragile-config": "20 step(s) have multiple root-forward passes (steps: [0, 1, 2, 3, 4]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "3440/4600 residual blocks (l2-fallback): output closer to normed than to input"
+   }
+  }
+ },
+ {
+  "run": "megatron_gpt_tiny_TP2PP1_sync_T0_s10_r1",
+  "n_dbs": 8,
+  "n_events": 201928,
+  "n_ranks": 8,
+  "arms": {
+   "full": {
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 7/1599 transitions",
+    "T0-param-update-applied": "1600 optim.step events with frozen/un-updated params"
+   },
+   "no_topo": {
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 7/1599 transitions",
+    "T0-param-update-applied": "1600 optim.step events with frozen/un-updated params"
+   },
+   "no_precond": {
+    "T0-norm-output-unit-rms": "9368 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 7/1599 transitions",
+    "T0-param-update-applied": "1600 optim.step events with frozen/un-updated params",
+    "T1-expert-bias-fp32": "24320 router(s) have non-fp32 expert_bias",
+    "T1-multi-backward-per-step-fragile-config": "200 step(s) have multiple root-forward passes (steps: [0, 1, 2, 3, 4]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "10879/24320 residual blocks (l2-fallback): output closer to normed than to input"
+   }
+  }
+ },
+ {
+  "run": "olmo_core_dense_actckpt_2rank",
+  "n_dbs": 2,
+  "n_events": 35440,
+  "n_ranks": 2,
+  "arms": {
+   "full": {
+    "T0-norm-output-unit-rms": "84 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/39 transitions",
+    "T1-fwd-output-block-uniformity": "2 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "2 block-level grad-flow outlier(s)"
+   },
+   "no_topo": {
+    "T0-norm-output-unit-rms": "84 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/39 transitions",
+    "T1-fwd-output-block-uniformity": "2 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "2 block-level grad-flow outlier(s)"
+   },
+   "no_precond": {
+    "T0-checkpoint-preserve-rng": "336 checkpoint calls used preserve_rng_state=False while dropout is present",
+    "T0-norm-output-unit-rms": "4742 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/39 transitions",
+    "T1-comm-dtype-matches-training": "124 comm op(s) used dtype != declared training_dtype (bfloat16)",
+    "T1-expert-bias-fp32": "12642 router(s) have non-fp32 expert_bias",
+    "T1-fwd-output-block-uniformity": "3 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "3 block-level grad-flow outlier(s)",
+    "T1-multi-backward-per-step-fragile-config": "1 step(s) have multiple root-forward passes (steps: [0]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "7812/12642 residual blocks (l2-fallback): output closer to normed than to input"
+   }
+  }
+ },
+ {
+  "run": "olmo_core_moe",
+  "n_dbs": 2,
+  "n_events": 41488,
+  "n_ranks": 2,
+  "arms": {
+   "full": {
+    "T0-norm-output-unit-rms": "42 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/39 transitions",
+    "T1-fwd-output-block-uniformity": "5 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "2 block-level grad-flow outlier(s)"
+   },
+   "no_topo": {
+    "T0-norm-output-unit-rms": "42 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/39 transitions",
+    "T1-fwd-output-block-uniformity": "5 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "2 block-level grad-flow outlier(s)"
+   },
+   "no_precond": {
+    "T0-norm-output-unit-rms": "4898 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/39 transitions",
+    "T1-comm-dtype-matches-training": "1132 comm op(s) used dtype != declared training_dtype (bfloat16)",
+    "T1-expert-bias-fp32": "12306 router(s) have non-fp32 expert_bias",
+    "T1-fwd-output-block-uniformity": "6 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "3 block-level grad-flow outlier(s)",
+    "T1-multi-backward-per-step-fragile-config": "1 step(s) have multiple root-forward passes (steps: [0]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "7140/12306 residual blocks (l2-fallback): output closer to normed than to input"
+   }
+  }
+ },
+ {
+  "run": "olmo_core_moe_ep2",
+  "n_dbs": 2,
+  "n_events": 45688,
+  "n_ranks": 2,
+  "arms": {
+   "full": {
+    "T0-no-nan-inf": "440 events contain NaN/Inf tensors",
+    "T0-norm-output-unit-rms": "42 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/39 transitions",
+    "T1-fwd-output-block-uniformity": "3 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "2 block-level grad-flow outlier(s)"
+   },
+   "no_topo": {
+    "T0-no-nan-inf": "440 events contain NaN/Inf tensors",
+    "T0-norm-output-unit-rms": "42 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/39 transitions",
+    "T1-fwd-output-block-uniformity": "3 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "2 block-level grad-flow outlier(s)"
+   },
+   "no_precond": {
+    "T0-no-nan-inf": "440 events contain NaN/Inf tensors",
+    "T0-norm-output-unit-rms": "4367 normalizer outputs have abnormal RMS",
+    "T0-optim-step-counter-monotonic": "optim state['step'] failed to increment in 1/39 transitions",
+    "T1-comm-dtype-matches-training": "2224 comm op(s) used dtype != declared training_dtype (bfloat16)",
+    "T1-expert-bias-fp32": "11298 router(s) have non-fp32 expert_bias",
+    "T1-fwd-output-block-uniformity": "4 block-level fwd output outlier(s)",
+    "T1-grad-flow-block-uniformity": "3 block-level grad-flow outlier(s)",
+    "T1-multi-backward-per-step-fragile-config": "1 step(s) have multiple root-forward passes (steps: [0]...); DeepSpeed offload+ga=1 declared \u2014 silent grad loss expected (PR #7981 pattern)",
+    "T1-residual-stream-preserved": "7140/11298 residual blocks (l2-fallback): output closer to normed than to input"
+   }
+  }
+ }
+]

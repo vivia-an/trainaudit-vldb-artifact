@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-50",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "BF16_Optimizer fp32 grad accumulator allocated as fp32 even when grad_acc_dtype is bf16",
+  "fixed_commit": "ce607080",
+  "buggy_commit": "ce607080~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/4713",
+  "category": "dtype",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["bf16 model without ZeRO", "data_types.grad_accum_dtype = bf16 in ds_config"],
+  "root_cause": "BF16_Optimizer ignored the requested grad_acc_dtype and always allocated `fp32_groups_gradients_flat` as fp32. When the user explicitly requested bf16 grad accumulation (to save memory) the buffer dtype mismatched the configured dtype, the engine reported wrong memory usage, and the param_partition.grad cast at step time silently down-cast accumulated values losing precision in an unexpected place.",
+  "detection_method": "dtype_invariant",
+  "invariant": "BF16_Optimizer.fp32_groups_gradients_flat[i].dtype must equal the configured grad_acc_dtype.",
+  "diff_summary": "Plumb grad_acc_dtype into BF16_Optimizer constructor, allocate the grad-accum flat buffer with that dtype, and cast to fp32 only at step time when needed."
+}

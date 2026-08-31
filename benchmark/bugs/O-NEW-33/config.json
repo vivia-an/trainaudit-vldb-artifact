@@ -1,0 +1,20 @@
+{
+  "bug_id": "O-NEW-33",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "FullCheckpointer rebuilds optim state with old parameter keys, dropping state for renamed params after block_group_size change",
+  "fixed_commit": "740294f7",
+  "buggy_commit": "740294f7~1",
+  "category": "checkpoint",
+  "severity": "high",
+  "gpu_needed": 8,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "FullCheckpointer.restore_checkpoint with load_optimizer_state=true",
+    "training resumes with a different block_group_size than at save time"
+  ],
+  "root_cause": "_make_state_dict_compatible returned a remapped state_dict but FullCheckpointer threw away the og_keys_to_new mapping when calling load_fsdp_optim_state. The optimizer state was then loaded against the new model keys without translation, so optimizer state for many params was either silently zeroed or attached to the wrong tensor.",
+  "detection_method": "structural_invariant",
+  "invariant": "after FullCheckpointer.restore_checkpoint with load_optimizer_state=True, optimizer.state must contain entries for every parameter in fsdp_model.parameters() and the values must match the saved checkpoint",
+  "diff_summary": "captured (state_dict_to_load, og_keys_to_new) from _make_state_dict_compatible and added _make_optim_state_dict_compatible(optim_state_dict, og_keys_to_new) before load_fsdp_optim_state"
+}

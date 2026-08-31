@@ -1,0 +1,4 @@
+interval_steps,median_overhead_percent,p95_overhead_percent,throughput_percent,max_detection_delay_steps
+20,9.5,11.8,91.3,20
+100,6.9,8.7,93.5,100
+380,3.7,5.2,96.4,380

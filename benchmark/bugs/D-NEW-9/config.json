@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-9",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "BF16 optimizer lp_grads not cleared after HP accumulation",
+  "fixed_commit": "40009eb1",
+  "buggy_commit": "40009eb1~1",
+  "category": "optimizer",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "root_cause": "clear_lp_grads=False should be True in accumulate_hp_grads_and_remove_lp",
+  "detection_method": "runtime_hook",
+  "invariant": "lp_grads must be cleared after accumulation to prevent stale gradient buildup"
+}

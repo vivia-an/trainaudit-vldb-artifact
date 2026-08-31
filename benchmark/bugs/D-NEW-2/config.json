@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-2",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "WarmupCosineLR returns scalar instead of per-group LR list",
+  "fixed_commit": "3fd762cf",
+  "category": "lr_schedule",
+  "detection_method": "runtime_check",
+  "invariant": "get_lr() must return one value per param group",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED",
+    "fixed": "CLEAN"
+  }
+}

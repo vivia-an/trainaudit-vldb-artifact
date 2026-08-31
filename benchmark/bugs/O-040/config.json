@@ -1,0 +1,24 @@
+{
+  "bug_id": "O-040",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "A100 peak flops specification 2x too low",
+  "issue_url": "https://github.com/allenai/OLMo-core/commit/db2b6eff",
+  "buggy_commit": "f49e7559",
+  "fixed_commit": "db2b6eff",
+  "category": "numerical",
+  "severity": "low",
+  "gpu_needed": 0,
+  "trigger_conditions": [
+    "Training on A100 GPUs",
+    "MFU reporting"
+  ],
+  "root_cause": "A100 BF16 peak = 624 TFLOPS but code used 312 TFLOPS, inflating MFU to unrealistic values.",
+  "detection_method": "value_invariant",
+  "invariant": "A100 BF16 peak flops must be 624 TFLOPS, not 312",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: 312 TFLOPS",
+    "fixed": "CLEAN: 624 TFLOPS"
+  }
+}

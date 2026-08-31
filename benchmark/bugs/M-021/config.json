@@ -1,0 +1,28 @@
+{
+  "bug_id": "M-021",
+  "framework": "megatron-lm",
+  "title": "SwitchMLP expert parameters never updated with distributed optimizer",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/565",
+  "buggy_commit": "5f9c870f9f24b482509699d206a9dbb00958f6fc",
+  "fixed_commit": "72a255a7a418e432695878f76f771d11165b8166",
+  "fix_date": "2023-12-20",
+  "category": "optimizer_state",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": [
+    "DP",
+    "EP"
+  ],
+  "trigger_conditions": [
+    "num_experts >= 2 (MoE)",
+    "--use-distributed-optimizer",
+    "data_parallel_size >= 2"
+  ],
+  "root_cause": "Expert params fall back to non-distributed optimizer with no gradient all-reduce in the expert data parallel group. Each rank updates expert params with local-only gradients, causing params to diverge across ranks.",
+  "detection_method": "cross_rank_equality",
+  "invariant": "Expert params must be identical across ranks in the same expert DP subgroup. More distinct hash values than EP size = divergence.",
+  "fixed_behavior": "All parameters including experts are properly updated by the optimizer",
+  "notes": "This commit lacks --mock-data CLI arg but pretrain_gpt.py supports mock=True. detect.py injects the argument.",
+  "reproduction_status": "failed",
+  "failure_reason": "only affects memory efficiency"
+}

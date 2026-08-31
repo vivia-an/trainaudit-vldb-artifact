@@ -1,0 +1,1304 @@
+%%%%%%%% VLDB 2027 / PVLDB VOL. 20 SUBMISSION %%%%%%%%%
+
+\documentclass[sigconf,nonacm]{acmart}
+
+%%% do not modify the following VLDB block %%
+%%% VLDB block start %%%
+\usepackage{pvldb}% VLDB/PVLDB formatting overrides; required by the official template.
+%%% VLDB block end %%%
+
+%% Paper-specific PVLDB metadata. DOI and page numbers are assigned during
+%% production, so the official placeholders are correct for review.
+\renewcommand\vldbdoi{XX.XX/XXX.XX}
+\renewcommand\vldbpages{XXX-XXX}
+%% Add the final public artifact URL before submission; leave empty if the
+%% submission has no URL to display in the paper.
+\renewcommand\vldbavailabilityurl{https://github.com/vivia-an/trainaudit-vldb-artifact}
+
+\usepackage{rotating}
+
+\usepackage{tcolorbox}
+\tcbuselibrary{listings, minted, skins, breakable}
+
+\newtcblisting{confcode}[2][]{%
+    listing engine=minted,
+    minted language=python,
+    minted options={fontsize=\small, linenos, breaklines, autogobble, #1},
+    colback=gray!5,
+    colframe=black!40,
+    coltitle=black,
+    fonttitle=\bfseries,
+    title={#2},
+    breakable,
+    enhanced,
+    sharp corners,
+    boxrule=0.5pt,
+    toptitle=1mm,
+    bottomtitle=1mm,
+    left=1mm, right=1mm, top=0.5mm, bottom=0.5mm,
+    listing only,
+}
+
+\newtcblisting{sqlcode}[2][]{%
+    listing engine=minted,
+    minted language=sql,
+    minted options={fontsize=\small, linenos, breaklines, autogobble, #1},
+    colback=gray!5,
+    colframe=black!40,
+    coltitle=black,
+    fonttitle=\bfseries,
+    title={#2},
+    breakable,
+    enhanced,
+    sharp corners,
+    boxrule=0.5pt,
+    toptitle=1mm,
+    bottomtitle=1mm,
+    left=1mm, right=1mm, top=0.5mm, bottom=0.5mm,
+    listing only,
+}
+
+\newtcblisting{scriptcode}[2][]{%
+    listing engine=minted,
+    minted language=bash,
+    minted options={fontsize=\small, linenos, breaklines, autogobble, #1},
+    colback=gray!5,
+    colframe=black!40,
+    coltitle=black,
+    fonttitle=\bfseries,
+    title={#2},
+    breakable,
+    enhanced,
+    sharp corners,
+    boxrule=0.5pt,
+    toptitle=1mm,
+    bottomtitle=1mm,
+    left=1mm, right=1mm, top=0.5mm, bottom=0.5mm,
+    listing only,
+}
+
+\usepackage{multirow}
+\usepackage{minted}
+\usepackage{tabularx}
+% TikZ for drawing FSM diagrams
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,automata,fit,calc,shadows.blur}
+
+\usepackage[capitalize,noabbrev]{cleveref}
+\usepackage{subcaption}
+
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+% Allow hyphenation inside \texttt for long identifiers
+\usepackage[htt]{hyphenat}
+
+% Circled-number markers for figure cross-references (\ding{182}=1, 183=2, ...)
+\usepackage{pifont}
+% At most one full-width (figure*) float at the top of any page, so the two
+% wide workflow diagrams land on separate pages instead of stacking together.
+\setcounter{dbltopnumber}{1}
+
+% Real-SE headline numbers shared with appendix.tex — single source of truth
+\input{numbers}
+
+% Resolve supplement Appendix A--I labels against the separately compiled source.
+% (labels extracted from appendix.aux into appendix-refs.tex)
+\makeatletter
+\IfFileExists{appendix-refs.tex}{\input{appendix-refs.tex}}{}
+\makeatother
+
+% Cross-document appendix references keep their A--I labels while linking to
+% the immutable public supplementary PDF rather than a missing local anchor.
+\newcommand{\suppappendix}[1]{%
+  \href{https://github.com/vivia-an/trainaudit-vldb-artifact/blob/vldb-2027-artifact-v1.0.1/paper/appendix_supplement.pdf}%
+  {Appendix~\ref*{#1}}}
+
+%% Allow a small emergency stretch so tight paragraphs do not protrude into the margin
+\emergencystretch=2em
+
+\begin{document}
+
+\title[TrainAudit: Silent Error Detection for LLM Training]{TrainAudit: Silent Error Detection for LLM Training via Verified Guarded Relational Constraints}
+
+\author{Qingsong Cai}
+\authornote{Qingsong Cai and Shikai Li contributed equally to this work.}
+\affiliation{%
+  \institution{Sichuan University}
+  \city{Chengdu}
+  \country{China}
+}
+\email{qingsong1010@gmail.com}
+
+\author{Shikai Li}
+\authornotemark[1]
+\affiliation{%
+  \institution{West China Hospital, Sichuan University}
+  \city{Chengdu}
+  \country{China}
+}
+\email{lishikai@wchscu.edu.cn}
+
+\author{Zhengmao Ye}
+\affiliation{%
+  \institution{Sichuan University}
+  \city{Chengdu}
+  \country{China}
+}
+\email{yezhengmaolove@gmail.com}
+
+\author{Mingjie Tang}
+\affiliation{%
+  \institution{Sichuan University}
+  \city{Chengdu}
+  \country{China}
+}
+\email{tangrock@gmail.com}
+
+\author{Ran Tao}
+\affiliation{%
+  \institution{iQuest Lab}
+  \city{Beijing}
+  \country{China}
+}
+\email{rtao02@iquestlab.com}
+
+\author{Bryan Dai}
+\affiliation{%
+  \institution{iQuest Lab}
+  \city{Beijing}
+  \country{China}
+}
+\email{cbdai@iquestlab.com}
+
+%% ACM CCS concepts (required by acmart; not author-identifying)
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10010147.10010257</concept_id>
+       <concept_desc>Computing methodologies~Machine learning</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10011007.10011074.10011099</concept_id>
+       <concept_desc>Software and its engineering~Software reliability</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10011007.10011074.10011111</concept_id>
+       <concept_desc>Software and its engineering~Software testing and debugging</concept_desc>
+       <concept_significance>300</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computing methodologies~Machine learning}
+\ccsdesc[500]{Software and its engineering~Software reliability}
+\ccsdesc[300]{Software and its engineering~Software testing and debugging}
+
+\keywords{distributed training, large language models, silent errors, data quality, integrity constraints, constraint mining}
+
+\begin{abstract}
+We introduce \textsc{TrainAudit}, a production-oriented system designed to
+efficiently and reliably detect silent errors during large language model
+(LLM) training. Such errors violate prescribed training behavior without
+crashing the program, often leaving per-step metrics apparently normal while
+degrading model quality and wasting tens of thousands of GPU-hours. Standard
+monitors provide no online oracle for topology- and phase-dependent relations
+in runtime state. \textsc{TrainAudit} addresses this gap with \emph{guarded
+integrity constraints} over training traces, establishing explicit correctness
+obligations for when and where runtime relations must hold. It further adopts
+a two-phase auditing architecture that separates offline constraint discovery
+from deterministic online checking. Offline, candidate constraints are
+recovered from framework source and confirmed bug fixes and admitted only
+after verification; online, SQL queries check the live trace, and each
+non-empty result provides a concrete violation witness. On the frozen
+\emph{Real-SE} benchmark, \textsc{TrainAudit} detects
+\textbf{\RealSEDetFrac} buggy instances and raises no false positives on all
+\NumFixedReplay{} corresponding fixed revisions. In a planned seven-day,
+256$\times$H800 production run, it surfaced a previously unreported
+optimizer-routing fault before the first optimizer step; the job had a nominal
+allocation of approximately 43{,}000 H800 GPU-hours. Upstream maintainers
+subsequently confirmed and fixed the fault.
+\end{abstract}
+
+\maketitle
+
+%%% do not modify the following VLDB block %%
+%%% VLDB block start %%%
+\vldbtopmatter
+%%% VLDB block end %%%
+
+\section{Introduction}
+\label{sec:introduction}
+
+Training a large AI model is a long-running distributed state transition. At each step, thousands of GPUs compute partial gradients, exchange tensors through collective communication~\cite{li2020pytorch}, update optimizer state, restore or write checkpoints, and advance framework counters under a specific parallel topology. At frontier scale, a single run occupies thousands of GPUs for weeks~\cite{jiang2024megascale}; an undetected silent error corrupts the trajectory for the remainder, wasting tens of thousands of GPU-hours before the damage---if ever---surfaces.
+
+A \emph{silent error}\footnote{Following prior work~\cite{jiang2025traincheck,ttrace2025}, we use \emph{silent errors} to denote software defects that silently corrupt training state without raising exceptions---distinct from hardware-induced silent data corruption (SDC)~\cite{dixit2021silent,hochschild2021cores}, which is orthogonal and addressed by ECC.} occurs when this transition deviates from the intended training algorithm without becoming obviously invalid. Such errors include a rank skipping synchronization, an accumulated gradient being overwritten, only part of a checkpoint being restored, or an optimizer counter advancing in the wrong phase. They are \emph{semantic} in nature---they violate what the training algorithm prescribes, not what the runtime enforces---yet \emph{silent} in manifestation, because existing runtime infrastructure checks only structural validity (types, shapes, exceptions) and has no interface for algorithmic correctness.
+
+Figure~\ref{fig:micro-step-mismatch} shows a concrete example from DeepSpeed ZeRO-2~\cite{rasley2020deepspeed,rajbhandari2020zero}. An off-by-one error in the \texttt{micro\_step\_id} counter resets a gradient buffer when it should be accumulated. The run continues, the tensors have legal shapes and dtypes, and the loss curve remains nearly unchanged. Yet the live execution already contains evidence of the error: the current micro-step, the buffer operation, the accumulation phase, and the optimizer boundary. None of these fields is a reliable alarm by itself; together, however, they define a relation that correct training must satisfy: in a given accumulation phase, the buffer operation must match the intended update rule. Detecting such errors therefore requires recovering the semantic correctness conditions that current monitoring leaves unchecked.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.741\columnwidth]{figures/figure1_vector_v5.pdf}
+  \Description[Off-by-one micro-step id causes a gradient buffer to be overwritten instead of accumulated]{Two-panel diagram linked by the cue off-by-one implies wrong buffer op. Panel (a) compares the expected micro-step id sequence (1, 2, 3, ...) against the sequence observed after a reset to -1 (0, 1, 2, ...): the first post-reset slot reads id=0 where id=1 was expected, violating the sequencing invariant. Panel (b) contrasts the expected accumulation window, where G1 and G2 both accumulate into buffer = state + G1 + G2, against the observed execution: G1's accumulate path is marked discarded while a spurious window boundary appears before G2, which performs a copy, so the final buffer equals G2 alone. A closing takeaway states the missing check: buffer op must match accumulation phase.}
+  \caption{DeepSpeed ZeRO-2 silent error: an off-by-one
+  \texttt{micro\_step\_id} overwrites rather than accumulates a gradient
+  buffer.}
+  \label{fig:micro-step-mismatch}
+\end{figure}
+
+Existing detectors observe this transition through limited oracle sources. Metric-based monitors are easy to deploy, but they watch downstream symptoms such as loss spikes, NaNs/Infs, gradient-norm outliers, and throughput anomalies. Healthy-trace approaches can learn useful execution regularities~\cite{jiang2025traincheck}, but regularity in previous traces is not the same as a framework-level correctness obligation under a new topology or phase. Reference-based checking obtains a stronger oracle by comparing intermediate tensors against a trusted or alignable implementation~\cite{ttrace2025}, but such a reference is often unavailable for production-scale runs. Plan verification can reason about whether a distributed execution plan matches a logical specification~\cite{trainverify2025}, but it does not audit the dynamic state transitions that occur as counters, checkpoint state, optimizer metadata, and communication groups evolve during training. Our insight is that the hard silent errors are not signal-free; their signal is stranded below current monitoring interfaces.
+
+The gap between the runtime evidence already present and the interfaces exposed by existing detectors creates a two-sided data-management problem. On one side, scalar monitoring observes too little: loss, gradient norm, NaN/Inf counters, and throughput discard the rank-level, object-level, topology-level, and phase-level relations on which the signal depends. On the other, recording everything does not by itself provide a correctness oracle. Raw tracing can materialize millions of records about tensor states, optimizer counters, communication events, checkpoint state, rank groups, topology lineage, and framework metadata, yet it does not say which combinations are illegal.
+What is needed, then, is a way to locate the meaningful signal within this rich runtime state---observing more than scalar metrics, yet with enough semantic guidance to avoid being lost in millions of undifferentiated records.
+
+The central obstacle is that these runtime records do not come with an explicit specification of correct training behavior. We observe, however, that framework source code and confirmed bug fixes jointly encode both what can go wrong and what must hold: each fix implicitly reveals a correctness condition that was previously unwritten. This paper starts from these latent obligations and asks whether they can be recovered systematically and operationalized as online checks, without requiring a trusted reference run.
+Two difficulties stand between this idea and a deployable detector: each recovered obligation is valid only under specific topology and phase conditions---enforced unconditionally, it floods the operator with false alarms on correct runs---and recovering obligations at scale from framework artifacts requires automation that is itself error-prone.
+
+We propose \textsc{TrainAudit}, which addresses both by separating obligation
+\emph{discovery} (offline, LLM-assisted, verified against counterexamples before
+deployment) from obligation \emph{checking} (online, fully deterministic SQL
+queries over a relational training trace), so that the online path contains no
+LLM and no unverified rule. This separation is what makes model-proposed
+semantics safe to deploy: a model may contribute a candidate obligation, but a
+deterministic query over runtime evidence decides whether an execution violates
+it.
+
+Across a 392-record silent-error corpus, a frozen catalog snapshot matches
+\textbf{92.3\%} of the locked held-out bugs, with all three predicates
+groundable for \textbf{91.0\%}. On paired reproductions of real buggy and fixed
+revisions, \textsc{TrainAudit} detects \textbf{\RealSEDetFrac} buggy cases and
+raises no false positives on all \NumFixedReplay{} corresponding fixed
+revisions.
+
+In a planned seven-day, 256$\times$H800 production job, a verified rule
+identified an optimizer-routing fault before the first optimizer step
+(approximately 43{,}000 nominal H800 GPU-hours); maintainers subsequently
+confirmed and fixed the fault~\cite{ye2026megatronMuonRouting}.
+
+\noindent In summary, we make the following contributions:
+
+\noindent\textbf{1)} We define a \emph{training trace data model}, a relational data model for distributed AI training executions covering tensor state, optimizer state, call events, communication/checkpoint events, rank groups, and topology lineage.
+
+\noindent\textbf{2)} We formalize silent-error detection as checking \emph{runtime-guarded integrity constraints} over live training traces, where each constraint specifies which runtime fields to read, which tuples can be compared under the current topology, when the relation is valid, and what violation predicate to execute.
+
+\noindent\textbf{3)} We develop a reproducible template-induction protocol and a \emph{verified mining and execution} pipeline: under a matched free-form control, a versioned relation catalog raises validated-rule yield while evolving with new framework evidence; counterexample checks, healthy-run replay, and topology-aware validation govern acceptance before deterministic SQL execution.
+
+\noindent\textbf{4)} We build \emph{Real-SE}, a reproducible benchmark of paired buggy/fixed revisions and an observability-boundary case, to evaluate detection and fixed-side precision (\S\ref{subsec:detection}); full protocols and per-case outcomes appear in the supplementary material~\cite{trainaudit-supplement}.
+
+\section{Background and Motivation}
+\label{sec:background}
+
+The prevailing way to diagnose a silent error is still manual: for each incident, an engineer inspects the runtime state, relates it to the framework source and training algorithm, and reconstructs what the execution should have done. This process is costly and ad hoc, and the resulting diagnosis is rarely reusable across runs. Yet its success reveals an important opportunity: silent errors often leave a \emph{witness} in the runtime state; what is missing is a reusable correctness \emph{obligation} that gives this evidence meaning. Such obligations must be recovered from training code, algorithmic semantics, or confirmed fixes, then converted into checks that can be applied automatically. The remainder of this section develops this observation: \S\ref{subsec:silent-errors} defines the target errors and explains why existing oracle sources fail to exploit such witnesses reliably, while \S\ref{subsec:challenges} identifies the three data-management challenges (C1--C3) in turning latent obligations into practical online checks.
+
+\subsection{Silent Errors and Why Existing Approaches Miss Them}
+\label{subsec:silent-errors}
+\label{subsec:limitations}
+
+A \emph{silent error} is a fault in distributed training that produces numerically valid tensors and raises no exception, yet drives the run off the trajectory that the training algorithm prescribes. Root causes include software bugs (e.g., a missing all-reduce), framework misuse, and configuration drift. Their effects can first become observable in communication, gradient handling, optimizer updates, checkpointing, or training-loop control, across one or more DP/PP/TP/EP dimensions of hybrid parallelism (\suppappendix{app:extended_data} gives the phase and topology panorama).
+
+Despite this breadth, outcome metrics may surface the damage only after it has propagated: loss and gradient norm can track a healthy baseline long after the training state has been corrupted (Figure~\ref{fig:silent-motivation}). \textsc{TrainAudit} therefore targets errors that leave a sound, observable witness in the instrumented runtime state even while per-step metrics remain plausible. Faults whose only manifestation is asymptotic convergence drift fall outside this scope; \S\ref{subsec:theory} formalizes why no guarded predicate over the current schema can soundly separate them from correct executions.
+
+\begin{figure}[t]
+    \centering
+\includegraphics[width=0.950\columnwidth]{figures/fig_silent_motivation.pdf}
+\Description{Left: training-loss curves of a buggy and a fixed SFT run overlap for two thousand steps. Right: downstream SWE-bench pass rate diverges by 15.7 points while the mined rule fires at step one.}
+\caption{Production silent error (\suppappendix{app:production-cases}, Case~1): losses overlap for 2{,}000 steps while downstream quality diverges 15.7 points; the rule fires at step~1.}
+\label{fig:silent-motivation}
+\end{figure}
+
+A silent-error detector requires a \emph{detection oracle}: a source of truth against which observed runtime state is judged correct or corrupt. Each choice of oracle imposes a structural ceiling: outcome-metric monitors fire only after the macro curve bends, because aggregation can erase a fault's fine-grained signature; behavioral trace templates infer invariants---including topology-conditioned ones---from example runs, so they cover only what those runs exercise; differential testing needs a trusted, alignable reference and runs offline; and plan verification covers only what is decidable before the first step. In short, runtime evidence alone is not an oracle: existing approaches either discard its fine-grained structure, generalize only from previously observed executions, require a trusted reference, or cannot validate the execution online. Table~\ref{tab:approaches-comparison} summarizes these oracle choices and their structural limitations; \S\ref{subsec:detection} evaluates their observable consequences under a case-aligned protocol.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\Description{Comparison of silent-error detectors by mode, oracle source, and key structural limitation.}
+\caption{Silent-error detectors differ in the source and availability of their correctness oracle.}
+\label{tab:approaches-comparison}
+\begin{tabularx}{\linewidth}{@{}l l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Method} & \textbf{Mode} & \textbf{Oracle} & \textbf{Key limitation} \\
+\midrule
+Loss / NaN monitor  & Online  & Outcome metrics        & Late, uninformative \\
+TrainCheck          & Online  & Example-run invariants & Bounded by example runs \\
+TTrace              & Offline & Reference impl.\ diff  & Needs alignable reference \\
+TrainVerify         & Static  & Logical specification  & Plan-only, no runtime \\
+\midrule
+\textsc{TrainAudit} & Online  & Bug-derived constraints & Requires source-grounded constraint recovery \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textsc{TrainAudit} occupies the unexplored cell of this design space: it derives deployable checks from \emph{historical bug fixes} rather than from example executions, so a check's authority comes from source-level evidence and fix replay rather than from the runs available for invariant inference, while remaining online and requiring no trusted reference. This position is feasible because of a structural property established in \S\ref{sec:empirical}---silent errors repeatedly violate reusable relations over runtime training facts, even as the concrete template catalog grows with framework code. Turning those relations into trustworthy online checks requires overcoming three obstacles (\S\ref{subsec:challenges}).
+
+\subsection{Challenges}
+\label{subsec:challenges}
+
+\paragraph{C1: Correctness obligations require precise runtime guards.} Whether a relation over training state must hold is itself a conditional integrity constraint: it holds on some tuples and not others. Within a single tensor-parallel run, \texttt{layernorm.weight} is replicated across ranks and must be bitwise equal, whereas \texttt{query\_key\_value.weight} is partitioned and must differ---yet a single cross-rank equality check matches both. Enforced unconditionally, it flags every legitimately partitioned tensor, so a constraint carrying no guard for tensors, topology, and phase is unusable in production (\S\ref{subsec:problem-formulation}).
+
+\paragraph{C2: Correctness obligations are latent and must be recovered safely.} The constraints that define correct training are never written down as such: they are latent in the framework's implementation and the algorithm's mathematics, and only their \emph{violations} ever surface---as a fixed bug or a documented caveat. This rules out profiling them from a data instance the way integrity constraints usually are: a single clean run exhibits countless regularities, but a regularity that merely happened to hold is not one that must hold, and enforcing it fires false alarms on the next run. The authoritative source is the code and algorithm that generate the data, not the data itself---yet reading a constraint off that source is error-prone, because what the documentation states and what the implementation enforces routinely diverge. A candidate that looks correct on paper is quietly violated by the framework's own initialization path, so without validation against the actual code a mined library is itself a source of false positives (\S\ref{subsec:invariant_miner}).
+
+\paragraph{C3: Verified obligations must be checked at training speed.} The check runs online, on the critical path of every training step: a detector that slows the step, or falls behind it, will be turned off. Yet the state worth checking is large---parameters, gradients, and optimizer state across every rank---and inspecting it in full at every step is too expensive to sustain in production (\S\ref{subsec:data-collector}, \S\ref{subsec:error-analysis}).
+
+These challenges structure the paper. For C1, \S\ref{subsec:problem-formulation} decomposes every deployable constraint into three predicates---measurement schema, agreement topology, validity precondition---whose guards the Invariant Miner instantiates per framework (\S\ref{subsec:invariant_miner}). For C2, the Miner treats LLM-proposed candidates as untrusted, admitting a constraint only after counterexample verification, healthy-run replay, and topology-aware scope validation (\S\ref{subsec:invariant_miner}). For C3, the Data Collector captures only fields that accepted constraints read (\S\ref{subsec:data-collector}) and the Verifier prunes rules inapplicable under the active topology (\S\ref{subsec:error-analysis}); overhead is quantified in \S\ref{subsec:efficiency}. \S\ref{sec:empirical} first establishes the empirical foundation: real silent errors reuse guarded relations over runtime training facts, while the catalog of concrete templates evolves with the frameworks.
+
+\section{Empirical Study and Problem Formulation}
+\label{sec:empirical}
+
+The preceding section identifies the need for a source-grounded online oracle. This section first establishes the empirical premises that make such an oracle possible and then defines the checking problem precisely. \S\ref{subsec:bug-survey} studies the 392-record upstream evidence corpus to determine where the correctness standard comes from, whether silent errors recur at the level of runtime relations, and when those relations require topology and phase guards. \S\ref{subsec:problem-formulation} translates these findings into guarded relational constraints with three predicates: a measurement schema, an agreement topology, and a validity precondition. \S\ref{subsec:theory} establishes formal properties of this decomposition, including the schema-relative observability ceiling measured in \S\ref{sec:evaluation}.
+
+\subsection{Empirical Study: The Structure of Silent Errors}
+\label{subsec:bug-survey}
+\label{subsec:bug-collection}
+\label{subsec:fault-taxonomy}
+
+\paragraph{Corpus construction.}
+We test three premises needed by a source-grounded runtime oracle: the intended relation comes from outside the runtime data, relation types recur across incidents, and their applicability depends on topology and phase. Our evidence is a curated corpus of \textbf{392 upstream silent-error records} from Megatron-LM, DeepSpeed, OLMo, and OLMo-core. The released corpus combines a commit-backed collection with an
+earlier issue/PR-curated collection, deduplicated by upstream incident
+(Megatron-LM 110, DeepSpeed 123, OLMo 77, OLMo-core 82). Commit diffs and
+messages are the preferred evidence because they identify the changed
+training path and a concrete before/after semantics. Issue text is supporting evidence
+only, since reports often lack the buggy revision, trigger configuration, or
+an executable oracle.
+
+A candidate is retained when the available evidence supports a semantic
+correctness failure in a training-critical path rather than documentation,
+performance, or refactoring, and describes silent continuation as the primary
+behavior rather than an immediate exception. We require enough information to
+extract the affected semantic objects and intended relation, but do not treat
+this screening decision as physical reproduction: only the runnable subsets
+verify buggy and fixed behavior directly. We assign each record one coarse
+primary subsystem label by inductive coding and report the distribution in
+Table~\ref{tab:taxonomy}. These labels
+are descriptive bins for corpus reporting, not the relation-template space
+used by \textsc{TrainAudit}; in the table, ``any'' denotes
+topology-independent applicability.
+\suppappendix{app:methodology} reports provenance strength separately: 289
+records carry a fixed-commit identifier, 96 are issue/PR-only records, and 7
+retain only a curated source summary. The corpus is therefore heterogeneous
+evidence for coding and catalog induction, not 392 equally reproduced bugs
+nor an exhaustive all-commit census.
+
+\begin{table}[t]
+\centering
+\small
+\Description{Distribution of 392 evidence-corpus records by primary subsystem label, with typical parallelism dimension and loop stage of first observability.}
+\caption{Distribution of the \textbf{392-record evidence corpus} by primary
+subsystem, typical parallelism dimension, and first observable loop stage.}
+\label{tab:taxonomy}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}l >{\raggedleft\arraybackslash}p{0.13\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Primary label} & \textbf{Records} & \textbf{Parallelism} & \textbf{Loop Stage} \\
+\midrule
+Numerical      &  75 & any         & Fwd/Bwd \\
+Control Flow   &  50 & any         & All \\
+Grad Sync      &  46 & DP          & Backward \\
+Checkpoint     &  32 & DP/TP/PP    & Save/Load \\
+MoE            &  28 & EP          & Fwd/Bwd \\
+Optim State    &  28 & DP/FSDP     & Optim Step \\
+Data Loading   &  28 & DP          & Pre-step \\
+Communication  &  26 & DP/TP/PP/EP & All \\
+Dtype          &  24 & any         & Fwd/Bwd \\
+Loss Comp.     &  23 & any         & Forward \\
+Sharding       &  13 & TP/PP       & Init/Fwd \\
+LR Schedule    &  13 & any         & Optim Step \\
+Offload        &   6 & DP/FSDP     & Optim Step \\
+\midrule
+\textbf{Total} & \textbf{392} & & \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Finding 1: Recognition requires an external correctness relation.}
+The retained evidence does not identify a fault from an unlabelled runtime
+record alone; it first supplies an intended relation from the training code,
+algorithm, or confirmed fix. Runtime state may then contain a witness---for
+example unequal replicas or an incorrect call count---but it does not encode
+why those values should agree or how many calls are correct. In the physically
+replayed subset, ordinary operator-facing signals such as loss and gradient
+norms can remain plausible despite the violation. We do not claim a
+bitwise-identical healthy/buggy trace for every record; the corpus supports
+only this structural claim.
+
+\paragraph{Finding 2: Silent errors recur at the level of runtime relations.}
+Across the coded records, faults from different frameworks repeatedly
+instantiate the same kinds of obligations---replicated state should agree,
+scaled quantities should carry the intended factor, producers should precede
+consumers, and saved state should be restored completely. Yet these relations
+apply to different semantic objects and under different topology and phase
+conditions. This motivates an intermediate representation between the coarse
+corpus labels and framework-specific checks: a catalog of reusable relation
+templates whose reproducibility and coverage we evaluate in
+\S\ref{subsec:catalog-evaluation}.
+
+\paragraph{Finding 3: Whether a constraint must hold depends on topology and phase.} The two rightmost columns of Table~\ref{tab:taxonomy} summarize the guard structure visible even at this coarse coding level. Several labels are tied to specific parallelism dimensions---Grad Sync to DP, Sharding to TP/PP, and MoE to EP---and failures first become observable at different points of the training loop. A deployable check must therefore carry with it the topology under which its relation is required and the phase at which it is valid. \S\ref{subsec:problem-formulation} formalizes exactly this requirement as a three-predicate decomposition.
+
+\subsection{Problem Formulation and Three-Predicate Decomposition}
+\label{subsec:problem-formulation}
+\label{subsec:three-layer}
+\label{subsec:pattern_motivation}
+
+Building on \S\ref{subsec:bug-survey}'s finding that the correctness constraint lives outside the data, this subsection formalizes what it means to check such a constraint at runtime and reduces every deployable check to three predicates. We model a training run as a sequence of states and cast a correctness constraint as a \emph{semantic invariant} over them. Each state contains the objects that a silent error can corrupt: model parameters on each rank, gradients, optimizer state, training-loop control variables, framework metadata such as \texttt{tensor\_model\_parallel}, and the active parallel topology $\tau$. A silent error occurs when the actual next state differs from the intended next state, while the program raises no exception.
+
+\begin{definition}[Silent Error]
+\label{def:silent-error}
+A \emph{silent error} at step $t$ is a state $\tilde{s}_{t+1} = f_{\text{actual}}(s_t)$ such that $\tilde{s}_{t+1} \neq f_{\text{ideal}}(s_t)$ and no runtime exception is raised.
+\end{definition}
+
+Since $f_{\text{ideal}}$ is unavailable at runtime, \textsc{TrainAudit} instead checks \emph{semantic invariants}: relations that must hold in every correct training state---replicated parameters should agree across the right ranks, counters should advance with the training loop, and framework metadata should be consistent with the active topology. Crucially, each training state is already materialized as relational trace tuples, so such an invariant becomes a \emph{guarded relational constraint} that \textsc{TrainAudit} evaluates as a query over the trace, where a violation surfaces as a non-empty result. The remaining difficulty is therefore to make each constraint precise enough to deploy, which is what the three-predicate decomposition below provides.
+
+\begin{definition}[Semantic Invariant]
+\label{def:invariant}
+A \emph{semantic invariant} is a predicate $p: \mathcal{S} \to \{0, 1\}$ such that $\forall s_0, t: p(f_{\text{ideal}}^{\,t}(s_0)) = 1$.
+\end{definition}
+
+Consider a DP=2 run where a missing \texttt{allreduce} causes rank~0 and rank~1 to accumulate different gradient updates silently. In state terms, $\theta_{\text{rank0}} \neq \theta_{\text{rank1}}$ while no exception is raised---a silent error by Definition~\ref{def:silent-error}. The natural invariant is $p(s) = [\theta_{\text{rank0}} = \theta_{\text{rank1}}]$, which is violated (Definition~\ref{def:invariant}). But three questions must be answered to make it useful in production: \emph{what exactly to compare?} (parameter checksums, not raw tensors), \emph{on which parameters?} (DP-replicated weights only---TP-sharded \texttt{query\_key\_value} weights are \emph{supposed} to differ), and \emph{when?} (after step-1 synchronization, not at initialization).
+
+Every deployable constraint must answer these three questions, so we decompose each constraint into three predicates:
+\begin{equation}
+\label{eq:three-layer}
+p(s) \;=\; \pi_{\text{schema}}(s) \;\wedge\; \pi_{\text{topo}}(s;\,\tau) \;\wedge\; \pi_{\text{precond}}(s;\,t).
+\end{equation}
+$\pi_{\text{schema}}$ selects the fields of $s$ to read, such as parameter checksums, gradient norms, or function-call counts. $\pi_{\text{topo}}$ encodes which ranks or objects should agree under the active topology $\tau$. $\pi_{\text{precond}}$ guards the check by training step and framework metadata, preventing valid states such as intentionally sharded tensors from being reported as violations. The three predicates are jointly necessary: dropping any one leaves the others without production usability---a bare cross-rank comparison misfires on correctly-sharded tensors, and an unguarded equality check fires before step-1 synchronization---which our drop-one ablation quantifies (\S\ref{subsec:verified-mining-ablation}). This decomposition is the formal answer to C1: the guards are part of the constraint, not side information attached after the fact.
+
+% Declared early enough for this double-column overview to occupy the top of
+% the next page, beside the transition from Section 3 to Section 4.
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=0.96\linewidth]{figures/fig_overview_v44.pdf}
+    \Description[TrainAudit architecture with offline mining, online checking, and deployment context]{Three numbered components form the main workflow. The offline Invariant Miner receives a catalog template and framework source, scopes and grounds a candidate, attacks it with counterexamples, and accepts it only after verification; its lower state machine shows the implementation stages and rejection loop. Accepted guarded rules enter the verified constraint library. Online, the Data Collector materializes selected lifecycle fields into a DuckDB trace, and the Verifier applies topology-aware pruning before running deterministic SQL. Empty results satisfy the rule; non-empty rows form a violation set that is formatted into the user-facing report at left. A right-hand summary rail gives catalog provenance, acceptance gates, and framework-adapter scope.}
+    \caption{\textsc{TrainAudit} architecture: offline rule discovery and
+    online deterministic trace checking. No LLM runs online.}
+    \label{fig:architecture}
+\end{figure*}
+
+\subsection{Formal Properties of Guarded Constraints}
+\label{subsec:theory}
+
+We briefly formalize the three-predicate decomposition as a Boolean-algebra fragment over the trace schema, establishing three properties that \S\ref{sec:evaluation} measures directly. Write $G_c = \pi_{\text{topo}} \wedge \pi_{\text{precond}}$ for the \emph{guard} of constraint $c$. The \emph{violation set} on trace $D$ is
+\begin{equation}
+\label{eq:violation-set}
+V_c(D) \;=\; \bigl\{\, tup \in D : G_c(tup) \;\wedge\; \neg\,\pi_{\text{schema}}(tup)\,\bigr\},
+\end{equation}
+and $c$ fires on $D$ iff $V_c(D)\neq\emptyset$. For relational checks, $\pi_{\text{schema}}$ is evaluated per \emph{comparison group}---the guarded tuples sharing the constraint's grouping key, e.g., all replicas of one parameter at one step---and $V_c(D)$ contains the tuples of every violating group (single-tuple checks are singletons); this is exactly the \texttt{WHERE}/\texttt{GROUP BY}/\texttt{HAVING} shape the Verifier compiles to (\S\ref{subsec:error-analysis}).
+
+\begin{proposition}[Soundness]\label{prop:soundness}
+If $p_c$ is a semantic invariant (Definition~\ref{def:invariant}) and $c$ fires on the trace $\tilde D_t$ of an actual execution, then $\tilde s_t$ lies on no ideal trajectory.
+\end{proposition}
+\noindent Immediate: firing implies $p_c(\tilde s_t)=0$, which by Definition~\ref{def:invariant} excludes $\tilde s_t$ from every ideal trajectory.
+
+\begin{proposition}[Guard Monotonicity]\label{prop:monotone}
+If $c_1, c_2$ share the same schema condition and $G_1 \Rightarrow G_2$, then $V_{c_1}(D) \subseteq V_{c_2}(D)$ for every trace~$D$.
+\end{proposition}
+\noindent Immediate from the subset relation on the guard conjuncts. Dropping any conjunct from a guard can therefore only weakly increase the false-positive count on a fixed clean corpus; \S\ref{subsec:verified-mining-ablation} measures the magnitude of each guard's effect.
+
+The result below characterizes the schema-relative limit without assuming
+that every numerical difference is itself a sound, reference-free oracle.
+
+\begin{theorem}[Schema-Relative Observability Ceiling]\label{thm:ceiling}
+Let $\operatorname{proj}_{\Sigma}(D)$ denote a trace projected onto schema
+$\Sigma$, and let $\mathcal{L}_{\Sigma}$ be the set of such projections
+admitted by correct executions under the applicable topology and phase
+guards. If
+$\operatorname{proj}_{\Sigma}(\tilde D)\in\mathcal{L}_{\Sigma}$ for a faulty
+trace $\tilde D$, no sound guarded predicate over $\Sigma$ can distinguish
+$\tilde D$ from all correct executions.
+\end{theorem}
+\begin{proof}
+If $\operatorname{proj}_{\Sigma}(\tilde D)\in\mathcal{L}_{\Sigma}$, some
+correct execution has the same observable projection. Any predicate over
+$\Sigma$ has the same value on the two projections, so a predicate that fires
+on $\tilde D$ also fires on a correct execution and is not sound. The
+ceiling therefore lies at the schema, not at the predicate language: any
+separator expressible over $\Sigma$ can be conjoined with the applicable
+guards.
+\end{proof}
+
+\noindent The bound is tight in practice: O-003's sub-percent z-loss change is
+present numerically, but remains within the values admitted by clean
+executions and has no sound reference-free separator under the current
+schema. It therefore remains observationally indistinguishable from some
+correct execution under the available online information
+(\S\ref{subsec:detection}). This ceiling is a property of the instrumented
+schema, not of the constraint language: no sound guarded predicate over
+$\Sigma$ can close it, so widening $\Sigma$---not enriching the
+rules---is the only remedy.
+
+How \textsc{TrainAudit} mines such three-predicate constraints from framework artifacts (C2) and executes them at training pace (C3) is the subject of \S\ref{sec:overview}.
+
+\section{TrainAudit: Mining and Checking Verified Constraints}
+\label{sec:overview}
+\label{sec:pattern-detection}
+
+\textsc{TrainAudit} follows a four-stage pipeline: \ding{182}~the
+\textbf{Pattern Catalog} provides reusable templates
+(\S\ref{subsec:pattern_catalog}); \ding{183}~the \textbf{Invariant Miner}
+grounds and verifies them (\S\ref{subsec:invariant_miner}); \ding{184}~the
+\textbf{Data Collector} records the required fields
+(\S\ref{subsec:data-collector}); and \ding{185}~the \textbf{Verifier} checks the
+resulting trace (\S\ref{subsec:error-analysis}). Across all four stages, a rule
+must remain broad enough to capture a recurring silent-error pattern, yet narrow
+enough to stay silent on correct executions.\footnote{\emph{Terminology conventions.} \emph{Schema collection tiers}
+S0--S6 denote trace field sets and their cost trade-offs; \emph{rule-trigger
+tiers} A0/A1 denote the firing layer (A0 = PyTorch public interface, A1 =
+framework adapter).}
+
+% Queue the second double-column workflow figure here so it follows the
+% architecture overview on the next page instead of leaving page 7 text-only.
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.900\textwidth]{figures/fig_three_predicate_sql.pdf}
+\Description{Three side-by-side SQL panels showing the same cross-rank equality rule with progressively added topology and precondition guards, annotated with the false positives each guard removes.}
+\caption{Topology- and phase-guarded SQL compilation for cross-rank
+replication.}
+\label{fig:three-predicate-sql}
+\end{figure*}
+
+\subsection{Architecture and Running Example}
+\label{subsec:architecture}
+
+\textsc{TrainAudit} evaluates constraints over a relational \emph{training
+trace}, so that a silent error surfaces as a non-empty query result.
+Figure~\ref{fig:architecture} separates offline constraint preparation from
+online enforcement. Facing C1 and C2, the offline Invariant Miner grounds
+catalog templates with deployable topology and phase guards, then admits them
+through counterexample verification and healthy-run replay. To address C3, the
+online Data Collector materializes only the fields accepted rules read, while
+the Verifier executes compiled SQL under topology-aware pruning and reports the
+violating constraint, ranks, and step. Accepted constraints therefore execute
+deterministically; LLM output never enters the runtime verdict path.
+
+The system attaches through one context-manager wrapper with no user code
+changes. A lightweight per-framework adapter maps abstract lifecycle points to
+framework entry points. Across the evaluated frameworks, the complete adapter
+implementations comprise 30--150 LoC (\S\ref{subsec:scalability}).
+
+\label{subsec:e2e-example}
+A cross-rank replication bug in Megatron-LM's SwitchMLP router weights provides
+the running example. A missing synchronization leaves two replicas that should
+be bitwise equal silently divergent. The correctness relation is easy to state
+yet unsafe to deploy unguarded. Replicated parameters must share a checksum
+across TP ranks, but intentionally sharded parameters must not be compared at
+all; the bare check therefore flags 57 correctly sharded
+\texttt{query\_key\_value.weight} tensors on a clean $\mathrm{TP}=2$ run.
+\textsc{TrainAudit} scopes the cross-rank replication template before
+deployment---comparing checksums only when $\mathrm{TP}>1$ and the parameter is
+not tensor-parallel sharded---so the same check stays silent on this clean run
+yet returns the divergent \texttt{router.weight} in the buggy run.
+
+\subsection{Pattern Catalog: From Corpus Evidence to Reusable Rule Templates}
+\label{subsec:pattern_catalog}
+
+\noindent\emph{Why a catalog is necessary.}
+The coarse corpus labels of \S\ref{sec:empirical} summarize where failures
+occur, but they do not specify a check: ``gradient synchronization'', for
+example, does not say which states should agree, across which ranks, or at
+what point in the step. Writing one check per incident would preserve these
+accidental details and transfer poorly. At the other extreme, asking the LLM
+to invent a relation while inspecting each framework gives the miner an
+unbounded and moving search space. The Pattern Catalog bounds this search by
+maintaining the relation families currently supported by the evidence, while
+leaving framework objects and applicability conditions to later grounding.
+
+\emph{Catalog construction and use.}
+Each catalog entry records a framework-independent relation (e.g., equality
+or ordering), its semantic object roles and observable violation witness, and
+the topology and phase guards under which it may apply; we admit entries
+supported by recurring bug-and-fix evidence and version the catalog as new
+evidence arrives. The Invariant Miner then grounds a selected entry into
+framework-specific fields, topology groups, and lifecycle stages and verifies
+the resulting executable rule before deployment; we evaluate a frozen catalog
+snapshot in \S\ref{subsec:catalog-evaluation}, with the complete construction
+protocol in \suppappendix{app:pattern-catalog}.
+
+\emph{Template representation and boundary.}
+A catalog entry separates invariant semantics from framework-specific binding.
+For example, the cross-rank replication template records equality as its
+relation, a replicated parameter as its semantic object, multiple checksums
+within one replica group as the violation witness, and open slots for the
+topology group, sharding predicate, and lifecycle point. These fields map
+directly to the three-predicate interface: the relation and witness define the
+schema-level violation, the comparison group supplies $\pi_{\text{topo}}$, and
+the sharding and lifecycle slots supply $\pi_{\text{precond}}$. Framework
+parameter names, attributes, and hookpoints remain open until grounding binds
+them from target-source evidence. Two incidents share a template only when
+their relation, semantic roles, and violation witness agree; differences in
+topology or phase become guard slots.
+We split candidates whose merger changes the relation, requires unrelated
+disjunctions, lacks a common witness, or would flag a legal execution. A
+recurring catalog entry requires support from two independent incidents;
+one-off relations remain singleton evidence.
+
+\subsection{Invariant Miner: Instantiating Templates into Verified Rules}
+\label{subsec:invariant_miner}
+
+A catalog template names a relation worth checking, but an executable rule must
+scope that relation to the code, topology, and training phase of a concrete
+framework. Direct LLM-generated scopes are unsafe: a plausible candidate may
+omit a topology guard, apply at the wrong phase, or encode a documentation-level
+assumption that the real initialization path violates. The Invariant Miner
+therefore treats every LLM-instantiated candidate as \emph{untrusted until
+verified} and admits it into the verified constraint library $\mathcal{P}$ only
+after counterexample verification, healthy-run replay, and topology-aware scope
+validation. Candidate generation is bounded to instantiating
+$\pi_{\text{schema}} \wedge \pi_{\text{topo}} \wedge
+\pi_{\text{precond}}$ from a catalog template.
+
+\label{subsubsec:candidate-verification}
+Candidate verification proceeds through four ordered stages. The miner first
+\textbf{scopes} the candidate to a training phase and parameter class, fixing
+$\pi_{\text{topo}} \wedge \pi_{\text{precond}}$; without this step, a
+cross-rank equality rule would also match correctly sharded parameters. Only
+once the scope is constrained does it \textbf{ground} $\pi_{\text{schema}}$,
+collecting supporting evidence $\mathcal{E}^{+}$ and contradicting evidence
+$\mathcal{E}^{-}$ from the call sites and module attributes retrieved from the
+framework source. The grounded candidate then enters the adversarial
+\textbf{construct} stage, which synthesizes at least two counterexamples
+$\mathcal{CE}$ that would make the rule fire on a clean run if its scope were
+still too broad. Finally, the miner \textbf{accepts} the candidate only when no
+counterexample validates and the confidence score clears a threshold:
+\begin{equation}
+\begin{aligned}
+\textsc{Accept}(c) \Leftrightarrow\; & \big(\forall ce \in \mathcal{CE}: \textsc{Verify}(ce) \neq \texttt{HOLDS}\big) \\
+& \,\land\, \big(\textsc{Conf}(c) \geq \theta_{\text{conf}}\big),
+\end{aligned}
+\label{eq:accept}
+\end{equation}
+A single confirmed counterexample is \emph{decisive}: a constructed state on
+which the candidate fires during a provably correct execution refutes semantic
+invariance (Definition~\ref{def:invariant}) and rejects the candidate regardless
+of its confidence score. $\textsc{Conf}(c) \in [0,1]$ plays the complementary
+\emph{screening} role, aggregating evidence strength and counterexample-test
+outcomes on top of a hard floor of two independent evidence sources. The score
+is uncalibrated and serves only to keep thin-evidence survivors out of the
+library, with $\theta_{\text{conf}}{=}0.8$ as a conservative default (full rule
+in \suppappendix{app:conf-screening}). Precision is evaluated separately end to
+end: the adversarially verified cohort fires on 0 of 764 held-out clean
+evaluations, and the deployed library produces \FixedFPFrac{} fixed-side false
+positives (\S\ref{subsec:verified-mining-ablation}).
+
+The mining loop is a five-stage finite-state machine covering gap analysis,
+evidence retrieval, synthesis, persistence, and reporting (state diagram in
+\suppappendix{app:algorithm}); $S_3$ is the only branching stage and hosts the
+verification funnel above. On a catalog or framework update, unchanged
+templates and adapters are reused while affected scopes are re-grounded and
+verified (cost in \S\ref{subsec:efficiency}). The miner and runtime pruner divide
+responsibility for scope enforcement: the funnel writes the tightest scope
+supported by static evidence, and at job start the pruner reads the live $\tau$
+and disables rules whose preconditions do not match the live configuration.
+
+For cross-rank replication, the miner leaves the rule with
+$\pi_{\text{topo}} = [\texttt{TP}{>}1]$ and
+$\pi_{\text{precond}} = [\texttt{tpl}{=}\texttt{False}]$, where \texttt{tpl}
+marks intentional tensor-parallel sharding of the parameter.
+
+\begin{algorithm}[t]
+\footnotesize
+\caption{Counterexample-guided constraint mining loop.}
+\label{alg:miner}
+\begin{algorithmic}[1]
+\REQUIRE Pattern catalog $\mathcal{C}$, framework source $F$, launch script $L$
+\ENSURE  Verified constraint library $\mathcal{P}$
+\STATE $\mathcal{P} \gets \emptyset$ \hfill // initialize library
+\WHILE{$\mathrm{coverage\_gap}(\mathcal{C}, \mathcal{P}) > 0$}
+  \STATE $\mathit{pat} \gets S_1.\textsc{PickPattern}(\mathcal{C}, \mathcal{P})$ \hfill // $S_1$: gap analysis
+  \STATE $\mathit{ctx} \gets S_2.\textsc{GatherEvidence}(\mathit{pat}, F, L)$ \hfill // $S_2$: evidence gathering
+  \STATE $c   \gets S_3.\textsc{Synthesize}(\mathit{pat}, \mathit{ctx})$ \hfill // $S_3$: candidate proposal
+  \STATE $\mathcal{CE} \gets S_3.\textsc{Attack}(c)$ \hfill // $S_3$: counterexample attack
+  \IF{$\big(\forall ce \in \mathcal{CE}: \textsc{Verify}(ce) \neq \texttt{HOLDS}\big) \,\land\, \big(\textsc{Conf}(c) \geq \theta_{\text{conf}}\big)$}
+     \STATE $\mathcal{P} \gets \mathcal{P} \cup \{c\}$ \hfill // $S_4$: persist accepted
+  \ENDIF
+  \STATE $S_5.\textsc{Report}(c, \mathcal{P})$ \hfill // $S_5$: feedback (accept/reject)
+\ENDWHILE
+\STATE \textbf{return} $\mathcal{P}$
+\end{algorithmic}
+\end{algorithm}
+
+Figure~\ref{fig:three-predicate-sql} shows how the running replication check
+changes as its guards are compiled into SQL. Panel~(a) uses only
+$\pi_{\text{schema}}$ and reports legitimately TP-sharded tensors;
+panel~(b) adds $\pi_{\text{topo}}$ but can still fire before step-1
+synchronization; panel~(c) adds the phase precondition, leaving the
+SwitchMLP \texttt{router.weight} violation as a non-empty query result. The
+matched ablation in \S\ref{subsec:verified-mining-ablation} quantifies this
+progression (83.3 to 25.8 FP/1M and 0/\NumFixedReplay{} fixed-side false
+positives for the guarded rule).
+
+\subsection{Training Instrumentation: Capturing the Runtime Fields Rules Need}
+\label{subsec:data-collector}
+
+Once a rule is accepted, its required runtime fields determine collection cost.
+The Data Collector therefore lets the verified constraint library $\mathcal{P}$
+select those fields instead of imposing one fixed trace schema: rules requiring
+only checksums and rank coordinates keep the collector at tier S0, while rules
+needing optimizer state or control variables enable later tiers.
+Table~\ref{tab:trace-schema} organizes S0--S6 as ordered schema tiers; the cost
+of raising a tier is evaluated in \S\ref{subsec:efficiency} and the full
+coverage--overhead curve is given in \suppappendix{app:extended_data}
+(Figure~\ref{fig:tier-coverage}).
+
+{\sloppy The collector instruments the PyTorch training loop at five canonical lifecycle points---\texttt{before-\allowbreak forward}, \texttt{after-\allowbreak forward}, \texttt{main-\allowbreak grad-\allowbreak in-\allowbreak backward}, \texttt{after-\allowbreak backward}, and \texttt{before-\allowbreak optimizer}---without modifying user code; three auxiliary taps (checkpoint save/load, \texttt{distributed.all\_reduce}, build snapshot) extend coverage to the 8 hookpoints used by the verifier's indexer (\S\ref{subsec:efficiency}), which include both optimizer pre- and post-step taps. The dominant overhead source is not the number of hooks but \emph{what} each hook computes: full-tensor checksums require moving data to the CPU, so the collector uses GPU-side scalar reductions whenever a rule does not require bit-exact checksums. Captured records are written, with rank/step/stage coordinates unrolled into columns, into a DuckDB-backed trace database with a two-step sliding window---the faults we target reproduce deterministically under a fixed configuration and seed, so cross-rank and cross-step checks need at most two consecutive snapshots. For the running example, the cross-rank replication rule requires only the S0 columns (\texttt{cksum}, \texttt{param\_name}, \texttt{rank}, \texttt{step}, \texttt{stage}) at the \texttt{after-optimizer} (optimizer post-step) tap.\par}
+
+\begin{table}[!t]
+\small
+\Description{Schema collection tiers S0 through S6 listing representative new fields added at each opt-in tier.}
+\caption{Opt-in trace-schema tiers exposed by the Data Collector.}
+\label{tab:trace-schema}
+\begin{tabularx}{\columnwidth}{@{}c >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Schema tier} & \textbf{Representative new fields} \\
+\midrule
+S0 & cksum, param\_name, ranks, step, stage, dtype, shape \\
+S1 & grad\_norm, grad\_cksum \\
+S2 & loss\_value \\
+S3 & learning\_rate, micro\_step\_id \\
+S4 & optimizer\_state\_cksum \\
+S5--S6 & ep/cp\_rank, zero\_stage, has\_nan/inf, num\_tokens \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Online Detection: Compiling Verified Rules into Runtime Checks}
+\label{subsec:error-analysis}
+
+After the required fields are written to the trace, the Verifier evaluates the accepted rules. Rather than evaluating each rule as a separate Python predicate with separate paths for state snapshots, call events, and initialization checks, \textsc{TrainAudit} compiles instantiated rules into parameterized SQL over the DuckDB trace: $\pi_{\text{topo}}$ and $\pi_{\text{precond}}$ become \texttt{WHERE} filters, and $\pi_{\text{schema}}$ becomes the violation condition in the \texttt{HAVING} clause. An empty result means the constraint holds for the current step; a non-empty result \emph{is} the violation set, already labeled with the offending parameter, step, and ranks.
+
+Before the first training step, the verifier performs three tasks. First, it extracts the active topology $\tau$ from the launch script---DP/TP/PP/EP group sizes, \texttt{zero\_stage}, and mixed-precision dtype---and disables rules whose $\pi_{\text{topo}}$ cannot hold under it. Second, it builds a topology-aware lineage table that marks each parameter as replicated or intentionally sharded, so SQL filters remove sharded weights before $\pi_{\text{schema}}$ is evaluated; this is the runtime counterpart of the SwitchMLP scope in \S\ref{subsec:e2e-example}. Third, it compiles every constraint into a parameterized SQL query. State-row, call-event, and initialization-snapshot rules differ only in which trace relations they read.
+
+After each eligible event or scheduled snapshot, the Data Collector commits
+its records and the verifier executes the surviving rules bound to that
+hookpoint; event-triggered rules therefore run every step, whereas
+snapshot-bound rules follow the configured sampling period analyzed in
+\S\ref{subsec:efficiency}. State-equality, call-ordering, and initialization violations all compile to
+the same query shape (full SQL specification in \suppappendix{app:sql}).
+
+When a query returns a non-empty row set, the verifier walks the corresponding rule's coarse-to-fine dependency tree to localize the fault: coarse rules (whole-tensor checksums) run first, and finer rules (per-module, per-stage, per-parameter, bitwise) instantiate only after a coarse check has confirmed that a fault is likely. The final report names the violating constraint, the affected parameter, the divergent ranks, and the step at which the violation first appeared. On the detected Real-SE cases, rule names alone localize 53\% of cases, and the expand--contract drill-down compresses the remaining candidate sets by ${\sim}6\times$. \suppappendix{app:diagnosis} gives the full quantitative study.
+
+\section{Evaluation}
+\label{sec:evaluation}
+
+We evaluate whether (1)~verified guarded constraints detect real
+silent errors that prior detectors miss, (2)~each guard and validation stage
+controls candidate quality and deployment size, (3)~the Pattern Catalog can be constructed reproducibly
+and covers held-out records, (4)~the checks run at practical cost, and
+(5)~the resulting library transfers across frameworks and versions. Real-SE replays run on one
+eight-NVIDIA-H800 node; end-to-end overhead runs span 4--32 nodes with eight H800 GPUs each
+(32--256 GPUs), while full-snapshot microbenchmarks use a separate NVIDIA-H20
+server with a 1.2B-parameter GPT harness.
+
+% Queue this evaluation summary early so it can occupy the next page top.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_predicate_ablation_v2.pdf}
+\Description{Three-panel figure. The first two panels compare detection and clean-trace false positives for the full predicate and two guard ablations. The third compares clean-trace false-positive rates for manual SQL, Daikon-style mining, and guarded T01 checks on a logarithmic axis.}
+\caption{Guard conditions and database-oriented baselines. Panels~(a--b)
+report the matched predicate ablation; panel~(c) compares clean-trace FP rates
+over the same trace relations on a log scale.}
+\label{fig:predicate-ablation}
+\end{figure}
+
+\subsection{Experimental Setup}
+\label{subsec:eval-setup}
+
+Our protocol separates catalog construction from detector scoring and makes
+execution-protocol differences explicit.
+
+\label{para:workloads}
+\emph{Benchmark and baselines.}
+Real-SE is a frozen, coverage-constrained detector benchmark for held-out recall
+within the 392-record catalog corpus. It contains \NumRealSEReal{}
+detector-coverable paired reproductions of real buggy and fixed revisions and
+\NumRealSEBoundary{} predesignated observability-boundary case. Before catalog
+induction, every Real-SE incident was assigned to the locked test in the
+128/186/78 seed/development/locked split. The benchmark covers held-out catalog
+families; prevalence and out-of-pool generalization are outside its scope.
+Construction, admission, and replay details appear in
+\suppappendix{app:method-reproducibility}. We compare against Na\"ive Monitoring
+(loss, gradient norm, and NaN/Inf), the official
+TrainCheck~\cite{jiang2025traincheck} implementation, Manual SQL equality,
+bound, and monotonicity checks, and leave-one-configuration-out Daikon-style
+mining~\cite{ernst2007daikon} without topology guards or counterexample
+verification.
+
+\emph{Comparison and verdict protocol.}
+\textsc{TrainAudit} and the database-style baselines consume traces from these
+paired reproductions. TrainCheck instead infers case-local invariants from a fixed
+full-training surrogate and checks its aligned buggy surrogate; Na\"ive
+Monitoring consumes the same surrogate metrics. These surrogate runs provide an
+\emph{oracle-coverage study};
+\suppappendix{app:extended_data} gives the per-case mappings.
+
+A \textsc{TrainAudit} detection must be the first alert on the buggy replay and
+identify the ground-truth rule and parameter; any alert on the paired fixed
+side is a false positive. Requiring the ground-truth firing to appear first
+models an operator triaging alerts in order: a stream led by spurious findings
+does not provide a usable diagnosis even if the real violation appears later.
+This first-alert convention affects only ablations,
+because the deployed library raises no spurious Real-SE alert. We freeze the
+library without case identifiers, fixes, or verdicts and report buggy-case
+detection, fixed-side FP per case, and clean-trace FP per million rule
+evaluations. TrainCheck's fixed traces serve as inference inputs, whereas
+clean-trace FP uses independently collected healthy runs. Detection and
+clean-trace precision therefore rest on different evidence.
+
+The paired reproductions run on the H800 node with NVLink, PyTorch v2.1, and NCCL v2.18
+unless an upstream revision requires otherwise; each case executes at its own
+buggy/fixed revisions rather than under one global framework version.
+
+\subsection{Detection Effectiveness and Precision}
+\label{subsec:detection}
+
+\noindent\emph{Real-bug detection.}
+As Table~\ref{tab:summary_3way} shows, \textsc{TrainAudit} detects
+\NumRealSEDet{} of \NumRealSE{} cases: all
+\NumRealSEDet/\NumRealSEReal{} detector-coverable commit-pair cases and
+\textbf{\RealSEDetRate} overall (95\% Wilson CI $[74.2\%,99.0\%]$), counting
+O-003 as a miss (per-case outcomes in \suppappendix{app:extended_data}).
+Because several cases share a framework or rule, the interval's independence
+assumption is optimistic; requiring executable commit pairs and compact drivers
+also over-represents bugs with localizable method-level witnesses.
+
+\begin{table}[!ht]
+\centering
+\Description{Two visually separated Real-SE protocol panels. The first reports TrainAudit detection and fixed-side precision on paired real revisions. The second reports oracle coverage for TrainCheck and naive monitoring on case-aligned surrogates.}
+\caption{Real-SE evidence under two execution protocols. Panel~(a) evaluates
+\textsc{TrainAudit} on paired framework revisions; panel~(b) reports TrainCheck
+and Na\"ive Monitoring oracle coverage on case-aligned surrogates
+(\NumBaselineEval{} completed cases; O-003 pending).}
+\label{tab:summary_3way}
+\small
+{\small\textbf{(a)} Paired buggy/fixed revisions.}\\[2pt]
+\begin{tabularx}{\linewidth}{@{}l >{\centering\arraybackslash}X >{\centering\arraybackslash}X@{}}
+\toprule
+Method & Buggy cases detected & Fixed-side FP \\
+\midrule
+\textsc{TrainAudit} (this work) & \textbf{\RealSEDetFrac} & \textbf{\FixedFPFrac} \\
+\bottomrule
+\end{tabularx}\\[6pt]
+{\small\textbf{(b)} Case-aligned surrogate oracle coverage.}\\[2pt]
+\begin{tabularx}{\linewidth}{@{}l >{\centering\arraybackslash}X@{}}
+\toprule
+Method & Cases covered \\
+\midrule
+TrainCheck~\cite{jiang2025traincheck} & \TCDetFrac \\
+Naïve Monitoring & \NaiveDetFrac \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Under the case-aligned surrogate protocol, TrainCheck detects
+\textbf{\TCDetFrac} cases (11 misses and the O-005 inference failure), while
+Na\"ive Monitoring detects \textbf{0/\NumBaselineEval}. None of the evaluated
+faults moves loss, gradient norm, or NaN/Inf counts beyond the thresholds used
+by Na\"ive Monitoring.
+TrainCheck's measured coverage reflects the API traces and relation templates
+exposed by the selected surrogate runs. In each miss, the collected trace or
+inferred templates omit the fault-relevant relation; broader example runs may
+expose additional relations.
+
+\emph{Database-oriented baselines.}
+Figure~\ref{fig:predicate-ablation}(c) asks whether standard constraints over the same
+trace relations suffice. Manual SQL expresses self-contained equality, bound,
+or monotonicity checks, while generic Daikon-style templates add learned
+single-trace relations; neither supplies the topology and phase guards needed
+to deploy the relations safely. On four clean Megatron-LM configurations,
+unguarded equality misclassifies 48\% of multi-replica groups
+(\UnguardedFrac{}; $4.8{\times}10^5$ FP/1M) because many tensors are intentionally sharded.
+Daikon-style templates, learned leave-one-configuration-out, retain
+$1.3{\times}10^5$ FP/1M, dominated by workload-specific ranges and equality
+over sharded tensors. Guarded T01-style checks reduce that residual to 25.8 FP/1M.
+A six-rule deploy mix on the same four stores is silent on
+\CleanEvals{} rule evaluations (0/\CleanEvals{}; 95\% Wilson upper bound
+$\le\WilsonFPCap{}$ per million). That denominator counts evaluations
+($4{\times}\CleanEvalsPerDb{}$), not store rows ($4{\times}\StoreRows{}$).
+
+\begin{table}[t]
+\centering\footnotesize
+\Description{Comparison of manual SQL, Daikon-style mining, and TrainAudit on topology guards, verification, and clean-trace false positives per million evaluations.}
+\caption{Database-oriented alternatives over the same trace relations. The
+25.8 FP/1M entry is the guarded T01 residual; the six-rule deployment mix is
+silent on all \CleanEvals{} evaluations.}
+\label{tab:db-baselines}
+\begin{tabularx}{\linewidth}{@{}l >{\centering\arraybackslash}X >{\centering\arraybackslash}X >{\centering\arraybackslash}X@{}}
+\toprule
+ & \shortstack{Manual\\SQL} & \shortstack{Daikon-\\style} &
+ \shortstack{\textsc{TrainAudit}\\(verified)} \\
+\midrule
+Topology guard       & no & no & \textbf{yes} \\
+Counterexample verification & no & no & \textbf{yes} \\
+\midrule
+Clean-trace FP/1M & $4.8{\times}10^5$ & $1.3{\times}10^5$ & \textbf{25.8} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\label{para:detection-boundary}
+\emph{Observability boundary.}
+O-003 exhibits only sub-percent z-loss drift and changes no field that the
+online schema can stably distinguish without a trusted reference; it is
+therefore an observability limit rather than a missing rule. On the precision
+side, \textsc{TrainAudit} produces no false alert in all
+\NumFixedReplay{} paired fixed-side evaluations.\footnote{Sixteen fixed sides
+complete cleanly; M-020's upstream fix instead rejects the faulty
+configuration as intended. We count this as a fixed-side verdict, not as a
+completed CLEAN replay.}
+
+% Declare the funnel before Section 5.3 so it can occupy the left-column top
+% of the following page rather than entering after that column is committed.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_funnel_ablation_v2.pdf}
+\Description{Two-panel verification-funnel figure. Candidate counts contract from 420 hypotheses through 5,334 enumerated, 3,436 healthy-validated, and 357 adversarially verified candidates to 45 deployment entries. A paired panel shows zero of 764 clean firings for the full funnel versus 114 of 400 when healthy-run validation is skipped.}
+\caption{Verification funnel: candidate contraction through verification and
+curation (a), and held-out clean firing with and without healthy-run validation
+(b).}
+\label{fig:funnel-dual-axis}
+\end{figure}
+
+\subsection{Impact of Guarded Verification}
+\label{subsec:verified-mining-ablation}
+
+We isolate two decisions: whether runtime rules need both guards, and whether
+candidate constraints need healthy-run and adversarial verification.
+A complementary leave-one-database-out ablation over 42 databases preserves
+the same ordering in every database: removing $\pi_{\text{precond}}$,
+adversarial verification, and $\pi_{\text{topo}}$ raises aggregate false
+positives from 342 to 429, 551, and 598, respectively
+(funnel detail in \suppappendix{app:algorithm}).
+
+\emph{Predicate-level effect.}
+We evaluate the three configurations on the six-case Real-SE multi-rank subset
+and 504\,K clean rule evaluations (Figure~\ref{fig:predicate-ablation}).
+Topology awareness is critical to precision: removing $\pi_{\text{topo}}$
+increases clean-trace false positives by \textbf{3.2$\times$} (25.8 to 83.3
+FP/1M), while preserving 6/6 fault detection. Without
+$\pi_{\text{precond}}$, premature step-0 equality alerts precede the real
+violation in two cases, which the first-alert convention of
+\S\ref{subsec:eval-setup} scores as misses (4/6). Consistent with
+Proposition~\ref{prop:monotone}, the underlying violation set still grows
+when the guard is dropped; what the guard removes is the spurious mass that
+arrives ahead of the true firing. The guarded configuration is the only
+one with 6/6 detection and fewer than 30 FP/1M.
+
+\emph{Verification funnel.}
+Across four frameworks, the nested automated cohorts contract from 5{,}334
+enumerated candidates to 3{,}436 healthy-run survivors and then 357
+adversarially verified candidates (Figure~\ref{fig:funnel-dual-axis}). Because
+each cohort contains the next, buggy-case detection remains
+\textbf{\RealSEDetFrac} throughout; the residual miss is the observability-boundary
+case of \S\ref{subsec:detection}. What changes is candidate quality. Skipping
+healthy-run validation yields 114/400 firings on held-out clean traces, whereas
+the L3 and L4 survivors produce 0/6{,}922 and 0/764 alerts. Thus L3 removes
+clean-trace false positives, while adversarial filtering removes 3{,}079
+additional candidates that contribute no Real-SE detection. The final 45-entry
+deployment library is a separately curated cross-framework subset of L4, not a
+fifth automated gate, and preserves \textbf{\FixedFPFrac} fixed-side false
+positives.
+
+\subsection{Pattern-Catalog Reproducibility and Generalization}
+\label{subsec:catalog-evaluation}
+
+\noindent\emph{Matched mining ablation.}
+Under the matched evaluation protocol, the Catalog raises validated-rule yield
+from \textbf{2.00\%} to \textbf{6.69\%} and Real-SE detection from
+\textbf{11/18} to \textbf{17/18}. All six discordant cases are additional
+detections by the Catalog, with none favoring the free-form arm (two-sided
+exact McNemar $p{=}0.031$). The complete funnel and paired outcomes appear in
+\suppappendix{app:pattern-catalog}; fixed-side FP is 0/17 for the Catalog arm
+and 2/17 for free-form mining.
+
+\begin{table}[t]
+\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\Description{Matched Catalog versus free-form mining ablation showing validated-rule yield, deployment entries, Real-SE detection, and fixed-side false positives.}
+\caption{Direct Catalog ablation with downstream validation held fixed.}
+\label{tab:catalog-direct}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Arm & \shortstack{Validated\\yield} & Deploy & \shortstack{Real-SE\\det.} & \shortstack{Fixed\\FP} \\
+\midrule
+Catalog   & \textbf{6.69\%} & 45 & \textbf{17/18} & \textbf{0/17} \\
+Free-form & 2.00\%          & 29 & 11/18          & 2/17 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+We test generalization in two complementary ways. First, for each of 249 bugs
+added after the catalog snapshot, we ask whether a frozen template matches the
+fault's runtime relation without using that bug during induction. The catalog
+covers \textbf{95.1\%} of runtime-observable cases (83.1\% overall), and at a
+matched budget of 15 templates retains a 67.5\% versus 47.8\% advantage over
+free-form mining (Figure~\ref{fig:catalog_generalization}). This advantage
+reflects curation: 1{,}841 free-form proposals collapse into coarse buckets,
+whereas the catalog preserves 35 fine-grained obligations. Second, a locked
+test on 78 of the original 392 records measures induction reproducibility and
+groundability: schema match is \textbf{92.3\%} (72/78), joint grounding is
+\textbf{91.0\%} (71/78), and two-rater assignment agreement is
+$\kappa{=}0.954$ (\suppappendix{app:pattern-catalog}). Real-SE incidents belong
+to this locked test, not the 249-bug expansion.
+
+\subsection{Efficiency and Detection Latency}
+\label{subsec:efficiency}
+
+\noindent\emph{Rule-evaluation cost.}
+The Megatron-LM evaluation snapshot activates 24 applicable rules
+(12 A0 + 9 A1 + 3 probes) bound to 8 hookpoints; non-applicable entries remain
+offline until grounded for that framework
+(\suppappendix{app:extended_data}). Hookpoint indexing evaluates about three
+rules per tick rather than scanning all 24.
+That index is what keeps the query path flat as the deployment grows: scanning
+every loaded rule rises from \ScanMsOne\,ms at one rule to
+\ScanMsHundred\,ms at 100, while the indexed path stays at
+\IdxMsEight--\IdxMsHundred\,ms once eight or more rules are loaded. Indexed
+point lookups likewise remain sub-millisecond
+(\QueryPointLo--\QueryPointHi\,ms) as the store grows to \QueryRowsHi{} rows.
+Table~\ref{tab:scale-axes-main} reports the full series on both axes. These are
+per-statement microbenchmarks and exclude collection cost.
+
+\begin{table}[t]
+\centering\footnotesize
+\Description{Two scale axes: query latency versus store size, and scan-all versus indexed-three latency versus loaded rule count.}
+\caption{Query-path scaling along store-size and loaded-rule axes; reported
+latencies are per statement, not per tick.}
+\label{tab:scale-axes-main}
+{\footnotesize\textbf{(a)} Query path vs.\ store size.}\\[2pt]
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Path} & \QueryRowsLo{} rows & \QueryRowsHi{} rows \\
+\midrule
+Point lookup & \QueryPointLo\,ms & \QueryPointHi\,ms \\
+Two-step window & \QueryWinLo\,ms & \QueryWinHi\,ms \\
+Full-table scan & \QueryFullLo\,ms & \QueryFullHi\,ms \\
+\bottomrule
+\end{tabular}\\[6pt]
+{\footnotesize\textbf{(b)} Loaded rules.}\\[2pt]
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+ & $n{=}1$ & $n{=}8$ & $n{=}24$ & $n{=}100$ \\
+\midrule
+Scan all & \ScanMsOne\,ms & \ScanMsEight\,ms & \ScanMsTf\,ms & \ScanMsHundred\,ms \\
+Indexed 3 & \IdxMsOne\,ms & \IdxMsEight\,ms & \IdxMsTf\,ms & \IdxMsHundred\,ms \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\emph{Measured end-to-end overhead.}
+Table~\ref{tab:e2e-overhead} measures the complete online path, including
+collection.
+Across 4--32 H800 nodes (32--256 GPUs), the full collector--store--verifier
+path adds \textbf{6.3--7.2\%} median overhead while retaining 93.3--94.1\% of
+baseline throughput. Scaling from 32 to 256 GPUs increases median overhead by
+0.9 percentage points, with peak GPU memory remaining within 3.4\% of
+baseline. At 256 GPUs, moving the verification interval from 20 to 380 steps
+lowers median overhead from 9.5\% to 3.7\%, while increasing worst-case
+detection delay from 20 to 380 steps. These measurements cover the incremental
+online path. Full diagnostic snapshots use a separate collection mode.
+
+\begin{table}[t]
+\centering\scriptsize
+\setlength{\tabcolsep}{2.4pt}
+\Description{End-to-end TrainAudit overhead, retained throughput, and relative peak GPU memory from 32 to 256 GPUs, followed by the verification-interval trade-off at 256 GPUs.}
+\caption{End-to-end overhead across 32--256 GPUs and the
+verification-cadence trade-off at 256 GPUs; worst-case detection delay equals
+the interval.}
+\label{tab:e2e-overhead}
+{\scriptsize\textbf{(a)} Scale-out online path (100-step interval).}\\[2pt]
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\shortstack{GPUs\\(nodes)} & \shortstack{Collect\\ovh.} & \shortstack{Full med.\\ovh.} & \shortstack{Full P95\\ovh.} & \shortstack{Throughput\\retained} & \shortstack{Peak GPU\\memory} \\
+\midrule
+32 (4)   & 1.9\% & \textbf{6.3\%} & 7.8\% & 94.1\% & 102.7\% \\
+64 (8)   & 2.3\% & 6.9\% & 8.9\% & 93.5\% & 103.1\% \\
+128 (16) & 2.0\% & 6.5\% & 8.2\% & 93.9\% & 102.9\% \\
+256 (32) & 2.4\% & 7.2\% & 9.4\% & 93.3\% & 103.4\% \\
+\bottomrule
+\end{tabular}\\[5pt]
+{\scriptsize\textbf{(b)} Verification cadence at 256 GPUs.}\\[2pt]
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Interval & Median overhead & P95 overhead & Throughput retained \\
+\midrule
+20 steps  & 9.5\% & 11.8\% & 91.3\% \\
+100 steps & \textbf{6.9\%} & 8.7\% & 93.5\% \\
+380 steps & 3.7\% & 5.2\% & 96.4\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_catalog_generalization.pdf}
+\Description{Line chart of held-out coverage versus catalog size: the frozen 35-template catalog rises above free-form frozen and free-form re-mine baselines, with a callout of about 20 percentage points gain at equal size of 15 templates.}
+\caption{Frozen-Catalog generalization on 249 later-added bugs. At 35 templates
+the catalog covers 83.1\%; at a matched budget of 15 it covers 67.5\% versus
+47.8\% for free-form mining and exceeds the 55.4\% re-mining upper bound.}
+\label{fig:catalog_generalization}
+\end{figure}
+
+\emph{Full diagnostic snapshots.}
+On a separate 1.2B/H20 full-snapshot microbenchmark (DP=2, bf16),
+moving tensor fingerprinting and summary statistics to the GPU reduces
+snapshot-enabled iteration time from 191.9\,s to 25.0\,s
+(7.7$\times$; \suppappendix{app:amortization}). Online deployment amortizes this
+path through periodic collection; Table~\ref{tab:e2e-overhead} reports the
+end-to-end online cost. The same mechanism shapes the schema tiers of
+\S\ref{subsec:data-collector}: because
+the cost is dominated by the synchronous copy rather than by the number of
+fields, raising the tier from checksums to GPU-side gradient statistics
+lowers per-step overhead from ${\sim}8\%$ to ${\sim}1.5\%$ while widening the
+observable surface (\suppappendix{app:extended_data}, Figure~\ref{fig:tier-coverage}).
+
+\noindent The optimized and SHA-256 paths produce identical cross-rank equality
+verdicts; only their implementation differs. Event-triggered rules fire on the
+first recorded event, whereas snapshot-bound rules have a worst-case delay of
+the dump period $K$; because the optimized dump cost ranges from 15 to 51\,s
+across the measured TP/PP/DP variants, $K$ must be set per topology rather
+than inferred from world size. \suppappendix{app:amortization} derives the
+resulting amortized-overhead curve, on which the optimized collector meets any
+overhead target at a ${\sim}7.7\times$ shorter period than the naive one.
+
+\emph{Offline cost.}
+Mining Megatron-LM's deployed rules takes roughly 350 LLM iterations and
+40--50\,M tokens (about \$70--100 at the evaluated model price); this cost is
+paid offline and only when the framework library is regenerated.
+
+\subsection{Portability and Production Experience}
+\label{subsec:scalability}
+
+\noindent\emph{Adapter portability.}
+We deploy grounded rules from the same catalog version through adapters for
+Megatron-LM, DeepSpeed, OLMo, OLMo-core, and FSDP
+(Figure~\ref{fig:portability_matrix}). The provenance matrix distinguishes
+direct rule reuse from template reuse with target-specific re-grounding. New
+rule mining decreases from nine rules for the first framework to none for
+FSDP, which directly inherits all six framework-agnostic A0 rules through a
+30-line adapter. Two A1 rules cannot migrate unchanged because PP partition
+granularity and replica grouping alter $\pi_{\text{topo}}$; their catalog
+templates remain applicable, but their target-framework topology scopes must
+be re-grounded and verified.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.741\columnwidth]{figures/fig_portability_matrix.pdf}
+\Description{Matrix heatmap of invariant reuse across five ML frameworks with onboarding order and adapter line counts.}
+\caption{Rule provenance across five framework adapters. $\star$ = first
+grounding; shade = unchanged reuse; $\times$ = topology re-grounding required;
+dash = no corresponding hookpoint.}
+\label{fig:portability_matrix}
+\end{figure}
+
+\emph{Transfer analysis.}
+Treating Megatron-LM and DeepSpeed as sources, we apply their rules to a
+separate transfer set of 10 OLMo/OLMo-core cases assembled for this analysis
+rather than to the Real-SE replays of \S\ref{subsec:detection}. The source
+rules detect all eight cases observable under the collected schema, with no
+case-level false positive; seven detections directly reuse A0 rules.
+
+\emph{Post-freeze catalog hits.}
+After the catalog snapshot of 16~July 2026, five public incidents match a
+frozen template and carry a merged upstream fix: DeepSpeed \#8224 (T07),
+\#8152 (T08), \#8147 (T11), and Megatron-LM \#6585 (T18), \#5974 (T22).
+We report these \NumPostFreeze{} cases as post-freeze catalog hits on existing
+templates, not as newly invented relations and not as additions to the
+production count below.
+
+\emph{Production experience.}
+On a planned seven-day, 256$\times$H800 production job with an MTP-only
+pipeline stage, the pinned deployment version's param-group rule fired at
+initialization, before the first optimizer step: tied
+\texttt{word\_embeddings} replicas were routed to different optimizers across
+PP ranks. Loss, gradient norm, throughput, and checkpoint operations remained
+normal. The report identified the missing embedding attribute that routed one
+replica to Muon and another to AdamW. The job's nominal allocation was
+approximately 43{,}000 H800 GPU-hours. We reported the fault upstream, where
+maintainers confirmed and fixed the fault~\cite{ye2026megatronMuonRouting}; the
+same rule reproduces it on a Megatron-LM HEAD scan. This is a single production
+interception; it is not one of the \NumPostFreeze{} post-freeze catalog hits.
+
+\emph{Limitations.}
+Deployed-rule silence is 0/\CleanEvals{} evaluations on four clean stores; the 25.8 FP/1M figure remains
+the unguarded-to-guarded T01 residual. The 256$\times$H800 result is one initialization-time interception rather
+than a long-horizon deployment study. Finally, the provenance audit excludes
+case material from mining inputs but cannot exclude public bug discussions
+from LLM pretraining.
+\section{Related Work}
+\label{sec:related-work}
+
+\emph{Detecting silent errors in training.}
+Metric monitors expose corruption only after it reaches loss, gradient norms,
+or NaN/Inf counts~\cite{jiang2025traincheck,ttrace2025}. Numerical safeguards
+such as gradient clipping, loss scaling, and reduced-precision
+arithmetic~\cite{pascanu2013difficulty,micikevicius2018mixed,wang2018training}
+mitigate particular numerical failure modes but do not
+detect general semantic corruption. TTrace~\cite{ttrace2025} differentially
+compares against an alignable reference, TrainVerify~\cite{trainverify2025}
+checks a static parallel plan before execution, and
+TrainCheck~\cite{jiang2025traincheck}, the closest online detector, infers
+behavioral relations from example executions. These systems respectively
+require a reference, stop before runtime, or remain bounded by the behaviors
+exercised in their inference traces. Unlike these systems, \textsc{TrainAudit}
+obtains its oracle from the framework's own bug-fix history, preserves the
+topology and phase conditions under which it applies, and checks it against
+live state during the same run.
+
+\emph{Specification mining and semantic checker synthesis.}
+Dynamic specification miners such as Daikon~\cite{ernst2007daikon} and
+DInv~\cite{grant2018inferring} infer candidate invariants from executions,
+while recent work studies whether LLMs can recover program
+invariants~\cite{pei2023can}. T2C~\cite{lou2025t2c} derives semantic checkers
+from developer-written tests, and QURE~\cite{qure2024} uses counterexamples to
+validate LLM-generated program transformations. \textsc{TrainAudit} combines
+source-guided recovery with verifier-backed admission and targets a different
+source and unit of specification: historical framework fixes reveal latent
+obligations over distributed runtime state. It admits source-grounded candidates
+through counterexample checks, healthy-run replay, paired buggy/fixed replay,
+and topology-aware scope validation. Accepted obligations become deterministic
+online queries. Existing bug
+studies~\cite{silent_bug_2024,liu2024investigating,zang2025towards} characterize
+the symptoms, causes, and distribution of deep-learning failures, but stop at
+taxonomy or diagnosis. \textsc{TrainAudit} instead treats confirmed fixes as
+specification evidence and operationalizes recurring bug semantics as reusable
+online checks.
+
+\emph{Constraints and data quality.}
+Conditional functional dependencies~\cite{fan2008cfd}, denial
+constraints~\cite{chu2013discovering}, and profiling systems
+~\cite{papenbrock2015functional,pena2019dcfinder} express or discover relations
+over stored instances. \textsc{TrainAudit} additionally checks grouped
+aggregates and adjacent execution snapshots, with the active parallel topology
+and training phase determining which tuples are semantically comparable.
+Constraint applicability is therefore part of each constraint rather than a
+global assumption about a stored relation: a relation may be valid only for
+particular ranks, tensor roles, topology coordinates, and execution phases.
+Data-quality systems validate or repair stored contents under declared or
+inferred rules~\cite{dallachiesa2013nadeef,schelter2018deequ,
+song2021autovalidate,chen2025autotest,mahdavi2019raha,
+rekatsinas2017holoclean}, while diagnosis and tuning systems explain anomalies
+or recommend configurations~\cite{yoon2016dbsherlock,zhou2024dbot,
+tang2024gptuner}. Continuous-query semantics~\cite{arasu2006cql} bound a window
+by time or tuple count; our topology and phase guards impose an orthogonal
+restriction on whether tuples within that window are valid comparison partners.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+\textsc{TrainAudit} turns obligations recovered from framework source and fixes
+into verified, topology- and phase-guarded queries over live training traces.
+It detects \textbf{\RealSEDetFrac} Real-SE instances with
+\textbf{0/\NumFixedReplay} fixed-side false positives and intercepted a
+production fault before the first optimizer step. Across 32--256 GPUs, the
+complete online path adds 6.3--7.2\% median overhead, while the verification
+interval exposes an explicit trade-off between overhead and detection latency.
+Detection remains bounded by the instrumented schema, but many silent errors leave runtime evidence that
+becomes actionable once training semantics are encoded as guarded relations.
+The released corpus and frozen catalog instantiate a broader recipe: systems
+with queryable execution state and auditable bug-fix histories can derive
+online correctness oracles even without complete formal specifications.
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{main}
+
+% Appendix submitted as separate supplementary PDF (appendix.tex)
+
+\end{document}

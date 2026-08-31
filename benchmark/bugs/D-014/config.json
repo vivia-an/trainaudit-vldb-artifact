@@ -1,0 +1,16 @@
+{
+  "bug_id": "D-014",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Ping-pong buffer index reset causes gradient reduction data race",
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/7805",
+  "buggy_commit": "3bc882faa67bd3b1490e6e153a8ed0a33bab10e2",
+  "fixed_commit": "15ad92b459c6c39b7c5527efe1e42080eb4ab99f",
+  "category": "communication",
+  "severity": "medium",
+  "gpu_needed": 0,
+  "root_cause": "self.index = 0 resets buffer index at wrong point, causing reduce_ipg_grads to use stale data",
+  "detection_method": "source_analysis",
+  "invariant": "Ping-pong buffer index must not be reset between gradient reduce calls",
+  "reproduction_status": "reproduced"
+}

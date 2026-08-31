@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-60",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "BLT distill missed first-call label_offsets when fuse_boundaries enabled",
+  "fixed_commit": "114faa48",
+  "buggy_commit": "114faa48~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/114faa48",
+  "category": "loss",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["BLTDistillTransformer with local_decoder.fuse_boundaries=True"],
+  "root_cause": "The label-offset application path that conditionally adds vocab_size_blt to boundary positions was duplicated for the alternate boundary computation but missed in the first forward branch. Boundary positions did not get their offsets applied to labels, so the cross-entropy compared against the wrong target indices for boundary tokens.",
+  "detection_method": "constraint:label_offset_consistency",
+  "invariant": "When fuse_boundaries is enabled, every boundary position in labels must receive the +vocab_size_blt offset before being compared against the joint vocab logits.",
+  "diff_summary": "Add the same shift_boundary_mask + label_offsets block in the first-call branch of the forward path.",
+  "silent_check": "Forward succeeds and CE loss is finite — labels at boundary positions just point to the wrong half of the joint vocab, producing silently larger but valid loss values that the model trains on."
+}

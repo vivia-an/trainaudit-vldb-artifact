@@ -1,0 +1,5 @@
+framework,config_tag,parallel_config,steps_max,total_events,fp_firings,source_runscript,note
+Megatron-LM,megatron_clean,"TP=1,PP=1,DP=1 (single-rank GPT)",20,9141,0,megatron_clean_run.py,"T1_FW_METADATA tier; dense"
+Megatron-LM,megatron_moe,"TP=1,PP=1,DP=1 (single-rank SwitchMLP MoE)",20,20821,0,megatron_clean_run.py (VARIANT=moe),"T1_FW_METADATA tier"
+OLMo-core,olmo_core_baseline,"single-rank dense olmo2_60M",0 (step-0 init only),40001,0,olmo_core_baseline_run.py,"build snapshot + init events only"
+OLMo-core,olmo_core_moe_hybrid,"single-rank hybrid-MoE",0 (step-0 init only),41345,0,olmo_core_moe_hybrid run script,"build snapshot + init events only"

@@ -1,0 +1,20 @@
+{
+  "bug_id": "OC-NEW-12",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Per-document RoPE positions not propagated when cu_doc_lens is provided in packed mode",
+  "fixed_commit": "0690fabf",
+  "buggy_commit": "0690fabf~1",
+  "category": "attention",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Multiple documents packed into one sequence (intra-document masking)",
+    "cu_doc_lens is provided to attention forward",
+    "RotaryEmbedding (non-Fused) attention path"
+  ],
+  "root_cause": "Attention.forward called self.rope(...) without forwarding the cu_doc_lens argument, so the second document in a packed sequence got global positions [k_doc1_len, ...] instead of restarting at 0. Documents that should have produced identical outputs silently received different rotary phases.",
+  "detection_method": "value_invariant",
+  "invariant": "For two identical documents packed back-to-back, the post-RoPE q/k for both segments must match (intra-doc positions reset at each cu_doc_lens boundary).",
+  "diff_summary": "Forward cu_doc_lens through Attention/NormalizedAttention to RotaryEmbedding so per-document position computation actually runs; raise NotImplementedError for non-RotaryEmbedding RoPE variants."
+}

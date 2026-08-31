@@ -1,0 +1,4 @@
+method,supported_statement
+Manual SQL,"Equality, bound, and monotonicity checks"
+Daikon-style,Learned single-trace relations
+TrainAudit,Topology- and phase-guarded relational constraints

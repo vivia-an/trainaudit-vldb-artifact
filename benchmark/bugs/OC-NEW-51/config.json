@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-51",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "MultiHeadLatentAttention init dispatched to Attention branch — wrong layers initialized",
+  "fixed_commit": "2e404d48",
+  "buggy_commit": "2e404d48~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/2e404d48",
+  "category": "initialization",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["MultiHeadLatentAttention (DeepSeek-style MLA) module"],
+  "root_cause": "InitMethod.init_attention dispatched on isinstance(m, Attention) before isinstance hasattr(m, 'wq_a'). Because MultiHeadLatentAttention inherits from Attention and exposes w_q, the MLA branch was never reached; the projections wq_a, wkv_a, wkv_b were never initialized while only w_q was, leaving the rest at the dtype-empty allocation values.",
+  "detection_method": "constraint:full_module_initialization",
+  "invariant": "Every nn.Linear weight in attention sub-modules must be initialized exactly once via the appropriate init_attention branch before training starts.",
+  "diff_summary": "Reorder init_attention to test hasattr(m, 'wq_a') first so MultiHeadLatentAttention is dispatched to its specific init branch.",
+  "silent_check": "Buggy init does not raise — torch.empty produced finite (uninitialized memory) values for wq_a/wkv_a/wkv_b; the model trains but starts from non-deterministic, very-out-of-distribution weights for the latent KV projections."
+}

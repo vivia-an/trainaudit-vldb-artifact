@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-12",
+  "framework": "deepspeed",
+  "category": "control_flow",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["user_config_keys", "parsed_engine_config", "seq_parallel_comm_dtype"],
+  "check_stage": "init",
+  "pi_schema_applicable": true,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P1",
+  "tier_field": "Tier 6",
+  "rationale": "Constant key 'seq_parallel_comm_data_type' mismatches documented 'seq_parallel_communication_data_type', so user value is silently dropped at parse and dtype defaults to fp32. Detection compares user-set key vs parsed engine config at init. Borderline dtype vs control_flow: chose control_flow because the root cause is config-key wiring at init, not a numeric dtype computation. parallel_dim=none (single-rank parses config). P1 trace equality on parsed config field."
+}

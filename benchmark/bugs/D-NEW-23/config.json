@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-23",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO2 allreduce_bucket forces rank=None, never uses single-rank reduce path",
+  "fixed_commit": "a85b6e47",
+  "buggy_commit": "a85b6e47~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/4946",
+  "category": "communication",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 1 or 2", "use_multi_rank_bucket_allreduce=False"],
+  "root_cause": "In refactor PR #4695, allreduce_bucket(self, bucket, rank=None, ...) was added with a hard `rank = None` reset at the very top of the function, which silently overrides any rank passed in by callers. The intended single-destination reduce path is therefore never taken and gradients always go through allreduce, producing different numerics on the receiving rank than expected.",
+  "detection_method": "function_call_counting",
+  "invariant": "When use_multi_rank_bucket_allreduce is False, dist.reduce should be called for gradient buckets while dist.all_reduce should not.",
+  "diff_summary": "Remove the hard-coded `rank = None` line at the top of allreduce_bucket so that the caller-supplied rank is honored."
+}

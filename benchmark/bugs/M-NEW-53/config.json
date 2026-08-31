@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-53",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "DDP cast cudagraph manager runs warmup steps and shares mempool across virtual pipeline stages, corrupting captured param-cast outputs across VPP",
+  "fixed_commit": "271cef0900",
+  "buggy_commit": "271cef0900~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/4035",
+  "category": "cuda_graph",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP", "PP"],
+  "trigger_conditions": [
+    "DDP enable_cuda_graph=True with virtual pipeline parallel (interleaved schedule)",
+    "Multiple VPP stages on the same device"
+  ],
+  "root_cause": "_ParamAndGradBucketGroup created a CudaGraphManager for copy_params_from_grad_buffer without num_warmup_steps=0, so the cast graph was warmed up before capture. Combined with cuda_graph_use_single_mempool=True and lack of per-VPP stage scoping, multiple VPP stages shared mempool and warmup buffers, so the captured cast graph for one VPP stage could write into another stage's parameter buffer.",
+  "detection_method": "function_call_counting",
+  "invariant": "DDP cast cudagraphs must be created with num_warmup_steps=0 and tagged with the current vp_stage so that VPP stages do not share captured buffer pools.",
+  "diff_summary": "Pass num_warmup_steps=0 to the DDP CudaGraphManager('copy_params_from_grad_buffer') and set cuda_graphs.Cudagraph_VPP_Stage = self.vp_stage before each MambaStack/TransformerBlock forward.",
+  "silent_check": "Warmup of the cast graph is just an extra forward pass; capture proceeds; replay returns parameters of correct shape and dtype, but values may have been overwritten by the warmup or by a sibling VPP stage, so optimizer updates are applied to silently corrupted cast weights."
+}

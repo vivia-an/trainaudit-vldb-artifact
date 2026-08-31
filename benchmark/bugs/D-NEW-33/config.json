@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-33",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "MiCS save_non_zero_checkpoint True on every rank — checkpoint files race-overwrite each other",
+  "fixed_commit": "8a63754b",
+  "buggy_commit": "8a63754b~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/3787",
+  "category": "checkpoint",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["MiCS sharding (mics_shard_size > 0)", "world_size > mics_shard_size", "save_checkpoint called on all ranks"],
+  "root_cause": "self.save_non_zero_checkpoint = (rank == 0) or zero_optimization_partition_weights() became True for every MiCS rank because zero_optimization_partition_weights() is True under MiCS. All ranks then wrote the consolidated non-ZeRO checkpoint file, racing with each other and silently leaving inconsistent contents on disk.",
+  "detection_method": "function_call_counting",
+  "invariant": "For a MiCS run with shard_size S, exactly S ranks (those with global_rank < S) should report save_non_zero_checkpoint=True; all other ranks should report False.",
+  "diff_summary": "Add is_first_weights_partition_group() helper and AND it with zero_optimization_partition_weights() when computing save_non_zero_checkpoint."
+}

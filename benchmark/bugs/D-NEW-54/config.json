@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-54",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "MoE checkpoint records dp_world_size instead of seq_dp_world_size — wrong replication factor on resume with sequence parallel",
+  "fixed_commit": "377a0d15",
+  "buggy_commit": "377a0d15~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/7732",
+  "category": "checkpointing",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP", "EP", "SP"],
+  "trigger_conditions": ["MoE module present", "sequence_parallel_size > 1", "save then load checkpoint"],
+  "root_cause": "_save_checkpoint writes the global dp_world_size into the state-dict's 'dp_world_size' field for MoE expert checkpoints. When sequence parallel is also enabled the relevant DP world size is seq_dp_world_size = dp_world_size / sp_size. On resume the checkpoint loader uses this value to re-shard expert tensors, producing the wrong split: experts get replicated/sliced across SP ranks instead of across true DP ranks, so each EP-rank loads weights for the wrong slice and starts from corrupted parameters.",
+  "detection_method": "value_invariant",
+  "invariant": "After load_checkpoint, every MoE expert parameter on rank r must bit-equal the corresponding fragment that rank r wrote into the saved checkpoint.",
+  "diff_summary": "Replace self.dp_world_size with self.seq_dp_world_size in the engine's MoE checkpoint metadata dict.",
+  "silent_check": "Buggy code stores an integer in JSON metadata; load doesn't validate it and proceeds to slice tensors with the wrong divisor. Tensor shapes still match the partition formula so no shape assertion fires; the loaded weights are simply the wrong slice of the saved tensor."
+}

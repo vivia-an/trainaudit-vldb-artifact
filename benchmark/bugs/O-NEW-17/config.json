@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-17",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "muP set_base_shapes rescales parameters again when loading from a checkpoint, doubling the muP scaling",
+  "fixed_commit": "4d15c810",
+  "buggy_commit": "4d15c810~1",
+  "category": "checkpoint",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "model.use_mup=true",
+    "OLMo.from_checkpoint() (sharded or unsharded) called to resume training"
+  ],
+  "root_cause": "OLMo.__init__ unconditionally invoked set_base_shapes(self, mup_base_shapes) which applies muP rescaling to the parameters. When loading a checkpoint, parameters are already in muP-scaled space, so the rescale fires a second time and silently shrinks/grows weights by the muP factor. Fix adds a mup_rescale_params=False kwarg and passes it from from_checkpoint.",
+  "detection_method": "value_scaling_check",
+  "invariant": "for muP runs, parameter norms after OLMo.from_checkpoint() must equal the parameter norms saved in the checkpoint",
+  "diff_summary": "added mup_rescale_params kwarg to OLMo.__init__ and forwarded rescale_params=False to set_base_shapes; from_checkpoint paths now construct OLMo(... mup_rescale_params=False)"
+}

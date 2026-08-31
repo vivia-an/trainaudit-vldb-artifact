@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-31",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "fused_linear_cross_entropy_loss accumulates gradient in bf16 by default — silently noisier than fp32 accumulation",
+  "fixed_commit": "b068044d",
+  "buggy_commit": "b068044d~1",
+  "category": "dtype",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "LMHead loss_implementation uses liger fused_linear_cross_entropy_loss",
+    "Mixed-precision (bf16) training"
+  ],
+  "root_cause": "The liger-kernel fused linear+CE call defaulted accum_grad to bf16, which silently degraded gradient precision on the LM head. The numerical noise was small enough that training continued, but it shifted loss curves vs the unfused baseline.",
+  "detection_method": "dtype_invariant",
+  "invariant": "Backward gradient accumulation for the LM head fused kernel must be in fp32 even when forward inputs are bf16.",
+  "diff_summary": "Pass accum_grad=fp32 explicitly into the fused_linear_cross_entropy_loss call and bump liger-kernel."
+}

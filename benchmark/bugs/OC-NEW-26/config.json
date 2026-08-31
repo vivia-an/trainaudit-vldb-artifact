@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-26",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "memmap_to_write tmp filename uses seeded random — concurrent writers collide on identical path under the same RNG seed",
+  "fixed_commit": "4c3895aa",
+  "buggy_commit": "4c3895aa~1",
+  "category": "data_processing",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Multiple ranks/processes preprocess the same path with the same global random seed",
+    "memmap_to_write/write_array_to_disk used for index/cache materialization"
+  ],
+  "root_cause": "memmap_to_write picked the temp filename via random.randint(0, 2**32) seeded by the global Python RNG. With identical seeds across ranks, each rank generated the same tmp_path; one rank's tmp_path.replace removed the file another rank was about to read, causing FileNotFoundError-style silent data shadowing or partial-content reads when a fallback masked the error.",
+  "detection_method": "runtime_check",
+  "invariant": "Concurrent writers of the same file must use unique temp paths (entropy independent of the deterministic seed) and a missing tmp_path due to a concurrent rename must succeed if the destination exists.",
+  "diff_summary": "Use random.SystemRandom() for the tmp suffix and tolerate FileNotFoundError on tmp_path.replace when the destination already exists."
+}

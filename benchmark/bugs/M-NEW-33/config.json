@@ -1,0 +1,21 @@
+{
+  "bug_id": "M-NEW-33",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "ChainedOptimizer.load_state_dict leaves param_groups stale after EP>1 checkpoint resume",
+  "fixed_commit": "1505db4cc",
+  "buggy_commit": "1505db4cc~1",
+  "category": "checkpoint",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["EP"],
+  "trigger_conditions": [
+    "ChainedOptimizer (e.g., MoE with separate expert/non-expert optimizers)",
+    "Resuming from checkpoint",
+    "expert_parallel_size > 1"
+  ],
+  "root_cause": "ChainedOptimizer.load_state_dict iterated over inner optimizers and called their load_state_dict, but never rebuilt self.param_groups. Inner optimizers' load_state_dict replaces their internal param_groups dict, so the outer ChainedOptimizer kept references to the OLD param_groups. Subsequent learning-rate updates went to a detached groups list and never reached the actual optimizer state, silently freezing LR after resume.",
+  "detection_method": "structural_invariant",
+  "invariant": "After ChainedOptimizer.load_state_dict, self.param_groups must be the concatenation of optimizer.param_groups for each inner optimizer (identity match).",
+  "diff_summary": "Added 'self.param_groups = []; for optimizer in self.chained_optimizers: self.param_groups += optimizer.param_groups' after the load loop in ChainedOptimizer.load_state_dict."
+}

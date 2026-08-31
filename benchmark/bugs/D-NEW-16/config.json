@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-16",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO-3 reduce_and_partition_stream syncs against wrong CUDA stream",
+  "fixed_commit": "be60451f",
+  "buggy_commit": "be60451f~1",
+  "category": "zero_optimizer",
+  "severity": "high",
+  "gpu_needed": 2,
+  "root_cause": "__add_grad_to_ipg_bucket uses default_stream() instead of current_stream() for reduce_and_partition_stream synchronization",
+  "detection_method": "runtime_hook",
+  "invariant": "Stream synchronization must use current_stream() not default_stream() to prevent race conditions"
+}

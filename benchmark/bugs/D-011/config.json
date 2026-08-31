@@ -1,0 +1,25 @@
+{
+  "bug_id": "D-011",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "BF16_Optimizer last-microbatch grad leak under ZeRO-1",
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/7985",
+  "buggy_commit": "5999fb06~1",
+  "fixed_commit": "5999fb06",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 2,
+  "trigger_conditions": [
+    "bf16 + grad_accum_dtype=fp32",
+    "zero_stage=1",
+    "gradient_accumulation_steps > 1"
+  ],
+  "root_cause": "backward_epilogue() called AFTER allreduce_gradients(). Last micro-batch FP32 grads not included in allreduce.",
+  "detection_method": "function_call_ordering",
+  "invariant": "opt.backward_epilogue must be called BEFORE allreduce_gradients",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: opt.backward_epilogue AFTER allreduce",
+    "fixed": "CLEAN: opt.backward_epilogue BEFORE allreduce"
+  }
+}

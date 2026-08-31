@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-71",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO-3 partition padding allocated with torch.empty — undefined values get reduced into other ranks' partitions",
+  "fixed_commit": "d229ff17",
+  "buggy_commit": "d229ff17~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/3832",
+  "category": "communication",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3", "any param whose partition_numel > the slice numel for the last rank (requires padding)"],
+  "root_cause": "When a parameter's last partition is smaller than partition_numel, _avg_scatter_dense_grads built a padded_partition with `torch.empty(...)` and only copied the valid prefix into it. The trailing pad elements held arbitrary garbage from the GPU allocator. That whole padded tensor was then included in the reduce_scatter, so other ranks received contaminated padding bytes mixed into the next parameter's region (because reduce_scatter sums element-wise across ranks before slicing).",
+  "detection_method": "structural_invariant",
+  "invariant": "Any padding bytes appended to a per-param grad partition before reduce-scatter must be exactly zero.",
+  "diff_summary": "Replace `torch.empty(param.partition_numel(), ...)` with `torch.zeros(param.partition_numel(), ...)` for the padded_partition; also add the elements_in_ipg_bucket guard for the contiguous-gradients branch so it doesn't run when extra-large-tensor allreduce path is needed.",
+  "silent_check": "Pre-fix code allocates uninitialized memory whose values vary run-to-run but are still finite; reduce_scatter completes normally; the wrong gradient values silently propagate to optimizer.step. No exception."
+}

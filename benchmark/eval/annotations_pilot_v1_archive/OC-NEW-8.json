@@ -1,0 +1,15 @@
+{
+  "bug_id": "OC-NEW-8",
+  "framework": "olmo-core",
+  "category": "loss_computation",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["loss_term_name", "requires_grad", "is_detached", "step"],
+  "check_stage": "after_forward",
+  "pi_schema_applicable": true,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P4",
+  "tier_field": "Tier 0",
+  "rationale": "PoE branch sums detached output.z_loss into combined_loss, so regularizer has no gradient. Detected by hooking the loss aggregation and asserting every term has requires_grad=True. Borderline numerical vs loss_computation: chose loss_computation because the bug is in how loss terms are combined, not in numerical math. pi_precond=true (only when PoE+z_loss_multiplier active)."
+}

@@ -1,0 +1,20 @@
+{
+  "bug_id": "OC-NEW-24",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "MoEFusedV2Optimizer reduces PP grad norm with _combine_norm (sum-of-norms) instead of _reduce_norm — over-counts gradient magnitude",
+  "fixed_commit": "ee572fb2",
+  "buggy_commit": "ee572fb2~1",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["PP", "DP"],
+  "trigger_conditions": [
+    "Pipeline parallelism (mesh dim 'pp')",
+    "MoEFusedV2Optimizer in use"
+  ],
+  "root_cause": "When reducing total_grad_norm across the PP group, the code called self._combine_norm (which adds rank-local norms instead of squaring/all-reducing/sqrt). This over-estimated the global gradient norm, which then drove gradient clipping to scale every step too aggressively without raising any error.",
+  "detection_method": "cross_rank_equality",
+  "invariant": "Global grad-norm reduction across PP must satisfy sqrt(sum(local_norm**2)), equivalent to the existing _reduce_norm helper, not naive summation of norm magnitudes.",
+  "diff_summary": "Replace the PP-group _combine_norm call with _reduce_norm so the cross-stage reduction performs square-sum-sqrt."
+}

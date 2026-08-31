@@ -1,0 +1,20 @@
+{
+  "bug_id": "O-NEW-28",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Restart in later epochs uses seed+epoch as PRNG seed, mixing epoch into seed irreversibly and corrupting reshuffle",
+  "fixed_commit": "1b7d2756",
+  "buggy_commit": "1b7d2756~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/670",
+  "category": "data_processing",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "training resumes from a checkpoint that is past the first epoch",
+    "max_epochs > 1"
+  ],
+  "root_cause": "IterableDataset was constructed with seed=seed+(train_config.epoch or 0) and reshuffle() did self.seed += 1. After a restart at epoch=N the dataset received seed+N as base and then was incremented again, producing a different shuffle order than the original run had used at the same epoch. This silently changed the data ordering across resumes.",
+  "detection_method": "value_invariant",
+  "invariant": "the global indices produced by IterableDataset for (seed, epoch) must be identical across a fresh run and a resumed run",
+  "diff_summary": "split seed and epoch into separate fields, used PCG64(seed=seed+epoch) inside _build_global_indices, and changed reshuffle to take an explicit epoch arg rather than mutating self.seed"
+}

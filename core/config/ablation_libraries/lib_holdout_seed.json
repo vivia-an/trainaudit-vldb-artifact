@@ -1,0 +1,30 @@
+{
+  "constraints": {
+    "data_parallel": {},
+    "tensor_parallel": {},
+    "pipeline_parallel": {},
+    "zero_optimization": {},
+    "model_integrity": {},
+    "training_progress": {}
+  },
+  "metadata": {
+    "version": "1.2",
+    "description": "预定义的分布式训练数据一致性检查约束",
+    "last_updated": "2025-11-28",
+    "constraint_types": {
+      "consistency": "一致性约束，检查数据在不同节点间的一致性",
+      "validity": "有效性约束，检查数据的有效性和合理性",
+      "completeness": "完整性约束，检查数据的完整性",
+      "partition": "分区约束，检查数据分片的正确性"
+    },
+    "applicable_condition_operators": [
+      "> 1",
+      ">= 1",
+      ">= 2",
+      "= 1",
+      "!= 0"
+    ],
+    "protocol": "strict re-mining holdout",
+    "exclusion_list": "logs/holdout_mining/EXCLUSION_LIST.json"
+  }
+}

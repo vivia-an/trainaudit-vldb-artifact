@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-64",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "FP16 fused optimizer grad-norm reduces only TP-rank-0 gradients — TP grad_norm undercounted by sqrt(tp_size)",
+  "fixed_commit": "0896503e",
+  "buggy_commit": "0896503e~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/5411",
+  "category": "gradient_clipping",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP", "TP"],
+  "trigger_conditions": ["fp16 + FP16_Optimizer (fused, non-ZeRO or ZeRO-1)", "Megatron-style tensor parallel with tp_size > 1", "param groups containing both TP and non-TP parameters"],
+  "root_cause": "FP16_Optimizer.get_grad_norm computed the per-group flattened grad norm and treated all of the flat buffer as if it belonged to a non-TP parameter. So only tp_rank=0 contributed (since for non-TP params the duplicate copies on tp_rank>0 should be skipped). For genuine TP-sliced parameters this skip is wrong — the per-rank slices are different and all should sum into the global norm. Result: at TP=4 the reported total_norm is ~1/sqrt(4) = 1/2 of the true value, gradient clipping is therefore much weaker than configured.",
+  "detection_method": "value_invariant",
+  "invariant": "global_grad_norm computed by FP16_Optimizer at TP=k must equal (within fp32 tolerance) the global_grad_norm computed at TP=1 with the same global batch and seed.",
+  "diff_summary": "Add _get_norm_mask_idx() to identify which slices of the flat grad belong to replicated (skip-on-non-zero-tp-rank) tensors; pass this mask to a new get_flattened_grad_norm; sum only non-masked slices.",
+  "silent_check": "Wrong (smaller) total_norm is a finite scalar; gradient clipping uses a clip = max(1, norm/max_norm) so weaker clipping just means the optimizer takes a slightly larger step. No exception, only convergence drift between TP=1 and TP>1 runs."
+}

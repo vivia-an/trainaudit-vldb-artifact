@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-56",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "q_norm forced to elementwise_affine=True regardless of attention_layer_norm_with_affine",
+  "fixed_commit": "933c6ad6",
+  "buggy_commit": "933c6ad6~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/322",
+  "category": "model_init/layer_norm_config",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["FSDP", "DP"],
+  "trigger_conditions": [
+    "attention_layer_norm=True (QK norm enabled)",
+    "attention_layer_norm_with_affine=False (asymmetric config)"
+  ],
+  "root_cause": "When constructing QK normalization layers, `k_norm` correctly used `elementwise_affine=config.attention_layer_norm_with_affine` but `q_norm` was hard-coded to `elementwise_affine=True`. With `attention_layer_norm_with_affine=False` the model silently normalizes q with learnable scale/bias but k without, breaking symmetry between q and k and adding parameters that the user did not request.",
+  "detection_method": "model_param_count_check",
+  "invariant": "q_norm.weight.requires_grad == k_norm.weight.requires_grad; both must follow attention_layer_norm_with_affine",
+  "diff_summary": "Pass `elementwise_affine=config.attention_layer_norm_with_affine` to both q_norm and k_norm builds",
+  "silent_check": "Both LayerNorm flavours are valid; constructor succeeds, forward and backward run normally, only parameter counts and gradients differ silently."
+}

@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-47",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "BF16 model + ZeRO defaults silently force fp32 grad accum buffer despite ZeRO requiring matching dtype",
+  "fixed_commit": "06938835",
+  "buggy_commit": "06938835~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/2566",
+  "category": "dtype",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["model dtype = bf16", "no explicit grad_accum_dtype in ds_config", "ZeRO enabled"],
+  "root_cause": "When grad_accum_dtype was unspecified, the engine auto-selected fp32 for any bf16 model. Under ZeRO this is silently wrong because ZeRO assumes grad_accum_dtype == model_dtype; gradient accumulation buffers ended up in fp32 while reduction ran in bf16, so accumulated gradients were lost on the first cast back.",
+  "detection_method": "config_invariant",
+  "invariant": "When ZeRO is enabled and grad_accum_dtype is not user-set, grad_accum_dtype must equal model_dtype.",
+  "diff_summary": "Add `and not self.zero_optimization()` to the auto-promotion-to-fp32 branch so ZeRO+bf16 keeps grad_accum_dtype = bf16 by default."
+}

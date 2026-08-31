@@ -1,0 +1,21 @@
+{
+  "bug_id": "M-NEW-17",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "FSDP grad accumulation fusion missing main_grad creation in linear backward",
+  "fixed_commit": "9f72f4775",
+  "buggy_commit": "9f72f4775~1",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "use_megatron_fsdp=True",
+    "gradient_accumulation_fusion=True",
+    "weight is FSDP DTensor (has __fsdp_param__ attribute)"
+  ],
+  "root_cause": "LinearWithGradAccumulationAndAsyncCommunication.backward called fused_weight_gradient_mlp_cuda.wgrad_gemm_accum_fp32 directly with weight.main_grad, but for Megatron-FSDP parameters main_grad must be reconstructed in-place via weight.get_main_grad() each iteration. Without this call main_grad pointed to a stale buffer, so accumulated weight gradients were wrong.",
+  "detection_method": "runtime_hook",
+  "invariant": "If hasattr(weight, '__fsdp_param__'), weight.main_grad after backward must equal weight.get_main_grad().",
+  "diff_summary": "Added 'if hasattr(weight, \"__fsdp_param__\"): weight.main_grad = weight.get_main_grad()' before the fused wgrad accumulator in tensor_parallel/layers.py and core/utils.py drain_embedding_wgrad_compute."
+}

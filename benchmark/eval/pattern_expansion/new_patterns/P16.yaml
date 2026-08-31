@@ -1,0 +1,26 @@
+id: P16
+name: Loss Component Normalization
+type: B
+rule_r: Every loss component L_i = sum_i(l_i) / N_i must use the correct denominator N_i (token
+  count, batch count, micro-batch count, byte count) matching the granularity of l_i, must
+  guard N_i > 0 (no all-mask divide-by-zero), and must preserve gradient flow (no .detach()
+  on terms in the summed loss).
+scope_sigma: 'Loss aggregation entry points: cross-entropy (with ignore_index and masked-mean),
+  MoE auxiliary losses, z-loss, distillation soft-CE, micro-batch loss accumulation, and weight-decay
+  exclusion classifiers (no_decay name patterns).'
+mode_m: B
+precond_rho: Active on every backward whose loss has a mask or weighted sum; requires non-empty
+  token mask and finite component values; checked at the loss-finalize call site.
+example_bugs:
+- M-NEW-36
+- O-015
+- O-NEW-3
+- O-NEW-35
+- O-NEW-68
+- OC-NEW-4
+- OC-NEW-55
+- OC-NEW-56
+covers_count_estimate: 11
+related_existing_pattern: 'Refines P2 (scaling consistency): P2 says "aggregate carries 1/N
+  or N"; P16 says "N is the right N for THIS component". P2 covers cross-rank reduce; P16
+  covers per-component normalisation within a single rank.'

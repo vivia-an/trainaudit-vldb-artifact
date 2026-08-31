@@ -1,0 +1,28 @@
+{
+  "bug_id": "M-033",
+  "framework": "megatron-lm",
+  "title": "Global auxiliary loss gradient incorrectly scaled due to averaging over global token count",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/3672",
+  "buggy_commit": "28a0aefdeab4bba419e4e18cccb2c0bf3c1e9f4e",
+  "fixed_commit": "90fcb538a554d6b9d8e8b9e6a40e4cd9e5afd5bb",
+  "category": "numerical",
+  "severity": "medium",
+  "gpu_needed": 4,
+  "parallel_dimensions": [
+    "DP"
+  ],
+  "trigger_conditions": [
+    "num_experts >= 2",
+    "--moe-router-load-balancing-type global_aux_loss",
+    "--moe-aux-loss-coeff > 0",
+    "data_parallel_size > 1"
+  ],
+  "root_cause": "global_aux_loss not multiplied by dp_size before attaching gradient. Gradient is 1/dp_size too small.",
+  "detection_method": "argument_check",
+  "invariant": "normalize_scale for global loss logging must equal aux_loss_coeff * dp_size, not just aux_loss_coeff",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: aux_loss=0.025 ≈ coeff/dp_size=0.025",
+    "fixed": "CLEAN: aux_loss=0.100 ≈ coeff=0.100"
+  }
+}

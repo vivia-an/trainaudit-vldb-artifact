@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-22",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO 1/2 elastic checkpoint optimizer state alignment ignores nccl_start_alignment_factor",
+  "fixed_commit": "0a10bd42",
+  "buggy_commit": "0a10bd42~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/5105",
+  "category": "checkpoint",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 1 or 2", "load elastic checkpoint with different world size", "load_optimizer_states=True"],
+  "root_cause": "In _partition_base_optimizer_state, the alignment used for re-flattening merged optimizer state was just dist.get_world_size(group), but ZeRO pads optimizer states by nccl_start_alignment_factor * world_size when saving. As a result the per-rank optimizer state slices were misaligned and silently restored to the wrong parameters.",
+  "detection_method": "value_invariant",
+  "invariant": "After load_checkpoint, optimizer.state[p] tensors must equal the pre-save optimizer.state[p] tensors element-wise for every parameter p.",
+  "diff_summary": "Multiply alignment by self.nccl_start_alignment_factor in _partition_base_optimizer_state when re-partitioning merged optimizer states."
+}

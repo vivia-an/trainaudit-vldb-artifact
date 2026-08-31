@@ -1,0 +1,24 @@
+{
+  "bug_id": "O-003",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Z-loss calculation averaged over instances instead of tokens",
+  "buggy_commit": "a5539f42",
+  "fixed_commit": "d7994c86",
+  "category": "loss_computation",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "softmax_auxiliary_loss enabled",
+    "gradient_accumulation_steps > 1"
+  ],
+  "root_cause": "z_loss / num_micro_batches instead of z_loss / batch_size_in_tokens (64x difference for seq_len=64)",
+  "detection_method": "value_scaling_check",
+  "invariant": "z_loss denominator must be batch_size_in_tokens, not num_micro_batches",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: z_loss uses num_micro_batches denominator",
+    "fixed": "CLEAN: z_loss uses batch_size_in_tokens denominator"
+  },
+  "notes": "Detection is mixed: runtime z_loss computation (Tier 1) + source analysis for denominator check (Tier 3). Z_loss 64x scaling difference is a real computed value."
+}

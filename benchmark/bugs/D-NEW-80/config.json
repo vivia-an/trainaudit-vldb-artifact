@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-80",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO-1/2 records padding only on last rank — middle ranks at large DP report padding=0 and contaminate optimizer state",
+  "fixed_commit": "4fea41f4",
+  "buggy_commit": "4fea41f4~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/6974",
+  "category": "checkpointing",
+  "severity": "high",
+  "gpu_needed": 8,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 1 or 2", "large DP world size where alignment forces padding to span more than one rank (e.g. dp=768, alignment=1536, group numel between two consecutive multiples)"],
+  "root_cause": "In _setup_for_real_optimizer, padding was recorded only on `partition_id == world_size - 1` and set to 0 elsewhere. With large DP and a small param group, the alignment-induced padding (e.g. 1024 / 768 ranks ≈ 1.3 per rank, but applied as whole partitions of 348 elems) actually consumes the LAST THREE ranks — those ranks should report padding=348, 348, and 328 respectively, but recorded 0. _get_state_without_padding then trims only the last partition by its (wrong) padding, leaving the other padding ranks with junk values (uninitialized memory after the true end of the flattened parameter) that get treated as legitimate optimizer state on save / on subsequent get_lean_optimizer_state calls.",
+  "detection_method": "value_invariant",
+  "invariant": "For every (group i, rank r), groups_padding[i][r] must equal max(0, min(curr_partition_size, left_boundary + curr_partition_size - orig_group_numel)).",
+  "diff_summary": "Replace the last-rank-only padding computation with a per-rank computation based on left_boundary and orig_group_numel; move the calculation to after data_parallel_partitions is set so that left_boundary is well-defined.",
+  "silent_check": "Buggy code stores padding=0 on a rank that actually has padding; subsequent get_state_without_padding skips no elements and the resulting checkpoint contains garbage in the trailing slot. Loading the checkpoint succeeds; only optimizer-state correctness is broken (wrong moments for the affected slot, manifesting as slow drift)."
+}

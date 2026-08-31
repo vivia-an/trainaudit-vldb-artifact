@@ -1,0 +1,20 @@
+{
+  "bug_id": "M-NEW-39",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MLA softmax_scale built from wrong mscale config field",
+  "fixed_commit": "62f0a9737",
+  "buggy_commit": "62f0a9737~1",
+  "category": "attention",
+  "severity": "high",
+  "gpu_needed": 2,
+  "trigger_conditions": [
+    "MultiLatentAttention (MLA) configured (e.g., DeepSeek-V2/V3)",
+    "YaRN RoPE rotary_scaling_factor != 1.0",
+    "mscale and mscale_all_dim differ"
+  ],
+  "root_cause": "MultiLatentAttention computed softmax_scale as _yarn_get_mscale(rotary_scaling_factor, self.config.mscale) instead of self.config.mscale_all_dim. DeepSeek-V2 uses different values for the two; using mscale alone produced an attention softmax scaling that was wrong by an mscale_all_dim/mscale ratio, silently distorting attention probabilities every step.",
+  "detection_method": "value_invariant",
+  "invariant": "MultiLatentAttention.softmax_scale must equal mscale*mscale/sqrt(q_head_dim) where mscale = _yarn_get_mscale(rotary_scaling_factor, config.mscale_all_dim).",
+  "diff_summary": "Changed _yarn_get_mscale(self.config.rotary_scaling_factor, self.config.mscale) to _yarn_get_mscale(self.config.rotary_scaling_factor, self.config.mscale_all_dim); also changed default mscale_all_dim from 0.707 to 0.0 with new arg default."
+}

@@ -1,0 +1,28 @@
+{
+  "bug_id": "M-012",
+  "framework": "megatron-lm",
+  "title": "TopKRouter expert_bias gets wrong dtype (bf16 instead of fp32)",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/1482",
+  "buggy_commit": "db439037170b3bf2717d9ff2a8dd1c3f5549e359",
+  "fixed_commit": "a58768725f557c64c489b8ae09c6858a9b8c97ef",
+  "fix_date": "2025-02-25",
+  "category": "dtype",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": [],
+  "trigger_conditions": [
+    "num_experts >= 2 (MoE with TopKRouter)",
+    "--moe-router-enable-expert-bias",
+    "--bf16 or --fp16 (Float16Module converts buffers)"
+  ],
+  "root_cause": "Float16Module converts all registered buffers to bf16/fp16. expert_bias is a fp32 buffer that gets silently downcast, causing precision loss in routing decisions.",
+  "detection_method": "dtype_invariant",
+  "invariant": "expert_bias.dtype must be torch.float32 during routing. bf16/fp16 = bug.",
+  "fixed_behavior": "_maintain_float32_expert_bias() restores fp32 at each forward pass",
+  "notes": "Supports --mock-data. Same detection paradigm as M-024 (dtype check).",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: expert_bias has wrong dtype",
+    "fixed": "CLEAN: expert_bias dtype is fp32"
+  }
+}

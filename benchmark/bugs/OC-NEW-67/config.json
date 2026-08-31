@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-67",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "InvSqrt LR schedule wrong scheduler chosen for OLMoE3 — Cos used where WSD intended",
+  "fixed_commit": "5fe26e83",
+  "buggy_commit": "5fe26e83~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/5fe26e83",
+  "category": "scheduler",
+  "severity": "medium",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": ["OLMoE3-3B-27B training script", "scheduler determined by config"],
+  "root_cause": "OLMoE3-3B-27B used CosWithWarmup with only warmup_steps configured. Without an explicit decay schedule the optimizer ran cosine decay from peak lr to alpha_f over the full training horizon, instead of the WSD (warmup-stable-decay) schedule the recipe intended. The lr trajectory was silently cosine-shaped instead of WSD-shaped.",
+  "detection_method": "constraint:scheduler_intent_match",
+  "invariant": "WSD-style training recipes must use the WSD scheduler with explicit warmup, decay step counts, and decay_fraction=None — not CosWithWarmup, even though both yield monotonic lr curves.",
+  "diff_summary": "Replace CosWithWarmup(warmup_steps=2000) with WSD(units=SchedulerUnits.steps, warmup=2000, decay=int(50e9 / GLOBAL_BATCH_SIZE), decay_fraction=None).",
+  "silent_check": "Buggy scheduler runs without any error — the trainer uses the cos-with-warmup lr at every step, training proceeds with finite gradients and updates; only the lr trajectory is silently wrong."
+}

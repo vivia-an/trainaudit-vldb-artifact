@@ -1,0 +1,12 @@
+check_stage,count,pct
+after_forward,88,22.4
+after_backward,71,18.1
+init,56,14.3
+build,51,13.0
+before_optimizer,43,11.0
+other,21,5.4
+checkpoint_load,18,4.6
+checkpoint_save,14,3.6
+all_reduce,14,3.6
+before_forward,12,3.1
+main_grad_in_backward,4,1.0

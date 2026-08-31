@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-39",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "PP grad-norm clip used per-PP-stage local norm without all-reducing across PP ranks",
+  "fixed_commit": "533f016b",
+  "buggy_commit": "533f016b~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/533f016b",
+  "category": "optimizer",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP", "PP"],
+  "trigger_conditions": ["pipeline parallelism enabled", "max_grad_norm set"],
+  "root_cause": "TransformerTrainModule.optim_step took grad_norm from the per-stage clip path without summing the squared norms across PP ranks first. Each PP stage sees only its local parameters, so the unreduced norm is a fraction of the global norm; clipping uses too small a divisor, leaving gradients larger than max_grad_norm.",
+  "detection_method": "constraint:cross_pp_grad_norm_reduction",
+  "invariant": "When PP is enabled, the gradient norm used for clip_grad_norm_ must be reduced across the PP mesh (sum-of-squares with sqrt) before applying max_norm.",
+  "diff_summary": "Move grad-norm computation into the train module and inline a DTensor-aware all-reduce across the PP group before clipping.",
+  "silent_check": "Buggy step finishes — clipping is applied per-stage, optimizer steps proceed, only the resulting gradients are larger than the configured max_grad_norm with no exception."
+}

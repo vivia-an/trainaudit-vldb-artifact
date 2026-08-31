@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-43",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO3 builds fp16 partitions from full param_groups including frozen params, OOM-equivalent silent waste plus unused optimizer state",
+  "fixed_commit": "bf6b9802",
+  "buggy_commit": "bf6b9802~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/2653",
+  "category": "zero",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3", "model contains parameters with requires_grad=False"],
+  "root_cause": "DeepSpeedZeroOptimizer_Stage3._setup_for_real_optimizer called _create_fp16_partitions_with_defragmentation() on the raw self.optimizer.param_groups, including frozen params. Frozen params became part of the partitioned trainable list — they were placed into Adam fp32 state and received update increments from optimizer.step, silently un-freezing them.",
+  "detection_method": "structural_invariant",
+  "invariant": "Across optimizer steps, p.data must remain unchanged for every nn.Parameter with requires_grad=False.",
+  "diff_summary": "Add _get_trainable_parameter_groups() that filters by requires_grad and pass the filtered list into _create_fp16_partitions_with_defragmentation."
+}

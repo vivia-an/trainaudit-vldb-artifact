@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-40",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO param dtype cast inside zero_wrapper_for_fp_tensor_constructor reassigns Parameter to a non-Parameter Tensor",
+  "fixed_commit": "426810a2",
+  "buggy_commit": "426810a2~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/4138",
+  "category": "dtype",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["zero.Init context", "model code constructs a tensor with requires_grad=True (e.g. via torch.empty(...).requires_grad_(True))"],
+  "root_cause": "zero_wrapper_for_fp_tensor_constructor cast tensors to the target dtype with `tensor = tensor.to(target_fp_dtype)`. For tensors that were already nn.Parameter (or had requires_grad=True), .to() returns a fresh non-Parameter Tensor without the autograd hook; the wrapper rebound the local name but the model still held the original reference, so the model's Parameter kept the wrong dtype and the (correctly-cast) shadow tensor became unreachable.",
+  "detection_method": "dtype_invariant",
+  "invariant": "After zero.Init wraps a tensor constructor, the tensor visible to the model must satisfy `tensor.dtype == target_fp_dtype` and remain the same Python object that the model references.",
+  "diff_summary": "Cast in-place via `tensor.data = tensor.data.to(target_fp_dtype)` so the original Parameter object is preserved and its dtype actually changes."
+}

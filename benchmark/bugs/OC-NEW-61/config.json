@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-61",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "BLT shift_boundary_mask did not AND with byte_mask — pad positions polluted label offsets",
+  "fixed_commit": "9ee3bd68",
+  "buggy_commit": "9ee3bd68~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/9ee3bd68",
+  "category": "loss",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["BLTDistillTransformer with fused boundaries", "padded byte positions present in batch"],
+  "root_cause": "shift_boundary_mask was computed as boundary_mask[:, 1:] without AND-ing with byte_mask[:, 1:]. Padded positions where boundary_mask happened to be True (left-over from a previous batch slot) added vocab_size_blt//2 to label entries that should have remained at the ignore_index, distorting CE on padded positions.",
+  "detection_method": "constraint:padding_invariance",
+  "invariant": "Any operation that mutates labels at boundary positions must restrict its mask via AND with the active byte_mask so padded positions are untouched.",
+  "diff_summary": "shift_boundary_mask = boundary_mask[:, 1:] & byte_mask[:, 1:]",
+  "silent_check": "Buggy step runs without raising — pad positions still have ignore_index in some places but get nudged elsewhere; CE silently sees a few extra mis-labelled positions per batch."
+}

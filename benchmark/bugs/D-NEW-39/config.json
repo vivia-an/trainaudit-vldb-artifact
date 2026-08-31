@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-39",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Pipeline parallel _aggregate_total_loss broadcasts torch.stack of mixed-dtype losses, non-last stages receive wrong dtype",
+  "fixed_commit": "02288bc1",
+  "buggy_commit": "02288bc1~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/4727",
+  "category": "communication",
+  "severity": "medium",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["PP", "DP"],
+  "trigger_conditions": ["pipeline parallel num_stages > 1", "bf16 model loss tensor"],
+  "root_cause": "In _aggregate_total_loss the last stage built `losses = torch.stack([self.dp_group_loss, agg_loss])` and broadcast it to other PP stages. When the source tensors were bf16 the broadcast tensor was bf16 too, but other ranks initialised their receive buffer as fp32 (default Tensor()), so dist.broadcast wrote bf16 bytes into an fp32 tensor and other PP stages saw garbage scalar losses.",
+  "detection_method": "dtype_invariant",
+  "invariant": "After dist.broadcast inside _aggregate_total_loss, the losses tensor must have the same dtype on every PP rank.",
+  "diff_summary": "Force losses to fp32 with `.float()` on the last stage before the broadcast so all PP ranks agree on dtype."
+}

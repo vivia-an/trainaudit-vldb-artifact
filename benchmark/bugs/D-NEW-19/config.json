@@ -1,0 +1,1 @@
+{"bug_id":"D-NEW-19","framework":"deepspeed","repo":"microsoft/DeepSpeed","title":"extra_large_param uses param.dtype instead of comm_dtype — gradient silently dropped","fixed_commit":"3e64f495","buggy_commit":"3e64f495~1","category":"gradient_reduction","severity":"critical","gpu_needed":2}

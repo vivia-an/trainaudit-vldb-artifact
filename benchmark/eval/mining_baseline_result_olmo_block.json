@@ -1,0 +1,83 @@
+{
+  "n_hypotheses": 6,
+  "n_predicates_l2": 9,
+  "n_predicates_accepted_l3": 8,
+  "n_predicates_rejected_l3": 1,
+  "schema_hookpoints": [
+    "module.fwd.post",
+    "module.fwd.pre",
+    "comm.post",
+    "module.bwd",
+    "comm.pre",
+    "optim.step.post",
+    "dataloader.batch",
+    "optim.step.pre",
+    "build.snapshot"
+  ],
+  "schema_field_count": 186,
+  "accepted": [
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/tsb/no_nan_inf",
+      "desc": "No traced tensor may contain NaN or Inf.",
+      "template": "TENSOR_STAT_BOUND",
+      "family": "F8"
+    },
+    {
+      "hyp_id": "H1",
+      "pred_id": "hyp/param/tsb/module.fwd.post/output.l2_norm_positive",
+      "desc": "$.output.l2_norm > 0 at module.fwd.post (parametric tensor-stat).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H3",
+      "pred_id": "hyp/csm/optim.step.post/state_step_max",
+      "desc": "state_step_max must increase monotonically across optim.step.post events.",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F5"
+    },
+    {
+      "hyp_id": "H3",
+      "pred_id": "hyp/csm/optim.step.post/state_step_min",
+      "desc": "state_step_min must increase monotonically across optim.step.post events.",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F5"
+    },
+    {
+      "hyp_id": "H4",
+      "pred_id": "hyp/param/pfc/module.fwd.pre/module_id_positive",
+      "desc": "$.module_id > 0 at module.fwd.pre (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H4",
+      "pred_id": "hyp/param/pfc/module.fwd.post/output.l2_norm_positive",
+      "desc": "$.output.l2_norm > 0 at module.fwd.post (parametric).",
+      "template": "PAYLOAD_FIELD_COMPARE",
+      "family": "F-PARAM"
+    },
+    {
+      "hyp_id": "H5",
+      "pred_id": "hyp/cross_rank_equal/replica_cksum",
+      "desc": "Replica params must have equal cksum across replica group.",
+      "template": "STRUCTURAL_PRESENCE",
+      "family": "F1"
+    },
+    {
+      "hyp_id": "H6",
+      "pred_id": "hyp/sp/build_has_modules",
+      "desc": "Build snapshot must have parameters and modules.",
+      "template": "STRUCTURAL_PRESENCE",
+      "family": "F4"
+    }
+  ],
+  "rejected_summary": [
+    {
+      "hyp_id": "H3",
+      "pred_id": "hyp/param/csm/module.fwd.post/output.abs_max",
+      "reason": "fired on 3/3 healthy traces; counts=[7718, 6800, 3641]"
+    }
+  ]
+}

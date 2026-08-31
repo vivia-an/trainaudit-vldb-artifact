@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-63",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "SourceMixtureDataset rounded down per-source instances — dataset shorter than expected",
+  "fixed_commit": "d4ad23f7",
+  "buggy_commit": "d4ad23f7~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/pull/316",
+  "category": "data",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["SourceMixtureDataset / NumpyFSLDatasetMixture", "training_steps near dataset boundary (mid-training anneal)"],
+  "root_cause": "tokens_requested_per_path = ceil(target_ratio * num_tokens_in_path) and instances_requested_per_path = tokens_requested_per_path // sequence_length. The integer-floor in the second step dropped the per-path remainder, so total instances < training_steps * batch_size. The trainer ran past the end of the dataset into epoch 2 with no warning — visible only as an unexpected loss drop near end of run.",
+  "detection_method": "constraint:dataset_size_matches_steps",
+  "invariant": "sum(instances_per_path) must equal training_steps * batch_size; any rounding-down must be redistributed (e.g. via Hamilton's largest-remainder method) so the trainer never wraps to epoch 2.",
+  "diff_summary": "Compute the deficit k = training_steps*batch_size - sum(instances) and add 1 instance to the top-k paths by largest fractional remainder.",
+  "silent_check": "Buggy training succeeds — the trainer runs all configured steps; the data loader silently wraps into epoch 2 for the last 1-30 steps, producing duplicated samples without any error."
+}

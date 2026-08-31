@@ -1,0 +1,7 @@
+# Only needed to run core/run_miner.py, which calls an LLM to mine new constraints.
+# Installing this pulls in the AutoGen stack (autogen, pyautogen, autogen-agentchat,
+# autogen-core, tiktoken, httpx and their dependencies) — a few hundred MB. None of it is
+# required for the offline verification path; see ../docs/RERUN_LIMITS.md.
+-r requirements.txt
+autogen>=0.9.9
+pyautogen>=0.10.0

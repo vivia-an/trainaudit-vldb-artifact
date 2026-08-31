@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-58",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "BLTDistill patch loss div factor used input_ids.numel() — wrong scaling for byte-level losses",
+  "fixed_commit": "685b4e9d",
+  "buggy_commit": "685b4e9d~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/685b4e9d",
+  "category": "loss",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["BLTDistillTransformer", "patch_loss_div_factor configured"],
+  "root_cause": "The byte-level loss div factor was computed as loss_div_factor / input_ids.numel(), but loss_div_factor passed in is at the byte sequence level not the patch level. The correct denominator is h_byte.shape[0] * h_byte.shape[1] (number of byte positions), and the patch loss needs an analogous division by patch positions. The mismatch silently mis-weighted byte vs patch loss components.",
+  "detection_method": "constraint:loss_normalization_consistency",
+  "invariant": "Each loss component must be divided by the number of valid positions of that component's granularity (bytes vs patches), not by input_ids.numel().",
+  "diff_summary": "Divide loss_div_factor by h_byte.shape[0]*h_byte.shape[1] for the byte loss, and patch_loss_div_factor by h_patch.shape[0]*h_patch.shape[1] for the patch loss.",
+  "silent_check": "Forward and backward run normally — losses are finite, just mis-scaled relative to each other; the model trains but with a silently shifted balance between byte and patch objectives."
+}

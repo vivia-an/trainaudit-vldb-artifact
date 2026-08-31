@@ -1,0 +1,24 @@
+{
+  "bug_id": "B7",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "FlashSelfAttention.forward sets self.dropout_p=0 in eval branch and never restores",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/pull/411",
+  "fixed_commit": "7cc8d839e",
+  "buggy_commit": "7cc8d839e~1",
+  "category": "state_mutation",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "FlashSelfAttention with attention_dropout > 0",
+    "model.eval() / forward called with self.training=False",
+    "model.train() afterwards (dropout_p stays 0)"
+  ],
+  "root_cause": "The eval branch did `self.dropout_p = 0`, mutating the instance. After the call self.dropout_p is permanently 0 even when training resumes. Fix introduces a local `dropout_p` variable.",
+  "detection_method": "post_eval_attribute_check",
+  "invariant": "After running forward in eval mode, the FlashSelfAttention.dropout_p attribute must equal the constructor's attention_dropout (no permanent mutation)",
+  "expected_output": {
+    "buggy": "BUG DETECTED: dropout_p mutated to 0",
+    "fixed": "CLEAN: dropout_p preserved"
+  }
+}

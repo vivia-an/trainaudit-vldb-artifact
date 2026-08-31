@@ -1,0 +1,4 @@
+scenario,description,flagged_records,total_records,false_positive,source
+clean_broad_replica_check,TP=2 clean run without topology/sharding guard,57,492,yes,main_cn.tex P3 precondition example / CASE2_WALKTHROUGH_PI_TOPO.md
+clean_scoped_topology_check,Same clean run after tpl=False and TP>1 precondition,0,492,no,main_cn.tex P3 precondition example / CASE2_WALKTHROUGH_PI_TOPO.md
+bug_scoped_topology_check,SwitchMLP router-weight divergence under scoped rule,1,1,no,main_cn.tex P3 precondition example / CASE2_WALKTHROUGH_PI_TOPO.md

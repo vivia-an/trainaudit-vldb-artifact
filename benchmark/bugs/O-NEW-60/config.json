@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-60",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Missing reset_parameters() after FSDP wrap on torch>=2.1 leaves model with default-initialized weights",
+  "fixed_commit": "6e5f6674",
+  "buggy_commit": "6e5f6674~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/279",
+  "category": "model_init/fsdp",
+  "severity": "critical",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "torch >= 2.1",
+    "FSDP wrapping with init_device='meta'"
+  ],
+  "root_cause": "Starting in torch 2.1, FSDP no longer triggers the user's reset_parameters() automatically when materializing meta-device parameters. The buggy script created the OLMo model with init_device='meta', wrapped with FSDP, and never explicitly called `olmo_model.reset_parameters()` afterwards. Parameters are therefore left with whatever default contents FSDP produces (effectively uninitialized/zero-filled), silently destroying the carefully designed init scheme.",
+  "detection_method": "weight_init_distribution_check",
+  "invariant": "After FSDP wrap, summary stats of every parameter must match the init_fn's expected mean/std",
+  "diff_summary": "Call `olmo_model.reset_parameters()` immediately after FSDP wrap",
+  "silent_check": "FSDP successfully materializes the meta tensors with default contents; no exception. The model trains, but starts from a near-zero init that drastically changes loss dynamics."
+}

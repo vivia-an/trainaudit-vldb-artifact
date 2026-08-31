@@ -1,0 +1,15 @@
+{
+  "bug_id": "OC-NEW-19",
+  "framework": "olmo-core",
+  "category": "control_flow",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["module_class", "preserve_rng_state", "has_dropout"],
+  "check_stage": "build",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "apply_activation_checkpointing hard-coded preserve_rng_state=False; with dropout active, backward recompute uses a different mask. Detected at build by asserting preserve_rng_state==True whenever any nn.Dropout exists in the model. Borderline numerical vs control_flow: chose control_flow because the bug is a misconfigured flag, not numerical math. pi_precond=true (precond is has_dropout=True)."
+}

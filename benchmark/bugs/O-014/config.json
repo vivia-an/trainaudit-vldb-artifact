@@ -1,0 +1,11 @@
+{
+  "bug_id": "O-014",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Non-zero ranks reporting partially-reduced metrics",
+  "category": "communication",
+  "root_cause": "Throughput metrics not using reduce_type=max \u2192 partially-reduced values on non-zero ranks",
+  "detection_method": "source_analysis",
+  "invariant": "Throughput metrics must use reduce_type=ReduceType.max",
+  "reproduction_status": "reproduced"
+}

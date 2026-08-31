@@ -1,0 +1,15 @@
+{
+  "bug_id": "M-NEW-3",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "fp32 residual connection silently downcast to bf16",
+  "fixed_commit": "08857d9f7",
+  "buggy_commit": "08857d9f7~1",
+  "category": "precision",
+  "severity": "high",
+  "gpu_needed": 2,
+  "root_cause": "_bias_dropout_add_func downcasts residual to x.dtype (bf16) instead of upcasting x to residual.dtype (fp32)",
+  "detection_method": "runtime_hook",
+  "invariant": "When fp32_residual_connection=True, residual stream must stay in fp32",
+  "reproduction_status": "pending"
+}

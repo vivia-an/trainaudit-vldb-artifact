@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-27",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Multi-epoch training does not reset dataset.start_index, so the next epoch resumes from the previous epoch's offset",
+  "fixed_commit": "a3e2ea7b",
+  "buggy_commit": "a3e2ea7b~1",
+  "category": "data_processing",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "training spans more than one epoch (max_epochs > 1)",
+    "epoch boundary reached during training"
+  ],
+  "root_cause": "On epoch rollover Trainer reset epoch counters and called dataset.reshuffle(), but never reset dataset.start_index. The IterableDataset therefore skipped the first global_train_examples_seen_this_epoch instances of the new epoch, silently dropping them from training.",
+  "detection_method": "value_invariant",
+  "invariant": "at the start of every epoch, self.dataset.start_index must equal 0",
+  "diff_summary": "added self.dataset.start_index = 0 to the post-epoch reset block, alongside global_train_examples_seen_this_epoch = 0 and the reshuffle call"
+}

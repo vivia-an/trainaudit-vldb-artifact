@@ -1,0 +1,17 @@
+{
+  "bug_id": "D-NEW-49",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "DeepSpeedDataLoader.len reports sampler length, ignores batch_size and drop_last",
+  "fixed_commit": "ae198e20",
+  "buggy_commit": "ae198e20~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/1718",
+  "category": "data_processing",
+  "severity": "low",
+  "gpu_needed": 1,
+  "trigger_conditions": ["any DeepSpeedDataLoader where dataset_size != batch_size"],
+  "root_cause": "DeepSpeedDataLoader.__init__ set self.len = len(self.data_sampler), the count of underlying samples. Callers using len(dataloader) (e.g. lr scheduler total_num_steps, progress bars, max_steps detection) silently received the sample count instead of the batch count, off by ~batch_size× — schedules and step counters silently drift.",
+  "detection_method": "value_invariant",
+  "invariant": "len(DeepSpeedDataLoader) must equal len(sampler)//batch_size when drop_last=True, else ceil(len(sampler)/batch_size).",
+  "diff_summary": "Compute self.len from len(self.data_sampler)/batch_size (floor or ceil depending on dataloader_drop_last)."
+}

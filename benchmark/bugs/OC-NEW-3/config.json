@@ -1,0 +1,14 @@
+{
+  "bug_id": "OC-NEW-3",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "sqrt decay LR schedule uses wrong formula — decay curve inverted",
+  "fixed_commit": "f34e7ddc",
+  "buggy_commit": "f34e7ddc~1",
+  "category": "lr_schedule",
+  "severity": "medium",
+  "gpu_needed": 0,
+  "root_cause": "sqrt(progress) instead of 1-sqrt(1-progress) — wrong decay curve shape",
+  "detection_method": "runtime_check",
+  "invariant": "sqrt decay should decay fast initially, slow at end"
+}

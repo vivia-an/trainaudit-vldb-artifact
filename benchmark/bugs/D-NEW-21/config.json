@@ -1,0 +1,1 @@
+{"bug_id":"D-NEW-21","framework":"deepspeed","repo":"microsoft/DeepSpeed","title":"bf16 without ZeRO incorrectly treated as having ZeRO optimizer state in checkpoint","fixed_commit":"991ebd72","buggy_commit":"991ebd72~1"}

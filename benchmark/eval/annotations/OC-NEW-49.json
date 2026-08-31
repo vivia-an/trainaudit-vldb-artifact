@@ -1,0 +1,14 @@
+{
+  "bug_id": "OC-NEW-49",
+  "framework": "olmo-core",
+  "category": "control_flow",
+  "parallel_dimension": "FSDP",
+  "invariant_type": "completeness",
+  "required_trace_fields": ["param_name", "requires_grad"],
+  "check_stage": "build",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "freeze_params=['teacher.*'] missed shared 'blocks.*' params because share_blocks_between_teacher_and_student=True. Detection statically iterates named_parameters() after freeze applied: every param that should be frozen per recipe intent must have requires_grad=False. P8 because this is a build-time named_parameters snapshot check, no runtime needed. Tier 6 (named_parameters set with requires_grad). schema_topo_precond: precond is 'this is a stage1 BLT recipe with share_blocks=True'. Original 'freeze' category mapped to control_flow per prompt mapping.",
+  "borderline_flags": []
+}

@@ -1,0 +1,20 @@
+{
+  "bug_id": "D-015",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "Misplaced overflow return always exits FP16 optimizer step",
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/7645",
+  "buggy_commit": "02da3732934efbf10b72e143758747386d45f724",
+  "fixed_commit": "d56e847bac2853d5b8819ce176eeafff65a3798e",
+  "category": "control_flow",
+  "severity": "high",
+  "gpu_needed": 0,
+  "root_cause": "return self.overflow at wrong indentation causes optimizer step to always return early",
+  "detection_method": "source_analysis",
+  "invariant": "return self.overflow must be inside if self.overflow block, not if use_grad_scaling",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: return self.overflow must be inside if self.overflow block",
+    "fixed": "CLEAN"
+  }
+}

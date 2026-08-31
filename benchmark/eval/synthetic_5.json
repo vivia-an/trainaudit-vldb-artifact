@@ -1,0 +1,12 @@
+{
+  "name": "synthetic_5",
+  "policy": "D1 harness self-test on CPU",
+  "n": 5,
+  "bugs": [
+    "B11",
+    "B12",
+    "O-NEW-1",
+    "OC-NEW-2",
+    "M-014"
+  ]
+}

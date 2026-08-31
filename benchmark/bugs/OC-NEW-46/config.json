@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-46",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "BLT byte embeddings never initialized to teacher-embedding stats — kept default kaiming",
+  "fixed_commit": "529dc3b8",
+  "buggy_commit": "529dc3b8~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/529dc3b8",
+  "category": "initialization",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["LocalEncoder.fix_init called", "BLT distill training with target_embeddings provided"],
+  "root_cause": "fix_init computed te_mean and te_std of the target embeddings but used them only when initializing hash_embeddings; the main self.embedding.weight (byte embeddings) was never assigned the te-scaled init, leaving it at nn.Embedding's default initialization. The encoder therefore started training with byte embeddings whose distribution did not match the teacher's vocabulary embeddings.",
+  "detection_method": "constraint:embedding_init_distribution",
+  "invariant": "When a teacher embedding source is provided, the byte embedding must be sampled from a distribution with the same per-channel mean/std as the teacher embeddings.",
+  "diff_summary": "Sample byte_embedding_init from te_std * randn + te_mean and copy into self.embedding.weight.data after the hash-embedding init block.",
+  "silent_check": "Buggy init runs without exception — self.embedding.weight retains its default initialization, training proceeds with a finite but mis-scaled byte embedding distribution that the user only catches via convergence-rate comparison."
+}

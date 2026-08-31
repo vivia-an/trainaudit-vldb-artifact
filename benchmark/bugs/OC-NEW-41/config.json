@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-41",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Instance filter loss divisor missed masked-out instance tokens — wrong gradient scale",
+  "fixed_commit": "a671d94c",
+  "buggy_commit": "a671d94c~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/a671d94c",
+  "category": "loss",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["instance_mask present in batch", "any rank has masked instances"],
+  "root_cause": "When the instance filter dropped instances on some ranks the loss divisor (batch_num_tokens_for_loss) only counted unmasked tokens. With per-rank sum-then-allreduce, ranks with fewer kept tokens contributed an artificially large per-token loss, producing an unfair weighted average across the data-parallel group and a wrong gradient magnitude.",
+  "detection_method": "constraint:loss_normalization_consistency",
+  "invariant": "Across DP ranks the loss divisor must equal the global batch token count (including masked-instance tokens accounted as zero loss) so each rank contributes proportionally.",
+  "diff_summary": "Add `(~instance_mask).sum() * batch['labels'].shape[1]` to batch_num_tokens_for_loss when an instance mask is present.",
+  "silent_check": "Buggy step runs through forward, backward and optimizer with no exception — the loss division is just numerically wrong, producing biased gradients on batches where ranks differ in masked-instance counts."
+}

@@ -1,0 +1,11 @@
+# Direct dependency versions used for the published offline audit on Python 3.12.3.
+# This profile makes the evidence checks and optional figure/test checks repeatable
+# without installing the LLM client stack. PyTorch is deliberately not pinned here:
+# the full package suite accepts a standard PyTorch 2.x install, while the author run
+# used NVIDIA's non-PyPI build 2.7.0a0+79aa17489c.nv25.4.
+duckdb==1.4.3
+PyYAML==6.0.2
+pydantic==2.11.2
+pytest==8.1.1
+matplotlib==3.10.1
+numpy==1.26.4

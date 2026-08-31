@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-36",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Trainer async bookkeeping callback fires after future is FINISHED — state_dict snapshot can capture pre-callback state",
+  "fixed_commit": "3af84252",
+  "buggy_commit": "3af84252~1",
+  "category": "control_flow",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Trainer launches a bookkeeping op (e.g., async checkpoint save) that has a completion cb",
+    "_join_bookkeeping_ops races with state_dict() capture"
+  ],
+  "root_cause": "_run_bookkeeping_op attached cb via future.add_done_callback. add_done_callback runs after the future is marked FINISHED, so _join_bookkeeping_ops returned before cb ran, and a state_dict() capture immediately after could observe stale callback state (e.g., un-rotated checkpoint indexes).",
+  "detection_method": "function_call_counting",
+  "invariant": "All bookkeeping callbacks for a future must complete before that future transitions to FINISHED so _join_bookkeeping_ops waits on them too.",
+  "diff_summary": "Invoke cb inside wrapped_op before returning, instead of via future.add_done_callback, so the cb completion is part of the future result."
+}

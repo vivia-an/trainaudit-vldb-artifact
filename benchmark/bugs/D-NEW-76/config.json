@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-76",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO-3 init broadcast tracked through autograd — backward through synchronization op silently corrupts gradients",
+  "fixed_commit": "5a721de3",
+  "buggy_commit": "5a721de3~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/5075",
+  "category": "communication",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["DeepSpeed engine init with ZeRO 1/2 (broadcast model path)", "any param requires_grad=True (almost always)"],
+  "root_cause": "In DeepSpeedEngine._broadcast_model, dist.broadcast(p, ...) was invoked on the parameter Tensor itself (which has requires_grad=True). c10d::broadcast_ has no registered autograd kernel; PyTorch falls through with a warning that explicitly states 'may lead to silently incorrect behavior'. When the user later calls loss.backward(), autograd traverses the broadcast op as part of the computation graph and computes incorrect gradients (silently — no exception, just wrong numbers).",
+  "detection_method": "structural_invariant",
+  "invariant": "Tensor operations performed for cross-rank state synchronization at init must not be on autograd's recorded computation graph (must be inside torch.no_grad() or use .data).",
+  "diff_summary": "Wrap the for-loop over self.module.parameters() inside `with torch.no_grad():`.",
+  "silent_check": "PyTorch emits a UserWarning but proceeds with the broadcast and adds a no-autograd-impl edge to the graph; first backward pass after init silently produces wrong gradients (the warning message itself says 'silently incorrect behavior'). No exception."
+}

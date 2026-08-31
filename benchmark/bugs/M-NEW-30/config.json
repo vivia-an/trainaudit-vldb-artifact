@@ -1,0 +1,20 @@
+{
+  "bug_id": "M-NEW-30",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE aux loss not divided by tensor_model_parallel_size, over-scaled when TP>1",
+  "fixed_commit": "cac8d1a3f",
+  "buggy_commit": "cac8d1a3f~1",
+  "category": "loss_computation",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["TP", "EP"],
+  "trigger_conditions": [
+    "MoE aux loss enabled",
+    "tensor_model_parallel_size > 1"
+  ],
+  "root_cause": "switch_load_balancing_loss_func was called with self.config.moe_aux_loss_coeff directly. Aux loss is computed locally on each TP rank and gradients are then all-reduced; without dividing the coefficient by tp_size, the effective aux-loss gradient was multiplied by tp_size after the all-reduce, silently inflating load-balancing penalty.",
+  "detection_method": "value_scaling_check",
+  "invariant": "Aux loss coefficient passed into switch_load_balancing_loss_func must equal config.moe_aux_loss_coeff / tp_world_size.",
+  "diff_summary": "Computed moe_aux_loss_coeff = self.config.moe_aux_loss_coeff / get_tensor_model_parallel_world_size() and used it for both aux_loss and z_loss; logged tracker divides by adjusted coeff."
+}

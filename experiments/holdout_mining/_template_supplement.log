@@ -1,0 +1,16 @@
+[tmpl-supplement] 2026-07-13 16:43:08 templates=(P6 P9 P5-RNG COMM-PG) per_round=30 out=/volume/posttrain/users/lsk/sdc/lsk/sdccheck/config/lib_holdout_mined.json
+added model_integrity/layer-count-matches-config
+added model_integrity/emb-init-std-bound
+added model_integrity/checkpoint-preserve-rng
+added model_integrity/process-group-size-correct
+backup /volume/posttrain/users/lsk/sdc/lsk/sdccheck/config/lib_holdout_mined.json.bak_pre_phase1_seed
+done added=4 path=/volume/posttrain/users/lsk/sdc/lsk/sdccheck/config/lib_holdout_mined.json
+[tmpl-supplement] 2026-07-13 16:43:09 === template: P6 (30 iters) ===
+[tmpl-supplement] after P6: {'data_parallel': 36, 'tensor_parallel': 54, 'pipeline_parallel': 7, 'zero_optimization': 0, 'model_integrity': 4, 'training_progress': 0}
+[tmpl-supplement] 2026-07-13 16:43:12 === template: P9 (30 iters) ===
+[tmpl-supplement] after P9: {'data_parallel': 36, 'tensor_parallel': 54, 'pipeline_parallel': 7, 'zero_optimization': 0, 'model_integrity': 4, 'training_progress': 0}
+[tmpl-supplement] 2026-07-13 16:43:16 === template: P5-RNG (30 iters) ===
+[tmpl-supplement] after P5-RNG: {'data_parallel': 36, 'tensor_parallel': 54, 'pipeline_parallel': 7, 'zero_optimization': 0, 'model_integrity': 4, 'training_progress': 0}
+[tmpl-supplement] 2026-07-13 16:43:20 === template: COMM-PG (30 iters) ===
+[tmpl-supplement] after COMM-PG: {'data_parallel': 36, 'tensor_parallel': 54, 'pipeline_parallel': 7, 'zero_optimization': 0, 'model_integrity': 4, 'training_progress': 0}
+[tmpl-supplement] 2026-07-13 16:43:23 phase1 templates done

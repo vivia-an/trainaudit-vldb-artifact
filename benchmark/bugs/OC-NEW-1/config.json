@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-1",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "soft_target_probs silently truncated from float to int by as_tensor()",
+  "buggy_commit": "b9d161bf~1",
+  "fixed_commit": "b9d161bf",
+  "category": "data_loading",
+  "severity": "critical",
+  "gpu_needed": 0,
+  "root_cause": "Local as_tensor() casts non-bool numpy arrays via astype(np.int_), destroying float probabilities",
+  "detection_method": "value_invariant",
+  "invariant": "as_tensor(float_array) must preserve float dtype, not truncate to int",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: [0.3, 0.7, 0.1, 0.9, 0.5] → [0, 0, 0, 0, 0]",
+    "fixed": "CLEAN: float probs preserved"
+  }
+}

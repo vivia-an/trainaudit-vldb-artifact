@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-29",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO2 + MoE: fp32→fp16 master-weight copy uses outer-loop partition_id, writing into wrong rank's slice",
+  "fixed_commit": "38a00bee",
+  "buggy_commit": "38a00bee~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/2058",
+  "category": "moe",
+  "severity": "critical",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": ["ZeRO stage 2", "MoE model with expert parallel groups != data parallel group"],
+  "root_cause": "After optimizer.step(), the loop that copies fp32 master weights back to bf16/fp16 partitions used a single `partition_id` taken from the outer scope. With MoE, different param groups use different real_dp_process_group with different ranks, so the wrong partition slot in bit16_partitions was overwritten and the local rank's actual partition was never updated.",
+  "detection_method": "cross_rank_equality",
+  "invariant": "After optimizer.step, bit16_partitions[i][rank_i_in_group] must equal single_partition_of_fp32_groups[i].to(bit16_dtype) for every group i, where rank_i_in_group = dist.get_rank(group=real_dp_process_group[i]).",
+  "diff_summary": "Compute partition_id per group inside the zip loop using dist.get_rank(group=real_dp_process_group[group_id]) instead of reusing the outer-scope value."
+}

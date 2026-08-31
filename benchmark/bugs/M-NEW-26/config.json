@@ -1,0 +1,20 @@
+{
+  "bug_id": "M-NEW-26",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE router weight initialized with DP RNG fork even when perform_initialization=False",
+  "fixed_commit": "1113758d2",
+  "buggy_commit": "1113758d2~1",
+  "category": "moe",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "TP"],
+  "trigger_conditions": [
+    "MoE TopKRouter or SharedExpertMLP gate creation",
+    "config.perform_initialization=False (e.g., loading checkpoint)"
+  ],
+  "root_cause": "Router/SharedExpert gate init logic ran config.init_method(self.weight) inside a get_data_parallel_rng_tracker fork only when perform_initialization=True; the else branch (perform_initialization=False) ALSO unconditionally re-initialized the weight on CPU outside any RNG fork. This silently re-randomized router weights even when the user expected them to be loaded later, with different values across DP ranks.",
+  "detection_method": "cross_rank_equality",
+  "invariant": "After Router.__init__ with perform_initialization=False, router.weight should not be re-randomized; if it is initialized, it must be identical across DP ranks.",
+  "diff_summary": "Removed the get_data_parallel_rng_tracker().fork() wrapping and the unconditional else-branch reinit; now config.init_method runs deterministically on CPU only when perform_initialization=True."
+}

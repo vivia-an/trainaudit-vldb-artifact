@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-32",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "fan_in init for embeddings ignores embed_scale — embeddings remain std=1.0 and become huge after scaling",
+  "fixed_commit": "a2cb7d56",
+  "buggy_commit": "a2cb7d56~1",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "InitMethod.fan_in selected",
+    "Transformer config sets embed_scale (e.g., Gemma-like models)"
+  ],
+  "root_cause": "init_embeddings under fan_in always used std=1.0. The transformer then multiplied embeddings by embed_scale (e.g., sqrt(d_model)) at the input, producing embeddings several orders of magnitude larger than intended. Training did not error but the input magnitude scrambled the early-layer dynamics.",
+  "detection_method": "value_invariant",
+  "invariant": "After init_embeddings followed by the embed_scale multiply, the embedding output std must stay near 1.0 (compensating the fan-in init by 1/embed_scale).",
+  "diff_summary": "When embed_scale is set, init embeddings with std = 1.0 / embed_scale instead of a fixed 1.0."
+}

@@ -1,0 +1,351 @@
+{
+  "meta": {
+    "batch": 4,
+    "count": 31,
+    "phase": "2.1_open_coding",
+    "instructions": "5-10 kebab-case labels per bug capturing rule structure; avoid re-labeling P1-P8"
+  },
+  "bugs": [
+    {
+      "bug_id": "O-NEW-19",
+      "labels": [
+        "init-distribution-std-mismatch",
+        "residual-layer-init-rescale-extra",
+        "init-fn-branch-divergence",
+        "post-init-divisor-leftover",
+        "config-vs-actual-init-std",
+        "weight-statistical-moment-check"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-2",
+      "labels": [
+        "causal-mask-inversion",
+        "attention-mask-geometry",
+        "triu-tril-polarity-flip",
+        "future-token-leakage",
+        "mask-boundary-semantics",
+        "single-token-attend-self-check"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-20",
+      "labels": [
+        "mup-readout-zero-init-violation",
+        "init-fn-mup-branch-missing",
+        "unconditional-reinit-overwrite",
+        "readout-special-init-preservation",
+        "mup-coordinate-check-broken",
+        "init-distribution-zero-required"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-21",
+      "labels": [
+        "mup-readout-misapplied-to-block",
+        "module-class-vs-role-mismatch",
+        "ff-proj-non-readout-required",
+        "zero-init-ffn-contribution-loss",
+        "mup-config-conditional-construction",
+        "init-distribution-nonzero-std-required"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-22",
+      "labels": [
+        "mup-attn-scale-formula-mismatch",
+        "sp-mup-base-width-equivalence",
+        "attention-temperature-scale",
+        "scale-factor-base-fanout",
+        "implementation-equivalence-base-case",
+        "scaling-rule-tracking"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-27",
+      "labels": [
+        "epoch-rollover-state-reset",
+        "dataset-start-index-stale",
+        "iterable-dataset-resume-offset",
+        "data-skipped-silently",
+        "lifecycle-counter-reset-missing",
+        "epoch-boundary-precondition"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-29",
+      "labels": [
+        "all-reduce-tensor-device-mismatch",
+        "cpu-vs-gpu-collective-backend",
+        "nccl-gloo-fallback-silent",
+        "tensor-construction-device-default",
+        "metric-tensor-device-precondition",
+        "collective-input-device-invariant"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-3",
+      "labels": [
+        "loss-reduction-formula-error",
+        "masked-mean-vs-mean-of-mask",
+        "z-loss-scalar-shape",
+        "reduction-operator-misapplied",
+        "loss-output-shape-check",
+        "auxiliary-loss-magnitude"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-35",
+      "labels": [
+        "param-group-classifier-regex-too-strict",
+        "leaf-norm-name-pattern-miss",
+        "weight-decay-applied-to-norm",
+        "fqn-substring-match-bug",
+        "no-decay-group-completeness",
+        "param-name-pattern-coverage"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-36",
+      "labels": [
+        "tensor-concat-axis-error",
+        "split-after-reduce-shape-violation",
+        "metric-category-mixing",
+        "shape-invariant-after-collective",
+        "all-reduce-output-shape-check",
+        "per-param-stat-decomposition"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-40",
+      "labels": [
+        "config-field-ignored-by-init",
+        "hardcoded-cutoff-factor",
+        "init-cutoff-config-stale",
+        "truncated-normal-cutoff-mismatch",
+        "config-vs-actual-init-arg",
+        "user-config-silently-overridden"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-49",
+      "labels": [
+        "lr-schedule-handoff-discontinuity",
+        "linearlr-start-end-factor-error",
+        "cosine-to-linear-junction-jump",
+        "lr-monotonic-step-violation",
+        "schedule-segment-composition",
+        "lr-trajectory-continuity-check"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-5",
+      "labels": [
+        "embedding-init-scale-missing-factor",
+        "init-std-fan-in-correction",
+        "embedding-vs-linear-init-rule",
+        "sqrt-d-model-factor-omitted",
+        "init-distribution-magnitude-off",
+        "embedding-statistical-moment-check"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-55",
+      "labels": [
+        "mup-readout-zero-init-overwrite",
+        "unconditional-reinit-mup",
+        "readout-init-skip-precondition",
+        "init-fn-mup-conditional-missing",
+        "ffproj-mureadout-special-init",
+        "coordinate-check-guarantee-broken"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-60",
+      "labels": [
+        "fsdp-meta-init-not-materialized",
+        "torch-version-api-regression",
+        "reset-parameters-call-missing",
+        "default-fsdp-init-leak",
+        "post-wrap-init-precondition",
+        "param-distribution-vs-init-fn-check"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-61",
+      "labels": [
+        "module-device-kwarg-omitted",
+        "meta-init-flow-broken-per-module",
+        "default-kaiming-init-leak",
+        "init-pipeline-bypass",
+        "module-construction-device-consistency",
+        "param-device-vs-config-init-device"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-62",
+      "labels": [
+        "reset-parameters-skipped-by-condition",
+        "mup-vs-sp-branch-divergence",
+        "infshapes-none-fallthrough",
+        "init-call-nesting-error",
+        "baseline-config-init-leak",
+        "fresh-build-reset-precondition"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-63",
+      "labels": [
+        "deepspeed-scheduler-type-wrong",
+        "warmuplr-vs-warmupdecaylr",
+        "lr-decay-phase-missing",
+        "lr-monotonic-decrease-violation",
+        "scheduler-config-string-typo",
+        "post-warmup-shape-check"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-64",
+      "labels": [
+        "deepspeed-warmup-min-lr-default",
+        "warmup-type-omitted",
+        "lr-warmup-shape-mismatch",
+        "trainer-cross-impl-equivalence",
+        "warmup-start-lr-fraction",
+        "lr-trajectory-vs-reference-trainer"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-65",
+      "labels": [
+        "checkpoint-retention-eviction-order",
+        "list-mutation-after-prune",
+        "newest-saved-evicted-next-call",
+        "save-then-track-ordering",
+        "checkpoint-disk-vs-memory-consistency",
+        "lifecycle-list-append-position"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-66",
+      "labels": [
+        "max-steps-units-mismatch",
+        "examples-vs-optimizer-steps",
+        "dataloader-truncation-early",
+        "batch-size-multiplication-missing",
+        "training-volume-shortfall",
+        "data-budget-config-derivation"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-68",
+      "labels": [
+        "fused-kernel-aux-arg-zeroed",
+        "z-loss-silently-disabled",
+        "lse-square-scale-hardcoded",
+        "fused-vs-reference-impl-equivalence",
+        "loss-component-magnitude-check",
+        "kernel-arg-vs-surrounding-belief"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-69",
+      "labels": [
+        "tokenizer-vs-model-eos-id-mismatch",
+        "config-special-token-stale",
+        "document-boundary-id-wrong",
+        "tokenizer-config-coupling",
+        "id-zero-as-real-token-treated-eos",
+        "config-value-vs-tokenizer-truth"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-7",
+      "labels": [
+        "wrong-module-initialized-typo",
+        "ff-out-vs-ff-proj-confusion",
+        "variable-name-typo-init",
+        "target-module-misidentified",
+        "init-fn-applied-to-wrong-tensor",
+        "module-rename-stale-reference"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-11",
+      "labels": [
+        "init-fan-in-vs-d-model-shared-constant",
+        "gqa-kv-projection-fan-mismatch",
+        "w-out-fan-in-n-heads-head-dim",
+        "shared-std-across-different-fans",
+        "true-fan-in-per-layer-derivation",
+        "claude-init-formula-error"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-12",
+      "labels": [
+        "rope-cu-doc-lens-not-forwarded",
+        "packed-sequence-position-reset-missing",
+        "intra-doc-position-restart",
+        "argument-propagation-omitted",
+        "identical-doc-output-equivalence",
+        "rope-phase-cross-doc-leakage"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-13",
+      "labels": [
+        "rope-batch-element-position-shared",
+        "searchsorted-batch-axis-missing",
+        "per-batch-offset-omitted",
+        "cumulative-doc-lens-batch-broadcast",
+        "intra-doc-position-batch-correctness",
+        "packed-mode-multi-batch-geometry"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-14",
+      "labels": [
+        "init-method-mixer-not-delegated",
+        "torch-empty-uninit-memory-leak",
+        "gdn-prescribed-init-skipped",
+        "hybrid-model-init-fallthrough",
+        "a-log-dt-bias-distribution-check",
+        "init-distribution-prescription-vs-actual"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-17",
+      "labels": [
+        "datamix-enum-name-vs-value-mismatch",
+        "config-string-key-typo",
+        "wrong-corpus-routed-silently",
+        "enum-self-consistency-check",
+        "data-source-id-vs-path",
+        "name-payload-cross-validation"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-19",
+      "labels": [
+        "activation-checkpoint-rng-not-preserved",
+        "dropout-recompute-mask-divergence",
+        "preserve-rng-state-flag-hardcoded",
+        "backward-graph-vs-forward-graph-mismatch",
+        "stochastic-op-recompute-determinism",
+        "ac-precond-when-dropout-active"
+      ]
+    },
+    {
+      "bug_id": "OC-NEW-20",
+      "labels": [
+        "expert-grad-zeroed-unconditionally",
+        "freeze-experts-config-ignored",
+        "subclass-method-moved-to-base",
+        "router-gradient-mask-leakage",
+        "moe-expert-update-half-killed",
+        "train-batch-override-misplaced"
+      ]
+    }
+  ]
+}

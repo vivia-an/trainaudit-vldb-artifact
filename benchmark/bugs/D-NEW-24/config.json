@@ -1,0 +1,18 @@
+{
+  "bug_id": "D-NEW-24",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO3 contiguous_gradients off-by-one — last param exactly filling bucket is dropped",
+  "fixed_commit": "11aa880e",
+  "buggy_commit": "11aa880e~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/4321",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3", "contiguous_gradients=True", "param.numel == bucket free space"],
+  "root_cause": "The decision to copy a parameter's gradient into the contiguous IPG bucket used a strict less-than comparison (`elements_in_ipg_bucket + param.grad.numel() < reduce_bucket_size`). When a param exactly fills the remaining bucket capacity the branch was skipped, so the gradient was never copied into the contiguous buffer and never reduced — the parameter silently received a stale (or zero) gradient.",
+  "detection_method": "value_invariant",
+  "invariant": "For every trainable param p with non-None grad after backward, the reduced gradient on the owning rank must be non-zero (or, when expected to be zero, must equal the locally computed grad).",
+  "diff_summary": "Change `<` to `<=` in the contiguous_gradients bucket-fit check in DeepSpeedZeroOptimizer_Stage3.reduce_independent_p_g_buckets_and_remove_grads."
+}

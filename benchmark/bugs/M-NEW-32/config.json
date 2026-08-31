@@ -1,0 +1,20 @@
+{
+  "bug_id": "M-NEW-32",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE input jitter applied AFTER gating instead of before, jittering gradients not inputs",
+  "fixed_commit": "e9204a5f3",
+  "buggy_commit": "e9204a5f3~1",
+  "category": "moe",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["EP"],
+  "trigger_conditions": [
+    "moe_input_jitter_eps > 0",
+    "MoE TopKRouter training=True"
+  ],
+  "root_cause": "TopKRouter.routing called self.apply_input_jitter(logits) AFTER computing logits = self.gating(input). The intent of input jitter is to perturb the router input, not the logits; jittering logits instead changes Z-loss reference and z-loss gradient direction, silently degrading load balancing.",
+  "detection_method": "source_analysis",
+  "invariant": "apply_input_jitter must be called on the router input tensor before self.gating(input), not on logits after gating.",
+  "diff_summary": "Removed apply_input_jitter call after Z-loss in routing(); moved jitter application into the abstract forward path so it runs on the input before gating."
+}

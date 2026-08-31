@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-21",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "OLMoSequentialBlock.ff_proj is silently zero-initialized via MuReadout when use_mup is enabled",
+  "fixed_commit": "0fdb7a84",
+  "buggy_commit": "0fdb7a84~1",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 0,
+  "trigger_conditions": [
+    "model.use_mup=true",
+    "every OLMoSequentialBlock constructed (any layer count)"
+  ],
+  "root_cause": "When use_mup was true, ff_proj was constructed as MuReadout with readout_zero_init=True and reset_parameters skipped re-initializing it. Only the final output ff_out should be a MuReadout in muP; every block's ff_proj being zero-initialized wipes out the FFN contribution at start of training. Fix only uses MuReadout for ff_proj when mlp_hidden_size is also set and always re-initializes ff_proj via init_normal.",
+  "detection_method": "value_invariant",
+  "invariant": "for use_mup=true (and default mlp_hidden_size), each block's ff_proj.weight must have non-zero std after initialization",
+  "diff_summary": "narrowed the layer_func selection so ff_proj only becomes MuReadout when mlp_hidden_size is set; removed the muP-skip in reset_parameters and always call init_normal on ff_proj"
+}

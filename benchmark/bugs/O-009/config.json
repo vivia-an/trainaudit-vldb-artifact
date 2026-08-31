@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-009",
+  "framework": "olmo",
+  "title": "Wrong size calculation for QK layer norm with GQA",
+  "issue_url": "https://github.com/allenai/OLMo/commit/8472d0b4",
+  "buggy_commit": "194012a0",
+  "fixed_commit": "8472d0b4",
+  "category": "numerical",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "trigger_conditions": ["attention_layer_norm=True", "n_kv_heads < n_heads (GQA)"],
+  "detection_method": "structural_invariant",
+  "invariant": "k_norm size must equal head_dim * n_kv_heads, not d_model // n_kv_heads"
+}

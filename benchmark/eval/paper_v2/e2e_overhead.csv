@@ -1,0 +1,5 @@
+gpus,nodes,collection_overhead_percent,full_median_overhead_percent,full_p95_overhead_percent,throughput_percent,gpu_memory_percent
+32,4,1.9,6.3,7.8,94.1,102.7
+64,8,2.3,6.9,8.9,93.5,103.1
+128,16,2.0,6.5,8.2,93.9,102.9
+256,32,2.4,7.2,9.4,93.3,103.4

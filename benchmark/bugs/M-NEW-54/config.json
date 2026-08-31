@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-54",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "DistributedOptimizer FP32 shard_model_param uses non-detached view, so the parameter shard participates in autograd and accumulates spurious grad_fn",
+  "fixed_commit": "537fa1ae17",
+  "buggy_commit": "537fa1ae17~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/2785",
+  "category": "optimizer",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": [
+    "DistributedOptimizer enabled with FP32 master parameters",
+    "Mixed precision training where some params remain FP32 (e.g. embeddings, layernorm)"
+  ],
+  "root_cause": "_build_model_and_main_param_groups built shard_model_param as model_param.view(-1)[range] without .detach(). Unlike the FP16/BF16 branch (which goes through main_param.detach() copies), the FP32 view kept grad_fn alive. As soon as anything autograd-eligible touched the shard, an extra grad chain was created, leading to silently doubled gradient contributions for FP32 parameters and inconsistent state with the FP16/BF16 path.",
+  "detection_method": "structural_invariant",
+  "invariant": "Every shard_model_param entry created in _build_model_and_main_param_groups must satisfy shard_model_param.requires_grad == False and shard_model_param.grad_fn is None.",
+  "diff_summary": "Change shard_model_param = model_param.view(-1)[start:end] to shard_model_param = model_param.detach().view(-1)[start:end].",
+  "silent_check": "Creating a non-detached view never raises; autograd eagerly hooks into the shard but does not error on the first backward; the accumulated effect is that FP32 parameters receive a duplicated or otherwise inconsistent gradient compared to the BF16/FP16 path."
+}

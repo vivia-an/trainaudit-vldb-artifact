@@ -1,0 +1,24 @@
+bug_id,framework,phase,set,verdict,trigger_signal,driver_path,duration_s,note
+B11,deepspeed,buggy,real,FAIL,,benchmark/bugs/B11/trainaudit_run.sh,~60,DS engine init succeeds + trainaudit_driver.py exits without per-step loss output (1-3 step repro); 456 stdout lines all DS config / TrainAudit init logs, zero matching `loss:.*grad_norm:` lines
+B12,olmo-core,buggy,real,FAIL,,benchmark/bugs/B12/trainaudit_run.sh,~30,trainaudit_driver crashes pre-training; 131 stdout lines no metric stream
+B13,olmo,buggy,real,FAIL,,benchmark/bugs/B13/trainaudit_run.sh,~30,131 stdout lines no metric stream
+M-012,megatron-lm,buggy,real,FAIL,,benchmark/bugs/M-012/trainaudit_run.sh,~30,Megatron commit-API mismatch crash; 101 lines
+M-014,megatron-lm,buggy,real,FAIL,,benchmark/bugs/M-014/trainaudit_run.sh,~30,Megatron BUGGY commit `train_step` API mismatch with venv-cu126 torch 2.7.1
+M-020,megatron-lm,buggy,real,FAIL,,benchmark/bugs/M-020/trainaudit_run.sh,~30,Megatron commit-API mismatch crash; 101 lines
+M-024,megatron-lm,buggy,real,FAIL,,benchmark/bugs/M-024/trainaudit_run.sh,~30,Megatron commit-API mismatch crash; 109 lines
+M-NEW-5,megatron-lm,buggy,real,FAIL,,benchmark/bugs/M-NEW-5/trainaudit_run.sh,~30,Megatron commit-API mismatch crash; 101 lines
+O-002,olmo,buggy,real,FAIL,,benchmark/bugs/O-002/trainaudit_run.sh,~30,131 stdout lines no metric stream
+O-005,olmo,buggy,real,FAIL,,benchmark/bugs/O-005/trainaudit_run.sh,~30,63 stdout lines no metric stream
+O-NEW-1,olmo,buggy,real,FAIL,,benchmark/bugs/O-NEW-1/trainaudit_run.sh,~30,59 stdout lines no metric stream
+OC-NEW-2,olmo-core,buggy,real,FAIL,,benchmark/bugs/OC-NEW-2/trainaudit_run.sh,~30,67 stdout lines no metric stream
+OC-NEW-3,olmo-core,buggy,real,FAIL,,benchmark/bugs/OC-NEW-3/trainaudit_run.sh,~30,79 stdout lines no metric stream
+CAND_OLMOCORE_RNGCKPT,olmo-core,buggy,real,FAIL,,benchmark/eval/hunt_log/CAND_OLMOCORE_RNGCKPT/dynamic_confirm_e2e.py,~5,antlr4 ATNDeserializer version mismatch (CAND driver imports old olmo-core grammar)
+CAND_OLMOCORE_EVAL_NOZEROGRAD,olmo-core,buggy,real,FAIL,,benchmark/eval/hunt_log/CAND_OLMOCORE_EVAL_NOZEROGRAD/dynamic_confirm_e2e.py,~5,antlr4 ATNDeserializer version mismatch
+CAND_DEEPSPEED_BF16_BOUNDARY_GRAD_LEAK,deepspeed,buggy,real,FAIL,,benchmark/eval/hunt_log/CAND_DEEPSPEED_BF16_BOUNDARY_GRAD_LEAK/dynamic_confirm_e2e.py,~5,ModuleNotFoundError: deepspeed (driver imports DS at module level; DS_DIR not on PYTHONPATH for hunt drivers)
+CAND_DEEPSPEED_ZERO_OFFLOAD_MULTI_BACKWARD,deepspeed,buggy,real,FAIL,,benchmark/eval/hunt_log/CAND_DEEPSPEED_ZERO_OFFLOAD_MULTI_BACKWARD/dynamic_confirm_e2e.py,~5,ModuleNotFoundError: deepspeed
+CAND_DEEPSPEED_WARMUPCOSINE_MULTIGROUP,deepspeed,buggy,real,FAIL,,benchmark/eval/hunt_log/CAND_DEEPSPEED_WARMUPCOSINE_MULTIGROUP/dynamic_confirm_e2e.py,~3,driver only emits 18 stdout lines (purely structural assertion script); no metric stream
+CAND_DEEPSPEED_BF16_ZERO0_DUAL_BUG,deepspeed,buggy,real,FAIL,,benchmark/eval/hunt_log/CAND_DEEPSPEED_BF16_ZERO0_DUAL_BUG/dynamic_confirm_e2e.py,~5,ModuleNotFoundError: deepspeed
+CAND_OLMOCORE_FSDP_EXPERTS,olmo-core,buggy,real,N/A,,benchmark/eval/hunt_log/CAND_OLMOCORE_FSDP_EXPERTS/,0,structural-only candidate (AST + runtime emulation); no real training metric stream by design
+CAND_MEGATRON_CUDAGRAPH_BUFFER_CORRUPTION,megatron-lm,buggy,real,N/A,,benchmark/eval/hunt_log/CAND_MEGATRON_CUDAGRAPH_BUFFER_CORRUPTION/,0,structural-only candidate; no real training metric stream
+CAND_OLMO_CKPT_SAVE_OVERWRITE_DROP,olmo,buggy,real,N/A,,benchmark/eval/hunt_log/CAND_OLMO_CKPT_SAVE_OVERWRITE_DROP/,0,structural-only candidate; no real training metric stream
+CAND_OLMO_ADAPTIVE_CLIP_EMA_RESET,olmo,buggy,real,N/A,,benchmark/eval/hunt_log/CAND_OLMO_ADAPTIVE_CLIP_EMA_RESET/,0,structural-only candidate; no real training metric stream

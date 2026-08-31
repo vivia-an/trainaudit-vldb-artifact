@@ -1,0 +1,24 @@
+{
+  "bug_id": "B8",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "InferenceEngine creates EP groups with num_experts instead of ep_size",
+  "issue_url": "https://github.com/deepspeedai/DeepSpeed/pull/7551",
+  "fixed_commit": "8cbbbb53",
+  "buggy_commit": "8cbbbb53~1",
+  "category": "moe_parallel_grouping",
+  "severity": "high",
+  "gpu_needed": 2,
+  "trigger_conditions": [
+    "deepspeed.init_inference with a model containing deepspeed.moe.MoE",
+    "world_size > 1",
+    "num_experts != ep_size"
+  ],
+  "root_cause": "InferenceEngine.__init__ called self._create_ep_parallel_group(config.moe.moe_experts); should be (config.moe.ep_size). When num_experts > ep_size the EP group has wrong size — when num_experts > world_size, group construction fails or creates malformed groups.",
+  "detection_method": "hook_create_ep_parallel_group_argument",
+  "invariant": "InferenceEngine._create_ep_parallel_group must be called with ep_size, not num_experts",
+  "expected_output": {
+    "buggy": "BUG DETECTED: _create_ep_parallel_group called with moe_experts value",
+    "fixed": "CLEAN: _create_ep_parallel_group called with ep_size value"
+  }
+}

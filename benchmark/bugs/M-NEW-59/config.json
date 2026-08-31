@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-59",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "TransformerLayer with moe_layer_recompute uses non-FP4-aware te_checkpoint guard, so FP4 recompute uses tensor_parallel.checkpoint and loses FP4 amax tracking",
+  "fixed_commit": "4402316e07",
+  "buggy_commit": "4402316e07~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/4070",
+  "category": "te_integration",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["TP", "EP"],
+  "trigger_conditions": [
+    "MoE layer with moe_layer_recompute enabled",
+    "config.fp4 set (NVFP4)",
+    "config.fp8 not set"
+  ],
+  "root_cause": "TransformerLayer.forward selected te_checkpoint only when self.config.fp8. With FP4-only training, the gate was False, so the regular tensor_parallel.checkpoint was used. That recompute path does not know about TE's FP recipe machinery: amax history is not extended for the recomputed forward, so the next forward sees an amax that omits the contribution of the recomputed pass, yielding mismatched scales between forward and recompute.",
+  "detection_method": "config_invariant",
+  "invariant": "When self.is_moe_layer and self.moe_layer_recompute and (config.fp8 or config.fp4), te_checkpoint must be selected as the recompute function.",
+  "diff_summary": "Change the gate from 'if self.config.fp8' to 'if self.config.fp8 or self.config.fp4' in the moe_layer_recompute branch of TransformerLayer.",
+  "silent_check": "tensor_parallel.checkpoint runs the forward function fine; loss values stay finite; FP4 amax accounting drifts slowly across recomputes, causing eventual loss-curve divergence relative to a non-recompute run."
+}

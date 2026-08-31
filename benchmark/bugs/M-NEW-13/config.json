@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-13",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE permute pads tokens unnecessarily for non-quantized dispatch",
+  "fixed_commit": "567d4d468",
+  "buggy_commit": "567d4d468~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/4038",
+  "category": "moe",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["EP"],
+  "trigger_conditions": [
+    "MoE token permute path (fused=True)",
+    "non-quantized model (no FP8/FP4)",
+    "tokens_per_expert provided"
+  ],
+  "root_cause": "get_align_size_for_quantization defaulted to 16 even for non-quantized models, and permute() default align_size was -1. The fused_permute_and_pad_with_probs path was always taken when tokens_per_expert was set, padding tokens to multiples of 16 even when no quantization was needed, leading to extra zero tokens entering experts and slightly different expert outputs.",
+  "detection_method": "value_invariant",
+  "invariant": "When fp8 and fp4 are both False, permute() must not pad and the returned tokens count must equal sum(tokens_per_expert).",
+  "diff_summary": "Changed default align_size from -1 to 0; added align_size > 0 guard before fused_permute_and_pad_with_probs; default get_align_size_for_quantization to 0."
+}

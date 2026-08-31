@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-64",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Hybrid DSL CommonLayerConfig does not derive params_dtype from mixed_precision_dtype, so models with mixed_precision_dtype='bf16' silently keep params_dtype=fp32",
+  "fixed_commit": "a55db03b29",
+  "buggy_commit": "a55db03b29~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/4500",
+  "category": "dtype",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": [
+    "Hybrid model built via the new Python DSL recipe API",
+    "Recipe sets mixed_precision_dtype='bf16' and leaves params_dtype at its 'fp32' default",
+    "Path: CommonLayerConfig.to_transformer_config_kwargs"
+  ],
+  "root_cause": "The DSL allowed bf16 mixed-precision compute while keeping params_dtype at fp32, producing a TransformerConfig with bf16=True but params_dtype=torch.float32. The legacy --bf16 CLI path automatically aligns params_dtype with bf16, so the DSL path silently diverged: parameters were materialized in fp32 and then cast on every forward, doubling memory and changing numerics relative to the legacy path.",
+  "detection_method": "config_invariant",
+  "invariant": "When TransformerConfig.bf16 is True (mixed_precision_dtype='bf16') and the recipe leaves params_dtype at the fp32 default, the produced TransformerConfig.params_dtype must equal torch.bfloat16.",
+  "diff_summary": "In CommonLayerConfig.to_transformer_config_kwargs, derive params_dtype from mixed_precision_dtype when params_dtype is at its fp32 default.",
+  "silent_check": "params_dtype=fp32 with bf16 compute is a supported configuration; nothing raises; loss values look normal; only memory consumption and numerics differ from the legacy CLI path, leading to subtly different convergence."
+}

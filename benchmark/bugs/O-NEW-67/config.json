@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-67",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Ladder 150M model uses max_sequence_length=1024 instead of 2048",
+  "fixed_commit": "21936749",
+  "buggy_commit": "21936749~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/770",
+  "category": "config/model_size",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["FSDP", "DP"],
+  "trigger_conditions": [
+    "scripts/ladder.py used to launch the 150M tier",
+    "Data tokenized at 2048 sequence length"
+  ],
+  "root_cause": "MODEL_CONFIG_150M in scripts/ladder.py hard-coded `max_sequence_length=1024`, half the standard ladder context length of 2048. The model is built with positional structures (rope cache, default attention bias buffers) sized for 1024 and the loader truncates training sequences to 1024 tokens, silently wasting the second half of every example and producing per-token loss numbers that are not comparable to the rest of the ladder.",
+  "detection_method": "config_value_check",
+  "invariant": "Each tier in the ladder must use the same max_sequence_length (2048) so token-loss curves are comparable",
+  "diff_summary": "Restore max_sequence_length=2048 in MODEL_CONFIG_150M; bump 300M device_batch_size accordingly",
+  "silent_check": "1024 is a perfectly valid integer for max_sequence_length; rope/attention buffers are constructed at that size and the loader simply truncates each instance to fit—no exception is raised, the model trains on shorter sequences than intended."
+}

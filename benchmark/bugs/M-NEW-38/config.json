@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-38",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MXFP8 reuse_grad_buf pollutes main grads on first iter when forward_pre_hook is disabled",
+  "fixed_commit": "33224ccb7",
+  "buggy_commit": "33224ccb7~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/2802",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": [
+    "reuse_grad_buf_for_mxfp8_param_ag=True",
+    "overlap_param_gather=True",
+    "First training iteration after init/checkpoint where forward_pre_hook is not yet registered"
+  ],
+  "root_cause": "train_step unconditionally called optim_instance._copy_main_params_to_param_buffer() whenever reuse_grad_buf_for_mxfp8_param_ag and overlap_param_gather were both set. On the first iteration the forward_pre_hook is disabled, so finish_param_sync() never zeros the grad buffer; copying main params into the shared param/grad buffer therefore left main param values inside main_grad, silently turning the next gradient accumulation into 'main_grad += new_grad' with non-zero start state.",
+  "detection_method": "value_invariant",
+  "invariant": "Before the first backward of any iteration, every weight's main_grad should be all zeros (or the residual of unfinished accumulation), never equal to the param data.",
+  "diff_summary": "Added 'forward_pre_hook_enabled = len(model[0].remove_forward_pre_hook_handles) > 0' check; only invoke _copy_main_params_to_param_buffer when the hook is enabled."
+}

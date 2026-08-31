@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-44",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "FlashAttn sliding-window off-by-one — window included one too many tokens",
+  "fixed_commit": "ca2c2a71",
+  "buggy_commit": "ca2c2a71~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/ca2c2a71",
+  "category": "attention",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["Attention with sliding_window > 0", "FlashAttn backend"],
+  "root_cause": "Attention.__init__ stored self.window_size = (window_size, 0) when configuring sliding-window attention. Flash-attention's window is closed-interval [i - window_size[0], i + window_size[1]], so passing window_size directly let token i attend to window_size + 1 past tokens instead of window_size.",
+  "detection_method": "constraint:sliding_window_size_semantics",
+  "invariant": "After configuration, the actual receptive window of each token under sliding attention must equal exactly the configured window_size positions.",
+  "diff_summary": "Change self.window_size = (window_size, 0) to self.window_size = (window_size - 1, 0).",
+  "silent_check": "Forward and backward succeed — flash-attn accepts the window pair, attention values are finite; the model just attends to one extra token per position, an SDC visible only via reference comparison."
+}

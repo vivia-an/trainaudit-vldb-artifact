@@ -1,0 +1,23 @@
+{
+  "bug_id": "O-NEW-51",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "IterableDataset leftover indices distributed wrongly across workers",
+  "fixed_commit": "0f87c9d3",
+  "buggy_commit": "0f87c9d3~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/302",
+  "category": "data_loader/sharding",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "FSDP"],
+  "trigger_conditions": [
+    "drop_last=False with device_batch_size set",
+    "DataLoader num_workers > 1",
+    "Total indices not divisible by device_batch_size"
+  ],
+  "root_cause": "When distributing the leftover (unaligned) indices across workers, the buggy code did `left_overs = indices[truncated_size + worker_info.id : truncated_size + worker_info.id + worker_info.num_workers]`, which gives each worker a contiguous slice of `num_workers` indices starting at its id (so workers overlap and miss other leftovers). The fix uses strided slicing `indices[truncated_size + worker_info.id :: worker_info.num_workers]` so each worker independently picks its share.",
+  "detection_method": "data_distribution_check",
+  "invariant": "Union of leftover indices across all workers must equal the full set of leftover indices, with no overlap",
+  "diff_summary": "Replace contiguous slice with strided slicing for leftover-index assignment per worker",
+  "silent_check": "Slicing always returns a (possibly empty) array; downstream collator processes whatever indices it gets without raising, so training continues with silently duplicated/missing samples."
+}

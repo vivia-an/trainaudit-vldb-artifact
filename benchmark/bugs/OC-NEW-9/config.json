@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-9",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "soft_ce branch backprops only alpha*soft_ce — hard_ce gradient zeroed because output.ce_loss is detached",
+  "fixed_commit": "a28b75f9",
+  "buggy_commit": "a28b75f9~1",
+  "category": "loss_computation",
+  "severity": "critical",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "soft_ce_alpha_start is set so soft-CE branch executes",
+    "LMHead returns ce_loss/z_loss as detached tensors via return_logits=True"
+  ],
+  "root_cause": "The soft-CE branch built combined_loss = (1-alpha)*hard_ce_loss + alpha*soft_ce_loss + z_loss using output.ce_loss and output.z_loss, both of which LMHead returns as .detach()'d copies. Only output.loss carries gradient. As soon as alpha decayed to 0 the entire backward() saw zero gradient and grad_norm collapsed.",
+  "detection_method": "value_invariant",
+  "invariant": "grad_norm must remain positive when (1-alpha) > 0; the (1-alpha) coefficient on hard CE must contribute non-zero parameter gradient.",
+  "diff_summary": "Backprop through output.loss (which has gradient) instead of the detached output.ce_loss; keep ce_loss/z_loss only for metric reporting."
+}

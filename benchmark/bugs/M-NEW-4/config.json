@@ -1,0 +1,15 @@
+{
+  "bug_id": "M-NEW-4",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "cross_entropy backward inplace corruption on fp32 logits",
+  "fixed_commit": "c125e98c7",
+  "buggy_commit": "c125e98c7~1",
+  "category": "gradient_corruption",
+  "severity": "high",
+  "gpu_needed": 2,
+  "root_cause": "VocabParallelCrossEntropy.calculate_logits_max calls .float() on fp32 input which returns the same tensor; subsequent in-place subtraction corrupts activations saved for autograd backward",
+  "detection_method": "runtime_hook",
+  "invariant": "After .float() conversion, the result must not alias the original tensor when in-place operations follow",
+  "reproduction_status": "pending"
+}

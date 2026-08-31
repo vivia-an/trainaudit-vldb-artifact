@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-54",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "BLT debias used log(sum(exp(logprobs))) — silent underflow on small probabilities",
+  "fixed_commit": "5da8b520",
+  "buggy_commit": "5da8b520~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/5da8b520",
+  "category": "loss",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["BLTDistillTransformer with debias enabled", "logprobs with low-probability tail"],
+  "root_cause": "y_space_hat_all = log(einsum(exp(logprobs), space_mask).float()). exp() of low logprobs underflows to 0 in fp32, the masked sum collapses to 0, and log(0) = -inf is added into y_hat in-place. Subsequent loss terms silently propagate -inf values rather than failing.",
+  "detection_method": "constraint:numerically_stable_logsumexp",
+  "invariant": "All log-domain reductions should be performed via torch.logsumexp on a where-masked tensor instead of log(sum(exp(...))) over a multiplicative mask.",
+  "diff_summary": "Replace torch.log(einsum(exp(...), mask)) with torch.where(mask, logprobs, -inf).logsumexp(-1); broadcast masks via [None, None, :].",
+  "silent_check": "The first training step produces finite values for non-degenerate inputs; the issue only shows up when probabilities are small enough that exp underflows, producing -inf silently in metrics and downstream loss without raising."
+}

@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-23",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "PerFileChunkedInstanceSourceConfig defaults token_dtype to uint16 — silent token-id corruption for vocab > 65535",
+  "fixed_commit": "29247fbc",
+  "buggy_commit": "29247fbc~1",
+  "category": "data_processing",
+  "severity": "critical",
+  "gpu_needed": 0,
+  "trigger_conditions": [
+    "Tokenizer with vocab_size > 65535 (e.g., dolma2)",
+    "PerFileChunkedInstanceSourceConfig used without explicit token_dtype"
+  ],
+  "root_cause": "PerFileChunkedInstanceSourceConfig.token_dtype defaulted to uint16. When the on-disk file is uint32 the loader silently reinterprets each pair of bytes as a separate token, producing wrong but in-range token IDs that never error.",
+  "detection_method": "dtype_invariant",
+  "invariant": "token_dtype default must match the tokenizer's required width; if not specified, must be inferred from tokenizer.vocab_size or the constructor must error.",
+  "diff_summary": "Drop the silent uint16 default; require either an explicit token_dtype or a tokenizer config from which the dtype can be inferred."
+}

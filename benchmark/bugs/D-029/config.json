@@ -1,0 +1,20 @@
+{
+  "bug_id": "D-029",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "MoE CPU offload grad norm tensor stays on CPU instead of GPU",
+  "issue_url": "https://github.com/microsoft/DeepSpeed/pull/5220",
+  "buggy_commit": "3e06a154b4d6a2f93c2c5504f52a932184def112",
+  "fixed_commit": "e6e8c1378de035df59034d09373b44af3319b6d7",
+  "category": "communication",
+  "severity": "medium",
+  "gpu_needed": 0,
+  "root_cause": "scaled_norm_tensor not moved to GPU before norm computation with CUDA tensors",
+  "detection_method": "source_analysis",
+  "invariant": "CPU-offloaded grad norm tensor must be moved to accelerator device",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: CPU-offloaded grad norm tensor must be moved to accelerator device",
+    "fixed": "CLEAN"
+  }
+}

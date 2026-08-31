@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-19",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Activation checkpointing skips RNG state preservation even when dropout is active — backward recomputes a different mask",
+  "fixed_commit": "606abd07",
+  "buggy_commit": "606abd07~1",
+  "category": "control_flow",
+  "severity": "critical",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Transformer activation checkpointing enabled",
+    "nn.Dropout module present in the model graph (dropout > 0)"
+  ],
+  "root_cause": "Transformer.apply_activation_checkpointing hard-coded preserve_rng_state=False with a TODO. With dropout active, the recomputed forward in backward used a fresh random mask, so backward gradients corresponded to a different forward graph than the one used to produce the loss — silently wrong gradients and degraded convergence.",
+  "detection_method": "value_invariant",
+  "invariant": "If any nn.Dropout module exists, the forward run during backward recompute must use the same RNG state as the original forward (preserve_rng_state=True).",
+  "diff_summary": "Set preserve_rng_state = any(isinstance(m, nn.Dropout) for m in self.modules()) so checkpointing pins the RNG state when dropout is active."
+}

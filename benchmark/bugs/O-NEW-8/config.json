@@ -1,0 +1,1 @@
+{"bug_id":"O-NEW-8","framework":"olmo","repo":"allenai/OLMo","title":"Attention norm overwrites residual input — destroys identity path","fixed_commit":"f81904f3","buggy_commit":"f81904f3~1","category":"residual_connection","severity":"critical","gpu_needed":0}

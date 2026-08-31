@@ -1,0 +1,20 @@
+{
+  "bug_id": "O-NEW-31",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Optimizer collects metrics with num_model_replicas == 1 hardcoded, so HSDP norms are N times too large",
+  "fixed_commit": "74ccc8e7",
+  "buggy_commit": "74ccc8e7~1",
+  "category": "gradient_sync",
+  "severity": "high",
+  "gpu_needed": 8,
+  "parallel_dimensions": ["FSDP"],
+  "trigger_conditions": [
+    "FSDP HYBRID_SHARD with num_model_replicas > 1",
+    "metric collection enabled"
+  ],
+  "root_cause": "Optimizer.clip_grads_and_collect_metrics divided by a hardcoded num_model_replicas=1 even when HSDP was using multiple replicas. Each replica contributed identical gradient norms; without dividing by the replica count, all_reduce sums them and the reported norm is N times the true value, leading to spurious clipping decisions and wrong logged grad_norm.",
+  "detection_method": "value_invariant",
+  "invariant": "with N model replicas in HSDP, all_reduced grad_norm metric must be divided by N before being reported",
+  "diff_summary": "moved the num_model_replicas determination into clip_grads_and_collect_metrics (passed via train.py) and applied / self.num_model_replicas to the all_reduced sums and norms"
+}

@@ -1,0 +1,25 @@
+{
+  "bug_id": "B11",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "clip_grad_norm_ uses torch.max instead of torch.min for clip_coef",
+  "issue_url": "https://github.com/deepspeedai/DeepSpeed/pull/5150",
+  "fixed_commit": "005afe12",
+  "buggy_commit": "005afe12~1",
+  "category": "gradient_clipping",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "FP32 training (no bf16/fp16)",
+    "ZeRO disabled (stage 0)",
+    "gradient_clipping > 0",
+    "actual gradient norm > max_norm"
+  ],
+  "root_cause": "deepspeed/runtime/utils.py:clip_grad_norm_ used torch.max(1, max_norm/total_norm) so clip_coef=1 when grads exceed threshold (no clipping). Fix changes max -> min so clip_coef<=1 properly clips.",
+  "detection_method": "runtime_value_check",
+  "invariant": "After clip_grad_norm_, ||grad|| must be <= max_norm (within tolerance)",
+  "expected_output": {
+    "buggy": "BUG DETECTED: post-clip grad norm equals pre-clip norm (no clipping applied)",
+    "fixed": "CLEAN: post-clip grad norm <= max_norm"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "bug_id": "M-NEW-40",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "ViT local layer spec uses AttnMaskType.causal instead of no_mask, silently turning bidirectional self-attention into causal",
+  "fixed_commit": "5ab31f4523",
+  "buggy_commit": "5ab31f4523~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/1791",
+  "category": "attention",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": ["TP"],
+  "trigger_conditions": [
+    "ViT/CLIP encoder built via get_vit_layer_with_local_spec (non-TE local path)",
+    "Multimodal training (LLaVA-style) with image patch tokens"
+  ],
+  "root_cause": "get_vit_layer_with_local_spec set self_attention attn_mask_type to AttnMaskType.causal. ViTs require bidirectional attention over patch tokens, so a lower-triangular mask is applied by DotProductAttention every forward pass. The TE path was already correct (no_mask) by an earlier fix; only the local path was missed. Training proceeds normally, but every patch can only attend to earlier patches, distorting visual features.",
+  "detection_method": "config_invariant",
+  "invariant": "ViT SelfAttention.attn_mask_type must be AttnMaskType.no_mask in both TE and local layer specs.",
+  "diff_summary": "Change params={'attn_mask_type': AttnMaskType.causal} to AttnMaskType.no_mask in get_vit_layer_with_local_spec.",
+  "silent_check": "DotProductAttention happily accepts a causal mask on a square ViT input; no exception is raised, training and validation losses look plausible, but the visual encoder learns from a wrongly masked attention pattern."
+}

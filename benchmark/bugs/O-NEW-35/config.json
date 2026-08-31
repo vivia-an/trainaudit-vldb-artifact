@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-35",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "param-group classifier uses '.norm.' regex requiring trailing dot, treating q_norm/k_norm/ff_norm leaf weights as decay params",
+  "fixed_commit": "4d322de2",
+  "buggy_commit": "4d322de2~1",
+  "category": "optimizer",
+  "severity": "medium",
+  "gpu_needed": 0,
+  "trigger_conditions": [
+    "model has LayerNorm/RMSNorm modules whose param fully-qualified name does not have anything after .norm (e.g. blocks.0.attn.q_norm.weight)",
+    "no_decay_norm_and_bias enabled"
+  ],
+  "root_cause": "get_param_groups identified norm parameters via the substring '.norm.' which only matches when there is a child name after .norm. For QK layer norms (q_norm.weight, k_norm.weight) the FQN ends with '.q_norm.weight' so the dot after norm never appears and the weight is silently routed to the decay group, applying weight_decay to a normalization layer's gain.",
+  "detection_method": "structural_invariant",
+  "invariant": "all parameters whose name contains '.norm' (with or without a child) must end up in the no_decay group when no_decay_norm_and_bias is true",
+  "diff_summary": "changed the substring check from '.norm.' to '.norm' so it matches both nested and leaf norm parameters"
+}

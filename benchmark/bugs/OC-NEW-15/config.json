@@ -1,0 +1,20 @@
+{
+  "bug_id": "OC-NEW-15",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "MoE load-balancing aux loss accumulated to metrics twice when activation checkpointing recomputes the block",
+  "fixed_commit": "85e125a5",
+  "buggy_commit": "85e125a5~1",
+  "category": "metric_tracking",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["EP", "DP"],
+  "trigger_conditions": [
+    "MoEFusedV2TransformerBlock with routed_experts_router",
+    "Activation checkpointing enabled around the MoE block"
+  ],
+  "root_cause": "compute_aux_loss accumulated the load-balancing scalar into the per-step metric on every forward call. Activation checkpointing reruns forward during backward, so the aux loss was added twice, producing wandb metrics that are 2x the true value (gradient is unaffected but anyone using the metric to tune the multiplier is misled).",
+  "detection_method": "function_call_counting",
+  "invariant": "Metric accumulation inside the MoE router must occur exactly once per global forward — recompute calls must skip the metrics side-effect.",
+  "diff_summary": "Track checkpoint-recompute depth via threadlocal context; pass accumulate_metrics=not _is_checkpoint_recomputing() into compute_aux_loss so recompute does not double-log the LBL value."
+}

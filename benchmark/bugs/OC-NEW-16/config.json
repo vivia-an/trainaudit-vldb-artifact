@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-16",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Idealized-overlap ladder reads dolma2 (uint32) tokens with default uint16 dtype — silently produces garbage token ids",
+  "fixed_commit": "be2d5d2f",
+  "buggy_commit": "be2d5d2f~1",
+  "category": "data_processing",
+  "severity": "critical",
+  "gpu_needed": 0,
+  "trigger_conditions": [
+    "Dolma2 tokenizer (vocab > 65535)",
+    "PerFileChunkedInstanceSourceConfig without explicit token_dtype"
+  ],
+  "root_cause": "PerFileChunkedInstanceSourceConfig defaulted token_dtype to uint16. dolma2 stores token IDs as uint32 because the vocab exceeds 65535. Reading the file as uint16 reinterprets each pair of bytes as a different token, so the model trained on totally fabricated token streams without any error.",
+  "detection_method": "dtype_invariant",
+  "invariant": "Configured token_dtype must accommodate tokenizer.vocab_size (uint16 only when vocab <= 65535).",
+  "diff_summary": "Pass NumpyDatasetDType.uint32 explicitly in the idealized-overlap ladder script so the loader reinterprets bytes correctly."
+}

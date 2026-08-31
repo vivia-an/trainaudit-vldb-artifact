@@ -1,0 +1,30 @@
+{
+  "bug_id": "M-020",
+  "framework": "megatron-lm",
+  "title": "Pipeline parallel silently trains with fewer layers than configured",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/468",
+  "buggy_commit": "64d816a39c41c17628eee49838a59c9693b6b036",
+  "fixed_commit": "99f999a46670359ecbba4ad82265901009722d8c",
+  "fix_date": "2024-08-07",
+  "category": "configuration_validation",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": [
+    "PP"
+  ],
+  "trigger_conditions": [
+    "pipeline_model_parallel_size > 1",
+    "num_layers % pipeline_model_parallel_size != 0",
+    "no virtual pipeline parallelism"
+  ],
+  "root_cause": "Integer division (num_layers // pp_size) silently drops layers when not evenly divisible. No assertion existed outside the virtual pipeline block.",
+  "detection_method": "structural_invariant",
+  "invariant": "actual total transformer layers across all PP ranks == configured num_layers",
+  "fixed_behavior": "assertion error at startup — rejects the invalid configuration",
+  "notes": "Fixed version crashes (correct behavior). This commit's --mock-data has a compatibility issue requiring a monkey-patch for get_blend_and_blend_per_split.",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: model has 4 layers, missing 1 layer(s)",
+    "fixed": "AssertionError: Number of layers should be divisible"
+  }
+}

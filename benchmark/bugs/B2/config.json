@@ -1,0 +1,24 @@
+{
+  "bug_id": "B2",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "LinearWithFrozenWeight backward forgets to all-reduce grad_input across TP",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/commit/5fffdfc7",
+  "fixed_commit": "5fffdfc7",
+  "buggy_commit": "5fffdfc7~1",
+  "category": "tensor_parallel_grad",
+  "severity": "high",
+  "gpu_needed": 2,
+  "trigger_conditions": [
+    "tensor_model_parallel_size > 1",
+    "weight has requires_grad=False (frozen)",
+    "linear_with_frozen_weight code path"
+  ],
+  "root_cause": "LinearWithFrozenWeight.backward returns grad_input without all-reducing across TP ranks. Each rank only sees its column-shard of grad. linear_with_frozen_weight took async_grad_allreduce as dummy arg.",
+  "detection_method": "compare_grad_input_magnitude_vs_expected",
+  "invariant": "After backward of linear_with_frozen_weight on TP=N, grad_input should equal sum across N ranks (i.e., expected = N * local_grad)",
+  "expected_output": {
+    "buggy": "BUG DETECTED: grad_input only ~half of expected (no TP all-reduce)",
+    "fixed": "CLEAN: grad_input matches expected"
+  }
+}

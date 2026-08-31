@@ -1,0 +1,47 @@
+Warning: Permanently added '[183.242.150.6]:32462' (ED25519) to the list of known hosts.
+===== TrainAudit on BUGGY (0bc7f6c7) =====
+=== 1/17 violations ===
+  [ok       ] T0-attention-head-uniformity: All attention modules have uniform per-head output l2.
+  [VIOLATION] T0-checkpoint-preserve-rng: 1 checkpoint calls used preserve_rng_state=False while dropout is present
+  [ok       ] T0-clip-grad-bounded: all 0 clip_grad calls bounded by max_norm
+  [ok       ] T0-dtype-propagation: checked 32 non-cast layer outputs (passive at T0; full join with pre-event is a T1 feature)
+  [ok       ] T0-evaluator-eval-mode: 1 torch.utils.checkpoint call(s) in trace; no_grad+train fwd events are likely recompute, not eval — rule passive to avoid FP
+  [ok       ] T0-grad-norm-finite: all 1 optim.step.pre events have finite non-zero grad norm
+  [ok       ] T0-initial-lr-present: no scheduler.init events (rule passive)
+  [ok       ] T0-build-has-modules: build snapshot has parameters and modules (1 snapshots)
+  [ok       ] T0-loss-per-token-dispersion: All loss.call events have bounded per-token dispersion.
+  [ok       ] T0-loss-reduction-mode-correct: All loss calls used reduction='mean'.
+  [ok       ] T0-no-nan-inf: no NaN/Inf detected
+  [ok       ] T0-norm-output-unit-rms: all 10 normalizer outputs within RMS [0.5,2.0]
+  [ok       ] T0-optim-lr-positive: all 1 param_groups have positive lr
+  [ok       ] T0-optim-step-counter-monotonic: only 1 optim.step.post events (rule passive)
+  [ok       ] T0-param-update-applied: All optim.step.post events show param updates were applied.
+  [ok       ] T0-softmax-degenerate: checked 0 softmax/router outputs, none degenerate
+  [ok       ] T0-token-id-in-vocab: no dataloader.batch events captured (rule passive)
+
+[O-005/trainaudit] BUG DETECTED via 1 rule(s):
+   - T0-checkpoint-preserve-rng: 1 checkpoint calls used preserve_rng_state=False while dropout is present
+     evidence: {'sample': [{'event_id': 88, 'function': 'main.<locals>._f', 'preserve_rng_state': False}]}
+
+===== TrainAudit on FIXED (204ad53c) =====
+=== 0/17 violations ===
+  [ok       ] T0-attention-head-uniformity: All attention modules have uniform per-head output l2.
+  [ok       ] T0-checkpoint-preserve-rng: all 1 checkpoint calls preserve rng
+  [ok       ] T0-clip-grad-bounded: all 0 clip_grad calls bounded by max_norm
+  [ok       ] T0-dtype-propagation: checked 32 non-cast layer outputs (passive at T0; full join with pre-event is a T1 feature)
+  [ok       ] T0-evaluator-eval-mode: 1 torch.utils.checkpoint call(s) in trace; no_grad+train fwd events are likely recompute, not eval — rule passive to avoid FP
+  [ok       ] T0-grad-norm-finite: all 1 optim.step.pre events have finite non-zero grad norm
+  [ok       ] T0-initial-lr-present: no scheduler.init events (rule passive)
+  [ok       ] T0-build-has-modules: build snapshot has parameters and modules (1 snapshots)
+  [ok       ] T0-loss-per-token-dispersion: All loss.call events have bounded per-token dispersion.
+  [ok       ] T0-loss-reduction-mode-correct: All loss calls used reduction='mean'.
+  [ok       ] T0-no-nan-inf: no NaN/Inf detected
+  [ok       ] T0-norm-output-unit-rms: all 10 normalizer outputs within RMS [0.5,2.0]
+  [ok       ] T0-optim-lr-positive: all 1 param_groups have positive lr
+  [ok       ] T0-optim-step-counter-monotonic: only 1 optim.step.post events (rule passive)
+  [ok       ] T0-param-update-applied: All optim.step.post events show param updates were applied.
+  [ok       ] T0-softmax-degenerate: checked 0 softmax/router outputs, none degenerate
+  [ok       ] T0-token-id-in-vocab: no dataloader.batch events captured (rule passive)
+
+[O-005/trainaudit] CLEAN: no rule violations
+

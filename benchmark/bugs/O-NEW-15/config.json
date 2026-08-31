@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-15",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Outlier-loss skip-step logic inverted: optimizer steps only when loss IS an outlier",
+  "fixed_commit": "11271219",
+  "buggy_commit": "11271219~1",
+  "category": "control_flow",
+  "severity": "critical",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "ce_loss_outlier_detector or grad_norm_outlier_detector enabled",
+    "any training step where the detector reports is_outlier=False (the common case)"
+  ],
+  "root_cause": "should_step was being AND-ed with is_outlier, meaning the optimizer only stepped on outlier steps and silently skipped normal training steps. The fix negates is_outlier so the optimizer steps on normal batches and skips outliers as intended.",
+  "detection_method": "function_call_counting",
+  "invariant": "optim.step() must be invoked on the vast majority of training steps; should_step should equal True on non-outlier batches",
+  "diff_summary": "changed should_step = should_step and is_outlier to should_step = should_step and not is_outlier in both ce_loss and grad_norm outlier branches"
+}

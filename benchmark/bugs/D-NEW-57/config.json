@@ -1,0 +1,19 @@
+{
+  "bug_id": "D-NEW-57",
+  "framework": "deepspeed",
+  "repo": "microsoft/DeepSpeed",
+  "title": "ZeRO++ ds_secondary_tensor stale after model load / checkpoint resume — dirty allgather poisons next forward",
+  "fixed_commit": "c069ceb3",
+  "buggy_commit": "c069ceb3~1",
+  "pr_url": "https://github.com/microsoft/DeepSpeed/pull/7707",
+  "category": "checkpointing",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP"],
+  "trigger_conditions": ["ZeRO stage 3 with hierarchical ZeRO++ (zero_quantized_weights or zero_hpz_partition_size>0)", "either (a) deepspeed.zero.Init followed by GatheredParameters/_load_from_state_dict, or (b) load_checkpoint after engine init"],
+  "root_cause": "_partition_param_sec was called without the has_been_updated flag from the GatheredParameters partition path, so ds_secondary_tensor was never refreshed after the master ds_tensor changed. Similarly, checkpoint_event_epilogue did not call invalidate_secondary_tensor after _load_zero_checkpoint refilled fp16_partitioned_groups_flat (= ds_tensor). The next ZeRO++ allgather reads from the stale ds_secondary_tensor and constructs a corrupted full parameter that mixes new master weights with old secondary-partition values.",
+  "detection_method": "value_invariant",
+  "invariant": "After any update to param.ds_tensor (load_state_dict, load_checkpoint, optimizer.step), ds_secondary_tensor must equal the corresponding slice of the freshly partitioned parameter (or be marked invalid).",
+  "diff_summary": "Pass has_been_updated to _partition_param_sec; add invalidate_secondary_tensor() at the start of checkpoint_event_epilogue.",
+  "silent_check": "Both ds_tensor and ds_secondary_tensor are valid contiguous fp16/bf16 buffers; allgather succeeds and produces a full-shape parameter. Forward/backward run normally; only the loss in the first few steps is wrong (spikes/anomaly), which the user sees as a bad initialization rather than an exception."
+}

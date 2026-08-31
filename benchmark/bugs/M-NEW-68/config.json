@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-68",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "Hybrid MoE pad_granularity is set to 32 (MXFP8) instead of 128 (HybridEP), so per-CP-rank sequence shards are misaligned for HybridEP dispatcher",
+  "fixed_commit": "63c560eba1",
+  "buggy_commit": "63c560eba1~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/3987",
+  "category": "context_parallel",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["TP", "CP", "EP"],
+  "trigger_conditions": [
+    "Hybrid Context Parallel (HybridCPDataLoaderWrapper) enabled",
+    "Hybrid EP dispatcher active",
+    "Sequences whose per-rank shard length is not divisible by 128"
+  ],
+  "root_cause": "HybridCPDataLoaderWrapper used pad_granularity = 32 (MXFP8 block size) when computing per-rank padding. HybridEP requires alignment to 128 elements. With granularity 32, per-CP-rank shards landed at offsets that did not satisfy HybridEP's 128-element alignment, so the dispatcher's load/store kernels read/wrote across token boundaries, mixing tokens between adjacent ranks.",
+  "detection_method": "config_invariant",
+  "invariant": "HybridCPDataLoaderWrapper.pad_granularity must equal 128 when HybridEP is enabled (instead of 32).",
+  "diff_summary": "Change pad_granularity from 32 to 128 in HybridCPDataLoaderWrapper to match HybridEP requirement.",
+  "silent_check": "Padding to 32 still produces a divisible shard size; the dispatcher kernel completes without error; the only effect is that tokens at shard boundaries get mis-attributed to neighboring ranks, silently corrupting attention/MoE outputs."
+}

@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-30",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "MoE sigmoid router gives F.sigmoid(logits) without epsilon — exact-zero scores propagate as NaN through downstream log",
+  "fixed_commit": "c4cd7401",
+  "buggy_commit": "c4cd7401~1",
+  "category": "moe",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "MoERouter with gating_function = sigmoid",
+    "Highly negative logits causing sigmoid output ~ 0 in bf16/fp16"
+  ],
+  "root_cause": "scores = F.sigmoid(logits) could underflow to exactly 0.0 under low precision, and downstream load-balancing or aux-loss code took log/divide of the score, producing -inf/NaN that silently propagated into the final loss without any explicit error.",
+  "detection_method": "value_invariant",
+  "invariant": "Router score for gating_function=sigmoid must be strictly positive (>= eps) so subsequent log/divide operations are finite.",
+  "diff_summary": "Add a small constant: scores = F.sigmoid(logits) + 1e-7 to keep the score away from exact zero."
+}

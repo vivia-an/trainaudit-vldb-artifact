@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-002",
+  "framework": "olmo",
+  "title": "Attention norm modifies the residual stream",
+  "issue_url": "https://github.com/allenai/OLMo/pull/680",
+  "buggy_commit": "3e307106af6561045ccc77ce2584d6fa55a634e3",
+  "fixed_commit": "c482df74e054049a7f36f9a62f144667184a6f77",
+  "category": "numerical",
+  "severity": "high",
+  "gpu_needed": 1,
+  "parallel_dimensions": [],
+  "trigger_conditions": [
+    "block_type = 'sequential'",
+    "norm_after = False (pre-norm, default)"
+  ],
+  "root_cause": "x = self.attn_norm(x) overwrites the residual variable. Residual connection uses normed input instead of original input.",
+  "detection_method": "residual_stream_invariance",
+  "invariant": "After attn_norm, the residual tensor must be the original input, not the normed version"
+}

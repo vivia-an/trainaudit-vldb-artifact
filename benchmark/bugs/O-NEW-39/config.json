@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-39",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "_do_adaptive_clipping/_do_global_fixed_clipping hardcode collect_param_metrics=True, forcing per-step host-device sync and ignoring metrics_log_interval",
+  "fixed_commit": "7a09ca04",
+  "buggy_commit": "7a09ca04~1",
+  "category": "control_flow",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "training with metrics_log_interval > 1",
+    "any clipping configuration (max_grad_norm or max_grad_norm_ratio)"
+  ],
+  "root_cause": "The clipping helpers were called with collect_param_metrics=True every step, regardless of the outer collect_param_metrics flag. This silently bypassed the metrics_log_interval gate (forcing host-device sync to compute clipping_rate every step) and produced metric values that did not match the requested logging cadence.",
+  "detection_method": "function_call_counting",
+  "invariant": "when collect_param_metrics is False at the outer call, _do_adaptive_clipping/_do_global_fixed_clipping must also be invoked with collect_param_metrics=False and clipping_rate must not be added to all_metrics",
+  "diff_summary": "passed the outer collect_param_metrics through to _do_adaptive_clipping and _do_global_fixed_clipping, and gated the clipping_rate metric assignment on collect_param_metrics"
+}

@@ -1,0 +1,18 @@
+{
+  "bug_id": "OC-NEW-17",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "OLMo midtraining mix key references the wrong file — '0625' name maps to '0725' path",
+  "fixed_commit": "6c08884b",
+  "buggy_commit": "6c08884b~1",
+  "category": "data_processing",
+  "severity": "high",
+  "gpu_needed": 0,
+  "trigger_conditions": [
+    "User selects DataMix.OLMo_midtraining_mix_0625_100B"
+  ],
+  "root_cause": "The DataMix enum had OLMo_midtraining_mix_0625_100B = 'OLMo-midtraining-mix-0725-100B'. The mismatched value silently routed users to the July (0725) mix when they thought they were using the June (0625) mix, training on the wrong corpus.",
+  "detection_method": "config_invariant",
+  "invariant": "DataMix enum string value must match its enum member name (date components agree).",
+  "diff_summary": "Rename the enum's string value from '0725' to '0625' to match the member."
+}

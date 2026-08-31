@@ -1,0 +1,22 @@
+{
+  "bug_id": "O-NEW-66",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Train DataLoader max_steps not multiplied by device_train_batch_size",
+  "fixed_commit": "6d29ee4b",
+  "buggy_commit": "6d29ee4b~1",
+  "pr_url": "https://github.com/allenai/OLMo/pull/172",
+  "category": "data_loader/scheduling",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "FSDP"],
+  "trigger_conditions": [
+    "IterableDataset wrapper with max_steps parameter",
+    "device_train_batch_size > 1"
+  ],
+  "root_cause": "`build_train_dataloader` passed `max_steps=train_config.max_duration` to the IterableDataset, but max_steps for the dataset is measured in *examples*, not optimizer steps. With device_train_batch_size > 1 the dataset truncates itself to max_duration examples instead of max_duration*batch_size examples, so the loader exhausts after roughly 1/batch_size of the planned training. Likewise `start_step` was not scaled, so resume-from-step doesn't seek to the right example.",
+  "detection_method": "data_volume_check",
+  "invariant": "Total examples yielded by train loader = max_duration * device_train_batch_size",
+  "diff_summary": "Multiply max_steps and start_step by device_train_batch_size when building/configuring the IterableDataset",
+  "silent_check": "Truncating to a smaller max_steps just makes the loader StopIteration earlier; the trainer simply ends the epoch sooner without raising."
+}

@@ -1,0 +1,17 @@
+>>> ID1
+[ID1] CLEAN: traincheck:0/363 failed
+>>> CC1
+[CC1] CLEAN: traincheck:0/440 failed
+>>> PE1
+[PE1] CLEAN: traincheck:0/4 failed
+>>> AV1
+[AV1] CLEAN: traincheck:0/5 failed
+>>> TA1
+[TA1] CLEAN: traincheck:0/440 failed
+>>> SC1
+[SC1] CLEAN: traincheck:0/4 failed
+>>> CW1
+[CW1] CLEAN: traincheck:0/4 failed
+>>> LN1
+[LN1] CLEAN: traincheck:0/187 failed
+DONE batch d2_new; results in /volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/eval/traincheck_surrogates/batch_d2_new_results.txt

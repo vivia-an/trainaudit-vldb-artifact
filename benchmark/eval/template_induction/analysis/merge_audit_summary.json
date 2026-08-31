@@ -1,0 +1,35 @@
+{
+ "n_templates": 35,
+ "n_pairs": 595,
+ "n_candidates": 23,
+ "n_mergeable": 0,
+ "mergeable_pairs": [],
+ "closest_non_mergeable": [
+  {
+   "a": "T19",
+   "b": "T30",
+   "why_separate": "Both are exclusivity over attention mass with near-identical schema predicates (FORALL (i,j) in forbidden: attention(i,j)==0); they stay separate only because the forbidden set is supplied by per-batch data (cu_doc_lens document membership) in T19 versus by static model config (causal/sliding-window extent) in T30, which changes the oracle rather than a topology/phase/precondition guard (§2.2). This is the one pair a different curator could defensibly merge into a single 'forbidden-position mass exclusion' template with a forbidden-set-source precondition guard."
+  },
+  {
+   "a": "T08",
+   "b": "T09",
+   "why_separate": "Both are value_scaling_consistency of the form applied_value == specified/reference value, and T09's clip-coefficient obligation reads like T08 plus an optimizer_step phase guard; they stay separate because T09's object is a derived monitoring/clipping metric recomputable from the gradients, not a quantity in the training path (§3.2)."
+  },
+  {
+   "a": "T14",
+   "b": "T29",
+   "why_separate": "Both are boundedness over a scalar/tensor consumed downstream, and 'strictly positive where it feeds a singular function' appears in both. They stay separate because the bounded objects differ in role (loss/gradient scaling scalar vs router gating probability) and the [0,1] probability bound has no analogue on the scaling scalar (§3.2)."
+  },
+  {
+   "a": "T21",
+   "b": "T26",
+   "why_separate": "Both are count_frequency_match over per-step boundaries and T21 could be read as an exactly-once obligation conditioned on overflow; merging would require an unrelated OR branch between the overflow biconditional and unconditional per-boundary counting (§3.3)."
+  },
+  {
+   "a": "T11",
+   "b": "T13",
+   "why_separate": "Both carry the restoration_after_reload operator over bookkeeping state at a boundary; they stay separate because 'equal to the saved value' and 'reset to the defined initial value' are unrelated OR branches (§3.3), a boundary the catalog also applies to singleton O-NEW-26."
+  }
+ ],
+ "claim_supported": "The claim 'irredundant under our predefined merge criterion' holds for this catalog: of 595 pairs, 23 share a canonical relation operator and all 23 fail at least one of the SS2 merge conditions, so no pair survives as mergeable - though T19/T30 (packed-document vs static-pattern attention-mass exclusion) is a genuinely close call whose separation rests on the forbidden set being data-dependent rather than config-static, and a curator who treated the forbidden-set source as a precondition guard would merge it; this is a statement about the predefined criterion only, not global minimality."
+}

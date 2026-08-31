@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-35",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Evaluator iterates with stale data-loader state — second eval pass starts mid-stream, evaluating a different subset",
+  "fixed_commit": "befb60b8",
+  "buggy_commit": "befb60b8~1",
+  "category": "metric_tracking",
+  "severity": "medium",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "LM evaluator runs multiple passes with eval_duration truncating each pass",
+    "DataLoaderBase carried over batches_processed from the previous pass"
+  ],
+  "root_cause": "Evaluator.__iter__ called reshuffle() but did not reset() the data loader. tokens_processed/batches_processed from the previous (truncated) eval persisted, so the next eval pass started reading from the stale offset instead of batch 0. Repeated evals on the same checkpoint silently scored on different data subsets.",
+  "detection_method": "value_invariant",
+  "invariant": "Two consecutive Evaluator passes over the same checkpoint must read the same first-N batches when deterministic=True (epoch pinned).",
+  "diff_summary": "Add a reset() call before each reshuffle() in Evaluator.__iter__ and pin epoch=1 when deterministic=True."
+}

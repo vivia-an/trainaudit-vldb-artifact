@@ -1,0 +1,20 @@
+{
+  "bug_id": "OC-NEW-10",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "Qwen3 transformer config defaults rope_full_precision=True, diverging from HF that applies RoPE in bf16",
+  "fixed_commit": "b5050631",
+  "buggy_commit": "b5050631~1",
+  "category": "dtype",
+  "severity": "high",
+  "gpu_needed": 1,
+  "trigger_conditions": [
+    "Qwen3 model factory used (qwen3_*B family)",
+    "Mixed-precision (bf16) training",
+    "Comparison or weight transfer with HuggingFace Qwen3 reference"
+  ],
+  "root_cause": "TransformerConfig.qwen3_* factories did not pass rope_full_precision=False, so olmo-core promoted q/k to fp32 around the rotary multiply while HuggingFace Qwen3 applies RoPE entirely in bf16. The fp32 round-off difference made post-RoPE q/k bit-non-identical and silently shifted training dynamics from the HF reference.",
+  "detection_method": "dtype_invariant",
+  "invariant": "When matching HF Qwen3, the dtype of the tensor entering the rotary multiplication must equal the input attention dtype (bf16), not fp32.",
+  "diff_summary": "Set rope_full_precision=False in all qwen3 TransformerConfig factories so RoPE runs in input dtype."
+}

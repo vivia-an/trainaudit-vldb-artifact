@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-58",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "_CudaGraphRunner enables FP8 capture for keep-mamba-stack-attention-linear-in-bf16 layers, casting frozen-bf16 attention linears into FP8 inside the captured graph",
+  "fixed_commit": "48ae741177",
+  "buggy_commit": "48ae741177~1",
+  "pr_url": "https://gitlab-master.nvidia.com/ADLR/megatron-lm/-/merge_requests/4015",
+  "category": "cuda_graph",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["TP"],
+  "trigger_conditions": [
+    "Mamba/hybrid model with --keep-mamba-stack-attention-linear-in-bf16",
+    "config.fp8 or config.fp4 enabled",
+    "CUDA graph capture enabled for transformer layers"
+  ],
+  "root_cause": "_CudaGraphRunner.__init__ set self.fp8_enabled = config.fp8 is not None / self.fp4_enabled = config.fp4 is not None unconditionally. The mamba-stack attention linears, however, are kept in bf16 to preserve numerics. Capturing those layers with FP8 enabled wrapped their GEMMs in FP8 cast paths, silently quantizing weights that were intentionally meant to stay in bf16.",
+  "detection_method": "config_invariant",
+  "invariant": "If isinstance(base_module, TransformerLayer) and config.keep_mamba_stack_attention_linear_in_bf16 and not is_moe_layer, runner.fp8_enabled and runner.fp4_enabled must both be False.",
+  "diff_summary": "Add a guard in _CudaGraphRunner.__init__ that resets fp8_enabled and fp4_enabled to False for non-MoE TransformerLayers when config.keep_mamba_stack_attention_linear_in_bf16 is True.",
+  "silent_check": "FP8 wrapping a bf16-targeted linear is a valid TE call path; no exception fires; the captured graph replays; the only effect is silently degraded numerical precision on the attention linears that were specifically intended to remain in bf16."
+}

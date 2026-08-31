@@ -1,0 +1,9 @@
+cumulative_tier,covered_cases,coverage_percent
+S0,111,28.3
+S0-S1,192,49.0
+S0-S2,223,56.9
+S0-S3,244,62.2
+S0-S4,261,66.6
+S0-S5/6,305,77.8
+Unobservable,87,22.2
+Total,392,100.0

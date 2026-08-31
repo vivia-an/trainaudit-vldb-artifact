@@ -1,0 +1,23 @@
+{
+  "bug_id": "M-NEW-65",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "ChainedOptimizer.split_state_dict for single-chunk MoE only assigns to state_dicts[0], leaving all other sub-optimizers unaware of the model state and silently skipping their load",
+  "fixed_commit": "1edfbd6782",
+  "buggy_commit": "1edfbd6782~1",
+  "pr_url": "https://github.com/NVIDIA/Megatron-LM/pull/3667",
+  "category": "checkpoint",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": [
+    "ChainedOptimizer with multiple sub-optimizers (e.g. dense + MoE)",
+    "Single global model chunk (len(self.model_chunks) == 1)",
+    "Loading checkpoint via split_state_dict"
+  ],
+  "root_cause": "split_state_dict's single-model-chunk branch did state_dicts[0] = state_dict only, leaving state_dicts[1:] as None. Sub-optimizers beyond index 0 (e.g. the MoE expert optimizer) thus received None as their model state and silently skipped loading their parameters/optimizer states. The model proceeded with default-initialized expert parameters after a checkpoint resume.",
+  "detection_method": "structural_invariant",
+  "invariant": "After ChainedOptimizer.split_state_dict, every entry in state_dicts must be non-None when state_dict is provided and len(self.model_chunks) == 1.",
+  "diff_summary": "Replace 'state_dicts[0] = state_dict' with 'state_dicts = [state_dict] * len(self.chained_optimizers)' in the single-chunk branch.",
+  "silent_check": "Sub-optimizers gracefully accept state_dict=None and just keep their initialized parameters; no exception is raised at load time; training resumes but the MoE experts are not actually restored from the checkpoint."
+}

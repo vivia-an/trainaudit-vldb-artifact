@@ -1,0 +1,28 @@
+{
+  "bug_id": "M-024",
+  "framework": "megatron-lm",
+  "title": "Router input jitter dtype bug — silent fp32 promotion",
+  "issue_url": "https://github.com/NVIDIA/Megatron-LM/pull/1726",
+  "buggy_commit": "74d9bcfff592f51482a3642fabcbaf6ce487e9c9",
+  "fixed_commit": "20b395424d2e2bbfaab57b2f954294eb57c90c82",
+  "fix_date": "2025-04-15",
+  "category": "dtype",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": [],
+  "trigger_conditions": [
+    "num_experts >= 2 (MoE with TopKRouter)",
+    "--moe-input-jitter-eps > 0",
+    "--bf16 or --fp16 (mixed precision)"
+  ],
+  "root_cause": "torch.distributions.uniform.Uniform creates fp32 tensors by default (no dtype arg). Multiplying bf16 input by fp32 jitter silently promotes the result to fp32.",
+  "detection_method": "dtype_invariant",
+  "invariant": "apply_input_jitter output dtype must equal input dtype. Dtype promotion from bf16 to fp32 = bug.",
+  "fixed_behavior": "Jitter tensors created with dtype=input.dtype, preserving bf16 throughout",
+  "notes": "Simple 2-line fix. Supports --mock-data.",
+  "reproduction_status": "reproduced",
+  "expected_output": {
+    "buggy": "BUG DETECTED: apply_input_jitter changed dtype",
+    "fixed": "CLEAN: apply_input_jitter preserves dtype"
+  }
+}

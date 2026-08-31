@@ -1,0 +1,20 @@
+{
+  "bug_id": "M-NEW-27",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE topk=1 gradient is silently zero because softmax is applied post-topk on a [N,1] tensor",
+  "fixed_commit": "5153efea0",
+  "buggy_commit": "5153efea0~1",
+  "category": "moe",
+  "severity": "high",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["EP"],
+  "trigger_conditions": [
+    "moe_router_topk == 1",
+    "use_pre_softmax False (default before fix)"
+  ],
+  "root_cause": "topk_softmax_with_capacity selected topk first then applied softmax: scores=topk(logits,k=1); probs=softmax(scores,dim=-1). With k=1, softmax of a length-1 vector is constant 1.0 with zero gradient w.r.t. logits, so the router weight received no learning signal at all when topk=1.",
+  "detection_method": "value_invariant",
+  "invariant": "When moe_router_topk==1, the gradient of router probs w.r.t. router logits at the selected expert must be non-zero in expectation.",
+  "diff_summary": "Added use_pre_softmax option; raise ValueError when topk==1 without pre-softmax, and added the use_pre_softmax branch that runs softmax over all experts before topk."
+}

@@ -1,0 +1,19 @@
+{
+  "bug_id": "O-NEW-40",
+  "framework": "olmo",
+  "repo": "allenai/OLMo",
+  "title": "Mitchell init hardcodes cutoff_factor=3.0, ignoring user-supplied init_cutoff_factor across blocks and embeddings",
+  "fixed_commit": "1346d085",
+  "buggy_commit": "1346d085~1",
+  "category": "numerical",
+  "severity": "medium",
+  "gpu_needed": 0,
+  "trigger_conditions": [
+    "init_fn = mitchell",
+    "user sets a non-default model.init_cutoff_factor"
+  ],
+  "root_cause": "Every Mitchell-init code path (OLMoBlock, OLMoSequentialBlock, OLMoLlamaBlock, and OLMo wte init) literally assigned cutoff_factor = 3.0, completely ignoring config.init_cutoff_factor. User configs that set a different cutoff (e.g. 4 or 6) silently produced narrower truncated-normal weight distributions than requested.",
+  "detection_method": "config_invariant",
+  "invariant": "for init_fn=mitchell, the cutoff_factor used by init_normal must equal config.init_cutoff_factor (falling back to 3.0 only when None)",
+  "diff_summary": "replaced hardcoded `cutoff_factor = 3.0` with `cutoff_factor = self.config.init_cutoff_factor or 3.0` in the three OLMo block variants and in OLMo.reset_parameters' wte init path"
+}

@@ -1,0 +1,20 @@
+{
+  "bug_id": "M-NEW-21",
+  "framework": "megatron-lm",
+  "repo": "NVIDIA/Megatron-LM",
+  "title": "MoE aux loss tracker accumulates twice when activation checkpointing reruns router",
+  "fixed_commit": "e6d56d682",
+  "buggy_commit": "e6d56d682~1",
+  "category": "metric_tracking",
+  "severity": "medium",
+  "gpu_needed": 2,
+  "parallel_dimensions": ["EP"],
+  "trigger_conditions": [
+    "MoE TopKRouter training=True",
+    "activation recompute / checkpointing enabled (router runs twice per step)"
+  ],
+  "root_cause": "TopKRouter.aux_loss_load_balancing and seq_aux_loss_load_balancing only checked self.training, not torch.is_grad_enabled(). With activation checkpointing the router forward runs once normally and again under recompute (no grad), and the aux loss tracker was incremented in both passes, doubling the logged values.",
+  "detection_method": "function_call_counting",
+  "invariant": "Per training step, aux loss save_to_aux_losses_tracker must be called at most once per router forward where torch.is_grad_enabled() is True.",
+  "diff_summary": "Added 'and torch.is_grad_enabled()' to the training guards in aux_loss_load_balancing, seq_aux_loss_load_balancing, and apply_z_loss."
+}

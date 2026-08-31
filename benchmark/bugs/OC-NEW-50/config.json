@@ -1,0 +1,19 @@
+{
+  "bug_id": "OC-NEW-50",
+  "framework": "olmo-core",
+  "repo": "allenai/OLMo-core",
+  "title": "freeze_experts assigned in __init__ instead of dataclass field — OmegaConf merge dropped it",
+  "fixed_commit": "8bb3f940",
+  "buggy_commit": "8bb3f940~1",
+  "pr_url": "https://github.com/allenai/OLMo-core/commit/8bb3f940",
+  "category": "config",
+  "severity": "high",
+  "gpu_needed": 4,
+  "parallel_dimensions": ["DP", "EP"],
+  "trigger_conditions": ["FreezeTransformerTrainModuleConfig used", "any CLI override applied via Config.merge"],
+  "root_cause": "FreezeTransformerTrainModuleConfig set self.freeze_experts via kwargs.pop in __init__ rather than declaring it as a dataclass field. Config.merge serializes/reconstructs through OmegaConf, which drops fields that aren't declared dataclass attributes; freeze_experts always reverted to the default 'first_half' regardless of the user's configured value, silently zeroing the first half of router gradients.",
+  "detection_method": "constraint:config_roundtrip_preservation",
+  "invariant": "Every user-tunable Config attribute must be a dataclass field so OmegaConf serialization preserves it through merge/dump.",
+  "diff_summary": "Drop the custom __init__ and declare freeze_experts: str = 'first_half' as a proper dataclass field.",
+  "silent_check": "Training proceeds without error — the wrong freeze_experts value silently masks router gradients in a way that's only visible by inspecting that the user's configured value was ignored."
+}

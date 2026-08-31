@@ -1,0 +1,14 @@
+{
+  "bug_id": "M-NEW-67",
+  "framework": "megatron-lm",
+  "category": "gradient_sync",
+  "parallel_dimension": "FSDP",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["param.__fsdp_param__", "param.decoupled_grad", "param.grad", "config.use_precision_aware_optimizer_no_fp8_or_ds_fp8"],
+  "check_stage": "after_backward",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P5",
+  "tier_field": "Tier 1",
+  "rationale": "Under precision-aware opt, grads_for_norm must read decoupled_grad (._local_tensor if __fsdp_param__), not param.grad. value_equality (known source), not implementation_equivalence. Layer=schema_topo_precond: precond is __fsdp_param__ + precision-aware conjunction. P5 over P4: feeds grad-norm.",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P4_P5"]
+}

@@ -1,0 +1,3 @@
+condition,clean_evaluations,false_positives,fp_per_million,detection
+full_guard,504000,13,25.8,6/6
+without_topology,504000,42,83.3,6/6
