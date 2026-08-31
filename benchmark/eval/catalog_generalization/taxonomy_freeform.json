@@ -1,0 +1,92 @@
+[
+  {
+    "id": "F01",
+    "name": "cross-rank-consistency",
+    "definition": "All distributed ranks must agree on critical training metrics, state variables, and configuration values to prevent silent divergence.",
+    "count": 280
+  },
+  {
+    "id": "F02",
+    "name": "miscellaneous",
+    "definition": "Other invariants not covered by the above types, including specific checks on metrics, asserts, and edge cases.",
+    "count": 50
+  },
+  {
+    "id": "F03",
+    "name": "device-placement",
+    "definition": "All model parameters, optimizer states, and tensors must reside on the correct device (e.g., same device, CPU if offloaded) to avoid silent cross-device errors.",
+    "count": 40
+  },
+  {
+    "id": "F04",
+    "name": "tensor-shape-consistency",
+    "definition": "Tensors must maintain expected shapes after operations like gather, reduce, embedding, and attention to prevent silent corruption.",
+    "count": 35
+  },
+  {
+    "id": "F05",
+    "name": "divisibility-conditions",
+    "definition": "Key dimensions (e.g., hidden_size, n_heads) must be divisible by relevant factors to avoid silent truncation or shape mismatches.",
+    "count": 30
+  },
+  {
+    "id": "F06",
+    "name": "collective-operation-ready",
+    "definition": "Distributed backend, process groups, and collective operation wrappers must be properly initialized before communication calls.",
+    "count": 30
+  },
+  {
+    "id": "F07",
+    "name": "mask-attention-valid",
+    "definition": "Attention masks must have proper shapes, binary values, and be correctly applied to avoid silent incorrect attention scores.",
+    "count": 25
+  },
+  {
+    "id": "F08",
+    "name": "checkpoint-consistency",
+    "definition": "Checkpoint saving and loading decisions, metadata, and state must be consistent across ranks and training steps.",
+    "count": 20
+  },
+  {
+    "id": "F09",
+    "name": "gradient-condition",
+    "definition": "Gradients must be non-None or zero after backward and zero_grad to ensure correct parameter updates.",
+    "count": 20
+  },
+  {
+    "id": "F10",
+    "name": "parameter-status-flow",
+    "definition": "Parameter ds_status must follow legal transitions (e.g., NOT_AVAILABLE -> INFLIGHT -> AVAILABLE) for correct gather operations.",
+    "count": 15
+  },
+  {
+    "id": "F11",
+    "name": "quantization-config",
+    "definition": "Quantization parameters like bits, group_size, and maxq must satisfy constraints (e.g., bits in {2,3,4,8}, maxq = 2^bits-1).",
+    "count": 15
+  },
+  {
+    "id": "F12",
+    "name": "data-batching-valid",
+    "definition": "Batch sizes must be positive, divisible by micro-batch and data-parallel sizes, and consistent across ranks.",
+    "count": 15
+  },
+  {
+    "id": "F13",
+    "name": "dropout-range",
+    "definition": "Dropout probability must be in [0,1] to ensure correct stochastic regularization.",
+    "count": 10
+  },
+  {
+    "id": "F14",
+    "name": "learning-rate-schedule-valid",
+    "definition": "Learning rate schedules must have valid ranges (e.g., min_lr <= max_lr) and positive step sizes.",
+    "count": 10
+  },
+  {
+    "id": "F15",
+    "name": "timer-profiling-valid",
+    "definition": "Timers must be properly initialized, not double-started, and consistent across ranks for accurate profiling.",
+    "count": 5
+  }
+]

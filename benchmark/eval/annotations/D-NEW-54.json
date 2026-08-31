@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-54",
+  "framework": "deepspeed",
+  "category": "checkpoint",
+  "parallel_dimension": "combo",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["param_checksum", "param_name", "rank_coords", "step"],
+  "check_stage": "checkpoint_load",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P1",
+  "tier_field": "Tier 0",
+  "rationale": "MoE expert checkpoint metadata stores dp_world_size instead of seq_dp_world_size; loader uses wrong divisor and slices the wrong fragment. Detection: checksum of MoE expert param post-load must equal the fragment that the same rank wrote at save (anti-example 7: detected at load). Layer is schema_topo_precond — precond guards 'MoE module + sequence_parallel_size>1' and the equality is per-rank (save fragment vs load fragment), not pure cross-rank replication. P1 over P3: not 'all DP ranks should agree' but 'this rank's loaded value should equal this rank's saved value'. Tier 0 since param_checksum suffices.",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P1_P3"]
+}

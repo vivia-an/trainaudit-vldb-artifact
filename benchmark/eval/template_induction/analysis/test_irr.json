@@ -1,0 +1,33 @@
+{
+ "n_double_rated": 78,
+ "verdict_6way": {
+  "raw_agreement": 0.962,
+  "cohen_kappa": 0.772
+ },
+ "match_vs_uncovered": {
+  "raw_agreement": 0.974,
+  "cohen_kappa": 0.843
+ },
+ "template_assignment_among_both_match": {
+  "n": 70,
+  "raw_agreement": 0.957,
+  "cohen_kappa": 0.954
+ },
+ "groundability_among_both_match": {
+  "n": 70,
+  "raw_agreement": 0.986,
+  "cohen_kappa": 0.0
+ },
+ "rater_a_verdicts": {
+  "MATCH": 72,
+  "INSUFFICIENT_EVIDENCE": 2,
+  "SINGLETON_NEW_RELATION": 3,
+  "UNOBSERVABLE": 1
+ },
+ "rater_b_verdicts": {
+  "MATCH": 70,
+  "INSUFFICIENT_EVIDENCE": 2,
+  "SINGLETON_NEW_RELATION": 3,
+  "UNOBSERVABLE": 3
+ }
+}

@@ -1,0 +1,15 @@
+{
+  "bug_id": "M-NEW-5",
+  "framework": "megatron-lm",
+  "category": "loss_computation",
+  "parallel_dimension": "none",
+  "invariant_type": "completeness",
+  "required_trace_fields": ["module_class", "module_attr_calculate_per_token_loss"],
+  "check_stage": "build",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "INFERRED_FROM_SPARSE_CONFIG. TopKRouter missing calculate_per_token_loss attribute means aux loss not scaled by num_tokens. Detected at build by static assert on module attr; single-GPU MoE reproduces so parallel_dim=none (anti-example 6). Borderline numerical vs loss_computation: chose loss_computation because root cause is missing scaling logic, not float math."
+}

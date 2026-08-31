@@ -1,0 +1,14 @@
+{
+  "bug_id": "M-NEW-21",
+  "framework": "megatron-lm",
+  "category": "control_flow",
+  "parallel_dimension": "EP",
+  "invariant_type": "monotonic",
+  "required_trace_fields": ["save_to_aux_losses_tracker_call_count", "torch.is_grad_enabled", "self.training", "step"],
+  "check_stage": "after_forward",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P7",
+  "tier_field": "Tier 6",
+  "rationale": "Recompute reruns router under no_grad; buggy guard checks only self.training so tracker double-increments. Count tracker calls, gate by torch.is_grad_enabled. monotonic (per-step bound). Layer=schema_topo_precond: precond is self.training AND grad_enabled. P7 over P1: counter not default field.",
+  "borderline_flags": ["CATEGORY_AMBIGUOUS_control_flow_moe", "PATTERN_AMBIGUOUS_P1_P7"]
+}

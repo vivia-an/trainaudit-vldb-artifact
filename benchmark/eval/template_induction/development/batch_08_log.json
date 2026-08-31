@@ -1,0 +1,88 @@
+{
+  "batch": 8,
+  "decisions": [
+    {
+      "case_id": "B5",
+      "decision": "MATCH",
+      "template_id": "T08",
+      "guard_extension": "precondition: finish_grad_sync must apply the same 1/dp_world_size averaging to MoE expert grad buffers as to dense grad buffers",
+      "note": "Expert grads left dp_world_size× too large; independent of T08's edp-divisor support (different defect and fix)."
+    },
+    {
+      "case_id": "D-NEW-66",
+      "decision": "MATCH",
+      "template_id": "T09",
+      "guard_extension": "topology 'any'; precondition: cached per-parameter gradient norms must be refreshed after safe_set_local_grad so the clip factor reflects the gradients actually clipped",
+      "note": "Coined state_freshness re-resolved to value_scaling_consistency from the relation statement (stale clip coefficient vs reference recomputation, T09's core obligation)."
+    },
+    {
+      "case_id": "M-NEW-28",
+      "decision": "MATCH",
+      "template_id": "T05",
+      "guard_extension": null,
+      "note": "Evidently the same incident as the T05 support recorded verbatim in the schema predicate (dtype(expert_bias at forward)==fp32); counts once per §4.1, support_count unchanged."
+    },
+    {
+      "case_id": "O-NEW-66",
+      "decision": "NEW_TEMPLATE",
+      "template_id": "T34",
+      "guard_extension": null,
+      "note": "Promoted per §4 with earlier singleton OC-NEW-63 (same objects: data-pipeline example budget vs steps×batch_size plan); coined 'proportionality' resolved to count_frequency_match from the relation statement."
+    },
+    {
+      "case_id": "OC-NEW-49",
+      "decision": "NEW_TEMPLATE",
+      "template_id": "T35",
+      "guard_extension": null,
+      "note": "Promoted per §4 with earlier singleton D-NEW-43 (designated-frozen params excluded from updates); freeze-mechanism differences are pure precondition guards (§2)."
+    },
+    {
+      "case_id": "OC-NEW-45",
+      "decision": "SINGLETON",
+      "template_id": null,
+      "guard_extension": null,
+      "note": "Constructed head_dim vs config-implied d_model/n_heads is a derived structural consistency — not T18 (single knob) nor T32 (stage assignment) per §3.2; medium confidence."
+    },
+    {
+      "case_id": "O-NEW-18",
+      "decision": "MATCH",
+      "template_id": "T11",
+      "guard_extension": "precondition: muP resume must restore each group's muP-scaled lr/weight_decay (mup_lr/mup_weight_decay tags), not reset every group to the base config value",
+      "note": "Restore-equality of per-group optimizer hyperparameters; independent of T11's existing muP set_base_shapes support."
+    },
+    {
+      "case_id": "O-NEW-35",
+      "decision": "SINGLETON",
+      "template_id": null,
+      "guard_extension": null,
+      "note": "Weight-decay-group exclusivity over still-trainable norm params; merging into T35 would need unrelated no-update vs no-decay OR branches (§3.3)."
+    },
+    {
+      "case_id": "D-NEW-74",
+      "decision": "MATCH",
+      "template_id": "T11",
+      "guard_extension": "precondition: ZeRO-3 NVMe optimizer offload must persist per-rank state to rank-exclusive paths so every rank restores exactly its own shard",
+      "note": "Shared-directory last-writer-wins violates value_after_load == value_at_save for each rank's shard."
+    },
+    {
+      "case_id": "D-NEW-25",
+      "decision": "MATCH",
+      "template_id": "T11",
+      "guard_extension": "precondition: load_module_only under bf16 must run refresh_fp32_params (not gated on fp16_enabled) so fp32 masters equal the upcast loaded module weights",
+      "note": "T11's derived-caches-refreshed clause; T28's merge boundary excludes save/load sync points, keeping this in T11."
+    },
+    {
+      "case_id": "M-NEW-62",
+      "decision": "MATCH",
+      "template_id": "T10",
+      "guard_extension": "precondition: VPP inter-stage isend must transmit the viewless make_viewless_tensor copy so the sender's buffer is not reused before the async send completes",
+      "note": "Coined equality_across_ranks re-resolved to ordering from the fix evidence (buffer reuse before isend completion); PP stages are not a replication group (§3.2)."
+    }
+  ],
+  "n_matched": 7,
+  "n_new_singletons": 2,
+  "n_new_templates": 2,
+  "core_edits": [],
+  "templates_total_after": 35,
+  "singletons_total_after": 24
+}

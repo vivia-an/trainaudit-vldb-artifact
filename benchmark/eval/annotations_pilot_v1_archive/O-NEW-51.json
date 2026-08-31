@@ -1,0 +1,15 @@
+{
+  "bug_id": "O-NEW-51",
+  "framework": "olmo",
+  "category": "data_loading",
+  "parallel_dimension": "DP",
+  "invariant_type": "completeness",
+  "required_trace_fields": ["worker_id", "num_workers", "rank", "sample_index", "epoch"],
+  "check_stage": "other",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": true,
+  "pi_precond_applicable": true,
+  "pattern_id": "P3",
+  "tier_field": "Tier 6",
+  "rationale": "Leftover indices contiguously sliced per worker.id, so workers overlap and miss others. Borderline sharding vs data_loading: chose data_loading per table A (shard duplicate/missing). Detect by gathering worker-emitted sample ids and checking union==full set with no overlap (P3 cross-rank/worker, pi_topo+pi_precond). check_stage=other (data loader, not a model phase)."
+}

@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-51",
+  "framework": "olmo",
+  "category": "data_loading",
+  "parallel_dimension": "FSDP",
+  "invariant_type": "completeness",
+  "required_trace_fields": [],
+  "check_stage": "other",
+  "minimum_sufficient_layer": "none",
+  "pattern_id": "none",
+  "tier_field": "exceeds_tier6",
+  "rationale": "Buggy contiguous slice gives each worker a num_workers-wide window starting at worker_id, so leftover indices overlap and miss; fix uses strided slicing. Both versions return a valid (possibly empty) array and downstream collator never raises, so training silently duplicates/drops samples. Detection requires inspecting the per-worker leftover index sets across workers and checking union==full set — not in Tier 0-6 schema (dataloader internals). Per anti-example 9, source-only/dataloader-internal bugs are pattern=none, layer=none, tier=exceeds_tier6. parallel_dim=FSDP per OLMo+FSDP convention.",
+  "borderline_flags": ["SOURCE_ONLY_DETECTION"]
+}

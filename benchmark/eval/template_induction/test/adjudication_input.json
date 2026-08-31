@@ -1,0 +1,267 @@
+[
+ {
+  "case_id": "M-006",
+  "case": {
+   "bug_id": "M-006",
+   "framework": "megatron-lm",
+   "repo": "NVIDIA/Megatron-LM",
+   "title": "Tensor parallelism produces divergent loss with non-divisible vocabulary sizes",
+   "description": "When vocabulary size is not evenly divisible by TP size, uneven vocab splits cause systematic loss divergence. After 2000 steps, absolute error reaches 47.137 (>50% relative error) vs single-GPU training.",
+   "root_cause": "When vocabulary size is not evenly divisible by TP size, uneven vocab splits cause systematic loss divergence. After 2000 steps, absolute error reaches 47.137 (>50% relative error) vs single-GPU training.",
+   "category": "sharding",
+   "parallel_dimension": "TP",
+   "severity": "high",
+   "trigger_conditions": [],
+   "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/1754"
+  },
+  "rater_a": {
+   "case_id": "M-006",
+   "verdict": "MATCH",
+   "template_id": "T03",
+   "alt_template_id": null,
+   "groundable": "yes",
+   "relation_operator": "reference_equivalence",
+   "guard_note": "TP>1 guard with vocab_size not divisible by the TP degree — the same non-divisibility precondition kind T03 already lists for sequence length.",
+   "rationale": "Loss must be invariant (within tolerance) to the TP degree, which is a performance-only knob, but uneven vocab splits make loss diverge systematically from the single-GPU reference."
+  },
+  "rater_b": {
+   "case_id": "M-006",
+   "verdict": "MATCH",
+   "template_id": "T03",
+   "alt_template_id": null,
+   "groundable": "no: the schema witness requires a paired TP=1 reference execution; no in-run signal isolates the uneven vocab split",
+   "relation_operator": "reference_equivalence",
+   "guard_note": "TP>1 with vocab_size not divisible by tp_size — same guard kind as T03's non-divisible-sequence-length precondition.",
+   "rationale": "Loss must be invariant to the tensor-parallel degree, and the evidence itself is a divergence measured against single-GPU training."
+  }
+ },
+ {
+  "case_id": "M-013",
+  "case": {
+   "bug_id": "M-013",
+   "framework": "megatron-lm",
+   "repo": "NVIDIA/Megatron-LM",
+   "title": "seq_aux_loss + pad_to_capacity produces corrupted routing map and wrong load balancing loss",
+   "description": "When pad_to_capacity is enabled, dummy padded tokens corrupt the routing_map used for load-balancing loss computation. The auxiliary loss becomes constantly 1.0 instead of reflecting true token distribution across experts.",
+   "root_cause": "When pad_to_capacity is enabled, dummy padded tokens corrupt the routing_map used for load-balancing loss computation. The auxiliary loss becomes constantly 1.0 instead of reflecting true token distribution across experts.",
+   "category": "numerical",
+   "parallel_dimension": "EP",
+   "severity": "medium",
+   "trigger_conditions": [],
+   "issue_url": "https://github.com/NVIDIA/Megatron-LM/issues/1617"
+  },
+  "rater_a": {
+   "case_id": "M-013",
+   "verdict": "MATCH",
+   "template_id": "T20",
+   "alt_template_id": "T08",
+   "groundable": "yes",
+   "relation_operator": "exclusivity",
+   "guard_note": "EP>1 guard; the padding source is MoE pad_to_capacity dummy tokens rather than dataset padding — the same padding-position guard kind.",
+   "rationale": "Padded positions must contribute zero to the loss, but dummy capacity-padding tokens enter the routing map feeding the load-balancing loss, pinning it at 1.0 regardless of true token distribution."
+  },
+  "rater_b": {
+   "case_id": "M-013",
+   "verdict": "MATCH",
+   "template_id": "T08",
+   "alt_template_id": "T20",
+   "groundable": "yes",
+   "relation_operator": "value_scaling_consistency",
+   "guard_note": "MoE pad_to_capacity with seq_aux_loss — the mask-valid-count guard kind T08 already permits for padded batches.",
+   "rationale": "The load-balancing loss must be normalized over mask-valid (real) token positions only, but dummy capacity-padding tokens enter the routing map and pin the statistic at 1.0."
+  }
+ },
+ {
+  "case_id": "M-NEW-15",
+  "case": {
+   "bug_id": "M-NEW-15",
+   "framework": "megatron-lm",
+   "repo": "megatron-lm",
+   "title": "Megatron-FSDP precision-aware optimizer keeps duplicate FusedAdam master_weights",
+   "description": "",
+   "root_cause": "When constructing the per-model-chunk optimizer for Megatron-FSDP, the code did not override FusedAdam's master_weights flag. FusedAdam allocated and used its own internal master weights instead of relying on Megatron-FSDP's main weights, so optimizer updates were applied to a stale duplicate copy that never received gradient updates.",
+   "category": "optimizer_state",
+   "parallel_dimension": null,
+   "severity": "high",
+   "trigger_conditions": [
+    "use_megatron_fsdp=True",
+    "use_precision_aware_optimizer=True",
+    "FusedAdam (TE or apex) available"
+   ],
+   "issue_url": ""
+  },
+  "rater_a": {
+   "case_id": "M-NEW-15",
+   "verdict": "MATCH",
+   "template_id": "T28",
+   "alt_template_id": "T22",
+   "groundable": "yes",
+   "relation_operator": "copy_consistency",
+   "guard_note": "Megatron-FSDP precision-aware FusedAdam is a precondition guard not listed among T28's permitted preconditions, but is the same guard kind (mixed-precision master/working sync point).",
+   "rationale": "FusedAdam's own master_weights duplicate is never refreshed from Megatron-FSDP's main weights, so the working parameter no longer equals the cast of its designated master partition at the post-step sync point."
+  },
+  "rater_b": {
+   "case_id": "M-NEW-15",
+   "verdict": "MATCH",
+   "template_id": "T22",
+   "alt_template_id": "T28",
+   "groundable": "yes",
+   "relation_operator": "update_effectiveness",
+   "guard_note": "Guard is the precision-aware-FusedAdam-under-Megatron-FSDP precondition kind already permitted (master_weights flag rather than use_decoupled_grad).",
+   "rationale": "FusedAdam steps its own duplicate master that never receives gradients, so the optimizer-registered/live parameters show no delta despite nonzero gradients — T22's checksum(p,t+1)!=checksum(p,t) witness."
+  }
+ },
+ {
+  "case_id": "O-013",
+  "case": {
+   "bug_id": "O-013",
+   "framework": "olmo-core",
+   "repo": "allenai/OLMo-core",
+   "title": "Removed buggy fused cross-entropy loss variant that consistently under-performed",
+   "description": "Fused cross-entropy loss 实现存在 bug，导致 loss 计算结果始终低于原生 PyTorch 实现（compiled 后），严重到需要 Post Incident Report 和完全移除该实现",
+   "root_cause": "Fused cross-entropy loss 实现存在 bug，导致 loss 计算结果始终低于原生 PyTorch 实现（compiled 后），严重到需要 Post Incident Report 和完全移除该实现",
+   "category": "loss_computation",
+   "parallel_dimension": "none",
+   "severity": "high",
+   "trigger_conditions": [],
+   "issue_url": "https://github.com/allenai/OLMo-core/releases/tag/v2.0.1"
+  },
+  "rater_a": {
+   "case_id": "O-013",
+   "verdict": "MATCH",
+   "template_id": "T03",
+   "alt_template_id": "T04",
+   "groundable": "yes",
+   "relation_operator": "reference_equivalence",
+   "guard_note": "fused-vs-native cross-entropy implementation selection is a precondition guard of the same kind as T03's listed attention-backend-selection guard.",
+   "rationale": "The fused loss variant must produce the same loss as the same computation under the native (compiled) baseline configuration on identical inputs, and it was consistently lower."
+  },
+  "rater_b": {
+   "case_id": "O-013",
+   "verdict": "MATCH",
+   "template_id": "T04",
+   "alt_template_id": "T03",
+   "groundable": "yes",
+   "relation_operator": "reference_equivalence",
+   "guard_note": "Guard is the fused cross-entropy loss variant selected; the oracle is the native PyTorch implementation, not a performance-neutral knob of the same code.",
+   "rationale": "The fused loss consistently deviates from an independent reference implementation on the same inputs — T04's computed-vs-reference-implementation comparison."
+  }
+ },
+ {
+  "case_id": "O-NEW-67",
+  "case": {
+   "bug_id": "O-NEW-67",
+   "framework": "olmo",
+   "repo": "olmo",
+   "title": "Ladder 150M model uses max_sequence_length=1024 instead of 2048",
+   "description": "",
+   "root_cause": "MODEL_CONFIG_150M in scripts/ladder.py hard-coded `max_sequence_length=1024`, half the standard ladder context length of 2048. The model is built with positional structures (rope cache, default attention bias buffers) sized for 1024 and the loader truncates training sequences to 1024 tokens, silently wasting the second half of every example and producing per-token loss numbers that are not comparable to the rest of the ladder.",
+   "category": "control_flow",
+   "parallel_dimension": null,
+   "severity": "medium",
+   "trigger_conditions": [
+    "scripts/ladder.py used to launch the 150M tier",
+    "Data tokenized at 2048 sequence length"
+   ],
+   "issue_url": ""
+  },
+  "rater_a": {
+   "case_id": "O-NEW-67",
+   "verdict": "SINGLETON_NEW_RELATION",
+   "template_id": null,
+   "alt_template_id": null,
+   "groundable": null,
+   "relation_operator": "count_frequency_match (model context length vs tokenized example length)",
+   "guard_note": null,
+   "rationale": "The runtime-expressible obligation is that the model's max_sequence_length cover the length the data was tokenized at so no example is silently truncated; T18 cannot express it (the wrong value IS the accepted config and is honored) and T34's counted object is the example budget against the step plan, not per-example sequence extent."
+  },
+  "rater_b": {
+   "case_id": "O-NEW-67",
+   "verdict": "UNOBSERVABLE",
+   "template_id": null,
+   "alt_template_id": null,
+   "groundable": null,
+   "relation_operator": "config_effectiveness (intended ladder sequence length vs configured)",
+   "guard_note": null,
+   "rationale": "The run faithfully honors the configured max_sequence_length=1024 (model buffers and loader truncation are all consistent with it); the error is that the config disagrees with the ladder's intended 2048, which lives outside the run's trace."
+  }
+ },
+ {
+  "case_id": "OC-NEW-54",
+  "case": {
+   "bug_id": "OC-NEW-54",
+   "framework": "olmo-core",
+   "repo": "olmo-core",
+   "title": "BLT debias used log(sum(exp(logprobs))) — silent underflow on small probabilities",
+   "description": "",
+   "root_cause": "y_space_hat_all = log(einsum(exp(logprobs), space_mask).float()). exp() of low logprobs underflows to 0 in fp32, the masked sum collapses to 0, and log(0) = -inf is added into y_hat in-place. Subsequent loss terms silently propagate -inf values rather than failing.",
+   "category": "loss_computation",
+   "parallel_dimension": null,
+   "severity": "high",
+   "trigger_conditions": [
+    "BLTDistillTransformer with debias enabled",
+    "logprobs with low-probability tail"
+   ],
+   "issue_url": ""
+  },
+  "rater_a": {
+   "case_id": "OC-NEW-54",
+   "verdict": "MATCH",
+   "template_id": "T04",
+   "alt_template_id": "T14",
+   "groundable": "yes",
+   "relation_operator": "reference_equivalence",
+   "guard_note": "BLT debias with a low-probability logprob tail is a precondition guard of the same kind as T04's listed analytic-formula guards.",
+   "rationale": "log(sum(exp(logprobs))) underflows to log(0) = -inf instead of equaling the stable log-sum-exp reference the debias term specifies on the same inputs."
+  },
+  "rater_b": {
+   "case_id": "OC-NEW-54",
+   "verdict": "SINGLETON_NEW_RELATION",
+   "template_id": null,
+   "alt_template_id": "T14",
+   "groundable": null,
+   "relation_operator": "boundedness",
+   "guard_note": "Guard would be BLTDistillTransformer with debias enabled and a low-probability logprob tail.",
+   "rationale": "The obligation is that the argument of a log-space debias reduction stay strictly positive so the loss term remains finite; the bounded object is an additive distillation loss term, not a loss/gradient scaling scalar (T14), a router gate probability (T29), or a label index (T33), so no frozen template carries it."
+  }
+ },
+ {
+  "case_id": "OC-NEW-67",
+  "case": {
+   "bug_id": "OC-NEW-67",
+   "framework": "olmo-core",
+   "repo": "olmo-core",
+   "title": "InvSqrt LR schedule wrong scheduler chosen for OLMoE3 — Cos used where WSD intended",
+   "description": "",
+   "root_cause": "OLMoE3-3B-27B used CosWithWarmup with only warmup_steps configured. Without an explicit decay schedule the optimizer ran cosine decay from peak lr to alpha_f over the full training horizon, instead of the WSD (warmup-stable-decay) schedule the recipe intended. The lr trajectory was silently cosine-shaped instead of WSD-shaped.",
+   "category": "lr_schedule",
+   "parallel_dimension": null,
+   "severity": "medium",
+   "trigger_conditions": [
+    "OLMoE3-3B-27B training script",
+    "scheduler determined by config"
+   ],
+   "issue_url": ""
+  },
+  "rater_a": {
+   "case_id": "OC-NEW-67",
+   "verdict": "MATCH",
+   "template_id": "T04",
+   "alt_template_id": "T18",
+   "groundable": "no: the intended WSD reference curve is recorded nowhere in the run — the config selects CosWithWarmup and the realized cosine trajectory is self-consistent at runtime, so no in-run oracle instantiates the schema",
+   "relation_operator": "reference_equivalence",
+   "guard_note": "wrong scheduler variant selected matches T04's listed 'scheduler mapping must select the decaying variant' precondition; same guard kind.",
+   "rationale": "The realized LR trajectory is cosine-shaped rather than the WSD reference curve the recipe mandates, but the oracle for that curve is external to the run."
+  },
+  "rater_b": {
+   "case_id": "OC-NEW-67",
+   "verdict": "UNOBSERVABLE",
+   "template_id": null,
+   "alt_template_id": null,
+   "groundable": null,
+   "relation_operator": "reference_equivalence (realized LR curve vs intended recipe shape)",
+   "guard_note": null,
+   "rationale": "The config names CosWithWarmup and the run's LR trajectory matches that scheduler's spec exactly; the WSD shape the recipe intended is nowhere in the run's config or trace, so no in-run signal distinguishes the two."
+  }
+ }
+]

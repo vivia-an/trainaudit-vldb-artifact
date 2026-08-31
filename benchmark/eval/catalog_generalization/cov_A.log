@@ -1,0 +1,9 @@
+taxonomy taxonomy_catalog.json (35 entries) | held-out 249 | done 0 | to run 249
+  50/249
+  100/249
+  150/249
+  200/249
+  249/249
+
+COVERAGE taxonomy_catalog.json: 207/249 = 83.1%
+judge calls=249 tokens in/out 200200/211425

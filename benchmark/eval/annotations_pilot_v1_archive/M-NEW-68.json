@@ -1,0 +1,15 @@
+{
+  "bug_id": "M-NEW-68",
+  "framework": "megatron-lm",
+  "category": "sharding",
+  "parallel_dimension": "combo",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["module_class", "pad_granularity", "hybrid_ep_enabled"],
+  "check_stage": "build",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "HybridCPDataLoaderWrapper.pad_granularity=32 must be 128 when HybridEP is on, otherwise per-CP-rank shards land at offsets that misalign HybridEP dispatcher and silently mix tokens across ranks. Detection is a static config_invariant on a module attribute under precond hybrid_ep_enabled, so P8 + pi_precond. Borderline communication vs sharding: chose sharding because the fault is the per-rank shard offset, not the collective op."
+}

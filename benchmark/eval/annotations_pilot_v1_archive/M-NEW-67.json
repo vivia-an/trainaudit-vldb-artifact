@@ -1,0 +1,15 @@
+{
+  "bug_id": "M-NEW-67",
+  "framework": "megatron-lm",
+  "category": "gradient_sync",
+  "parallel_dimension": "combo",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["param_name", "module_attr_fsdp_param", "config_use_precision_aware_optimizer", "grad_source"],
+  "check_stage": "before_optimizer",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P4",
+  "tier_field": "Tier 6",
+  "rationale": "When use_precision_aware_optimizer=True, get_grads_for_norm must read param.decoupled_grad never param.grad. Needs runtime hook on optimizer to inspect which grad source was selected, gated on config flag (precond). Borderline P7 vs P4: chose P4 because the check is on parameter dtype/source attribute at hook point, not a counter increment. parallel_dim=combo (FSDP+DP)."
+}

@@ -1,0 +1,14 @@
+category,count_392,pct_392,count_128_ref,pct_128_ref
+numerical,75,19.1,27,21.1
+checkpoint,32,8.2,16,12.5
+gradient_sync,46,11.7,14,10.9
+communication,26,6.6,13,10.2
+control_flow,50,12.8,11,8.6
+sharding,13,3.3,10,7.8
+dtype,24,6.1,10,7.8
+moe,28,7.1,6,4.7
+optimizer_state,28,7.1,5,3.9
+loss_computation,23,5.9,5,3.9
+data_loading,28,7.1,5,3.9
+offload,6,1.5,4,3.1
+lr_schedule,13,3.3,2,1.6

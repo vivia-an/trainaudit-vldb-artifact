@@ -1,0 +1,7 @@
+Warning: Permanently added '[183.242.150.6]:32462' (ED25519) to the list of known hosts.
+===== TrainAudit on O-NEW-3 BUGGY (a57f3803~1) =====
+[O-NEW-3] BUG DETECTED: olmo_zloss_mean_reduction_invariant: cross_entropy_loss raised RuntimeError on Bool mask mean (mean(): could not infer output dtype. Input dtype must be either a floating point or complex dtype. Got: Bool); buggy formula divides z_squared by Bool.mean() which is the wrong reduction
+
+===== TrainAudit on O-NEW-3 FIXED (a57f380332e7021755d0a36cf79406b4423cf361) =====
+[O-NEW-3] CLEAN: z_loss is a 0-dim scalar tensor: reduction='mean', compute_z_loss=True; loss.ndim=0, z_loss.ndim=0, z_loss.shape=()
+

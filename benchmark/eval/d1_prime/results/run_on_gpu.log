@@ -1,0 +1,259 @@
+=== run_on_gpu.sh @ Sun May 10 23:06:30 CST 2026 ===
+host=eval-gpu-0  venv=/volume/qscai/cqs/temp/venv-cu126  trace_root=/volume/qscai/cqs/temp/d1_prime_traces
+bugs=CF1 CM1 OF1
+
+--- probing eval-gpu-0 ---
+Warning: Permanently added '[183.242.150.6]:32054' (ED25519) to the list of known hosts.
+GPU 0: NVIDIA H200 (UUID: GPU-de8288ea-edc3-1855-be07-96d26efba793)
+GPU 1: NVIDIA H200 (UUID: GPU-8d00caf7-a25c-8f49-1d7a-21ae8bc28f59)
+
+--- launching remote run on eval-gpu-0 ---
+remote script: /volume/qscai/cqs/temp/run_d1prime_321541.sh
+Warning: Permanently added '[183.242.150.6]:32054' (ED25519) to the list of known hosts.
+torch= 2.7.1+cu126 cuda= True
+=================================================
+
+===== CF1 / buggy =====
+Observe function: log_softmax found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: hinge_embedding_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: multilabel_margin_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: smooth_l1_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: huber_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: normal_ found in module: <module 'torch.nn.init' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/init.py'>
+Observe function: remove found in module: <class 'torch.nn.utils.prune.BasePruningMethod'>
+Observe function: embedding found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: prune found in module: <class 'torch.nn.utils.prune.BasePruningMethod'>
+Observe function: gather_map found in module: <function gather at 0x14aab97631a0>
+Observe function: extra_repr found in module: <class 'torch.nn.modules.upsampling.Upsample'>
+Observe function: forward found in module: <class 'torch.nn.modules.upsampling.Upsample'>
+Observe function: values found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: items found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: keys found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: initialize_parameters found in module: <class 'torch.nn.modules.lazy.LazyModuleMixin'>
+Observe function: pop found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: clear found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: update found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: scatter found in module: <module 'torch.nn.parallel.scatter_gather' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/parallel/scatter_gather.py'>
+Observe function: lp_pool1d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool3d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool2d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: embedding_bag found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool1d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: has_uninitialized_params found in module: <class 'torch.nn.modules.lazy.LazyModuleMixin'>
+Main thread has finished or encountered an exception
+Flushing all buffers to the trace log file
+Trace dumper thread has stopped.
+Trace dumper thread has finished normally...
+RC=0
+trace files:
+drwxr-xr-x 2 root root    4096 May 10 23:06 .
+drwxr-xr-x 3 root root    4096 May 10 23:06 ..
+-rw-r--r-- 1 root root 9030355 May 10 23:06 instrumentation_124795.log
+-rw-r--r-- 1 root root       0 May 10 23:06 proxy_log.json
+-rw-r--r-- 1 root root  494571 May 10 23:06 trace_API_124795_22729495917888.log
+
+===== CF1 / fixed =====
+Observe function: log_softmax found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: hinge_embedding_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: multilabel_margin_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: smooth_l1_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: huber_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: normal_ found in module: <module 'torch.nn.init' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/init.py'>
+Observe function: remove found in module: <class 'torch.nn.utils.prune.BasePruningMethod'>
+Observe function: embedding found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: prune found in module: <class 'torch.nn.utils.prune.BasePruningMethod'>
+Observe function: gather_map found in module: <function gather at 0x145bb2767100>
+Observe function: extra_repr found in module: <class 'torch.nn.modules.upsampling.Upsample'>
+Observe function: forward found in module: <class 'torch.nn.modules.upsampling.Upsample'>
+Observe function: values found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: items found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: keys found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: initialize_parameters found in module: <class 'torch.nn.modules.lazy.LazyModuleMixin'>
+Observe function: pop found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: clear found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: update found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: scatter found in module: <module 'torch.nn.parallel.scatter_gather' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/parallel/scatter_gather.py'>
+Observe function: lp_pool1d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool3d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool2d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: embedding_bag found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool1d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: has_uninitialized_params found in module: <class 'torch.nn.modules.lazy.LazyModuleMixin'>
+Main thread has finished or encountered an exception
+Flushing all buffers to the trace log file
+Trace dumper thread has stopped.
+Trace dumper thread has finished normally...
+RC=0
+trace files:
+drwxr-xr-x 2 root root    4096 May 10 23:06 .
+drwxr-xr-x 4 root root    4096 May 10 23:06 ..
+-rw-r--r-- 1 root root 9030355 May 10 23:06 instrumentation_124973.log
+-rw-r--r-- 1 root root       0 May 10 23:06 proxy_log.json
+-rw-r--r-- 1 root root  514455 May 10 23:06 trace_API_124973_22390073283904.log
+
+===== CM1 / buggy =====
+Observe function: log_softmax found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: hinge_embedding_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: multilabel_margin_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: smooth_l1_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: huber_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: normal_ found in module: <module 'torch.nn.init' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/init.py'>
+Observe function: remove found in module: <class 'torch.nn.utils.prune.BasePruningMethod'>
+Observe function: embedding found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: prune found in module: <class 'torch.nn.utils.prune.BasePruningMethod'>
+Observe function: gather_map found in module: <function gather at 0x154618b4f100>
+Observe function: extra_repr found in module: <class 'torch.nn.modules.upsampling.Upsample'>
+Observe function: forward found in module: <class 'torch.nn.modules.upsampling.Upsample'>
+Observe function: values found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: items found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: keys found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: initialize_parameters found in module: <class 'torch.nn.modules.lazy.LazyModuleMixin'>
+Observe function: pop found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: clear found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: update found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: scatter found in module: <module 'torch.nn.parallel.scatter_gather' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/parallel/scatter_gather.py'>
+Observe function: lp_pool1d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool3d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool2d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: embedding_bag found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool1d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: has_uninitialized_params found in module: <class 'torch.nn.modules.lazy.LazyModuleMixin'>
+Main thread has finished or encountered an exception
+Flushing all buffers to the trace log file
+Trace dumper thread has stopped.
+Trace dumper thread has finished normally...
+RC=0
+trace files:
+drwxr-xr-x 2 root root    4096 May 10 23:06 .
+drwxr-xr-x 3 root root    4096 May 10 23:06 ..
+-rw-r--r-- 1 root root 8436730 May 10 23:06 instrumentation_125150.log
+-rw-r--r-- 1 root root       0 May 10 23:06 proxy_log.json
+-rw-r--r-- 1 root root  157988 May 10 23:06 trace_API_125150_23396812297536.log
+
+===== CM1 / fixed =====
+Observe function: log_softmax found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: hinge_embedding_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: multilabel_margin_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: smooth_l1_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: huber_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: normal_ found in module: <module 'torch.nn.init' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/init.py'>
+Observe function: remove found in module: <class 'torch.nn.utils.prune.BasePruningMethod'>
+Observe function: embedding found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: prune found in module: <class 'torch.nn.utils.prune.BasePruningMethod'>
+Observe function: gather_map found in module: <function gather at 0x145433c6b100>
+Observe function: extra_repr found in module: <class 'torch.nn.modules.upsampling.Upsample'>
+Observe function: forward found in module: <class 'torch.nn.modules.upsampling.Upsample'>
+Observe function: values found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: items found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: keys found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: initialize_parameters found in module: <class 'torch.nn.modules.lazy.LazyModuleMixin'>
+Observe function: pop found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: clear found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: update found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: scatter found in module: <module 'torch.nn.parallel.scatter_gather' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/parallel/scatter_gather.py'>
+Observe function: lp_pool1d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool3d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool2d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: embedding_bag found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool1d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: has_uninitialized_params found in module: <class 'torch.nn.modules.lazy.LazyModuleMixin'>
+Main thread has finished or encountered an exception
+Flushing all buffers to the trace log file
+Trace dumper thread has stopped.
+Trace dumper thread has finished normally...
+RC=0
+trace files:
+drwxr-xr-x 2 root root    4096 May 10 23:07 .
+drwxr-xr-x 4 root root    4096 May 10 23:07 ..
+-rw-r--r-- 1 root root 8436730 May 10 23:07 instrumentation_125225.log
+-rw-r--r-- 1 root root       0 May 10 23:07 proxy_log.json
+-rw-r--r-- 1 root root  157988 May 10 23:07 trace_API_125225_22357883352384.log
+
+===== OF1 / buggy =====
+Observe function: log_softmax found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: hinge_embedding_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: multilabel_margin_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: smooth_l1_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: huber_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: normal_ found in module: <module 'torch.nn.init' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/init.py'>
+Observe function: remove found in module: <class 'torch.nn.utils.prune.BasePruningMethod'>
+Observe function: embedding found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: prune found in module: <class 'torch.nn.utils.prune.BasePruningMethod'>
+Observe function: gather_map found in module: <function gather at 0x14726c34b100>
+Observe function: extra_repr found in module: <class 'torch.nn.modules.upsampling.Upsample'>
+Observe function: forward found in module: <class 'torch.nn.modules.upsampling.Upsample'>
+Observe function: values found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: items found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: keys found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: initialize_parameters found in module: <class 'torch.nn.modules.lazy.LazyModuleMixin'>
+Observe function: pop found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: clear found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: update found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: scatter found in module: <module 'torch.nn.parallel.scatter_gather' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/parallel/scatter_gather.py'>
+Observe function: lp_pool1d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool3d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool2d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: embedding_bag found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool1d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: has_uninitialized_params found in module: <class 'torch.nn.modules.lazy.LazyModuleMixin'>
+Main thread has finished or encountered an exception
+Flushing all buffers to the trace log file
+Trace dumper thread has stopped.
+Trace dumper thread has finished normally...
+RC=0
+trace files:
+drwxr-xr-x 2 root root    4096 May 10 23:07 .
+drwxr-xr-x 3 root root    4096 May 10 23:07 ..
+-rw-r--r-- 1 root root 9623983 May 10 23:07 instrumentation_125299.log
+-rw-r--r-- 1 root root       0 May 10 23:07 proxy_log.json
+-rw-r--r-- 1 root root 4731830 May 10 23:07 trace_API_125299_22487679141184.log
+
+===== OF1 / fixed =====
+Observe function: log_softmax found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: hinge_embedding_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: multilabel_margin_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: smooth_l1_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: huber_loss found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: normal_ found in module: <module 'torch.nn.init' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/init.py'>
+Observe function: remove found in module: <class 'torch.nn.utils.prune.BasePruningMethod'>
+Observe function: embedding found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: prune found in module: <class 'torch.nn.utils.prune.BasePruningMethod'>
+Observe function: gather_map found in module: <function gather at 0x14c87a267100>
+Observe function: extra_repr found in module: <class 'torch.nn.modules.upsampling.Upsample'>
+Observe function: forward found in module: <class 'torch.nn.modules.upsampling.Upsample'>
+Observe function: values found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: items found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: keys found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: initialize_parameters found in module: <class 'torch.nn.modules.lazy.LazyModuleMixin'>
+Observe function: pop found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: clear found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: update found in module: <class 'torch.nn.modules.container.ModuleDict'>
+Observe function: scatter found in module: <module 'torch.nn.parallel.scatter_gather' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/parallel/scatter_gather.py'>
+Observe function: lp_pool1d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool3d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool2d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: embedding_bag found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: max_unpool1d found in module: <module 'torch.nn.functional' from '/volume/qscai/cqs/temp/venv-cu126/lib/python3.12/site-packages/torch/nn/functional.py'>
+Observe function: has_uninitialized_params found in module: <class 'torch.nn.modules.lazy.LazyModuleMixin'>
+Main thread has finished or encountered an exception
+Flushing all buffers to the trace log file
+Trace dumper thread has stopped.
+Trace dumper thread has finished normally...
+RC=0
+trace files:
+drwxr-xr-x 2 root root    4096 May 10 23:07 .
+drwxr-xr-x 4 root root    4096 May 10 23:07 ..
+-rw-r--r-- 1 root root 9623983 May 10 23:07 instrumentation_125382.log
+-rw-r--r-- 1 root root       0 May 10 23:07 proxy_log.json
+-rw-r--r-- 1 root root 4732134 May 10 23:07 trace_API_125382_22857281811776.log
+
+--- summary ---
+  CF1/buggy: 3 files, 9,524,926 bytes  -> OK
+  CF1/fixed: 3 files, 9,544,810 bytes  -> OK
+  CM1/buggy: 3 files, 8,594,718 bytes  -> OK
+  CM1/fixed: 3 files, 8,594,718 bytes  -> OK
+  OF1/buggy: 3 files, 14,355,813 bytes  -> OK
+  OF1/fixed: 3 files, 14,356,117 bytes  -> OK
+
+Summary JSON: /volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/eval/d1_prime/results/run_on_gpu.summary.json
+Full log    : /volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/eval/d1_prime/results/run_on_gpu.log

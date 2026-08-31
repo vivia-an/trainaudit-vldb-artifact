@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-54",
+  "framework": "deepspeed",
+  "category": "checkpoint",
+  "parallel_dimension": "combo",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["param_name", "param_checksum", "rank_coords", "dp_world_size_meta"],
+  "check_stage": "checkpoint_load",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": true,
+  "pi_precond_applicable": true,
+  "pattern_id": "P3",
+  "tier_field": "Tier 0",
+  "rationale": "MoE checkpoint stores dp_world_size instead of seq_dp_world_size, so resume reslices experts wrongly across SP ranks. Detected by post-load expert checksum vs pre-save fragment per rank (cross-rank equality with topology-aware mapping). check_stage=load per anti-example 7. Borderline checkpoint vs moe: chose checkpoint because the bug is in save/load metadata, not the MoE router algorithm itself."
+}

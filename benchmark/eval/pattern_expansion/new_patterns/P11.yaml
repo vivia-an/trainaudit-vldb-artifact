@@ -1,0 +1,26 @@
+id: P11
+name: Position Encoding & Document Boundary Integrity
+type: B
+rule_r: For packed/multi-document inputs with cumulative document lengths cu_doc_lens and
+  per-batch offsets, RoPE/positional encodings, attention masks, and label-shift offsets must
+  use intra-document positions (i.e. position_in_doc[i] = i - cu_doc_lens[doc(i)]); tokens
+  of doc A must not see positions or content of doc B.
+scope_sigma: RoPE/ALiBi/learned-pos modules, attention mask construction, label-shift logic,
+  and any kernel that takes cu_doc_lens or byte_mask as an argument; covers full attention,
+  sliding-window attention, and CP-sharded attention paths.
+mode_m: B
+precond_rho: Active when packed-sequence training is enabled (cu_doc_lens argument is non-None
+  or byte_mask is provided); checked after the rotary/mask construction step on every forward.
+example_bugs:
+- M-013
+- M-NEW-34
+- M-NEW-61
+- O-NEW-2
+- OC-NEW-12
+- OC-NEW-13
+- OC-NEW-22
+- OC-NEW-34
+covers_count_estimate: 12
+related_existing_pattern: 'Refines P7 (residual stream integrity): P7 says "residual uses
+  original input"; P11 says "position/mask uses original document geometry". Both are runtime
+  postconditions on attention block.'

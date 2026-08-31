@@ -1,0 +1,15 @@
+{
+  "bug_id": "M-NEW-30",
+  "framework": "megatron-lm",
+  "category": "loss_computation",
+  "parallel_dimension": "TP",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["function_name", "aux_loss_coeff_arg", "config_moe_aux_loss_coeff", "tp_world_size"],
+  "check_stage": "after_forward",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": true,
+  "pi_precond_applicable": true,
+  "pattern_id": "P4",
+  "tier_field": "Tier 6",
+  "rationale": "Coefficient passed to switch_load_balancing_loss_func must equal config.moe_aux_loss_coeff / tp_world_size; otherwise aux-loss grad inflates by tp_size after TP all-reduce. Topology-aware (depends on TP size) and precond-gated (only when MoE aux loss enabled). Borderline moe vs loss_computation: chose loss_computation because root cause is missing TP scaling, parallel to numerical loss-scaling bugs. P4 because check reads function arg at hook point."
+}

@@ -1,0 +1,35 @@
+bug_id,framework,category,phase,set,trainaudit_verdict,traincheck_verdict,traincheck_violations,duration_s,note
+B1,megatron-lm,moe_router_init,buggy,D1,DETECTED,CLEAN,0/315,,traincheck:0/315 failed
+B1,megatron-lm,moe_router_init,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+B2,megatron-lm,tensor_parallel_grad,buggy,D1,DETECTED,DETECTED,6/520,,traincheck:6/520 failed invariants
+B2,megatron-lm,tensor_parallel_grad,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+B3,deepspeed,communication_dtype,buggy,D1,DETECTED,CLEAN,0/439,,traincheck:0/439 failed
+B3,deepspeed,communication_dtype,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+B8,deepspeed,moe_parallel_grouping,buggy,D1,DETECTED,DETECTED,2/433,,traincheck:2/433 failed invariants
+B8,deepspeed,moe_parallel_grouping,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+B11,deepspeed,gradient_clipping,buggy,D1,DETECTED,DETECTED,11/604,,traincheck:11/604 failed invariants
+B11,deepspeed,gradient_clipping,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+B12,olmo-core,lr_schedule,buggy,D1,DETECTED,DETECTED,24/478,,traincheck:24/478 failed invariants
+B12,olmo-core,lr_schedule,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+B13,olmo,residual_connection,buggy,D1,DETECTED,DETECTED,2/741,,traincheck:2/741 failed invariants
+B13,olmo,residual_connection,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+M-012,megatron-lm,dtype,buggy,D1,DETECTED,CLEAN,0/431,,traincheck:0/431 failed
+M-012,megatron-lm,dtype,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+M-014,megatron-lm,numerical,buggy,D1,DETECTED,DETECTED,3/432,,traincheck:3/432 failed invariants
+M-014,megatron-lm,numerical,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+M-020,megatron-lm,configuration_validation,buggy,D1,DETECTED,DETECTED,1/758,,traincheck:1/758 failed invariants
+M-020,megatron-lm,configuration_validation,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+M-024,megatron-lm,dtype,buggy,D1,DETECTED,DETECTED,1/430,,traincheck:1/430 failed invariants
+M-024,megatron-lm,dtype,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+M-NEW-5,megatron-lm,loss_scaling,buggy,D1,DETECTED,CLEAN,0/432,,traincheck:0/432 failed
+M-NEW-5,megatron-lm,loss_scaling,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+O-005,olmo,control_flow,buggy,D1,DETECTED,FAIL,infer:     assert not isinstance(            ^^^^^^^^^^^^^^^ AssertionError: Exc,,infer:     assert not isinstance(            ^^^^^^^^^^^^^^^ AssertionError: Exceptions or incomplete function calls don't have return values.
+O-005,olmo,control_flow,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+O-NEW-1,olmo,normalization,buggy,D1,DETECTED,DETECTED,1/683,,traincheck:1/683 failed invariants
+O-NEW-1,olmo,normalization,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+O-NEW-9,olmo,data_processing,buggy,D1,DETECTED,CLEAN,0/260,,traincheck:0/260 failed
+O-NEW-9,olmo,data_processing,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+OC-NEW-2,olmo-core,optimizer,buggy,D1,DETECTED,DETECTED,18/506,,traincheck:18/506 failed invariants
+OC-NEW-2,olmo-core,optimizer,fixed,D1,CLEAN,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup
+OC-NEW-3,olmo-core,lr_schedule,buggy,D1,DETECTED,CLEAN,0/381,,traincheck:0/381 failed
+OC-NEW-3,olmo-core,lr_schedule,fixed,D1,DETECTED,CLEAN,0/N,,fixed=reference for invariant inference; FP not measured in same-集合 D1 setup

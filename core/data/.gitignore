@@ -1,0 +1,4 @@
+*.db
+!/.gitkeep
+!funnel_counts.csv
+!funnel_skip_l3_results.csv

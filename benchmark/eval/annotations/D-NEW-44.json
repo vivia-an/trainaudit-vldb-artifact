@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-44",
+  "framework": "deepspeed",
+  "category": "checkpoint",
+  "parallel_dimension": "combo",
+  "invariant_type": "completeness",
+  "required_trace_fields": ["checkpoint_files_written", "tp_world_size", "ep_enabled", "rank_coords"],
+  "check_stage": "checkpoint_save",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P7",
+  "tier_field": "Tier 5",
+  "rationale": "MoE+TP save_checkpoint short-circuit caused only mp_rank_00_model_states.pt to be written; non-zero TP ranks silently skipped. Invariant: set of mp_rank_XX_model_states.pt files must cover all X in [0, tp_world_size). Layer schema_topo_precond: requires cross-rank set check AND a precond guard (only applies when MoE+TP>1; non-MoE save path is correct). Pattern P7 (function_call_counting per detection_method: counts of save calls per TP rank). Borderline P3 vs P7: chose P7 because the check is on call-counting / file-emission completeness, not on the equality of a replicated tensor across ranks. Category checkpoint over moe because the failure mode is loss of checkpoint state.",
+  "borderline_flags": ["CATEGORY_AMBIGUOUS_checkpoint_moe"]
+}

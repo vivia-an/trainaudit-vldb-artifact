@@ -1,0 +1,33 @@
+metric,value,pool_128_reference,note
+pilot_size,30,128,pilot 30 from 248 NEW pool
+category::dtype,1,-,3.3%
+category::loss_computation,3,-,10.0%
+category::checkpoint,5,-,16.7%
+category::gradient_sync,2,-,6.7%
+category::control_flow,5,-,16.7%
+category::moe,3,-,10.0%
+category::sharding,1,-,3.3%
+category::lr_schedule,4,-,13.3%
+category::optimizer_state,1,-,3.3%
+category::numerical,2,-,6.7%
+category::data_loading,2,-,6.7%
+category::communication,1,-,3.3%
+pattern::P4,7,-,23.3%
+pattern::P8,10,-,33.3%
+pattern::P7,4,-,13.3%
+pattern::P1,5,-,16.7%
+pattern::P3,3,-,10.0%
+pattern::P6,1,-,3.3%
+pattern_coverage_any,30,66%,100.0%
+tier_cumulative::0,9,30%,30.0%
+tier_cumulative::1,10,41%,33.3%
+tier_cumulative::2,10,51%,33.3%
+tier_cumulative::3,13,56%,43.3%
+tier_cumulative::4,14,61%,46.7%
+tier_cumulative::5,15,68%,50.0%
+tier_cumulative::6,30,74%,100.0%
+after_forward_count,5,48,16.7% vs 37.5%
+staircase_A_schema,11,20%,interp A (contributes)
+staircase_A_schema+topo,16,51%,interp A
+staircase_A_three_layer,30,74%,interp A
+staircase_B_schema_only,0,20%,interp B (sufficient) — UNUSABLE

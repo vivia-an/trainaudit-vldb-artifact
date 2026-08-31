@@ -1,0 +1,30 @@
+{
+  "purpose": "Strict re-mining holdout: these 19 Real-SE evaluation cases (fix commits, issues, and their bug-fix history entries) MUST be excluded from every mining input. Pre-registered before re-mining starts.",
+  "registered_at": "2026-07-12T17:30:00+08:00",
+  "source": "overleaf/sdc_llm_icml_2025-v2-back-cc-new-branch/appendix.tex tab:detection-results",
+  "cases": [
+    {"case_id": "Megatron-3c637fc0d", "framework": "megatron-lm", "fix_commit": "3c637fc0d", "constraint": "replica-cksum-equal"},
+    {"case_id": "DS-d56268f3",        "framework": "deepspeed",   "fix_commit": "d56268f3",  "constraint": "comm-dtype-matches-training"},
+    {"case_id": "DS-8cbbbb53",        "framework": "deepspeed",   "fix_commit": "8cbbbb53",  "constraint": "process-group-size-correct"},
+    {"case_id": "DS-005afe12",        "framework": "deepspeed",   "fix_commit": "005afe12",  "constraint": "clip-grad-bounded"},
+    {"case_id": "OLMoC-6e330ba2",     "framework": "olmo-core",   "fix_commit": "6e330ba2",  "constraint": "initial-lr-present"},
+    {"case_id": "Megatron-99f999a4",  "framework": "megatron-lm", "fix_commit": "99f999a4",  "constraint": "layer-count-strict"},
+    {"case_id": "OLMo-204ad53c",      "framework": "olmo",        "fix_commit": "204ad53c",  "constraint": "checkpoint-preserve-rng"},
+    {"case_id": "OLMo-167a7ac8",      "framework": "olmo",        "fix_commit": "167a7ac8",  "constraint": "data-loader-token-id-range"},
+    {"case_id": "OLMoC-O-022",        "framework": "olmo-core",   "fix_commit": null,        "constraint": "boundary: dataset seed override"},
+    {"case_id": "OLMoC-2b6cf996",     "framework": "olmo-core",   "fix_commit": "2b6cf996",  "constraint": "optim-step-counter-monotonic"},
+    {"case_id": "Megatron-e6d56d68",  "framework": "megatron-lm", "fix_commit": "e6d56d68",  "constraint": "invocation-frequency-per-step"},
+    {"case_id": "DS-e6e8c137",        "framework": "deepspeed",   "fix_commit": "e6e8c137",  "constraint": "moe-cpu-offload grad-norm device"},
+    {"case_id": "DS-40009eb1",        "framework": "deepspeed",   "fix_commit": "40009eb1",  "constraint": "bf16-lp-grad-clear"},
+    {"case_id": "OLMo-ce5f30d5",      "framework": "olmo",        "fix_commit": "ce5f30d5",  "constraint": "emb-init-std-sqrt-dmodel"},
+    {"case_id": "OLMo-a57f3803",      "framework": "olmo",        "fix_commit": "a57f3803",  "constraint": "zloss-mean-reduction"},
+    {"case_id": "OLMo-d7994c86",      "framework": "olmo",        "fix_commit": "d7994c86",  "constraint": "boundary: subthreshold z-loss drift"},
+    {"case_id": "OLMoC-db2b6eff",     "framework": "olmo-core",   "fix_commit": "db2b6eff",  "constraint": "a100-peak-flops-2x"},
+    {"case_id": "Megatron-1505db4c",  "framework": "megatron-lm", "fix_commit": "1505db4c",  "constraint": "chained-optimizer-param-groups-resync"},
+    {"case_id": "OLMoC-df72f4ee",     "framework": "olmo-core",   "fix_commit": "df72f4ee",  "constraint": "rope-packed-doc-position-reset"}
+  ],
+  "exclusion_rules": [
+    "Any mining prompt, pattern catalog entry, or bug-fix history record that cites one of these fix commits or case IDs must be withheld.",
+    "Constraint names themselves are NOT withheld from the template space (templates predate the cases); only the case-specific evidence is."
+  ]
+}

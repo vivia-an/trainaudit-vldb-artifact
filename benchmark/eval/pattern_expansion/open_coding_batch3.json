@@ -1,0 +1,349 @@
+{
+  "meta": {
+    "batch": 3,
+    "count": 31,
+    "description": "Open coding labels for 31 uncovered bugs (Phase 2.1). Each bug receives 5-10 kebab-case structural labels describing the SHAPE of the catching rule (not the bug category). Labels avoid re-naming existing P1-P8 patterns (P1 Dtype, P2 Scaling, P3 Cross-Rank Repl, P4 Invocation Freq, P5 State Restore, P6 Structural, P7 Residual Stream, P8 Counter)."
+  },
+  "labels": [
+    {
+      "bug_id": "M-NEW-18",
+      "labels": [
+        "config-flag-derivation-equality",
+        "boolean-gate-mismatch",
+        "init-time-config-check",
+        "double-managed-state-detection",
+        "fp8-recipe-aware-flag",
+        "master-weights-ownership-invariant"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-24",
+      "labels": [
+        "topk-k-derivation-from-config",
+        "hardcoded-numeric-literal",
+        "moe-routing-correctness",
+        "algorithm-formula-equivalence",
+        "tensor-shape-derived-arg",
+        "config-vs-call-arg-consistency"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-27",
+      "labels": [
+        "operator-ordering-degeneracy",
+        "softmax-after-topk-trap",
+        "gradient-magnitude-nonzero-check",
+        "topk-1-special-case",
+        "router-learning-signal-presence",
+        "post-backward-grad-probe"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-33",
+      "labels": [
+        "param-groups-identity-after-load",
+        "checkpoint-restore-completeness",
+        "outer-inner-state-reference-aliasing",
+        "structural-equality-post-restore",
+        "lr-update-routing-integrity",
+        "chained-optimizer-rebuild"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-34",
+      "labels": [
+        "fancy-vs-masked-indexing-equivalence",
+        "tensor-layout-preservation",
+        "shape-dimension-collapse-check",
+        "moe-token-expert-routing-correctness",
+        "row-major-ordering-invariant",
+        "indexing-semantics-equivalence"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-36",
+      "labels": [
+        "loss-accumulation-across-iterations",
+        "dict-assign-vs-add-distinction",
+        "logging-window-running-sum",
+        "iteration-aware-state-update",
+        "overwrite-bug-detection",
+        "log-interval-aggregation-invariant"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-38",
+      "labels": [
+        "first-iteration-special-case",
+        "main-grad-zero-precondition",
+        "buffer-aliasing-pollution",
+        "param-vs-grad-storage-distinction",
+        "hook-disabled-edge-case",
+        "pre-backward-grad-state-check"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-39",
+      "labels": [
+        "config-field-source-correctness",
+        "softmax-scale-formula-equivalence",
+        "wrong-attribute-name-reference",
+        "yarn-mscale-derivation",
+        "build-time-scalar-check",
+        "attention-scale-numerical-correctness"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-4",
+      "labels": [
+        "no-op-cast-aliasing",
+        "inplace-on-saved-tensor",
+        "autograd-saved-state-corruption",
+        "tensor-identity-vs-copy-distinction",
+        "fp32-noop-conversion-trap",
+        "post-forward-activation-integrity"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-40",
+      "labels": [
+        "cross-spec-consistency",
+        "attn-mask-type-correctness",
+        "te-vs-local-spec-divergence",
+        "bidirectional-vs-causal-mask",
+        "build-time-config-check",
+        "vit-domain-specific-mask"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-47",
+      "labels": [
+        "tensor-contiguity-precondition",
+        "kernel-pointer-arithmetic-assumption",
+        "stride-vs-flat-layout-mismatch",
+        "function-entry-precondition-check",
+        "metadata-vs-storage-discrepancy",
+        "wgrad-input-layout-invariant"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-51",
+      "labels": [
+        "phase-aware-dispatch",
+        "graph-warmup-vs-capture-context",
+        "checkpoint-recompute-disable-during-capture",
+        "context-flag-conditional-branch",
+        "implementation-equivalence-by-mode",
+        "cuda-graph-capture-purity"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-52",
+      "labels": [
+        "self-copy-suppression",
+        "data-ptr-equality-guard",
+        "redundant-copy-detection",
+        "in-place-write-ordering",
+        "tensor-aliasing-precondition",
+        "cuda-graph-replay-correctness"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-53",
+      "labels": [
+        "warmup-step-zero-precondition",
+        "vp-stage-mempool-isolation",
+        "captured-graph-buffer-scoping",
+        "config-flag-init-arg-derivation",
+        "build-time-cudagraph-correctness",
+        "shared-mempool-cross-contamination"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-54",
+      "labels": [
+        "detach-required-on-view",
+        "requires-grad-false-postcondition",
+        "grad-fn-none-invariant",
+        "shard-param-autograd-isolation",
+        "fp32-vs-fp16-branch-divergence",
+        "init-time-leaf-tensor-check",
+        "double-counted-gradient-prevention"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-55",
+      "labels": [
+        "two-layout-consistency",
+        "param-index-map-equality",
+        "padded-vs-unpadded-offset",
+        "naive-concat-vs-padded-layout",
+        "init-time-bucket-structural-check",
+        "optimizer-slice-correctness"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-57",
+      "labels": [
+        "fp4-vs-fp8-feature-flag-parity",
+        "mode-symmetric-restoration",
+        "delayed-scaling-recipe-restore",
+        "stale-amax-history-prevention",
+        "branch-coverage-completeness",
+        "post-forward-recipe-state-check"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-58",
+      "labels": [
+        "module-attribute-overrides-config-flag",
+        "fp8-disable-by-module-tag",
+        "bf16-preservation-precondition",
+        "build-time-conditional-flag",
+        "mamba-stack-special-handling",
+        "selective-quantization-skip"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-59",
+      "labels": [
+        "recompute-function-selection-by-recipe",
+        "te-checkpoint-vs-vanilla-dispatch",
+        "fp4-aware-recompute-path",
+        "amax-extension-during-recompute",
+        "build-time-checkpoint-fn-gate",
+        "moe-recompute-recipe-consistency"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-6",
+      "labels": [
+        "topk-k-derivation-from-config",
+        "moe-routing-correctness",
+        "hardcoded-numeric-literal",
+        "algorithm-formula-equivalence",
+        "config-vs-call-arg-consistency"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-60",
+      "labels": [
+        "fp4-vs-fp8-feature-flag-parity",
+        "save-original-input-gating",
+        "te-version-conditional-feature",
+        "selective-recompute-tensor-source",
+        "build-time-linear-module-config",
+        "quantized-vs-original-cache-distinction"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-61",
+      "labels": [
+        "seq-dim-axis-correctness",
+        "cp-group-argument-passed-explicitly",
+        "transpose-then-shard-axis-tracking",
+        "context-parallel-routing-correctness",
+        "post-forward-rotary-slice-check",
+        "default-vs-configured-group-distinction"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-62",
+      "labels": [
+        "viewless-tensor-return-postcondition",
+        "local-var-vs-return-value-mismatch",
+        "tensor-storage-aliasing-with-internal-buffer",
+        "isend-buffer-reuse-hazard",
+        "make-viewless-effect-confirmation",
+        "post-forward-output-isolation"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-64",
+      "labels": [
+        "cli-vs-dsl-config-parity",
+        "params-dtype-derivation-from-mixed-precision",
+        "config-field-co-derivation",
+        "init-time-dtype-config-check",
+        "legacy-path-equivalence-invariant",
+        "default-fp32-override-required"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-67",
+      "labels": [
+        "branch-priority-ordering",
+        "fsdp-and-precision-aware-coexist",
+        "grad-source-attribute-selection",
+        "decoupled-grad-vs-grad-distinction",
+        "before-optimizer-grad-source-check",
+        "config-conjunction-routing"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-68",
+      "labels": [
+        "pad-granularity-alignment",
+        "feature-block-size-consistency",
+        "hybrid-ep-vs-mxfp8-distinction",
+        "init-time-numeric-config-check",
+        "cross-rank-shard-alignment",
+        "config-derived-numeric-constant"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-69",
+      "labels": [
+        "config-flag-disambiguation",
+        "fp8-aware-grad-source-routing",
+        "decoupled-grad-vs-grad-distinction",
+        "wrong-config-attribute-reference",
+        "before-optimizer-grad-source-check",
+        "ds-fp8-recipe-family-membership"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-8",
+      "labels": [
+        "config-field-honored-in-forward",
+        "softmax-scale-config-respect",
+        "build-vs-runtime-config-propagation",
+        "wrong-attribute-name-reference",
+        "attention-scale-numerical-correctness"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-1",
+      "labels": [
+        "norm-formula-correctness",
+        "l2-vs-rms-distinction",
+        "post-norm-statistical-postcondition",
+        "output-second-moment-check",
+        "after-forward-numerical-probe",
+        "algorithm-formula-equivalence"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-13",
+      "labels": [
+        "monotonic-counter-across-resume",
+        "per-token-vs-per-sequence-distinction",
+        "accumulation-vs-overwrite-distinction",
+        "flops-counter-cumulative-invariant",
+        "resume-aware-running-total",
+        "non-decreasing-metric-check"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-16",
+      "labels": [
+        "truthy-object-as-boolean-trap",
+        "device-availability-vs-construction-distinction",
+        "bootstrap-config-reflects-backend",
+        "init-time-device-config-check",
+        "always-true-condition-detection",
+        "cuda-vs-mps-routing-correctness"
+      ]
+    }
+  ]
+}

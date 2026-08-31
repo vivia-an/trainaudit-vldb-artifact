@@ -1,0 +1,663 @@
+{
+  "arm": "A",
+  "use_catalog": true,
+  "model": "deepseek-v4-flash",
+  "temperature": 1.0,
+  "max_tokens": 32768,
+  "reps": 5,
+  "seed_file_entries_per_rep": 112,
+  "per_rep": [
+    {
+      "rep": 0,
+      "L1_raw_items": 347,
+      "L1_hypothesis": 334,
+      "L2_enumerated": 5488,
+      "L3_pass": 3208,
+      "L4_keep": 362,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 67,
+      "yield_L4_over_L2": 0.06596209912536444,
+      "distinct_survivors": 11,
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ],
+      "drops": {
+        "bad-or-missing-relation_type": 13
+      }
+    },
+    {
+      "rep": 1,
+      "L1_raw_items": 345,
+      "L1_hypothesis": 329,
+      "L2_enumerated": 4853,
+      "L3_pass": 2764,
+      "L4_keep": 355,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 74,
+      "yield_L4_over_L2": 0.07315062847723058,
+      "distinct_survivors": 11,
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ],
+      "drops": {
+        "bad-or-missing-relation_type": 16
+      }
+    },
+    {
+      "rep": 2,
+      "L1_raw_items": 351,
+      "L1_hypothesis": 330,
+      "L2_enumerated": 5365,
+      "L3_pass": 3106,
+      "L4_keep": 369,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 60,
+      "yield_L4_over_L2": 0.06877912395153775,
+      "distinct_survivors": 11,
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ],
+      "drops": {
+        "bad-or-missing-relation_type": 21
+      }
+    },
+    {
+      "rep": 3,
+      "L1_raw_items": 349,
+      "L1_hypothesis": 343,
+      "L2_enumerated": 5837,
+      "L3_pass": 3378,
+      "L4_keep": 391,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 65,
+      "yield_L4_over_L2": 0.06698646565016275,
+      "distinct_survivors": 11,
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ],
+      "drops": {
+        "bad-or-missing-relation_type": 6
+      }
+    },
+    {
+      "rep": 4,
+      "L1_raw_items": 351,
+      "L1_hypothesis": 327,
+      "L2_enumerated": 5210,
+      "L3_pass": 3117,
+      "L4_keep": 364,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 65,
+      "yield_L4_over_L2": 0.06986564299424185,
+      "distinct_survivors": 11,
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ],
+      "drops": {
+        "bad-or-missing-relation_type": 24
+      }
+    }
+  ],
+  "per_cell": [
+    {
+      "arm": "A",
+      "rep": 0,
+      "framework": "deepspeed",
+      "L1_raw_items": 97,
+      "L1_hypothesis": 89,
+      "L2_enumerated": 1309,
+      "L3_pass": 568,
+      "L4_keep": 80,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 16,
+      "drops": {
+        "bad-or-missing-relation_type": 8
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 0,
+      "framework": "megatron",
+      "L1_raw_items": 94,
+      "L1_hypothesis": 91,
+      "L2_enumerated": 988,
+      "L3_pass": 716,
+      "L4_keep": 110,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 15,
+      "drops": {
+        "bad-or-missing-relation_type": 3
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 0,
+      "framework": "olmo",
+      "L1_raw_items": 73,
+      "L1_hypothesis": 71,
+      "L2_enumerated": 1406,
+      "L3_pass": 876,
+      "L4_keep": 64,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 19,
+      "drops": {
+        "bad-or-missing-relation_type": 2
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 0,
+      "framework": "olmo_core",
+      "L1_raw_items": 83,
+      "L1_hypothesis": 83,
+      "L2_enumerated": 1785,
+      "L3_pass": 1048,
+      "L4_keep": 108,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 17,
+      "drops": {},
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 1,
+      "framework": "deepspeed",
+      "L1_raw_items": 95,
+      "L1_hypothesis": 89,
+      "L2_enumerated": 1420,
+      "L3_pass": 661,
+      "L4_keep": 77,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 14,
+      "drops": {
+        "bad-or-missing-relation_type": 6
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 1,
+      "framework": "megatron",
+      "L1_raw_items": 95,
+      "L1_hypothesis": 93,
+      "L2_enumerated": 953,
+      "L3_pass": 685,
+      "L4_keep": 115,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 19,
+      "drops": {
+        "bad-or-missing-relation_type": 2
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 1,
+      "framework": "olmo",
+      "L1_raw_items": 70,
+      "L1_hypothesis": 70,
+      "L2_enumerated": 1252,
+      "L3_pass": 762,
+      "L4_keep": 63,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 17,
+      "drops": {},
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 1,
+      "framework": "olmo_core",
+      "L1_raw_items": 85,
+      "L1_hypothesis": 77,
+      "L2_enumerated": 1228,
+      "L3_pass": 656,
+      "L4_keep": 100,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 24,
+      "drops": {
+        "bad-or-missing-relation_type": 8
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 2,
+      "framework": "deepspeed",
+      "L1_raw_items": 98,
+      "L1_hypothesis": 91,
+      "L2_enumerated": 1333,
+      "L3_pass": 602,
+      "L4_keep": 82,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 16,
+      "drops": {
+        "bad-or-missing-relation_type": 7
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 2,
+      "framework": "megatron",
+      "L1_raw_items": 90,
+      "L1_hypothesis": 85,
+      "L2_enumerated": 900,
+      "L3_pass": 668,
+      "L4_keep": 98,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 12,
+      "drops": {
+        "bad-or-missing-relation_type": 5
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 2,
+      "framework": "olmo",
+      "L1_raw_items": 75,
+      "L1_hypothesis": 75,
+      "L2_enumerated": 1349,
+      "L3_pass": 804,
+      "L4_keep": 75,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 18,
+      "drops": {},
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 2,
+      "framework": "olmo_core",
+      "L1_raw_items": 88,
+      "L1_hypothesis": 79,
+      "L2_enumerated": 1783,
+      "L3_pass": 1032,
+      "L4_keep": 114,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 14,
+      "drops": {
+        "bad-or-missing-relation_type": 9
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 3,
+      "framework": "deepspeed",
+      "L1_raw_items": 96,
+      "L1_hypothesis": 96,
+      "L2_enumerated": 1625,
+      "L3_pass": 741,
+      "L4_keep": 88,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 14,
+      "drops": {},
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 3,
+      "framework": "megatron",
+      "L1_raw_items": 93,
+      "L1_hypothesis": 90,
+      "L2_enumerated": 1104,
+      "L3_pass": 857,
+      "L4_keep": 95,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 17,
+      "drops": {
+        "bad-or-missing-relation_type": 3
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 3,
+      "framework": "olmo",
+      "L1_raw_items": 73,
+      "L1_hypothesis": 70,
+      "L2_enumerated": 1416,
+      "L3_pass": 877,
+      "L4_keep": 71,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 14,
+      "drops": {
+        "bad-or-missing-relation_type": 3
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 3,
+      "framework": "olmo_core",
+      "L1_raw_items": 87,
+      "L1_hypothesis": 87,
+      "L2_enumerated": 1692,
+      "L3_pass": 903,
+      "L4_keep": 137,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 20,
+      "drops": {},
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 4,
+      "framework": "deepspeed",
+      "L1_raw_items": 96,
+      "L1_hypothesis": 85,
+      "L2_enumerated": 986,
+      "L3_pass": 488,
+      "L4_keep": 65,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 15,
+      "drops": {
+        "bad-or-missing-relation_type": 11
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 4,
+      "framework": "megatron",
+      "L1_raw_items": 93,
+      "L1_hypothesis": 88,
+      "L2_enumerated": 1082,
+      "L3_pass": 747,
+      "L4_keep": 123,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 17,
+      "drops": {
+        "bad-or-missing-relation_type": 5
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 4,
+      "framework": "olmo",
+      "L1_raw_items": 76,
+      "L1_hypothesis": 73,
+      "L2_enumerated": 1365,
+      "L3_pass": 833,
+      "L4_keep": 73,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 19,
+      "drops": {
+        "bad-or-missing-relation_type": 3
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    },
+    {
+      "arm": "A",
+      "rep": 4,
+      "framework": "olmo_core",
+      "L1_raw_items": 86,
+      "L1_hypothesis": 81,
+      "L2_enumerated": 1777,
+      "L3_pass": 1049,
+      "L4_keep": 103,
+      "hyp_empty_entities": 0,
+      "hyp_l2_zero": 14,
+      "drops": {
+        "bad-or-missing-relation_type": 5
+      },
+      "survivors": [
+        "hyp/cross_rank_equal/replica_cksum",
+        "hyp/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/build.snapshot/model.n_modules",
+        "hyp/param/csm/build.snapshot/model.n_parameters",
+        "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+        "hyp/param/csm/optim.step.post/state_step_min",
+        "hyp/param/csm/optim.step.post/total_param_l2",
+        "hyp/param/csm/optim.step.pre/total_param_l2",
+        "hyp/sp/build_has_modules",
+        "hyp/tsb/no_nan_inf"
+      ]
+    }
+  ]
+}

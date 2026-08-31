@@ -1,0 +1,14 @@
+{
+  "bug_id": "M-NEW-30",
+  "framework": "megatron-lm",
+  "category": "loss_computation",
+  "parallel_dimension": "combo",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["aux_loss_coeff_passed", "config.moe_aux_loss_coeff", "tensor_model_parallel_world_size"],
+  "check_stage": "after_forward",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P1",
+  "tier_field": "Tier 3",
+  "rationale": "Aux coeff should be config.moe_aux_loss_coeff/tp_size; missing divide inflates post-allreduce grad by tp. Assert coeff equals expected formula. value_equality (known config+topo expression), not implementation_equivalence. P1, Tier 3. Layer=schema_topo_precond: precond is TP>1 AND MoE aux on.",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P1_P2"]
+}

@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-26",
+  "framework": "olmo",
+  "category": "control_flow",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["global_step", "restore_dataloader", "step"],
+  "check_stage": "init",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P1",
+  "tier_field": "Tier 0",
+  "rationale": "restore_checkpoint() forgot to reset self.global_step alongside epoch/tokens when cfg.restore_dataloader=False, so resumed run keeps the checkpoint's step counter (e.g., 50000) and skips warmup. Detection reads global_step right after restore and asserts ==0 (single value, anti-example 12: value_equality not completeness). Layer is schema_topo_precond: single-rank check but the assertion only applies under precond cfg.restore_dataloader=False. P1 because step is a standard Tier 0 trace field. check_stage=init: bug visible immediately after restore_checkpoint, before training step 0 (anti-example 10).",
+  "borderline_flags": []
+}

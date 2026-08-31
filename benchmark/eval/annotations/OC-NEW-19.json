@@ -1,0 +1,14 @@
+{
+  "bug_id": "OC-NEW-19",
+  "framework": "olmo-core",
+  "category": "control_flow",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["module_class_set", "preserve_rng_state"],
+  "check_stage": "build",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "Transformer.apply_activation_checkpointing hard-coded preserve_rng_state=False even with nn.Dropout in the graph; backward recompute uses a fresh mask so gradients mismatch the original forward. Detection: at build, scan named_modules for nn.Dropout; if any exists, the checkpoint wrapper config must have preserve_rng_state=True. P8 (static named_modules class snapshot). Tier 6 (named_modules class snapshot). schema_topo_precond: precond is 'activation checkpointing enabled AND a Dropout module exists'.",
+  "borderline_flags": []
+}

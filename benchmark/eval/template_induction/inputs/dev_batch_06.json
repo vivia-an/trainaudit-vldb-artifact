@@ -1,0 +1,388 @@
+[
+ {
+  "bug_id": "D-NEW-12",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "seq_parallel_communication_data_type config key typo causes silent ignore",
+  "description": "",
+  "root_cause": "SEQ_PARALLEL_COMMUNICATION_DATA_TYPE constant uses 'seq_parallel_comm_data_type' but config uses 'seq_parallel_communication_data_type'",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-14",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "WarmupCosineLR multi-group initialization returns wrong-length LR list",
+  "description": "",
+  "root_cause": "get_lr_ratio returns [0.0] list instead of 0.0 scalar; get_lr returns [0.0] instead of per-group list",
+  "category": "lr_schedule",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-23",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO2 allreduce_bucket forces rank=None, never uses single-rank reduce path",
+  "description": "",
+  "root_cause": "In refactor PR #4695, allreduce_bucket(self, bucket, rank=None, ...) was added with a hard `rank = None` reset at the very top of the function, which silently overrides any rank passed in by callers. The intended single-destination reduce path is therefore never taken and gradients always go through allreduce, producing different numerics on the receiving rank than expected.",
+  "category": "communication",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "ZeRO stage 1 or 2",
+   "use_multi_rank_bucket_allreduce=False"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-44",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "MOE save_checkpoint with TP > 1 only writes mp_rank_00_model_states.pt — non-zero TP ranks lose non-MoE weights",
+  "description": "",
+  "root_cause": "_save_moe_checkpoint short-circuited with `if exp_dp_rank != 0: return` before saving the per-mp-rank model_states.pt files. With TP > 1, only the rank that was both expert-DP-zero and mp-rank-zero ever wrote model_states.pt; all other TP shards were skipped, so resuming silently loaded mp_rank_00 onto every TP rank, training all TP ranks with the same shard.",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "MoE model",
+   "tensor parallel size > 1",
+   "expert parallel enabled"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-53",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "AutoEP ZeRO-2 forgets to scale per-rank loss by EP-group size — expert gradients undercount by factor ep_size",
+  "description": "",
+  "root_cause": "AutoEP runs one logical batch across an EP group (each EP rank sees a slice of tokens), so each rank's scalar loss is only 1/ep_size of the logical-batch loss. The buggy DeepSpeedEngine.backward() does not multiply the loss by ep_size before backward, so reduced expert gradients end up scaled by 1/ep_size relative to the equivalent ZeRO-2 / ep_size=1 baseline. Optimizer.step then applies effectively-shrunk gradients, biasing every step.",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "AutoEP MoE layer present",
+   "ZeRO stage 2",
+   "expert_parallel_size > 1"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-59",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO++ all_to_all_quant_reduce hard-codes gpu_per_node=16 — wrong intra-node split on every non-16-GPU node",
+  "description": "",
+  "root_cause": "csrc/quantization/pt_binding.cpp::quantized_reduction had `const int gpu_per_node = 16;` hard-coded. The Python wrapper all_to_all_quant_reduce passes the actual local_world_size, but the C++ side ignored it. Buffer slicing inside the kernel (sz.back() / gpu_per_node, in_groups / gpu_per_node, elems_per_in_tensor / gpu_per_node) is therefore done with the wrong divisor on any non-16-GPU node — rows of the quantized intermediate get attributed to the wrong intra-node rank, producing wrong reduced gradients.",
+  "category": "communication",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "ZeRO stage 3 with zero_quantized_gradients=true (qgZ)",
+   "any node-local-world-size != 16 (e.g. 8 GPUs/node, single node multi-GPU, etc.)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-64",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "FP16 fused optimizer grad-norm reduces only TP-rank-0 gradients — TP grad_norm undercounted by sqrt(tp_size)",
+  "description": "",
+  "root_cause": "FP16_Optimizer.get_grad_norm computed the per-group flattened grad norm and treated all of the flat buffer as if it belonged to a non-TP parameter. So only tp_rank=0 contributed (since for non-TP params the duplicate copies on tp_rank>0 should be skipped). For genuine TP-sliced parameters this skip is wrong — the per-rank slices are different and all should sum into the global norm. Result: at TP=4 the reported total_norm is ~1/sqrt(4) = 1/2 of the true value, gradient clipping is therefore much weaker than configured.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "fp16 + FP16_Optimizer (fused, non-ZeRO or ZeRO-1)",
+   "Megatron-style tensor parallel with tp_size > 1",
+   "param groups containing both TP and non-TP parameters"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-69",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO 1/2 reduction stream not waited by current stream — ipg_buffer rewrite races allreduce when comm > compute",
+  "description": "",
+  "root_cause": "In average_tensor (overlap_comm path), reduction_stream did wait_stream(current_stream) so the allreduce waits for backward to finish populating the buffer, but current_stream did NOT wait_stream(reduction_stream) afterwards. When backward of the next bucket completes faster than the previous allreduce, the next gradient gets written into the same ipg_buffer slot that allreduce is still reading, corrupting the reduce input. Equivalence (loss with vs without overlap_comm) is broken on small sequence-length / fast-compute models.",
+  "category": "communication",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "ZeRO stage 1 or 2",
+   "overlap_comm=True",
+   "communication time per allreduce > backward compute time of next bucket"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-8",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "WarmupLR ignores optimizer LR, always uses hardcoded 0.001",
+  "description": "",
+  "root_cause": "warmup_max_lr defaults to 0.001 instead of inheriting from optimizer param_groups",
+  "category": "lr_schedule",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-10",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MoE/DSA gate not sliced when num_query_groups < tp_size",
+  "description": "",
+  "root_cause": "In SelfAttention.forward when output_gate is True and num_query_groups < world_size, the gate tensor was not sliced per TP rank. Each TP rank ended up multiplying its query/key/value partition by the full unsliced gate, producing wrong attention output but no error.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "self-attention with output_gate=True",
+   "num_query_groups < tensor_model_parallel_size",
+   "tp_size > 1"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-22",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "encoder->decoder PP gradients summed instead of averaged when ETP < DTP",
+  "description": "",
+  "root_cause": "In p2p_communication._communicate, when an encoder TP rank receives multiple gradients from corresponding decoder TP ranks, _handle_tensor_list reduced them via torch.stack(...).sum(dim=0). The fix is mean(dim=0): summing scaled the encoder gradient by the TP-fanout factor, silently inflating learning rate for encoder params.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "encoder TP size != decoder TP size",
+   "encoder_tp_size <= decoder_tp_size",
+   "PP > 1"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-36",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MTP per-layer loss overwritten instead of accumulated when log_interval > 1",
+  "description": "",
+  "root_cause": "MTPLossLoggingHelper.save_loss_to_tracker assigned total_loss_dict[name] = loss for each iteration regardless of whether the key already existed. Across multiple training iterations within one logging window, only the most recent iteration's MTP loss survived; the logged value was the last-step loss rather than the average over log_interval steps.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "low",
+  "trigger_conditions": [
+   "Multi-Token Prediction (MTP) enabled",
+   "log_interval > 1"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-6",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "group_limited_topk uses num_groups instead of topk in inner topk",
+  "description": "",
+  "root_cause": "",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-10",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "grad_norm_exp_avg EMA self-referential update — adaptive clipping broken",
+  "description": "",
+  "root_cause": "",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-24",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "norm_after path applies attn_norm to (att_proj output) instead of to the attention output, leaving residual unnormed",
+  "description": "",
+  "root_cause": "Under norm_after, attn_norm was being applied to the QKV projection output (qkv = attn_norm(att_proj(x))) before splitting and computing attention. The Post-LN attention design requires applying attn_norm to the attention output before the residual add. This silently changes the model semantics from Post-LN attention to a normalized-QKV attention.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "model.norm_after=true",
+   "OLMoSequentialBlock forward executed during training"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-27",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Multi-epoch training does not reset dataset.start_index, so the next epoch resumes from the previous epoch's offset",
+  "description": "",
+  "root_cause": "On epoch rollover Trainer reset epoch counters and called dataset.reshuffle(), but never reset dataset.start_index. The IterableDataset therefore skipped the first global_train_examples_seen_this_epoch instances of the new epoch, silently dropping them from training.",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "training spans more than one epoch (max_epochs > 1)",
+   "epoch boundary reached during training"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-4",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "RoPE sin/cos missing type_as — dtype mismatch in mixed precision",
+  "description": "",
+  "root_cause": "pos_sin/pos_cos cached in float32, not cast to match q_ dtype (bf16/fp16)",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-55",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Block readout init unconditionally re-initializes ff_proj, overwriting muP zero-init",
+  "description": "",
+  "root_cause": "OLMoSequentialBlock.reset_parameters unconditionally called `init_normal(self.ff_proj, std, cutoff_factor, ...)`. When `use_mup=True`, ff_proj is a `MuReadout` module whose readout weights must remain at the muP zero/special initialization; the unconditional re-init overwrites that with a regular truncated-normal, silently breaking the muP coordinate-check guarantee that activation magnitudes are width-independent.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "OLMoSequentialBlock used and reset_parameters() called",
+   "use_mup enabled OR full_megatron init_fn (where ff_proj should keep MuReadout's zero init)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-61",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "ff_out nn.Linear constructed without device=init_device, breaking meta-init flow",
+  "description": "",
+  "root_cause": "When building the readout `ff_out`, every other Linear in the model passed `device=config.init_device` so it could be created on the meta device and later materialized by FSDP with the configured init. The buggy version omitted this kwarg for `ff_out`, so it was always built on the default device with default kaiming init, escaping the init pipeline. The readout therefore carries the wrong init scale and lives on the wrong device until FSDP later moves it.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "init_device='meta'",
+   "FSDP enabled (lazy materialization expected)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-69",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Ladder script uses eos_token_id=0 instead of dolma tokenizer's 50279",
+  "description": "",
+  "root_cause": "`MODEL_CONFIG_150M` hard-coded `eos_token_id=0` even though the dolma GPT-NeoX tokenizer uses 50279 for end-of-document. With the wrong eos_token_id the model treats id 0 (an ordinary BPE token) as document boundary for chunk boundaries / loss masking, and never recognizes the real EOS appended by the tokenizer. Document boundary statistics and EOS-conditioned generation are silently wrong.",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "scripts/ladder.py used to build the 150M model config",
+   "Dolma/GPT-NeoX tokenizer (eos_token_id=50279)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-12",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Per-document RoPE positions not propagated when cu_doc_lens is provided in packed mode",
+  "description": "",
+  "root_cause": "Attention.forward called self.rope(...) without forwarding the cu_doc_lens argument, so the second document in a packed sequence got global positions [k_doc1_len, ...] instead of restarting at 0. Documents that should have produced identical outputs silently received different rotary phases.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Multiple documents packed into one sequence (intra-document masking)",
+   "cu_doc_lens is provided to attention forward",
+   "RotaryEmbedding (non-Fused) attention path"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-28",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Mamba.forward casts inputs using cached self.dtype — wrong dtype after FSDP wraps the conv1d weight",
+  "description": "",
+  "root_cause": "Mamba.forward used self.dtype (snapshot at construction time) to cast x. After FSDP wrapped the inner conv1d, the actual parameter dtype changed but self.dtype was stale, so x flowed into the kernel in the wrong precision. The MambaSSM kernel still ran but produced silently wrong values.",
+  "category": "dtype",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Mamba sequence mixer wrapped in FSDP / FSDP2",
+   "Mixed-precision params (e.g., bf16 weights, fp32 cast targets)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-4",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "NaN loss when all instances on a rank are masked — division by zero",
+  "description": "",
+  "root_cause": "batch_num_tokens_for_loss = 0 when all instances masked, causing loss / 0 = NaN",
+  "category": "loss_computation",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-61",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "BLT shift_boundary_mask did not AND with byte_mask — pad positions polluted label offsets",
+  "description": "",
+  "root_cause": "shift_boundary_mask was computed as boundary_mask[:, 1:] without AND-ing with byte_mask[:, 1:]. Padded positions where boundary_mask happened to be True (left-over from a previous batch slot) added vocab_size_blt//2 to label entries that should have remained at the ignore_index, distorting CE on padded positions.",
+  "category": "loss_computation",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "BLTDistillTransformer with fused boundaries",
+   "padded byte positions present in batch"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-65",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "DataCollator routed academic/technical sources to a non-existent 4th expert label",
+  "description": "",
+  "root_cause": "_source_name_to_expert_label produced a one-hot at index 3 for academic/technical sources, but the deployed model only had 3 active experts (indices 0..2 plus a masked duplicate). The label tensor pointed to an unused expert slot, so router supervision was silently directed to a slot the router never produced gradient for.",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "FlexOLMo SFT with expert routing labels",
+   "data sources containing 'academic'/'technical_writing'/'tutorial'/'nonfiction'/'faq'"
+  ],
+  "issue_url": ""
+ }
+]

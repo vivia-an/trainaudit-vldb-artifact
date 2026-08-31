@@ -1,0 +1,407 @@
+[
+ {
+  "bug_id": "D-NEW-17",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "Loss double-scaling in backward — scale_if_loss applied to gas_scaled_loss",
+  "description": "",
+  "root_cause": "",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-34",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO3 allgather hardcodes ds_tensor dtype — mixed-dtype param groups silently allgather wrong bytes",
+  "description": "",
+  "root_cause": "all_gather_coalesced built one flat partition buffer assuming a single ds_tensor dtype across all params in the group, so when the param list contained mixed dtypes the larger-dtype params were silently truncated/aliased into the smaller-dtype buffer. After allgather, parameters held garbage bit patterns until the next iteration overwrote them.",
+  "category": "dtype",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "ZeRO stage 3",
+   "model contains parameters of more than one floating dtype (e.g. fp32 LayerNorm + bf16 weights)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-40",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO param dtype cast inside zero_wrapper_for_fp_tensor_constructor reassigns Parameter to a non-Parameter Tensor",
+  "description": "",
+  "root_cause": "zero_wrapper_for_fp_tensor_constructor cast tensors to the target dtype with `tensor = tensor.to(target_fp_dtype)`. For tensors that were already nn.Parameter (or had requires_grad=True), .to() returns a fresh non-Parameter Tensor without the autograd hook; the wrapper rebound the local name but the model still held the original reference, so the model's Parameter kept the wrong dtype and the (correctly-cast) shadow tensor became unreachable.",
+  "category": "dtype",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "zero.Init context",
+   "model code constructs a tensor with requires_grad=True (e.g. via torch.empty(...).requires_grad_(True))"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-47",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "BF16 model + ZeRO defaults silently force fp32 grad accum buffer despite ZeRO requiring matching dtype",
+  "description": "",
+  "root_cause": "When grad_accum_dtype was unspecified, the engine auto-selected fp32 for any bf16 model. Under ZeRO this is silently wrong because ZeRO assumes grad_accum_dtype == model_dtype; gradient accumulation buffers ended up in fp32 while reduction ran in bf16, so accumulated gradients were lost on the first cast back.",
+  "category": "dtype",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "model dtype = bf16",
+   "no explicit grad_accum_dtype in ds_config",
+   "ZeRO enabled"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-55",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO 1/2 expert gradients pre-divide by edp_world_size then skip the bucket-level divide — net divisor is dp/edp not dp",
+  "description": "",
+  "root_cause": "When the IPG bucket contains MoE params, average_tensor pre-divides each expert grad by dist.get_world_size(expert_dp_process_group)/sp_size and then skips the bucket-final divide by dist.get_world_size(dp_process_group)/sp_size. This was meant to handle the smaller EP group but it never compensates for the dp/ep ratio. The expert grad is then all-reduced over expert_dp_process_group; the final reduced value equals (sum over edp ranks)/edp_world_size — but the model's effective DP world for expert grads is dp_world_size, so the proper averaging factor should be dp_world_size, not edp_world_size. Result: expert gradients are systematically off by a factor of (dp/edp).",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "MoE layers present",
+   "ZeRO stage 1 or 2",
+   "ep_size != dp_size"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-57",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "ZeRO++ ds_secondary_tensor stale after model load / checkpoint resume — dirty allgather poisons next forward",
+  "description": "",
+  "root_cause": "_partition_param_sec was called without the has_been_updated flag from the GatheredParameters partition path, so ds_secondary_tensor was never refreshed after the master ds_tensor changed. Similarly, checkpoint_event_epilogue did not call invalidate_secondary_tensor after _load_zero_checkpoint refilled fp16_partitioned_groups_flat (= ds_tensor). The next ZeRO++ allgather reads from the stale ds_secondary_tensor and constructs a corrupted full parameter that mixes new master weights with old secondary-partition values.",
+  "category": "checkpoint",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "ZeRO stage 3 with hierarchical ZeRO++ (zero_quantized_weights or zero_hpz_partition_size>0)",
+   "either (a) deepspeed.zero.Init followed by GatheredParameters/_load_from_state_dict, or (b) load_checkpoint after engine init"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "D-NEW-72",
+  "framework": "deepspeed",
+  "repo": "deepspeed",
+  "title": "Sequence parallel single_all_to_all reshape collapses batch and seq dims — QKV permuted into wrong tokens",
+  "description": "",
+  "root_cause": "single_all_to_all's reshape for the head-scatter path used `[seq_world_size, inp_shape[scatter_idx]] + inp_shape[scatter_idx+1:]` and then transposed (0,2). This collapses batch and sequence into a single dimension and reorders elements such that after the all_to_all+reshape back, query[b,s,h] no longer corresponds to the same logical token. Pre-attention QKV are permuted into the wrong (b,s,h) positions, attention is computed on scrambled tokens, and the model never converges.",
+  "category": "communication",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "DeepSpeed sequence parallelism (DistributedAttention)",
+   "sp_world_size > 1",
+   "scatter_idx >= 2 (head-scatter path used in the second alltoall)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-12",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "CUDA-graph warmup overwrites MoE router expert_bias persistent buffer",
+  "description": "",
+  "root_cause": "_CudaGraphRunner saved/restored parameter grads before graph warmup, but did not save persistent buffers. The router's expert_bias buffer is updated in-place each forward by _apply_expert_bias(); warmup forward passes mutated it, and the post-capture state diverged from the pre-capture state, silently corrupting routing for latent MoE models.",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "MoE router with aux-loss-free routing (uses expert_bias)",
+   "CUDA graphs enabled",
+   "graph capture warmup runs the router forward"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-14",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "Layerwise distributed optimizer never marks param_gather as dispatched when expt_dp_size=1",
+  "description": "",
+  "root_cause": "_ParamAndGradBucketGroup.dispatch_param_gather had no early-return when intra distributed-optimizer instance size is 1. The all-gather work handles list ended up empty, but param_gather_dispatched remained False so finish_param_sync never executed. Expert params were therefore left at uninitialized/stale values from previous step's gather buffer.",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "use_layer_wise_distributed_optimizer (e.g. dist_muon)",
+   "expt_dp_size == 1",
+   "MoE expert parameters present"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-26",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MoE router weight initialized with DP RNG fork even when perform_initialization=False",
+  "description": "",
+  "root_cause": "Router/SharedExpert gate init logic ran config.init_method(self.weight) inside a get_data_parallel_rng_tracker fork only when perform_initialization=True; the else branch (perform_initialization=False) ALSO unconditionally re-initialized the weight on CPU outside any RNG fork. This silently re-randomized router weights even when the user expected them to be loaded later, with different values across DP ranks.",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "MoE TopKRouter or SharedExpertMLP gate creation",
+   "config.perform_initialization=False (e.g., loading checkpoint)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-34",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MoE local_indices wrong via fancy indexing on bool mask when topk > 1",
+  "description": "",
+  "root_cause": "BaseMoELayer used local_indices = global_indices[global_local_map] (fancy indexing). For 2-D global_indices with topk>1, advanced indexing collapses dimensions in a way that breaks the (token, expert_slot) layout, resulting in tokens being routed to the wrong experts on each EP rank. masked_select preserves the correct flat ordering.",
+  "category": "moe",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "MoE BaseMoELayer dispatch path",
+   "moe_router_topk > 1",
+   "expert_parallel_size > 1"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-65",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "ChainedOptimizer.split_state_dict for single-chunk MoE only assigns to state_dicts[0], leaving all other sub-optimizers unaware of the model state and silently skipping their load",
+  "description": "",
+  "root_cause": "split_state_dict's single-model-chunk branch did state_dicts[0] = state_dict only, leaving state_dicts[1:] as None. Sub-optimizers beyond index 0 (e.g. the MoE expert optimizer) thus received None as their model state and silently skipped loading their parameters/optimizer states. The model proceeded with default-initialized expert parameters after a checkpoint resume.",
+  "category": "checkpoint",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "ChainedOptimizer with multiple sub-optimizers (e.g. dense + MoE)",
+   "Single global model chunk (len(self.model_chunks) == 1)",
+   "Loading checkpoint via split_state_dict"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "M-NEW-69",
+  "framework": "megatron-lm",
+  "repo": "megatron-lm",
+  "title": "MegatronOptimizer uses use_precision_aware_optimizer instead of use_precision_aware_optimizer_no_fp8_or_ds_fp8 when selecting decoupled_grad, so FP8 + precision-aware paths read param.decoupled_grad which is None and report grad_norm=0",
+  "description": "",
+  "root_cause": "MegatronOptimizer.get_grads_for_norm and clip_grad_by_total_norm_fp32 dispatched on self.config.use_precision_aware_optimizer. With FP8 enabled, decoupled_grad is intentionally NOT used for those parameters; they should fall back to param.grad. The buggy gate took the precision-aware path anyway, attempting to read param.decoupled_grad (which is None), so grads_for_norm came back empty and grad_norm computed to 0.0. Without proper gradient clipping the optimizer could overshoot, but no exception was raised because count_zeros and clip routines treat empty input as a valid no-op.",
+  "category": "optimizer_state",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "use_precision_aware_optimizer enabled",
+   "FP8 training with non-delayed scaling (or DeepSeek-style FP8) so the no_fp8_or_ds_fp8 derived flag is False",
+   "Gradient clipping or count_zeros active"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-22",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "muP attention scale uses 1/d instead of sqrt(base_d)/d, mismatching the SP scale at the base width",
+  "description": "",
+  "root_cause": "Under muP the attention scale was 1/q.size(-1), which differs from the standard parameterization scale 1/sqrt(d) even at the base width. This silently changes the attention temperature for the base model relative to SP. Fix uses sqrt(mup_base_n_heads)/q.size(-1) so that the scale matches SP exactly when n_heads == mup_base_n_heads and tracks muP scaling rules for wider models.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "model.use_mup=true",
+   "scaled-dot-product attention path (not flash varlen)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-32",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Reduced sums/norms not divided by num_model_replicas in HSDP, optimizer metrics inflated by replica count",
+  "description": "",
+  "root_cause": "After the dist.all_reduce(SUM) in HYBRID_SHARD, identical replica contributions are summed N times. The original code consumed those sums directly, so per-param avg metrics and grad_norm metrics ended up N times larger than the true value. Fix divides the all-reduced tensor (all_sums_norms_numels and all_norms) by self.num_model_replicas before splitting and using.",
+  "category": "gradient_sync",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "HSDP with num_model_replicas > 1",
+   "collect_param_metrics=True",
+   "param-norm metrics being logged"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-40",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "Mitchell init hardcodes cutoff_factor=3.0, ignoring user-supplied init_cutoff_factor across blocks and embeddings",
+  "description": "",
+  "root_cause": "Every Mitchell-init code path (OLMoBlock, OLMoSequentialBlock, OLMoLlamaBlock, and OLMo wte init) literally assigned cutoff_factor = 3.0, completely ignoring config.init_cutoff_factor. User configs that set a different cutoff (e.g. 4 or 6) silently produced narrower truncated-normal weight distributions than requested.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "init_fn = mitchell",
+   "user sets a non-default model.init_cutoff_factor"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "O-NEW-70",
+  "framework": "olmo",
+  "repo": "olmo",
+  "title": "MoE load-balancing loss not divided by num_micro_batches in gradient accumulation loop",
+  "description": "",
+  "root_cause": "Inside the per-micro-batch loop the buggy code added the full `batched_load_balancing_loss(self.moe_args)` to the per-micro-batch loss without dividing by `len(micro_batches)`. Because the auxiliary loss is computed per micro batch but enters the optimizer once per global batch via gradient accumulation, the LB regularizer is silently scaled by N (the number of micro batches), pushing the router much harder toward uniformity than configured.",
+  "category": "loss_computation",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "block_type=moe (MegaBlocks-based MoE block)",
+   "moe_expert_choice=False (load-balancing loss path active)",
+   "Gradient accumulation with num_micro_batches > 1"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-23",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "PerFileChunkedInstanceSourceConfig defaults token_dtype to uint16 — silent token-id corruption for vocab > 65535",
+  "description": "",
+  "root_cause": "PerFileChunkedInstanceSourceConfig.token_dtype defaulted to uint16. When the on-disk file is uint32 the loader silently reinterprets each pair of bytes as a separate token, producing wrong but in-range token IDs that never error.",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "critical",
+  "trigger_conditions": [
+   "Tokenizer with vocab_size > 65535 (e.g., dolma2)",
+   "PerFileChunkedInstanceSourceConfig used without explicit token_dtype"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-3",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "sqrt decay LR schedule uses wrong formula — decay curve inverted",
+  "description": "",
+  "root_cause": "sqrt(progress) instead of 1-sqrt(1-progress) — wrong decay curve shape",
+  "category": "lr_schedule",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-31",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "fused_linear_cross_entropy_loss accumulates gradient in bf16 by default — silently noisier than fp32 accumulation",
+  "description": "",
+  "root_cause": "The liger-kernel fused linear+CE call defaulted accum_grad to bf16, which silently degraded gradient precision on the LM head. The numerical noise was small enough that training continued, but it shifted loss curves vs the unfused baseline.",
+  "category": "dtype",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "LMHead loss_implementation uses liger fused_linear_cross_entropy_loss",
+   "Mixed-precision (bf16) training"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-36",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Trainer async bookkeeping callback fires after future is FINISHED — state_dict snapshot can capture pre-callback state",
+  "description": "",
+  "root_cause": "_run_bookkeeping_op attached cb via future.add_done_callback. add_done_callback runs after the future is marked FINISHED, so _join_bookkeeping_ops returned before cb ran, and a state_dict() capture immediately after could observe stale callback state (e.g., un-rotated checkpoint indexes).",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "medium",
+  "trigger_conditions": [
+   "Trainer launches a bookkeeping op (e.g., async checkpoint save) that has a completion cb",
+   "_join_bookkeeping_ops races with state_dict() capture"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-46",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "BLT byte embeddings never initialized to teacher-embedding stats — kept default kaiming",
+  "description": "",
+  "root_cause": "fix_init computed te_mean and te_std of the target embeddings but used them only when initializing hash_embeddings; the main self.embedding.weight (byte embeddings) was never assigned the te-scaled init, leaving it at nn.Embedding's default initialization. The encoder therefore started training with byte embeddings whose distribution did not match the teacher's vocabulary embeddings.",
+  "category": "control_flow",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "LocalEncoder.fix_init called",
+   "BLT distill training with target_embeddings provided"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-59",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "Flex attention not upcast to fp32 — precision mismatch with SDPA backend",
+  "description": "",
+  "root_cause": "Flex attention was called directly on bf16 q/k/v while SDPA's reference path runs the matmul/softmax in fp32. The bf16-only flex path silently produced lower-precision attention outputs that diverge from the SDPA path used by tests, causing different loss trajectories between the two backends.",
+  "category": "numerical",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "AttentionBackend = flex_attn",
+   "bf16 training"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-63",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "SourceMixtureDataset rounded down per-source instances — dataset shorter than expected",
+  "description": "",
+  "root_cause": "tokens_requested_per_path = ceil(target_ratio * num_tokens_in_path) and instances_requested_per_path = tokens_requested_per_path // sequence_length. The integer-floor in the second step dropped the per-path remainder, so total instances < training_steps * batch_size. The trainer ran past the end of the dataset into epoch 2 with no warning — visible only as an unexpected loss drop near end of run.",
+  "category": "data_loading",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "SourceMixtureDataset / NumpyFSLDatasetMixture",
+   "training_steps near dataset boundary (mid-training anneal)"
+  ],
+  "issue_url": ""
+ },
+ {
+  "bug_id": "OC-NEW-8",
+  "framework": "olmo-core",
+  "repo": "olmo-core",
+  "title": "PoE z_loss combined into combined_loss is detached, contributing value but no gradient",
+  "description": "",
+  "root_cause": "In TransformerTrainModule.train_batch the PoE branch added output.z_loss to combined_loss, but LMHead emits output.z_loss as a detached metric tensor. The optimizer therefore saw the z_loss value in the printed metric while backprop applied zero z_loss gradient, so logit-norm regularization never actually constrained the weights.",
+  "category": "loss_computation",
+  "parallel_dimension": null,
+  "severity": "high",
+  "trigger_conditions": [
+   "Product-of-experts (PoE) training path active",
+   "z_loss_multiplier is set",
+   "return_logits=True from LMHead"
+  ],
+  "issue_url": ""
+ }
+]

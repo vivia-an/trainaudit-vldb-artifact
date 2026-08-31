@@ -1,0 +1,14 @@
+{
+  "bug_id": "OC-NEW-1",
+  "framework": "olmo-core",
+  "category": "data_loading",
+  "parallel_dimension": "none",
+  "invariant_type": "dtype_consistency",
+  "required_trace_fields": ["tensor_name", "dtype", "step"],
+  "check_stage": "other",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P4",
+  "tier_field": "Tier 0",
+  "rationale": "Local as_tensor() casts non-bool numpy via astype(np.int_), silently truncating float soft_target_probs to 0. Detection reads tensor dtype (Tier 0) at dataloader output: it must be float for soft_target_probs. schema_topo_precond per anti-example 1: precond is 'this tensor is the soft_target_probs/float-input slot', not just 'any tensor'. P4 (runtime hook on dataloader output) over P1 because the field is not in the standard trace schema.",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P1_P4"]
+}

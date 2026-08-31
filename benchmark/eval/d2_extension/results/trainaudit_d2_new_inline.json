@@ -1,0 +1,302 @@
+{
+  "experiment": "trainaudit_inline_d2_new",
+  "results": [
+    {
+      "bug_id": "ID1",
+      "variant": "buggy",
+      "verdict": "DETECTED",
+      "rule": "P9-init-distribution-consistency",
+      "n_violations": 1,
+      "first_violation": {
+        "actual_std": 0.4991966485977173,
+        "declared": 0.02,
+        "band": [
+          0.01,
+          0.03
+        ]
+      },
+      "evidence": [
+        {
+          "actual_std": 0.4991966485977173,
+          "declared": 0.02,
+          "band": [
+            0.01,
+            0.03
+          ]
+        }
+      ]
+    },
+    {
+      "bug_id": "ID1",
+      "variant": "fixed",
+      "verdict": "CLEAN",
+      "rule": "P9-init-distribution-consistency",
+      "n_violations": 0,
+      "first_violation": null,
+      "evidence": []
+    },
+    {
+      "bug_id": "CC1",
+      "variant": "buggy",
+      "verdict": "DETECTED",
+      "rule": "P10-config-implied-coupling",
+      "n_violations": 1,
+      "first_violation": {
+        "config_zero_stage": 2,
+        "has_partitioned_state": false
+      },
+      "evidence": [
+        {
+          "config_zero_stage": 2,
+          "has_partitioned_state": false
+        }
+      ]
+    },
+    {
+      "bug_id": "CC1",
+      "variant": "fixed",
+      "verdict": "CLEAN",
+      "rule": "P10-config-implied-coupling",
+      "n_violations": 0,
+      "first_violation": null,
+      "evidence": []
+    },
+    {
+      "bug_id": "PE1",
+      "variant": "buggy",
+      "verdict": "DETECTED",
+      "rule": "P11-position-encoding-integrity",
+      "n_violations": 2,
+      "first_violation": {
+        "k": 0,
+        "boundary_idx": 16,
+        "pos_at_boundary": 16
+      },
+      "evidence": [
+        {
+          "k": 0,
+          "boundary_idx": 16,
+          "pos_at_boundary": 16
+        },
+        {
+          "k": 1,
+          "boundary_idx": 40,
+          "pos_at_boundary": 40
+        }
+      ]
+    },
+    {
+      "bug_id": "PE1",
+      "variant": "fixed",
+      "verdict": "CLEAN",
+      "rule": "P11-position-encoding-integrity",
+      "n_violations": 0,
+      "first_violation": null,
+      "evidence": []
+    },
+    {
+      "bug_id": "AV1",
+      "variant": "buggy",
+      "verdict": "DETECTED",
+      "rule": "P12-algorithm-variant-equivalence",
+      "n_violations": 20,
+      "first_violation": {
+        "step": 0,
+        "rel_diff": 0.007838704623281956
+      },
+      "evidence": [
+        {
+          "step": 0,
+          "rel_diff": 0.007838704623281956
+        },
+        {
+          "step": 1,
+          "rel_diff": 0.007839132100343704
+        },
+        {
+          "step": 2,
+          "rel_diff": 0.007838794030249119
+        }
+      ]
+    },
+    {
+      "bug_id": "AV1",
+      "variant": "fixed",
+      "verdict": "CLEAN",
+      "rule": "P12-algorithm-variant-equivalence",
+      "n_violations": 0,
+      "first_violation": null,
+      "evidence": []
+    },
+    {
+      "bug_id": "TA1",
+      "variant": "buggy",
+      "verdict": "DETECTED",
+      "rule": "P13-tensor-aliasing-stale-state",
+      "n_violations": 20,
+      "first_violation": {
+        "step": 0,
+        "cached": 4.650704860687256,
+        "actual": 4.569393634796143
+      },
+      "evidence": [
+        {
+          "step": 0,
+          "cached": 4.650704860687256,
+          "actual": 4.569393634796143
+        },
+        {
+          "step": 1,
+          "cached": 4.650704860687256,
+          "actual": 4.476579189300537
+        },
+        {
+          "step": 2,
+          "cached": 4.650704860687256,
+          "actual": 4.378371715545654
+        }
+      ]
+    },
+    {
+      "bug_id": "TA1",
+      "variant": "fixed",
+      "verdict": "CLEAN",
+      "rule": "P13-tensor-aliasing-stale-state",
+      "n_violations": 0,
+      "first_violation": null,
+      "evidence": []
+    },
+    {
+      "bug_id": "SC1",
+      "variant": "buggy",
+      "verdict": "DETECTED",
+      "rule": "P14-sharded-state-completeness",
+      "n_violations": 1,
+      "first_violation": {
+        "missing_ranks": [
+          "mp_rank_01_model_states.pt"
+        ]
+      },
+      "evidence": [
+        {
+          "missing_ranks": [
+            "mp_rank_01_model_states.pt"
+          ]
+        }
+      ]
+    },
+    {
+      "bug_id": "SC1",
+      "variant": "fixed",
+      "verdict": "CLEAN",
+      "rule": "P14-sharded-state-completeness",
+      "n_violations": 0,
+      "first_violation": null,
+      "evidence": []
+    },
+    {
+      "bug_id": "CW1",
+      "variant": "buggy",
+      "verdict": "DETECTED",
+      "rule": "P15-counter-width-adequacy",
+      "n_violations": 1,
+      "first_violation": {
+        "step": 127,
+        "prev": 127,
+        "now": -128
+      },
+      "evidence": [
+        {
+          "step": 127,
+          "prev": 127,
+          "now": -128
+        }
+      ]
+    },
+    {
+      "bug_id": "CW1",
+      "variant": "fixed",
+      "verdict": "CLEAN",
+      "rule": "P15-counter-width-adequacy",
+      "n_violations": 0,
+      "first_violation": null,
+      "evidence": []
+    },
+    {
+      "bug_id": "LN1",
+      "variant": "buggy",
+      "verdict": "DETECTED",
+      "rule": "P16-loss-component-normalization",
+      "n_violations": 20,
+      "first_violation": {
+        "step": 0,
+        "ratio": 16.0
+      },
+      "evidence": [
+        {
+          "step": 0,
+          "ratio": 16.0
+        },
+        {
+          "step": 1,
+          "ratio": 16.0
+        },
+        {
+          "step": 2,
+          "ratio": 16.0
+        }
+      ]
+    },
+    {
+      "bug_id": "LN1",
+      "variant": "fixed",
+      "verdict": "CLEAN",
+      "rule": "P16-loss-component-normalization",
+      "n_violations": 0,
+      "first_violation": null,
+      "evidence": []
+    }
+  ],
+  "summary": {
+    "ID1": {
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P9-init-distribution-consistency"
+    },
+    "CC1": {
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P10-config-implied-coupling"
+    },
+    "PE1": {
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P11-position-encoding-integrity"
+    },
+    "AV1": {
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P12-algorithm-variant-equivalence"
+    },
+    "TA1": {
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P13-tensor-aliasing-stale-state"
+    },
+    "SC1": {
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P14-sharded-state-completeness"
+    },
+    "CW1": {
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P15-counter-width-adequacy"
+    },
+    "LN1": {
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P16-loss-component-normalization"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+arm,taxonomy_size,cov_all,n_all,pct_all,cov_observable,n_observable,pct_observable
+A_catalog,35,207,249,83.1,155,163,95.1
+B1_freeform_frozen,15,119,249,47.8,90,163,55.2
+B2_freeform_remine,per-bug,138,249,55.4,99,163,60.7
+
+catalog_coverage_vs_size
+top_K,coverage_pct
+5,38.2
+10,58.2
+15,67.5
+20,74.3
+25,78.3
+35,83.1

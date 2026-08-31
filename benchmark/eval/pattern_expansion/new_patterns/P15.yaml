@@ -1,0 +1,27 @@
+id: P15
+name: Counter Width & Granularity
+type: B
+rule_r: 'Every counter / index / size argument must use a dtype wide enough for max(value)
+  over a full training run, and its unit (samples vs batches vs micro-batches vs optimizer-steps,
+  elements vs rows, byte vs patch) must match the surrounding formula. Concretely: max(counter)
+  < dtype_max(counter) and unit(counter) == unit_expected_by_consumer.'
+scope_sigma: global_train_flops, sample_idx, doc_idx, IPG element counts, step-counter increments,
+  dataset.__len__, max_steps, kernel elem-count args (numel vs size(0)), peak-flops constants,
+  sliding-window widths, microbatch divisors.
+mode_m: B
+precond_rho: Checked at counter-allocation/init and at increment/use sites; requires the expected
+  horizon (total_steps, max_doc_idx) and the consumer's expected unit, both available from
+  config.
+example_bugs:
+- D-006
+- D-007
+- D-NEW-46
+- D-NEW-49
+- D-NEW-75
+- M-027
+- O-025
+- O-040
+covers_count_estimate: 15
+related_existing_pattern: 'Refines P8 (counter consistency): P8 says "init/reset paths agree";
+  P15 says "width and unit are correct in the first place". P8 is a sub-case (consistency
+  given correct dtype).'

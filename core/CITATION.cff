@@ -1,0 +1,53 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "TrainAudit Core: Verified Constraint Mining for Silent Training Errors"
+type: software
+authors:
+  - given-names: Qingsong
+    family-names: Cai
+    affiliation: Sichuan University
+  - given-names: Shikai
+    family-names: Li
+    affiliation: West China Hospital, Sichuan University
+  - given-names: Zhengmao
+    family-names: Ye
+    affiliation: Sichuan University
+  - given-names: Hao
+    family-names: Tang
+    affiliation: Sichuan University
+  - given-names: Mingjie
+    family-names: Tang
+    affiliation: Sichuan University
+  - given-names: Ran
+    family-names: Tao
+    affiliation: iQuest
+  - given-names: Bryan
+    family-names: Dai
+    affiliation: iQuest
+license: MIT
+keywords:
+  - silent errors
+  - distributed training
+  - invariant mining
+  - data quality
+preferred-citation:
+  type: article
+  title: "TrainAudit: Silent Error Detection for LLM Training via Verified Guarded Relational Constraints"
+  authors:
+    - given-names: Qingsong
+      family-names: Cai
+    - given-names: Shikai
+      family-names: Li
+    - given-names: Zhengmao
+      family-names: Ye
+    - given-names: Hao
+      family-names: Tang
+    - given-names: Mingjie
+      family-names: Tang
+    - given-names: Ran
+      family-names: Tao
+    - given-names: Bryan
+      family-names: Dai
+  year: 2026
+  journal: "Proceedings of the VLDB Endowment"
+  notes: "Under review for PVLDB Volume 20. Add volume, pages, and DOI once assigned."

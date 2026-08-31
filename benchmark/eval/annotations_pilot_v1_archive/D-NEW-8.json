@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-8",
+  "framework": "deepspeed",
+  "category": "lr_schedule",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["lr", "optimizer_configured_lr", "warmup_max_lr", "step"],
+  "check_stage": "before_optimizer",
+  "pi_schema_applicable": true,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P1",
+  "tier_field": "Tier 3",
+  "rationale": "WarmupLR ignores optimizer.param_groups lr and uses hardcoded warmup_max_lr=0.001. After warmup, observed lr should equal optimizer-configured lr; reading trace lr value alone suffices, so pi_schema=true. Precond: scheduler is WarmupLR and step>=warmup_steps. Single-rank reproducible so parallel_dim=none. P1 (value equality on a trace field) not P5 because no grad-norm bound."
+}

@@ -1,0 +1,25 @@
+Warning: Permanently added '[183.242.150.6]:32054' (ED25519) to the list of known hosts.
+===== TrainAudit on D-029 BUGGY (3e06a154b4d6a2f93c2c5504f52a932184def112) =====
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+[2026-05-17 23:30:21,274] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-17 23:30:21,454] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:47: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @autocast_custom_fwd
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:66: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  @autocast_custom_bwd
+[2026-05-17 23:30:24,796] [INFO] [comm.py:637:init_distributed] cdb=None
+[D-029] BUG DETECTED: moe_cpu_offload_grad_norm_device_invariant: _average_expert_grad_norms passed device='cpu' tensor to dist.all_reduce (should be on accelerator under CPU offload + MoE)
+
+===== TrainAudit on D-029 FIXED (e6e8c1378de035df59034d09373b44af3319b6d7) =====
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+[2026-05-17 23:30:30,490] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-17 23:30:30,672] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:47: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @autocast_custom_fwd
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/zero/linear.py:66: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  @autocast_custom_bwd
+[2026-05-17 23:30:34,412] [INFO] [comm.py:637:init_distributed] cdb=None
+[D-029] CLEAN: _average_expert_grad_norms moved scaled_norm_tensor to accelerator before all_reduce
+

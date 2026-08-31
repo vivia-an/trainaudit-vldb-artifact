@@ -1,0 +1,41 @@
+% Generated 2026-05-17 from real_sdc_manifest.json (N_real = 17 + N_boundary = 1).
+% Each row pins one upstream silent-error bug to its source — issue/PR URL, buggy
+% commit SHA, fixed commit SHA — so reviewers can audit every detection result
+% in Table~\ref{tab:detection-results} back to its repo.
+\begin{table*}[t]
+\centering
+\caption{Provenance of every case in the Real-SDC main set. Each case is grounded
+in an upstream issue, PR, or commit-pair. Boundary case LC1 (O-003) is included
+for completeness; all three methods miss it by design.}
+\label{tab:provenance}
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.05}
+\begin{tabular}{@{}l l l l l l@{}}
+\toprule
+\textbf{Case} & \textbf{Framework} & \textbf{Upstream issue / PR / commit} & \textbf{Buggy commit} & \textbf{Fixed commit} & \textbf{Driver} \\
+\midrule
+\multicolumn{6}{l}{\textit{Real silent-error cases (N\_real = 17)}} \\
+B1       & Megatron-LM & \href{https://github.com/NVIDIA/Megatron-LM/issues/599}{issue \#599}          & \texttt{3c637fc0d\textasciitilde 1}   & \texttt{3c637fc0d}     & \texttt{bugs/B1/reproduce.sh} \\
+B3       & DeepSpeed   & \href{https://github.com/microsoft/DeepSpeed/issues/2071}{issue \#2071}      & \texttt{d56268f3\textasciitilde 1}    & \texttt{d56268f3}      & \texttt{bugs/B3/reproduce.sh} \\
+B8       & DeepSpeed   & \href{https://github.com/deepspeedai/DeepSpeed/pull/7551}{PR \#7551}         & \texttt{8cbbbb53\textasciitilde 1}    & \texttt{8cbbbb53}      & \texttt{bugs/B8/reproduce.sh} \\
+B11      & DeepSpeed   & \href{https://github.com/deepspeedai/DeepSpeed/pull/5150}{PR \#5150}         & \texttt{005afe12\textasciitilde 1}    & \texttt{005afe12}      & \texttt{bugs/B11/reproduce.sh} \\
+B12      & OLMo-core   & \href{https://github.com/allenai/OLMo-core/pull/27}{PR \#27}                 & \texttt{6e330ba2\textasciitilde 1}    & \texttt{6e330ba2}      & \texttt{bugs/B12/reproduce.sh} \\
+M-010    & Megatron-LM & \href{https://github.com/NVIDIA/Megatron-LM/issues/784}{issue \#784}         & \texttt{892c4c85}                     & \texttt{e6d56d68}      & \texttt{bugs/M-010/reproduce.sh} \\
+M-020    & Megatron-LM & \href{https://github.com/NVIDIA/Megatron-LM/issues/468}{issue \#468}         & \texttt{64d816a3}                     & \texttt{99f999a4}      & \texttt{bugs/M-020/reproduce.sh} \\
+M-NEW-33 & Megatron-LM & \href{https://github.com/NVIDIA/Megatron-LM/commit/1505db4cc}{commit \texttt{1505db4cc}} & \texttt{1505db4cc\textasciitilde 1}   & \texttt{1505db4cc}     & \texttt{bugs/M-NEW-33/trainaudit\_driver.py} \\
+O-005    & OLMo        & \href{https://github.com/allenai/OLMo/commit/204ad53c}{commit \texttt{204ad53c}}  & \texttt{0bc7f6c7}                     & \texttt{204ad53c}      & \texttt{bugs/O-005/trainaudit\_run.sh} \\
+O-040    & OLMo-core   & \href{https://github.com/allenai/OLMo-core/pull/614}{PR \#614}               & \texttt{f49e7559}                     & \texttt{db2b6eff}      & \texttt{bugs/O-040/trainaudit\_driver.py} \\
+O-NEW-3  & OLMo        & \href{https://github.com/allenai/OLMo/commit/a57f3803}{commit \texttt{a57f3803}}  & \texttt{a57f3803\textasciitilde 1}    & \texttt{a57f3803}      & \texttt{bugs/O-NEW-3/trainaudit\_driver.py} \\
+O-NEW-5  & OLMo        & \href{https://github.com/allenai/OLMo/commit/ce5f30d5}{commit \texttt{ce5f30d5}}  & \texttt{ce5f30d5\textasciitilde 1}    & \texttt{ce5f30d5}      & \texttt{bugs/O-NEW-5/trainaudit\_driver.py} \\
+O-NEW-9  & OLMo        & \href{https://github.com/allenai/OLMo/pull/795}{PR \#795}                    & \texttt{167a7ac8\textasciitilde 1}    & \texttt{167a7ac8}      & \texttt{bugs/O-NEW-9/trainaudit\_run.sh} \\
+OC-NEW-2 & OLMo-core   & \href{https://github.com/allenai/OLMo-core/commit/2b6cf996}{commit \texttt{2b6cf996}} & \texttt{2b6cf996\textasciitilde 1}    & \texttt{2b6cf996}      & \texttt{bugs/OC-NEW-2/trainaudit\_run.sh} \\
+OC-NEW-22& OLMo-core   & \href{https://github.com/allenai/OLMo-core/commit/df72f4ee}{commit \texttt{df72f4ee}} & \texttt{df72f4ee\textasciitilde 1}    & \texttt{df72f4ee}      & \texttt{bugs/OC-NEW-22/trainaudit\_driver.py} \\
+D-029    & DeepSpeed   & \href{https://github.com/microsoft/DeepSpeed/pull/5220}{PR \#5220}           & \texttt{3e06a154}                     & \texttt{e6e8c137}      & \texttt{bugs/D-029/trainaudit\_driver.py} \\
+D-NEW-9  & DeepSpeed   & \href{https://github.com/microsoft/DeepSpeed/pull/5328}{PR \#5328}           & \texttt{40009eb1\textasciitilde 1}    & \texttt{40009eb1}      & \texttt{bugs/D-NEW-9/trainaudit\_driver.py} \\
+\midrule
+\multicolumn{6}{l}{\textit{Honestly-disclosed boundary case (N\_boundary = 1)}} \\
+LC1 (O-003) & OLMo & \href{https://github.com/allenai/OLMo/commit/d7994c86}{commit \texttt{d7994c86}} & \texttt{a5539f42} & \texttt{d7994c86} & \texttt{bugs/O-003/trainaudit\_run.sh} \\
+\bottomrule
+\end{tabular}
+\end{table*}

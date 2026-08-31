@@ -1,0 +1,16 @@
+{
+  "commit_a": "005afe12",
+  "commit_b": "005afe12~1",
+  "rc_a": 0,
+  "rc_b": 0,
+  "rules_a": {},
+  "rules_b": {
+    "T0-clip-grad-bounded": 2
+  },
+  "new_at_b": {
+    "T0-clip-grad-bounded": 2
+  },
+  "fixed_at_b": {},
+  "persistent": {},
+  "regression": true
+}

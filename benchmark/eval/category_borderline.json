@@ -1,0 +1,790 @@
+{
+  "count": 157,
+  "ids": [
+    {
+      "bug_id": "B1",
+      "old_category": "moe_router_init",
+      "title": "SwitchMLP router torch.nn.Linear init not wrapped in data-parallel RNG tracker"
+    },
+    {
+      "bug_id": "B10",
+      "old_category": "gradient_accumulation",
+      "title": "ZeRO-2 + CPU offload micro_step_id off-by-one and wrong copy/accumulate gating"
+    },
+    {
+      "bug_id": "B11",
+      "old_category": "gradient_clipping",
+      "title": "clip_grad_norm_ uses torch.max instead of torch.min for clip_coef"
+    },
+    {
+      "bug_id": "B13",
+      "old_category": "residual_connection",
+      "title": "OLMoSequentialBlock attn_norm overwrites residual stream"
+    },
+    {
+      "bug_id": "B15",
+      "old_category": "loss_scaling",
+      "title": "Trainer.train_micro_batch divides z_loss by num_micro_batches instead of batch_size_in_tokens"
+    },
+    {
+      "bug_id": "B2",
+      "old_category": "tensor_parallel_grad",
+      "title": "LinearWithFrozenWeight backward forgets to all-reduce grad_input across TP"
+    },
+    {
+      "bug_id": "B3",
+      "old_category": "communication_dtype",
+      "title": "DeepSpeedEngine.communication_data_type defaults to fp32 when only bfloat16 is enabled"
+    },
+    {
+      "bug_id": "B4",
+      "old_category": "parallelism_initialization",
+      "title": "get_data_parallel_src_rank uses global_rank % num_dp_groups instead of looking up first global rank in the DP group"
+    },
+    {
+      "bug_id": "B5",
+      "old_category": "gradient_scaling",
+      "title": "DistributedDataParallel.finish_grad_sync forgets to scale expert_grads by 1/dp_world_size"
+    },
+    {
+      "bug_id": "B6",
+      "old_category": "pipeline_parallel_sync",
+      "title": "forward_backward_pipelining_with_interleaving uses num_microbatches instead of total_num_microbatches in the param-sync gate"
+    },
+    {
+      "bug_id": "B7",
+      "old_category": "state_mutation",
+      "title": "FlashSelfAttention.forward sets self.dropout_p=0 in eval branch and never restores"
+    },
+    {
+      "bug_id": "B8",
+      "old_category": "moe_parallel_grouping",
+      "title": "InferenceEngine creates EP groups with num_experts instead of ep_size"
+    },
+    {
+      "bug_id": "B9",
+      "old_category": "sequence_parallel",
+      "title": "single_all_to_all routes uneven-head path on second all2all when divisibility fails"
+    },
+    {
+      "bug_id": "D-NEW-12",
+      "old_category": "config_parsing",
+      "title": "seq_parallel_communication_data_type config key typo causes silent ignore"
+    },
+    {
+      "bug_id": "D-NEW-13",
+      "old_category": "optimizer",
+      "title": "ZeRO-1/2 CPU-offload gradient norm underestimated with manual GA"
+    },
+    {
+      "bug_id": "D-NEW-14",
+      "old_category": "lr_scheduler",
+      "title": "WarmupCosineLR multi-group initialization returns wrong-length LR list"
+    },
+    {
+      "bug_id": "D-NEW-15",
+      "old_category": "optimizer",
+      "title": "BF16 + ZeRO-0 gradients never zeroed between optimizer steps"
+    },
+    {
+      "bug_id": "D-NEW-16",
+      "old_category": "zero_optimizer",
+      "title": "ZeRO-3 reduce_and_partition_stream syncs against wrong CUDA stream"
+    },
+    {
+      "bug_id": "D-NEW-17",
+      "old_category": "loss_scaling",
+      "title": "Loss double-scaling in backward — scale_if_loss applied to gas_scaled_loss"
+    },
+    {
+      "bug_id": "D-NEW-18",
+      "old_category": "gradient_corruption",
+      "title": "ZeRO-1/2 CPU-offload gradient loss with multiple backward() per step"
+    },
+    {
+      "bug_id": "D-NEW-19",
+      "old_category": "gradient_reduction",
+      "title": "extra_large_param uses param.dtype instead of comm_dtype — gradient silently dropped"
+    },
+    {
+      "bug_id": "D-NEW-20",
+      "old_category": "<missing>",
+      "title": "BF16_Optimizer incorrectly selected for bf16+fp32_grad_accum without ZeRO"
+    },
+    {
+      "bug_id": "D-NEW-21",
+      "old_category": "<missing>",
+      "title": "bf16 without ZeRO incorrectly treated as having ZeRO optimizer state in checkpoint"
+    },
+    {
+      "bug_id": "D-NEW-38",
+      "old_category": "data_processing",
+      "title": "Sparse gradients silently not updating — SparseTensor wraps .data instead of param.grad"
+    },
+    {
+      "bug_id": "D-NEW-43",
+      "old_category": "zero",
+      "title": "ZeRO3 builds fp16 partitions from full param_groups including frozen params, OOM-equivalent silent waste plus unused optimizer state"
+    },
+    {
+      "bug_id": "D-NEW-46",
+      "old_category": "optimizer",
+      "title": "ZeRO optimizer.step() called once during initialization, increments Adam step counter before any real update"
+    },
+    {
+      "bug_id": "D-NEW-49",
+      "old_category": "data_processing",
+      "title": "DeepSpeedDataLoader.len reports sampler length, ignores batch_size and drop_last"
+    },
+    {
+      "bug_id": "D-NEW-54",
+      "old_category": "checkpointing",
+      "title": "MoE checkpoint records dp_world_size instead of seq_dp_world_size — wrong replication factor on resume with sequence parallel"
+    },
+    {
+      "bug_id": "D-NEW-57",
+      "old_category": "checkpointing",
+      "title": "ZeRO++ ds_secondary_tensor stale after model load / checkpoint resume — dirty allgather poisons next forward"
+    },
+    {
+      "bug_id": "D-NEW-58",
+      "old_category": "quantization",
+      "title": "Asymmetric int8 dequantize hard-codes output dtype to half — silently downcasts when caller asks for float"
+    },
+    {
+      "bug_id": "D-NEW-60",
+      "old_category": "checkpointing",
+      "title": "Universal checkpoint stage3 multi-machine load uses local_rank instead of global DP rank for partition slicing"
+    },
+    {
+      "bug_id": "D-NEW-61",
+      "old_category": "loss_scaling",
+      "title": "ZeRO-1 fp16 overflow flag broadcast only on partition_gradients path — Z1 ranks diverge on overflow"
+    },
+    {
+      "bug_id": "D-NEW-62",
+      "old_category": "mixed_precision",
+      "title": "BF16_Optimizer skips fp32 cast of gradient when grad_acc_dtype != fp32 — Adam runs on bf16 grads"
+    },
+    {
+      "bug_id": "D-NEW-63",
+      "old_category": "optimizer",
+      "title": "CPUAdam IncrementStep non-idempotent across same-step subgroup updates — bias-correction drifts between subgroups"
+    },
+    {
+      "bug_id": "D-NEW-64",
+      "old_category": "gradient_clipping",
+      "title": "FP16 fused optimizer grad-norm reduces only TP-rank-0 gradients — TP grad_norm undercounted by sqrt(tp_size)"
+    },
+    {
+      "bug_id": "D-NEW-65",
+      "old_category": "pipeline",
+      "title": "PipelineEngine non-last-stage backward double-updates hp_grads when bfloat16_immediate_grad_update is enabled"
+    },
+    {
+      "bug_id": "D-NEW-66",
+      "old_category": "gradient_clipping",
+      "title": "ZeRO-3 CPU offload set_local_grad does not refresh norm_for_param_grads — gradient clipping uses pre-clipping norm"
+    },
+    {
+      "bug_id": "D-NEW-67",
+      "old_category": "loss_scaling",
+      "title": "ZeRO-0 + torch.autocast(fp16) trains without a GradScaler — fp16 gradients underflow to zero"
+    },
+    {
+      "bug_id": "D-NEW-72",
+      "old_category": "sequence_parallel",
+      "title": "Sequence parallel single_all_to_all reshape collapses batch and seq dims — QKV permuted into wrong tokens"
+    },
+    {
+      "bug_id": "D-NEW-74",
+      "old_category": "checkpointing",
+      "title": "ZeRO-3 NVMe optimizer offload writes all ranks' tensors to one shared dir — last writer wins, load gets wrong rank's state"
+    },
+    {
+      "bug_id": "D-NEW-75",
+      "old_category": "optimizer",
+      "title": "CPU Adam/Adagrad uses params.size(0) instead of numel() — only the first row of multi-dim params gets updated"
+    },
+    {
+      "bug_id": "D-NEW-79",
+      "old_category": "lr_scheduler",
+      "title": "WarmupLR / LRRangeTest / OneCycle do not initialize optimizer group lr at construction — first step uses original lr"
+    },
+    {
+      "bug_id": "D-NEW-80",
+      "old_category": "checkpointing",
+      "title": "ZeRO-1/2 records padding only on last rank — middle ranks at large DP report padding=0 and contaminate optimizer state"
+    },
+    {
+      "bug_id": "D-NEW-9",
+      "old_category": "optimizer",
+      "title": "BF16 optimizer lp_grads not cleared after HP accumulation"
+    },
+    {
+      "bug_id": "M-020",
+      "old_category": "configuration_validation",
+      "title": "Pipeline parallel silently trains with fewer layers than configured"
+    },
+    {
+      "bug_id": "M-NEW-10",
+      "old_category": "attention",
+      "title": "MoE/DSA gate not sliced when num_query_groups < tp_size"
+    },
+    {
+      "bug_id": "M-NEW-11",
+      "old_category": "optimizer",
+      "title": "FusedAdam.use_decoupled_grad not set for Megatron-FSDP, gradients silently ignored"
+    },
+    {
+      "bug_id": "M-NEW-14",
+      "old_category": "optimizer",
+      "title": "Layerwise distributed optimizer never marks param_gather as dispatched when expt_dp_size=1"
+    },
+    {
+      "bug_id": "M-NEW-15",
+      "old_category": "optimizer",
+      "title": "Megatron-FSDP precision-aware optimizer keeps duplicate FusedAdam master_weights"
+    },
+    {
+      "bug_id": "M-NEW-18",
+      "old_category": "optimizer",
+      "title": "use_decoupled_grad set wrong for bf16 + use_precision_aware_optimizer"
+    },
+    {
+      "bug_id": "M-NEW-21",
+      "old_category": "metric_tracking",
+      "title": "MoE aux loss tracker accumulates twice when activation checkpointing reruns router"
+    },
+    {
+      "bug_id": "M-NEW-3",
+      "old_category": "precision",
+      "title": "fp32 residual connection silently downcast to bf16"
+    },
+    {
+      "bug_id": "M-NEW-36",
+      "old_category": "metric_tracking",
+      "title": "MTP per-layer loss overwritten instead of accumulated when log_interval > 1"
+    },
+    {
+      "bug_id": "M-NEW-39",
+      "old_category": "attention",
+      "title": "MLA softmax_scale built from wrong mscale config field"
+    },
+    {
+      "bug_id": "M-NEW-4",
+      "old_category": "gradient_corruption",
+      "title": "cross_entropy backward inplace corruption on fp32 logits"
+    },
+    {
+      "bug_id": "M-NEW-40",
+      "old_category": "attention",
+      "title": "ViT local layer spec uses AttnMaskType.causal instead of no_mask, silently turning bidirectional self-attention into causal"
+    },
+    {
+      "bug_id": "M-NEW-41",
+      "old_category": "data_processing",
+      "title": "GPTDataset returns aliased cached_loss_mask, downstream in-place padding mutates the shared cache and corrupts later samples"
+    },
+    {
+      "bug_id": "M-NEW-43",
+      "old_category": "context_parallel",
+      "title": "DistributedDataParallel target_gradient_scaling_factor uses get_data_parallel_world_size without context_parallel, so gradients are over-scaled by cp_size when CP is enabled"
+    },
+    {
+      "bug_id": "M-NEW-45",
+      "old_category": "te_integration",
+      "title": "TEGroupedMLP fused-ops backward_dw skips _trigger_wgrad_accumulation_and_reduce_hooks on the original linear modules, so DDP never zeros param.grad and AccumulateGrad double-counts"
+    },
+    {
+      "bug_id": "M-NEW-46",
+      "old_category": "pipeline",
+      "title": "Interleaved 1F1B forgets to wait on async P2P send before deallocating the source buffer, sending corrupted activations to the next pipeline stage"
+    },
+    {
+      "bug_id": "M-NEW-47",
+      "old_category": "te_integration",
+      "title": "prepare_input_tensors_for_wgrad_compute does not enforce all_gathered_input.contiguous(), so wgrad GEMM reads a non-contiguous strided tensor as if it were contiguous"
+    },
+    {
+      "bug_id": "M-NEW-5",
+      "old_category": "loss_scaling",
+      "title": "MoE aux loss not scaled by num_tokens in per_token_loss mode"
+    },
+    {
+      "bug_id": "M-NEW-51",
+      "old_category": "cuda_graph",
+      "title": "tensor_parallel.checkpoint runs CheckpointFunction during CUDA graph warmup, causing graph capture to record stale recomputed activations"
+    },
+    {
+      "bug_id": "M-NEW-52",
+      "old_category": "cuda_graph",
+      "title": "_CudagraphReplayNode unconditionally copies user_input into cudagraph_input even when the data pointers already match, overwriting in-place results from preceding ops"
+    },
+    {
+      "bug_id": "M-NEW-53",
+      "old_category": "cuda_graph",
+      "title": "DDP cast cudagraph manager runs warmup steps and shares mempool across virtual pipeline stages, corrupting captured param-cast outputs across VPP"
+    },
+    {
+      "bug_id": "M-NEW-54",
+      "old_category": "optimizer",
+      "title": "DistributedOptimizer FP32 shard_model_param uses non-detached view, so the parameter shard participates in autograd and accumulates spurious grad_fn"
+    },
+    {
+      "bug_id": "M-NEW-55",
+      "old_category": "optimizer",
+      "title": "_ParamAndGradBucket builds local param_to_index from naive concatenation, ignoring per-param padding so optimizer reads from misaligned offsets when distributed optimizer pads to data_parallel_world_size"
+    },
+    {
+      "bug_id": "M-NEW-57",
+      "old_category": "cuda_graph",
+      "title": "_CudagraphReplayNode treats fp4_enabled as fp8 only, skipping the per-module FP-recipe restoration on FP4 paths so saved scaling factors drift each replay"
+    },
+    {
+      "bug_id": "M-NEW-58",
+      "old_category": "cuda_graph",
+      "title": "_CudaGraphRunner enables FP8 capture for keep-mamba-stack-attention-linear-in-bf16 layers, casting frozen-bf16 attention linears into FP8 inside the captured graph"
+    },
+    {
+      "bug_id": "M-NEW-59",
+      "old_category": "te_integration",
+      "title": "TransformerLayer with moe_layer_recompute uses non-FP4-aware te_checkpoint guard, so FP4 recompute uses tensor_parallel.checkpoint and loses FP4 amax tracking"
+    },
+    {
+      "bug_id": "M-NEW-6",
+      "old_category": "routing",
+      "title": "group_limited_topk uses num_groups instead of topk in inner topk"
+    },
+    {
+      "bug_id": "M-NEW-60",
+      "old_category": "te_integration",
+      "title": "Attention.set_save_original_input gate is FP8-only and missed for NVFP4, so attention activations are cached as the FP4-quantized tensor instead of the original input"
+    },
+    {
+      "bug_id": "M-NEW-61",
+      "old_category": "rope",
+      "title": "MultimodalRotaryEmbedding slices rotary embedding along the wrong dimension and omits cp_group when CP is enabled, so each CP rank sees the wrong rotary position embedding"
+    },
+    {
+      "bug_id": "M-NEW-62",
+      "old_category": "pipeline",
+      "title": "MambaStack assigns make_viewless_tensor result to local 'output' but returns 'hidden_states', sending a non-viewless aliased tensor between hybrid VPP stages"
+    },
+    {
+      "bug_id": "M-NEW-67",
+      "old_category": "optimizer",
+      "title": "MegatronOptimizer.get_grads_for_norm checks fsdp_param BEFORE precision-aware-optimizer branch, so M-FSDP + precision-aware optimizer reads param.grad._local_tensor instead of decoupled_grad and computes the wrong norm"
+    },
+    {
+      "bug_id": "M-NEW-68",
+      "old_category": "context_parallel",
+      "title": "Hybrid MoE pad_granularity is set to 32 (MXFP8) instead of 128 (HybridEP), so per-CP-rank sequence shards are misaligned for HybridEP dispatcher"
+    },
+    {
+      "bug_id": "M-NEW-69",
+      "old_category": "optimizer",
+      "title": "MegatronOptimizer uses use_precision_aware_optimizer instead of use_precision_aware_optimizer_no_fp8_or_ds_fp8 when selecting decoupled_grad, so FP8 + precision-aware paths read param.decoupled_grad which is None and report grad_norm=0"
+    },
+    {
+      "bug_id": "M-NEW-7",
+      "old_category": "metric_tracking",
+      "title": "z-loss metric tracking missing avg_group — not averaged across ranks"
+    },
+    {
+      "bug_id": "M-NEW-8",
+      "old_category": "attention",
+      "title": "config.softmax_scale ignored in attention forward paths"
+    },
+    {
+      "bug_id": "M-NEW-9",
+      "old_category": "<missing>",
+      "title": "aux_loss metric incorrectly scaled by TP world_size, missing reduce_group"
+    },
+    {
+      "bug_id": "O-NEW-1",
+      "old_category": "normalization",
+      "title": "RMSNorm uses L2 norm instead of root-mean-square — wrong normalization"
+    },
+    {
+      "bug_id": "O-NEW-10",
+      "old_category": "optimizer",
+      "title": "grad_norm_exp_avg EMA self-referential update — adaptive clipping broken"
+    },
+    {
+      "bug_id": "O-NEW-13",
+      "old_category": "metric_tracking",
+      "title": "FLOPs counter multiplies per-sequence flops by global batch size every step instead of accumulating per token"
+    },
+    {
+      "bug_id": "O-NEW-2",
+      "old_category": "attention",
+      "title": "Attention causal mask inverted — future tokens attend to past"
+    },
+    {
+      "bug_id": "O-NEW-22",
+      "old_category": "attention",
+      "title": "muP attention scale uses 1/d instead of sqrt(base_d)/d, mismatching the SP scale at the base width"
+    },
+    {
+      "bug_id": "O-NEW-24",
+      "old_category": "normalization",
+      "title": "norm_after path applies attn_norm to (att_proj output) instead of to the attention output, leaving residual unnormed"
+    },
+    {
+      "bug_id": "O-NEW-27",
+      "old_category": "data_processing",
+      "title": "Multi-epoch training does not reset dataset.start_index, so the next epoch resumes from the previous epoch's offset"
+    },
+    {
+      "bug_id": "O-NEW-28",
+      "old_category": "data_processing",
+      "title": "Restart in later epochs uses seed+epoch as PRNG seed, mixing epoch into seed irreversibly and corrupting reshuffle"
+    },
+    {
+      "bug_id": "O-NEW-30",
+      "old_category": "metric_tracking",
+      "title": "MoE load-balance and z-loss aux losses logged without all-reduce, so each rank reports its local value"
+    },
+    {
+      "bug_id": "O-NEW-35",
+      "old_category": "optimizer",
+      "title": "param-group classifier uses '.norm.' regex requiring trailing dot, treating q_norm/k_norm/ff_norm leaf weights as decay params"
+    },
+    {
+      "bug_id": "O-NEW-38",
+      "old_category": "data_processing",
+      "title": "DataConfig defaults memmap_dtype to uint16 silently, so vocab_size > 2^16 truncates token ids on load"
+    },
+    {
+      "bug_id": "O-NEW-4",
+      "old_category": "positional_encoding",
+      "title": "RoPE sin/cos missing type_as — dtype mismatch in mixed precision"
+    },
+    {
+      "bug_id": "O-NEW-49",
+      "old_category": "scheduler/learning_rate",
+      "title": "Final linear-decay scheduler uses wrong start/end factors (decays from 1.0 to alpha_f instead of alpha_f to alpha_f^2)"
+    },
+    {
+      "bug_id": "O-NEW-5",
+      "old_category": "initialization",
+      "title": "Embedding init std missing sqrt(d_model) factor — embeddings 16x too small"
+    },
+    {
+      "bug_id": "O-NEW-51",
+      "old_category": "data_loader/sharding",
+      "title": "IterableDataset leftover indices distributed wrongly across workers"
+    },
+    {
+      "bug_id": "O-NEW-53",
+      "old_category": "data_loader/epoch_transition",
+      "title": "Dataset start_index not reset when starting a new epoch"
+    },
+    {
+      "bug_id": "O-NEW-55",
+      "old_category": "model_init/weights",
+      "title": "Block readout init unconditionally re-initializes ff_proj, overwriting muP zero-init"
+    },
+    {
+      "bug_id": "O-NEW-56",
+      "old_category": "model_init/layer_norm_config",
+      "title": "q_norm forced to elementwise_affine=True regardless of attention_layer_norm_with_affine"
+    },
+    {
+      "bug_id": "O-NEW-57",
+      "old_category": "model_init/embedding",
+      "title": "Token embedding sized by vocab_size instead of embedding_size, mismatching ff_out width"
+    },
+    {
+      "bug_id": "O-NEW-6",
+      "old_category": "attention",
+      "title": "Flash attention input layout wrong — head and sequence dims swapped"
+    },
+    {
+      "bug_id": "O-NEW-60",
+      "old_category": "model_init/fsdp",
+      "title": "Missing reset_parameters() after FSDP wrap on torch>=2.1 leaves model with default-initialized weights"
+    },
+    {
+      "bug_id": "O-NEW-61",
+      "old_category": "model_init/fsdp",
+      "title": "ff_out nn.Linear constructed without device=init_device, breaking meta-init flow"
+    },
+    {
+      "bug_id": "O-NEW-62",
+      "old_category": "model_init/mup",
+      "title": "load_model in mup coord-check skips reset_parameters when infshapes is None"
+    },
+    {
+      "bug_id": "O-NEW-63",
+      "old_category": "scheduler/learning_rate",
+      "title": "DeepSpeed scheduler set to WarmupLR instead of WarmupDecayLR (no decay phase)"
+    },
+    {
+      "bug_id": "O-NEW-64",
+      "old_category": "scheduler/learning_rate",
+      "title": "DeepSpeed warmup_min_lr=0 instead of base_lr*0.1, also missing warmup_type=linear"
+    },
+    {
+      "bug_id": "O-NEW-65",
+      "old_category": "checkpoint/retention",
+      "title": "Newest checkpoint deleted by retention policy because it is appended after pruning"
+    },
+    {
+      "bug_id": "O-NEW-66",
+      "old_category": "data_loader/scheduling",
+      "title": "Train DataLoader max_steps not multiplied by device_train_batch_size"
+    },
+    {
+      "bug_id": "O-NEW-67",
+      "old_category": "config/model_size",
+      "title": "Ladder 150M model uses max_sequence_length=1024 instead of 2048"
+    },
+    {
+      "bug_id": "O-NEW-69",
+      "old_category": "tokenizer/eos_token",
+      "title": "Ladder script uses eos_token_id=0 instead of dolma tokenizer's 50279"
+    },
+    {
+      "bug_id": "O-NEW-7",
+      "old_category": "initialization",
+      "title": "Wrong layer initialized — ff_out instead of ff_proj (variable name typo)"
+    },
+    {
+      "bug_id": "O-NEW-70",
+      "old_category": "loss_computation/moe",
+      "title": "MoE load-balancing loss not divided by num_micro_batches in gradient accumulation loop"
+    },
+    {
+      "bug_id": "O-NEW-8",
+      "old_category": "residual_connection",
+      "title": "Attention norm overwrites residual input — destroys identity path"
+    },
+    {
+      "bug_id": "O-NEW-9",
+      "old_category": "data_processing",
+      "title": "Token IDs silently truncated to 16-bit by modulo 2^16"
+    },
+    {
+      "bug_id": "OC-NEW-12",
+      "old_category": "attention",
+      "title": "Per-document RoPE positions not propagated when cu_doc_lens is provided in packed mode"
+    },
+    {
+      "bug_id": "OC-NEW-13",
+      "old_category": "attention",
+      "title": "RotaryEmbedding cu_doc_lens path miscomputes positions for B>1 — second batch element reuses batch-0 doc layout"
+    },
+    {
+      "bug_id": "OC-NEW-15",
+      "old_category": "metric_tracking",
+      "title": "MoE load-balancing aux loss accumulated to metrics twice when activation checkpointing recomputes the block"
+    },
+    {
+      "bug_id": "OC-NEW-16",
+      "old_category": "data_processing",
+      "title": "Idealized-overlap ladder reads dolma2 (uint32) tokens with default uint16 dtype — silently produces garbage token ids"
+    },
+    {
+      "bug_id": "OC-NEW-17",
+      "old_category": "data_processing",
+      "title": "OLMo midtraining mix key references the wrong file — '0625' name maps to '0725' path"
+    },
+    {
+      "bug_id": "OC-NEW-18",
+      "old_category": "normalization",
+      "title": "QwenRMSNorm absent from olmo-core — RMSNorm casts back to og_dtype after weight multiply, diverging from HF Qwen3"
+    },
+    {
+      "bug_id": "OC-NEW-2",
+      "old_category": "optimizer",
+      "title": "Adam step counter not incremented — bias correction permanently wrong"
+    },
+    {
+      "bug_id": "OC-NEW-22",
+      "old_category": "attention",
+      "title": "RoPE positions use global token index in packed mode — second document gets [k_doc1_len, ...] instead of [0, ...]"
+    },
+    {
+      "bug_id": "OC-NEW-23",
+      "old_category": "data_processing",
+      "title": "PerFileChunkedInstanceSourceConfig defaults token_dtype to uint16 — silent token-id corruption for vocab > 65535"
+    },
+    {
+      "bug_id": "OC-NEW-25",
+      "old_category": "data_processing",
+      "title": "SamplingInstanceSource cache write race — concurrent ladder runs overwrite each other's index files"
+    },
+    {
+      "bug_id": "OC-NEW-26",
+      "old_category": "data_processing",
+      "title": "memmap_to_write tmp filename uses seeded random — concurrent writers collide on identical path under the same RNG seed"
+    },
+    {
+      "bug_id": "OC-NEW-33",
+      "old_category": "metric_tracking",
+      "title": "NumpyDataLoaderBase double-counts tokens_processed — counter advances both inside and outside the iterator"
+    },
+    {
+      "bug_id": "OC-NEW-34",
+      "old_category": "attention",
+      "title": "ComplexRotaryEmbedding ignores cu_doc_lens — packed-document positions never reset for complex-RoPE blocks"
+    },
+    {
+      "bug_id": "OC-NEW-35",
+      "old_category": "metric_tracking",
+      "title": "Evaluator iterates with stale data-loader state — second eval pass starts mid-stream, evaluating a different subset"
+    },
+    {
+      "bug_id": "OC-NEW-38",
+      "old_category": "metrics",
+      "title": "Grad clipper recorded grad_norm DTensor — record_metric saw distributed value"
+    },
+    {
+      "bug_id": "OC-NEW-39",
+      "old_category": "optimizer",
+      "title": "PP grad-norm clip used per-PP-stage local norm without all-reducing across PP ranks"
+    },
+    {
+      "bug_id": "OC-NEW-41",
+      "old_category": "loss",
+      "title": "Instance filter loss divisor missed masked-out instance tokens — wrong gradient scale"
+    },
+    {
+      "bug_id": "OC-NEW-42",
+      "old_category": "metrics",
+      "title": "BLT distill metric not divided by num_micro_batches when grad_accum_steps>1"
+    },
+    {
+      "bug_id": "OC-NEW-43",
+      "old_category": "optimizer",
+      "title": "SkipStepOptimizer fed unreduced ce_batch_loss — skip decisions on per-rank values"
+    },
+    {
+      "bug_id": "OC-NEW-44",
+      "old_category": "attention",
+      "title": "FlashAttn sliding-window off-by-one — window included one too many tokens"
+    },
+    {
+      "bug_id": "OC-NEW-45",
+      "old_category": "config",
+      "title": "Mamba2 ladder hard-coded head_dim from d_model/n_heads — wrong with FLA defaults"
+    },
+    {
+      "bug_id": "OC-NEW-46",
+      "old_category": "initialization",
+      "title": "BLT byte embeddings never initialized to teacher-embedding stats — kept default kaiming"
+    },
+    {
+      "bug_id": "OC-NEW-47",
+      "old_category": "attention",
+      "title": "TE attention backend silently ignored cu_doc_lens — intra-doc masking not applied"
+    },
+    {
+      "bug_id": "OC-NEW-48",
+      "old_category": "attention",
+      "title": "Flex-attention sliding-window mask used Python `and` on tensors — short-circuit returned wrong mask"
+    },
+    {
+      "bug_id": "OC-NEW-49",
+      "old_category": "freeze",
+      "title": "BLT stage1 froze only teacher.* — student blocks updated against teacher gradient"
+    },
+    {
+      "bug_id": "OC-NEW-5",
+      "old_category": "data_processing",
+      "title": "Document packing sort overflow — uint32 * -1 wraps to huge positive"
+    },
+    {
+      "bug_id": "OC-NEW-50",
+      "old_category": "config",
+      "title": "freeze_experts assigned in __init__ instead of dataclass field — OmegaConf merge dropped it"
+    },
+    {
+      "bug_id": "OC-NEW-51",
+      "old_category": "initialization",
+      "title": "MultiHeadLatentAttention init dispatched to Attention branch — wrong layers initialized"
+    },
+    {
+      "bug_id": "OC-NEW-52",
+      "old_category": "data",
+      "title": "Instance packing ladder set source_group_size on both Packing source and parent — double counting"
+    },
+    {
+      "bug_id": "OC-NEW-53",
+      "old_category": "config",
+      "title": "Qwen3Clone-8B script forgot use_head_qk_norm — used per-channel QK norm instead of per-head"
+    },
+    {
+      "bug_id": "OC-NEW-54",
+      "old_category": "loss",
+      "title": "BLT debias used log(sum(exp(logprobs))) — silent underflow on small probabilities"
+    },
+    {
+      "bug_id": "OC-NEW-55",
+      "old_category": "loss",
+      "title": "H-Net ratio loss averaged over padded positions — wrong target ratio under variable-length batches"
+    },
+    {
+      "bug_id": "OC-NEW-56",
+      "old_category": "loss",
+      "title": "H-Net embed loss never normalized by loss_div_factor — wrong loss weighting"
+    },
+    {
+      "bug_id": "OC-NEW-58",
+      "old_category": "loss",
+      "title": "BLTDistill patch loss div factor used input_ids.numel() — wrong scaling for byte-level losses"
+    },
+    {
+      "bug_id": "OC-NEW-59",
+      "old_category": "attention",
+      "title": "Flex attention not upcast to fp32 — precision mismatch with SDPA backend"
+    },
+    {
+      "bug_id": "OC-NEW-6",
+      "old_category": "attention",
+      "title": "Sliding window size off-by-one — window 1 token too small"
+    },
+    {
+      "bug_id": "OC-NEW-60",
+      "old_category": "loss",
+      "title": "BLT distill missed first-call label_offsets when fuse_boundaries enabled"
+    },
+    {
+      "bug_id": "OC-NEW-61",
+      "old_category": "loss",
+      "title": "BLT shift_boundary_mask did not AND with byte_mask — pad positions polluted label offsets"
+    },
+    {
+      "bug_id": "OC-NEW-63",
+      "old_category": "data",
+      "title": "SourceMixtureDataset rounded down per-source instances — dataset shorter than expected"
+    },
+    {
+      "bug_id": "OC-NEW-64",
+      "old_category": "data",
+      "title": "FSLDataset fingerprint missed sequence_length / bos_token_id — wrong cache reused"
+    },
+    {
+      "bug_id": "OC-NEW-65",
+      "old_category": "data",
+      "title": "DataCollator routed academic/technical sources to a non-existent 4th expert label"
+    },
+    {
+      "bug_id": "OC-NEW-66",
+      "old_category": "initialization",
+      "title": "Attention gate w_g never initialized — uses uninitialized memory"
+    },
+    {
+      "bug_id": "OC-NEW-67",
+      "old_category": "scheduler",
+      "title": "InvSqrt LR schedule wrong scheduler chosen for OLMoE3 — Cos used where WSD intended"
+    },
+    {
+      "bug_id": "OC-NEW-7",
+      "old_category": "data_processing",
+      "title": "soft_target_probs silently truncated to int by custom as_tensor"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+id: P13
+name: Tensor Aliasing & Stale State
+type: B
+rule_r: For any cached statistic / shadow buffer / persistent buffer s derived from tensor
+  t, after every write to t, s must be refreshed (s == f(t)) and storage-aliased buffers must
+  not trample each other; tensors that must be detached views or viewless leaves must satisfy
+  data_ptr/grad_fn invariants.
+scope_sigma: All cached norms, contiguous-grad bucket buffers, IPG buffers, expert biases,
+  fused-kernel master weights, CUDA-graph captured buffers, FP8 amax history, viewless attention
+  outputs, isend/irecv buffers, and on-disk fingerprint files.
+mode_m: B
+precond_rho: Active whenever the producing op or write to t fires (inside set_grad/clip_norm/zero_grad/communication/cuda-graph-warmup);
+  the cache-vs-source pair must be in a defined relation (i.e. the cache exists and is supposed
+  to track t).
+example_bugs:
+- D-016
+- D-NEW-38
+- D-NEW-43
+- D-NEW-51
+- D-NEW-56
+- D-NEW-66
+- D-NEW-70
+- D-NEW-71
+covers_count_estimate: 29
+related_existing_pattern: "Sibling of P5 (state restoration): P5 covers the train\u2194eval\
+  \ / save\u2194load roundtrip; P13 covers the producer-consumer consistency on a single forward/backward\
+  \ pass."

@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-12",
+  "framework": "deepspeed",
+  "category": "control_flow",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["user_config_key", "engine_parsed_value", "config_constant_name"],
+  "check_stage": "init",
+  "minimum_sufficient_layer": "schema_only",
+  "pattern_id": "P1",
+  "tier_field": "exceeds_tier6",
+  "rationale": "Constant SEQ_PARALLEL_COMMUNICATION_DATA_TYPE used 'seq_parallel_comm_data_type' but documented key is 'seq_parallel_communication_data_type', so user-set value is silently dropped. Detection: after engine.initialize, the parsed comm dtype must equal the user-supplied value. Single-rank, single-field comparison -> schema_only. Pattern P1: deterministic expected value derived from user config. Tier exceeds_tier6 because the required field (engine internal _param_dict / parsed config dtype) is not in the standard Tier 0-6 trace schema. Category control_flow per config_parsing -> control_flow mapping. Borderline pattern none vs P1: chose P1 because runtime can compare user-supplied vs engine-parsed values; not pure source-only.",
+  "borderline_flags": ["EXCEEDS_TIER6", "CATEGORY_AMBIGUOUS_control_flow_dtype"]
+}

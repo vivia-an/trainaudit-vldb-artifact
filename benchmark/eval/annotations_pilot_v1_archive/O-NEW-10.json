@@ -1,0 +1,15 @@
+{
+  "bug_id": "O-NEW-10",
+  "framework": "olmo",
+  "category": "optimizer_state",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["op_name", "lerp_self_value", "lerp_target_value", "current_grad_norm", "step"],
+  "check_stage": "before_optimizer",
+  "pi_schema_applicable": true,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P4",
+  "tier_field": "Tier 4",
+  "rationale": "EMA self-referential lerp: target arg equals the EMA itself, never the live grad_norm. Borderline numerical vs optimizer_state: chose optimizer_state because the corrupted state is the EMA buffer used for adaptive clipping (anti-example 9). Hooking lerp_ args is needed (P4), single-GPU reproduces so parallel_dim=none."
+}

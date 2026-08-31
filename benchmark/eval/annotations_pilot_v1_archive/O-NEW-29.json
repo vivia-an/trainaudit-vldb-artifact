@@ -1,0 +1,15 @@
+{
+  "bug_id": "O-NEW-29",
+  "framework": "olmo",
+  "category": "communication",
+  "parallel_dimension": "FSDP",
+  "invariant_type": "dtype_consistency",
+  "required_trace_fields": ["op_name", "tensor_device", "backend", "step"],
+  "check_stage": "all_reduce",
+  "pi_schema_applicable": true,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P6",
+  "tier_field": "Tier 0",
+  "rationale": "Per-param metric tensors live on CPU and get passed to dist.all_reduce, silently falling back to gloo with different reduction semantics. Borderline gradient_sync vs communication: chose communication because the root cause is wrong device/backend on the collective input, not the reduction op (anti-example 3). Hook before all_reduce, assert tensor.device.type=='cuda' (P6, pi_schema+pi_precond)."
+}

@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-81",
+  "framework": "deepspeed",
+  "category": "moe",
+  "parallel_dimension": "DP",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["module_class", "param_id", "param_data_ptr", "zero_tracked_set", "step"],
+  "check_stage": "after_forward",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P7",
+  "tier_field": "Tier 6",
+  "rationale": "TopKGate.forward rebinds self.wg to a fresh fp32 Linear under ZeRO+fp16/bf16, orphaning the ZeRO-tracked parameter so its grads are never reduced or applied. Detection requires hooking TopKGate and checking wg.weight identity/data_ptr stays in ZeRO's tracked set across forwards under precond module_class==TopKGate AND ZeRO+mixed-precision (pi_precond). P7 (module-state counter/identity check) over P4 because the check is param-identity not dtype, and the orphan is in DP not EP routing path."
+}

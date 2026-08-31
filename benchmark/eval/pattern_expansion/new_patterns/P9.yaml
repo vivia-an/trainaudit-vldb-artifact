@@ -1,0 +1,26 @@
+id: P9
+name: Init Distribution Consistency
+type: C
+rule_r: "For every parameter p with a prescribed init recipe init_spec(p) (distribution family,\
+  \ std, fan-in/out factor, zero/identity), the post-construction tensor must satisfy stat(p)\
+  \ \u2248 init_spec(p) within the recipe's tolerance, and the chosen init branch must be\
+  \ reached."
+scope_sigma: All learnable parameters with module-level or framework-level init rules (linear/embedding/norm,
+  MuP readout, depth-scaled output proj, Mamba/GDN special inits, FSDP meta-device materialization).
+mode_m: C
+precond_rho: 'After model construction and before the first optimizer.step(): param.is_meta
+  == False, param.numel() > 0, model is on the target device, and infshapes/MuP-config (if
+  any) are finalized.'
+example_bugs:
+- O-024
+- O-035
+- O-NEW-19
+- O-NEW-20
+- O-NEW-21
+- O-NEW-22
+- O-NEW-40
+- O-NEW-5
+covers_count_estimate: 19
+related_existing_pattern: 'Sibling of P3 (cross-rank replication): P3 says "non-sharded params
+  bit-equal across ranks"; P9 says "each param matches its prescribed distribution". Independent:
+  P9 fires even on a single rank.'

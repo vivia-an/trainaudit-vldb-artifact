@@ -1,0 +1,201 @@
+{
+  "metadata": {
+    "experiment": "E3_hook",
+    "n_bugs": 32,
+    "subset": "32 cross-pool sanity"
+  },
+  "per_bug": {
+    "D-011": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": ["before-optimizer", "before-forward", "after-forward"],
+      "rationale": "Last-microbatch grad excluded from allreduce; cross-rank param divergence first visible at before-optimizer of next step (== 128's after_optimizer).",
+      "matches_128_check_stage": true
+    },
+    "D-014": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "Ping-pong buffer corruption gives wrong grad values; ~0.3% grad-norm deviation observable post-backward.",
+      "matches_128_check_stage": true
+    },
+    "D-015": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": ["before-optimizer", "before-forward", "after-forward"],
+      "rationale": "Optimizer always returns early, params not updated; visible at before-optimizer of next step (params unchanged) and downstream hooks.",
+      "matches_128_check_stage": true
+    },
+    "D-021": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": ["after-backward", "before-optimizer", "before-forward"],
+      "rationale": "Stream race produces NaN in reduced grads; manifests in optimizer-state / params after step (== 128's after_optimizer).",
+      "matches_128_check_stage": true
+    },
+    "D-025": {
+      "earliest_observable": "build",
+      "hooks_observable": ["build"],
+      "rationale": "EP group has 0 members at init due to wrong arg; structurally caught at build.snapshot before any step (matches 128 after_init).",
+      "matches_128_check_stage": true
+    },
+    "D-026": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "MoE grads double-scaled by 1/ep_size; grad-norm anomaly visible after backward.",
+      "matches_128_check_stage": true
+    },
+    "D-027": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Softmax along wrong dim produces non-normalized coefficients in forward output.",
+      "matches_128_check_stage": true
+    },
+    "D-029": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "CPU-resident grad-norm tensor mis-averaged; deviation visible in post-backward grad-norm value.",
+      "matches_128_check_stage": true
+    },
+    "D-038": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "logical_or on inf produces NaN; clipped grads contain NaN, observable post-backward.",
+      "matches_128_check_stage": true
+    },
+    "D-040": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward", "after-backward", "before-optimizer"],
+      "rationale": "Zero-sized microbatches: per-rank loss/activation count differs across DP ranks; first visible at after-forward.",
+      "matches_128_check_stage": true
+    },
+    "M-005": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward", "after-forward", "after-backward", "before-optimizer"],
+      "rationale": "Router weights initialized with per-rank RNG; cross-rank checksum mismatch visible at before-forward of step 0 (param-init bug, prompt rule).",
+      "matches_128_check_stage": false
+    },
+    "M-008": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": ["before-optimizer", "before-forward", "after-forward"],
+      "rationale": "found_inf_flag stuck true keeps LR at 0; visible in optimizer-state at before-optimizer.",
+      "matches_128_check_stage": true
+    },
+    "M-010": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward", "after-backward"],
+      "rationale": "save_to_aux_losses_tracker called twice under recompute; doubled aux_loss visible after forward (function-call counting).",
+      "matches_128_check_stage": true
+    },
+    "M-012": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward", "after-forward", "after-backward", "before-optimizer"],
+      "rationale": "expert_bias buffer downcast to bf16 by Float16Module; dtype mismatch already present before forward (buffer-state bug).",
+      "matches_128_check_stage": false
+    },
+    "M-014": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "topk-then-softmax with k=1 yields trivial probs == 1.0; routing-prob distribution wrong post-forward.",
+      "matches_128_check_stage": true
+    },
+    "M-020": {
+      "earliest_observable": "build",
+      "hooks_observable": ["build", "before-forward", "after-forward"],
+      "rationale": "Layer count silently truncated by integer division; structural bug detectable at build.snapshot before step 0.",
+      "matches_128_check_stage": false
+    },
+    "M-021": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": ["before-optimizer", "before-forward"],
+      "rationale": "Expert params not in dist-opt buffer; weights unchanged across steps, visible at before-optimizer (== 128 after_optimizer).",
+      "matches_128_check_stage": true
+    },
+    "M-024": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Uniform jitter in fp32 promotes bf16 input; activation dtype wrong post-forward.",
+      "matches_128_check_stage": true
+    },
+    "M-033": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "Global aux loss missing dp_size factor; grad magnitude 1/dp_size of expected, visible post-backward.",
+      "matches_128_check_stage": true
+    },
+    "O-002": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "attn_norm overwrites residual variable; residual-stream invariance violated in forward output (initial loss spike 10->60).",
+      "matches_128_check_stage": true
+    },
+    "O-003": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "z_loss divided by num_micro_batches not tokens; loss-magnitude check after forward catches it.",
+      "matches_128_check_stage": true
+    },
+    "O-005": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["main-grad-in-backward", "after-backward"],
+      "rationale": "RNG-state mismatch under checkpointing yields different dropout mask in recompute; grad inconsistency visible post-backward.",
+      "matches_128_check_stage": true
+    },
+    "O-006": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": ["checkpoint_load"],
+      "rationale": "global_step not reset on resume; dataloader internal start_index wrong post-load. Not visible at the 5 main hooks (cannot tell which sample is 'wrong'); maps to data_loading -> unobservable per brief, recorded under checkpoint_load tap.",
+      "matches_128_check_stage": true
+    },
+    "O-009": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "QK-norm size wrong under GQA; affected normalization stats visible in forward activations (silent, no shape crash).",
+      "matches_128_check_stage": true
+    },
+    "O-010": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": ["before-optimizer"],
+      "rationale": "state['step'] never incremented; counter visible directly in optimizer state at before-optimizer.",
+      "matches_128_check_stage": true
+    },
+    "O-014": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Throughput metrics not all-reduced; cross-rank metric inequality visible post-forward.",
+      "matches_128_check_stage": true
+    },
+    "O-016": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": ["checkpoint_load", "before-optimizer"],
+      "rationale": "Missing initial_lr surfaces only after checkpoint resume; per Rule 3 resume-time bugs map to checkpoint_load (visible in optimizer state at next before-optimizer too).",
+      "matches_128_check_stage": false
+    },
+    "O-021": {
+      "earliest_observable": "unobservable",
+      "hooks_observable": [],
+      "rationale": "Mixture rounding produces sample repetition only at end of training; no hook can tell a sample is 'duplicate' without global bookkeeping. Maps to data_loading -> unobservable per brief.",
+      "matches_128_check_stage": true
+    },
+    "O-022": {
+      "earliest_observable": "build",
+      "hooks_observable": ["build"],
+      "rationale": "build() corrupts global Python random RNG; observable at build.snapshot (RNG-state tap), not at the 5 main step hooks.",
+      "matches_128_check_stage": false
+    },
+    "O-023": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward", "after-forward"],
+      "rationale": "label_mask is int64 padded with pad_token_id rather than bool+False; dtype/value wrong on input batch tensor before forward.",
+      "matches_128_check_stage": true
+    },
+    "O-025": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "int overflow in global_train_flops yields anomalous MFU/flops metric at after-forward (after ~107K steps).",
+      "matches_128_check_stage": true
+    },
+    "O-040": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Wrong A100 peak flops constant inflates MFU 2x; metric anomaly visible at after-forward.",
+      "matches_128_check_stage": true
+    }
+  }
+}

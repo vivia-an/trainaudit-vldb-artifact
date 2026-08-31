@@ -1,0 +1,459 @@
+{
+  "metadata": {
+    "experiment": "E2_tier",
+    "batch": 2,
+    "n_bugs": 90
+  },
+  "per_bug": {
+    "O-034": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "Tensor dtype mismatch (bf16 vs fp32) during recomputation; dtype field at Tier 0 distinguishes buggy from clean."
+    },
+    "O-035": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "dp_rank", "step"],
+      "rationale": "sync_module_states fails to equalize params after re-init; cross-rank checksum compare on params at Tier 0 detects divergence."
+    },
+    "O-036": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Buffers/parameters look identical between meta-init and direct GPU init paths; only downstream loss differs subtly with no runtime fingerprint distinguishing the two init paths beyond comparing against ground-truth reference."
+    },
+    "O-037": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "Block-level FSDP wrapping causes gradient precision degradation; gradient checksum compare at Tier 1 reveals the divergence."
+    },
+    "O-038": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "tp_rank", "step"],
+      "rationale": "TP grad-norm scaled by world_size instead of dp_size; grad_norm field at Tier 1 reveals incorrect scaling vs expected."
+    },
+    "O-039": {
+      "min_tier_required": 0,
+      "fields_required": ["step", "stage"],
+      "rationale": "Duplicate final checkpoint save on restart; step+stage (checkpoint_save event) at Tier 0 reveals a duplicate save at the final step."
+    },
+    "B1": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "tp_rank", "step"],
+      "rationale": "SwitchMLP router weight diverges across TP ranks; cross-rank checksum compare on router.weight at Tier 0."
+    },
+    "B10": {
+      "min_tier_required": 3,
+      "fields_required": ["micro_step_id", "step"],
+      "rationale": "micro_step_id off-by-one in ZeRO-2; first-microstep id sequence detection requires micro_step_id field at Tier 3."
+    },
+    "B11": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "step"],
+      "rationale": "clip_grad_norm_ uses max instead of min; post-clip grad_norm exceeds max_norm, detectable at Tier 1."
+    },
+    "B12": {
+      "min_tier_required": "5-6",
+      "fields_required": ["param_group_attr", "step"],
+      "rationale": "Missing initial_lr key in optimizer param_groups is a structural attribute (not a tracked value); requires module/optimizer attribute snapshot at Tier 5-6."
+    },
+    "B13": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "attn_norm overwrites residual stream is an op-level forward activation bug; intermediate activations are not in any tier schema and parameter values are unaffected."
+    },
+    "B14": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "z_loss masked-mean formula wrong; loss value scale mismatch detectable at Tier 2."
+    },
+    "B15": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "z_loss divided by num_micro_batches instead of batch_size_in_tokens; loss value magnitude wrong, detectable at Tier 2."
+    },
+    "B2": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "tp_rank", "step"],
+      "rationale": "LinearWithFrozenWeight skips grad_input all-reduce across TP; cross-rank grad checksum compare at Tier 1 reveals divergent grad_input shards."
+    },
+    "B3": {
+      "min_tier_required": "5-6",
+      "fields_required": ["function_call_arg", "step"],
+      "rationale": "communication_data_type returns fp32 instead of bf16; detection requires hooking the engine method (Type-B function-call attribute) at Tier 5-6 since intermediate comm tensors aren't in lower-tier schema."
+    },
+    "B4": {
+      "min_tier_required": "5-6",
+      "fields_required": ["function_call_return", "dp_rank", "pp_rank"],
+      "rationale": "get_data_parallel_src_rank formula returns wrong rank under non-trivial PP layouts; detection requires Type-B hook on function return value at Tier 5-6."
+    },
+    "B5": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "step"],
+      "rationale": "expert_grads not divided by dp_world_size; pre/post-sync expert grad norm ratio detectable at Tier 1."
+    },
+    "B6": {
+      "min_tier_required": "5-6",
+      "fields_required": ["function_call_count", "step"],
+      "rationale": "param_sync gate uses wrong bound; requires counting param_sync_func invocations (Type-B hook) at Tier 5-6."
+    },
+    "B7": {
+      "min_tier_required": "5-6",
+      "fields_required": ["module_attr", "step"],
+      "rationale": "FlashSelfAttention.dropout_p attribute permanently mutated; requires module attribute snapshot at Tier 5-6."
+    },
+    "B8": {
+      "min_tier_required": "5-6",
+      "fields_required": ["function_call_arg", "ep_rank"],
+      "rationale": "_create_ep_parallel_group called with num_experts instead of ep_size; requires Type-B hook on call argument at Tier 5-6."
+    },
+    "B9": {
+      "min_tier_required": "5-6",
+      "fields_required": ["function_call_branch", "step"],
+      "rationale": "single_all_to_all takes wrong branch on second alltoall; requires Type-B hook on branch taken at Tier 5-6."
+    },
+    "D-NEW-1": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "TopKGate applies topk to logits vs softmax — softmax is monotonic so topk indices may match; only gate weights differ subtly with no runtime fingerprint in any tier schema."
+    },
+    "D-NEW-12": {
+      "min_tier_required": "5-6",
+      "fields_required": ["config_attr", "step"],
+      "rationale": "Config key typo causes silent ignore; requires inspecting parsed engine config attribute (Type-B) at Tier 5-6."
+    },
+    "D-NEW-13": {
+      "min_tier_required": 3,
+      "fields_required": ["micro_step_id", "grad_cksum", "step"],
+      "rationale": "CPU gradient buffer not updated on every micro-step; needs micro_step_id (Tier 3) to identify boundary plus grad_cksum to confirm missing accumulation."
+    },
+    "D-NEW-14": {
+      "min_tier_required": 3,
+      "fields_required": ["learning_rate", "param_group_id", "step"],
+      "rationale": "WarmupCosineLR returns wrong-length LR list; per-group LR field at Tier 3 reveals length/value mismatch."
+    },
+    "D-NEW-15": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "Gradients never zeroed for bf16+ZeRO-0; pre-step grad checksum should be zero but is non-zero, detectable at Tier 1."
+    },
+    "D-NEW-16": {
+      "min_tier_required": "5-6",
+      "fields_required": ["function_call_arg", "step"],
+      "rationale": "Stream synchronization uses wrong stream — race condition; only observable via Type-B hook on stream ID at Tier 5-6 (race may also produce non-deterministic param values, but the canonical detection is hooking the call)."
+    },
+    "D-NEW-17": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "Loss double-scaling in backward; loss value magnitude is wrong, detectable at Tier 2."
+    },
+    "D-NEW-18": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "CPU-offload gradient loss with multiple backward per step; gradient checksum reveals lost gradient accumulation at Tier 1."
+    },
+    "D-NEW-19": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "extra_large_param uses param.dtype instead of comm_dtype; dtype mismatch on the reduced tensor detectable at Tier 0."
+    },
+    "D-NEW-2": {
+      "min_tier_required": 3,
+      "fields_required": ["learning_rate", "param_group_id", "step"],
+      "rationale": "WarmupCosineLR returns scalar instead of per-group list; LR field per group at Tier 3 reveals mismatch."
+    },
+    "D-NEW-20": {
+      "min_tier_required": "5-6",
+      "fields_required": ["module_attr", "step"],
+      "rationale": "Wrong optimizer class selected; requires module class / type attribute snapshot at Tier 5-6."
+    },
+    "D-NEW-21": {
+      "min_tier_required": "5-6",
+      "fields_required": ["zero_stage", "module_attr"],
+      "rationale": "bf16 without ZeRO incorrectly treated as having ZeRO state; requires zero_stage flag at Tier 5-6."
+    },
+    "D-NEW-22": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "Optimizer state misaligned on elastic checkpoint load; param/optimizer state values diverge from pre-save, detectable via checksum at Tier 0 (checkpoint values comparison)."
+    },
+    "D-NEW-23": {
+      "min_tier_required": "5-6",
+      "fields_required": ["function_call_count", "step"],
+      "rationale": "rank=None reset overrides single-rank reduce path; requires counting dist.reduce vs dist.all_reduce calls (Type-B) at Tier 5-6."
+    },
+    "D-NEW-24": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "Param exactly filling bucket has gradient dropped; grad checksum detects stale/zero gradient at Tier 1."
+    },
+    "D-NEW-25": {
+      "min_tier_required": 4,
+      "fields_required": ["optimizer_state_cksum", "param_name", "step"],
+      "rationale": "fp32 master weights never refreshed from loaded bf16 module; optimizer state checksum diverges from bf16 module after load, requires Tier 4."
+    },
+    "D-NEW-26": {
+      "min_tier_required": "5-6",
+      "fields_required": ["module_attr", "step"],
+      "rationale": "quantized_nontrainable_weights flag overwrites quantized_weights; requires module attribute (config) snapshot at Tier 5-6."
+    },
+    "D-NEW-27": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "Reduce-scatter buffer dtype != communication_data_type; dtype field at Tier 0 reveals the mismatch."
+    },
+    "D-NEW-28": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "Extra-large param uses raw param.grad (bf16) instead of get_gradient_for_reduction (fp32); dtype mismatch detectable at Tier 0."
+    },
+    "D-NEW-29": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "dp_rank", "step"],
+      "rationale": "Wrong partition_id writes into wrong rank's slice; cross-rank parameter checksum mismatch on bit16 partitions at Tier 0."
+    },
+    "D-NEW-3": {
+      "min_tier_required": "5-6",
+      "fields_required": ["module_attr", "param_name"],
+      "rationale": "Frozen params (requires_grad=False) included in optimizer groups; requires param.requires_grad attribute snapshot (Type-B) at Tier 5-6."
+    },
+    "D-NEW-30": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "dp_rank", "step"],
+      "rationale": "Wrong partition_id used across param groups in CPU offload; cross-rank parameter checksum mismatch at Tier 0."
+    },
+    "D-NEW-31": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "Round-robin partition mapping disagrees with reduction destination; gradients attributed to wrong owner produce zero/stale grad detectable at Tier 1."
+    },
+    "D-NEW-32": {
+      "min_tier_required": "5-6",
+      "fields_required": ["module_attr", "pp_rank"],
+      "rationale": "Pipeline partition_balanced returns degenerate partitions (one stage with zero layers); requires module/named_parameters snapshot per PP rank at Tier 5-6."
+    },
+    "D-NEW-33": {
+      "min_tier_required": "5-6",
+      "fields_required": ["function_call_count", "rank"],
+      "rationale": "Multiple ranks write same checkpoint file (race); requires counting save_non_zero_checkpoint invocations across ranks (Type-B) at Tier 5-6."
+    },
+    "D-NEW-34": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "shape", "param_name"],
+      "rationale": "Mixed-dtype params truncated/aliased through wrong-dtype buffer; post-allgather param dtype/numel*element_size mismatch detectable at Tier 0."
+    },
+    "D-NEW-35": {
+      "min_tier_required": "5-6",
+      "fields_required": ["module_attr", "step"],
+      "rationale": "Shared InflightParamRegistry between train/eval coordinators; requires Python object identity comparison (module attribute) at Tier 5-6."
+    },
+    "D-NEW-36": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "step"],
+      "rationale": "global_grad_norm unscaled by wrong loss_scale on dynamic-scale change; grad_norm value diverges, detectable at Tier 1."
+    },
+    "D-NEW-38": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "Sparse gradients silently dropped; param.grad checksum is unchanged where expected non-zero, detectable at Tier 1."
+    },
+    "D-NEW-39": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "pp_rank", "step"],
+      "rationale": "Broadcast tensor dtype mismatches receive buffer dtype across PP ranks; cross-rank dtype compare at Tier 0."
+    },
+    "D-NEW-40": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name"],
+      "rationale": "Parameter dtype not actually changed (model still references original); param dtype field at Tier 0 reveals wrong dtype on the visible tensor."
+    },
+    "D-NEW-42": {
+      "min_tier_required": "5-6",
+      "fields_required": ["param_name_set", "stage"],
+      "rationale": "Frozen params silently omitted from saved checkpoint; requires set comparison of named_parameters vs saved keys (Type-B/module attr) at Tier 5-6."
+    },
+    "D-NEW-43": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "Frozen params silently un-frozen by Adam updates; param checksum changes across optimizer steps for requires_grad=False params, detectable at Tier 0 (assuming param.requires_grad is recorded as part of module schema, but pure value-change detection works without it)."
+    },
+    "D-NEW-44": {
+      "min_tier_required": "5-6",
+      "fields_required": ["function_call_count", "tp_rank"],
+      "rationale": "MoE save short-circuits on exp_dp_rank!=0; requires counting model_states.pt writes across TP ranks (Type-B) at Tier 5-6."
+    },
+    "D-NEW-45": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "param_group_id", "step"],
+      "rationale": "Backward hook closure captures stale group index — gradients routed to wrong reduction bucket; gradient checksum on params in early groups is wrong at Tier 1."
+    },
+    "D-NEW-46": {
+      "min_tier_required": 4,
+      "fields_required": ["optimizer_state_cksum", "param_name"],
+      "rationale": "Adam step counter incremented during initialization; optimizer.state[p]['step'] field at Tier 4 reveals counter is 1 instead of 0 right after init."
+    },
+    "D-NEW-47": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name"],
+      "rationale": "grad_accum_dtype != model_dtype with ZeRO; gradient accum buffer dtype field at Tier 0 reveals the mismatch."
+    },
+    "D-NEW-48": {
+      "min_tier_required": 3,
+      "fields_required": ["micro_step_id", "function_call_count", "step"],
+      "rationale": "is_gradient_accumulation_boundary not propagated to ZeRO; reduction triggered every microstep instead of once per GAS — detected by counting reductions vs micro_step_id boundaries (Tier 3 micro_step_id is the cheapest field needed)."
+    },
+    "D-NEW-49": {
+      "min_tier_required": "5-6",
+      "fields_required": ["function_call_return", "step"],
+      "rationale": "DeepSpeedDataLoader.__len__ returns sample count not batch count; requires Type-B hook on len() return value at Tier 5-6."
+    },
+    "D-NEW-50": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name"],
+      "rationale": "BF16_Optimizer fp32_groups_gradients_flat allocated as fp32 instead of bf16; dtype field at Tier 0 reveals the mismatch."
+    },
+    "D-NEW-51": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "Stale extra_large_param reference causes silent stale-grad reduction in next step; gradient checksum mismatch vs expected at Tier 1."
+    },
+    "D-NEW-53": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "ep_rank", "step"],
+      "rationale": "AutoEP forgets to scale loss by ep_size; expert weights diverge from baseline run after one step — cross-config param checksum compare at Tier 0 (with ep_rank annotation)."
+    },
+    "D-NEW-54": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "ep_rank", "step"],
+      "rationale": "MoE checkpoint records dp_world_size instead of seq_dp_world_size; expert params on rank r mismatch the saved fragment, detectable via param checksum compare at Tier 0."
+    },
+    "D-NEW-55": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "ep_rank", "step"],
+      "rationale": "Expert grads divided by edp_world_size instead of dp_world_size; expert weights diverge from EP=1 baseline — cross-config param checksum compare at Tier 0."
+    },
+    "D-NEW-56": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Stale locations tensor used to scatter tokens — op-level intermediate (locations is per-step transient state, not in any tier schema); only manifests in MoE token routing inside forward, not in tracked param/grad/loss state directly."
+    },
+    "D-NEW-57": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "ds_secondary_tensor stale after load — next allgather constructs corrupted full param; param checksum compare against expected at Tier 0."
+    },
+    "D-NEW-58": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Asymmetric int8 dequantize hardcodes output dtype to half (in CUDA kernel) — output tensor dtype is fp32 (correct shape/dtype), only mantissa precision is degraded; no runtime schema field distinguishes fp32-with-fp16-precision from true fp32 precision short of value comparison against ground-truth reference."
+    },
+    "D-NEW-59": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "Hard-coded gpu_per_node=16 produces wrong intra-node split; reduced gradients are wrong, detectable via grad_cksum compare against baseline at Tier 1."
+    },
+    "D-NEW-60": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "dp_rank", "step"],
+      "rationale": "Universal checkpoint multi-machine load uses local_rank instead of global rank; ranks load wrong slice — cross-rank param checksum compare at Tier 0."
+    },
+    "D-NEW-61": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "dp_rank", "step"],
+      "rationale": "Overflow flag broadcast skipped in ZeRO-1; ranks diverge in loss_scale and parameter values — cross-rank param checksum at Tier 0."
+    },
+    "D-NEW-62": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "param_partition.grad dtype != param_partition.dtype at Adam step; dtype field at Tier 0 reveals the bf16-vs-fp32 mismatch."
+    },
+    "D-NEW-63": {
+      "min_tier_required": 4,
+      "fields_required": ["optimizer_state_cksum", "param_name", "step"],
+      "rationale": "CPUAdam IncrementStep non-idempotent across subgroups — different bias-correction coefficients between subgroups; requires Adam optimizer state cksum compare at Tier 4."
+    },
+    "D-NEW-64": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "tp_rank", "step"],
+      "rationale": "FP16_Optimizer global grad_norm under-counts at TP>1; grad_norm field at Tier 1 reveals divergence from TP=1 baseline."
+    },
+    "D-NEW-65": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "pp_rank", "step"],
+      "rationale": "Non-last PP stage hp_grads doubled; gradient checksum or norm 2x baseline detectable at Tier 1."
+    },
+    "D-NEW-66": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "step"],
+      "rationale": "norm_for_param_grads not refreshed after set_local_grad — clipping uses stale norm; grad_norm comparison at Tier 1."
+    },
+    "D-NEW-67": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "fp16 grads underflow to zero without GradScaler; gradient checksum is zero where expected non-zero — Tier 1 detection."
+    },
+    "D-NEW-68": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "ipg double-buffer race produces corrupted reduce input; gradient checksum diverges from baseline (or grad_norm anomaly) at Tier 1."
+    },
+    "D-NEW-69": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "ipg_buffer race when comm > compute; gradient checksum diverges from non-overlap baseline at Tier 1."
+    },
+    "D-NEW-70": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "ipg_buffer averaged over full size including stale tail; reduced gradient values contaminated, detectable via grad checksum at Tier 1."
+    },
+    "D-NEW-71": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "dp_rank", "step"],
+      "rationale": "torch.empty padding contains garbage that gets reduced; cross-rank gradient checksum reveals contamination at Tier 1."
+    },
+    "D-NEW-72": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Sequence-parallel single_all_to_all reshape permutes tokens — bug is on per-token activation positions inside attention; activations are not in any tier schema, identity-test detection requires explicit instrumentation beyond runtime schema."
+    },
+    "D-NEW-73": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "ep_rank", "step"],
+      "rationale": "Manual backward path skips ep_size scaling; expert weights diverge from engine.backward path — cross-config param checksum compare at Tier 0."
+    },
+    "D-NEW-74": {
+      "min_tier_required": 4,
+      "fields_required": ["optimizer_state_cksum", "param_name", "dp_rank"],
+      "rationale": "NVMe optimizer state shared across ranks — wrong slice on load; optimizer state checksum mismatch vs pre-save at Tier 4."
+    },
+    "D-NEW-75": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "shape", "step"],
+      "rationale": "CPU Adam steps only first row of multi-dim params; param checksum changes only on first row, detectable via param_cksum + shape at Tier 0."
+    },
+    "D-NEW-76": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_cksum", "param_name", "step"],
+      "rationale": "Broadcast at init tracked through autograd — silently corrupts gradients; gradient checksum diverges from no-broadcast baseline at Tier 1."
+    },
+    "D-NEW-77": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "Stale ds_secondary_tensor used in allgather — constructed full param has stale fragment; param checksum compare at Tier 0."
+    },
+    "D-NEW-78": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "allreduce_bucket hardcodes fp16 instead of bf16 communication_data_type; dtype of tensor_to_allreduce field at Tier 0."
+    },
+    "D-NEW-79": {
+      "min_tier_required": 3,
+      "fields_required": ["learning_rate", "param_group_id", "step"],
+      "rationale": "Optimizer first-step LR is peak instead of warmup_min_lr; LR field at Tier 3 reveals mismatch with scheduler.get_lr() at step 0."
+    },
+    "D-NEW-8": {
+      "min_tier_required": 3,
+      "fields_required": ["learning_rate", "step"],
+      "rationale": "WarmupLR ignores optimizer LR, uses hardcoded 0.001; learning_rate field at Tier 3 reveals mismatch vs configured peak."
+    }
+  }
+}

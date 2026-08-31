@@ -1,0 +1,145 @@
+{
+  "tool": "trainaudit",
+  "n_bugs": 17,
+  "results": [
+    {
+      "bug_id": "B1",
+      "category": "gradient_sync",
+      "framework": "Megatron-LM",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "B2",
+      "category": "gradient_sync",
+      "framework": "Megatron-LM",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "B3",
+      "category": "dtype",
+      "framework": "DeepSpeed",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "B8",
+      "category": "moe",
+      "framework": "DeepSpeed",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "B11",
+      "category": "numerical",
+      "framework": "DeepSpeed",
+      "tier": "T0",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "B12",
+      "category": "lr_schedule",
+      "framework": "OLMo-core",
+      "tier": "T0",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "M-012",
+      "category": "moe",
+      "framework": "Megatron-LM",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "M-020",
+      "category": "sharding",
+      "framework": "Megatron-LM",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "M-024",
+      "category": "dtype",
+      "framework": "Megatron-LM",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "O-005",
+      "category": "checkpoint",
+      "framework": "OLMo",
+      "tier": "T0",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "O-NEW-1",
+      "category": "numerical",
+      "framework": "OLMo",
+      "tier": "T0",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "O-NEW-9",
+      "category": "data_loading",
+      "framework": "OLMo",
+      "tier": "T0",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "OC-NEW-2",
+      "category": "optimizer_state",
+      "framework": "OLMo-core",
+      "tier": "T0",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "OC-NEW-3",
+      "category": "lr_schedule",
+      "framework": "OLMo-core",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false
+    },
+    {
+      "bug_id": "CF1",
+      "category": "control_flow",
+      "framework": "(surrogate)",
+      "tier": "T0/T1",
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P4-invocation-frequency"
+    },
+    {
+      "bug_id": "CM1",
+      "category": "communication",
+      "framework": "(surrogate)",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P3-cross-rank-replication"
+    },
+    {
+      "bug_id": "OF1",
+      "category": "offload",
+      "framework": "(surrogate)",
+      "tier": "T1",
+      "buggy_detected": true,
+      "fixed_fp": false,
+      "rule": "P1-dtype-preservation"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "bug_id": "OC-NEW-49",
+  "framework": "olmo-core",
+  "category": "control_flow",
+  "parallel_dimension": "FSDP",
+  "invariant_type": "completeness",
+  "required_trace_fields": ["param_name", "requires_grad", "freeze_pattern", "shared_with"],
+  "check_stage": "build",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "freeze_params=['teacher.*'] missed shared blocks.* params, so blocks trained against teacher gradients. Detected at build by walking named_parameters and asserting every param intended frozen has requires_grad=False under share_blocks=True. Borderline control_flow vs sharding: chose control_flow because the bug is about which params are frozen (a flag/pattern misconfig), not parameter splitting."
+}

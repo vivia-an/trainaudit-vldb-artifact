@@ -1,0 +1,65 @@
+{
+  "annotator_id": "llm_independent_batch3",
+  "annotations": [
+    {
+      "bug_id": "D-022",
+      "category": "checkpoint",
+      "confidence": "high",
+      "rationale": "checkpoint shard merge order wrong"
+    },
+    {
+      "bug_id": "D-004",
+      "category": "communication",
+      "confidence": "medium",
+      "rationale": "SeqAllToAll uneven split, SP collective"
+    },
+    {
+      "bug_id": "D-001",
+      "category": "gradient_sync",
+      "confidence": "high",
+      "rationale": "gradient accumulation sum vs average"
+    },
+    {
+      "bug_id": "D-006",
+      "category": "optimizer_state",
+      "confidence": "medium",
+      "rationale": "FusedAdam int32 overflow skips param/optstate update"
+    },
+    {
+      "bug_id": "D-019",
+      "category": "moe",
+      "confidence": "high",
+      "rationale": "MoE EP wrong DP group, ep_size grad scale"
+    },
+    {
+      "bug_id": "D-028",
+      "category": "gradient_sync",
+      "confidence": "medium",
+      "rationale": "allreduce on bf16 instead of fp32 buffer"
+    },
+    {
+      "bug_id": "D-012",
+      "category": "offload",
+      "confidence": "high",
+      "rationale": "CPU offload grad discarded after first microstep"
+    },
+    {
+      "bug_id": "D-NEW-2",
+      "category": "lr_schedule",
+      "confidence": "high",
+      "rationale": "WarmupCosineLR scalar vs per-group list"
+    },
+    {
+      "bug_id": "D-018",
+      "category": "sharding",
+      "confidence": "low",
+      "rationale": "link_all_hp_params wrong world_size, partition size off"
+    },
+    {
+      "bug_id": "D-NEW-49",
+      "category": "data_loading",
+      "confidence": "high",
+      "rationale": "DataLoader __len__ returns sample count"
+    }
+  ]
+}

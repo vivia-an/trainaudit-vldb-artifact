@@ -1,0 +1,14 @@
+metric,count,pct,ref_128,redline,status
+layer::schema_only,3,10.0,20%,≥15%,FAIL
+layer::schema+topo_cum,3,10.0,51%,≥40%,FAIL
+layer::three_layer_cum,25,83.3,74%,≥60%,PASS
+layer::none,5,16.7,26%,-,-
+pattern::any_P,25,83.3,66%,≥55%,PASS
+tier::cum_0,6,20.0,30%,-,-
+tier::cum_1,8,26.7,41%,-,-
+tier::cum_2,8,26.7,51%,-,-
+tier::cum_3,12,40.0,56%,-,-
+tier::cum_4,12,40.0,61%,-,-
+tier::cum_5,13,43.3,68%,-,-
+tier::cum_6,23,76.7,74%,-,-
+tier::exceeds_tier6,7,23.3,-,-,-

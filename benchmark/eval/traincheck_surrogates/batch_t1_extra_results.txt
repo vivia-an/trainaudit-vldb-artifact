@@ -1,0 +1,7 @@
+>>> B2
+[B2] BUG DETECTED: traincheck:6/520 failed invariants
+>>> B3
+[B3] CLEAN: traincheck:0/439 failed
+>>> B8
+[B8] BUG DETECTED: traincheck:2/433 failed invariants
+DONE batch t1 extra; results in /volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/eval/traincheck_surrogates/batch_t1_extra_results.txt
