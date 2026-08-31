@@ -1,0 +1,117 @@
+[
+  {
+    "rep": 0,
+    "L1": 347,
+    "L2": 5798,
+    "L3": 3388,
+    "L4": 369,
+    "rescued": 13,
+    "yield": 0.06364263539151431,
+    "distinct_survivors": 11,
+    "survivors": [
+      "hyp/cross_rank_equal/replica_cksum",
+      "hyp/csm/optim.step.post/state_step_min",
+      "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+      "hyp/param/csm/build.snapshot/model.n_modules",
+      "hyp/param/csm/build.snapshot/model.n_parameters",
+      "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+      "hyp/param/csm/optim.step.post/state_step_min",
+      "hyp/param/csm/optim.step.post/total_param_l2",
+      "hyp/param/csm/optim.step.pre/total_param_l2",
+      "hyp/sp/build_has_modules",
+      "hyp/tsb/no_nan_inf"
+    ]
+  },
+  {
+    "rep": 1,
+    "L1": 345,
+    "L2": 5268,
+    "L3": 2986,
+    "L4": 370,
+    "rescued": 16,
+    "yield": 0.07023538344722854,
+    "distinct_survivors": 11,
+    "survivors": [
+      "hyp/cross_rank_equal/replica_cksum",
+      "hyp/csm/optim.step.post/state_step_min",
+      "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+      "hyp/param/csm/build.snapshot/model.n_modules",
+      "hyp/param/csm/build.snapshot/model.n_parameters",
+      "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+      "hyp/param/csm/optim.step.post/state_step_min",
+      "hyp/param/csm/optim.step.post/total_param_l2",
+      "hyp/param/csm/optim.step.pre/total_param_l2",
+      "hyp/sp/build_has_modules",
+      "hyp/tsb/no_nan_inf"
+    ]
+  },
+  {
+    "rep": 2,
+    "L1": 351,
+    "L2": 5985,
+    "L3": 3458,
+    "L4": 401,
+    "rescued": 21,
+    "yield": 0.06700083542188805,
+    "distinct_survivors": 11,
+    "survivors": [
+      "hyp/cross_rank_equal/replica_cksum",
+      "hyp/csm/optim.step.post/state_step_min",
+      "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+      "hyp/param/csm/build.snapshot/model.n_modules",
+      "hyp/param/csm/build.snapshot/model.n_parameters",
+      "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+      "hyp/param/csm/optim.step.post/state_step_min",
+      "hyp/param/csm/optim.step.post/total_param_l2",
+      "hyp/param/csm/optim.step.pre/total_param_l2",
+      "hyp/sp/build_has_modules",
+      "hyp/tsb/no_nan_inf"
+    ]
+  },
+  {
+    "rep": 3,
+    "L1": 349,
+    "L2": 5977,
+    "L3": 3479,
+    "L4": 394,
+    "rescued": 6,
+    "yield": 0.06591935753722604,
+    "distinct_survivors": 11,
+    "survivors": [
+      "hyp/cross_rank_equal/replica_cksum",
+      "hyp/csm/optim.step.post/state_step_min",
+      "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+      "hyp/param/csm/build.snapshot/model.n_modules",
+      "hyp/param/csm/build.snapshot/model.n_parameters",
+      "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+      "hyp/param/csm/optim.step.post/state_step_min",
+      "hyp/param/csm/optim.step.post/total_param_l2",
+      "hyp/param/csm/optim.step.pre/total_param_l2",
+      "hyp/sp/build_has_modules",
+      "hyp/tsb/no_nan_inf"
+    ]
+  },
+  {
+    "rep": 4,
+    "L1": 351,
+    "L2": 5887,
+    "L3": 3518,
+    "L4": 379,
+    "rescued": 24,
+    "yield": 0.06437914047902157,
+    "distinct_survivors": 11,
+    "survivors": [
+      "hyp/cross_rank_equal/replica_cksum",
+      "hyp/csm/optim.step.post/state_step_min",
+      "hyp/param/csm/build.snapshot/framework_invariants.megatron.n_transformer_layers_in_local_module",
+      "hyp/param/csm/build.snapshot/model.n_modules",
+      "hyp/param/csm/build.snapshot/model.n_parameters",
+      "hyp/param/csm/build.snapshot/optimizer.n_param_groups",
+      "hyp/param/csm/optim.step.post/state_step_min",
+      "hyp/param/csm/optim.step.post/total_param_l2",
+      "hyp/param/csm/optim.step.pre/total_param_l2",
+      "hyp/sp/build_has_modules",
+      "hyp/tsb/no_nan_inf"
+    ]
+  }
+]

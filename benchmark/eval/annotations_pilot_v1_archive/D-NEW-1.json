@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-1",
+  "framework": "deepspeed",
+  "category": "moe",
+  "parallel_dimension": "none",
+  "invariant_type": "implementation_equivalence",
+  "required_trace_fields": ["module_class", "gate_implementation_signature"],
+  "check_stage": "build",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "TopKGate applies topk to raw logits instead of post-softmax gates. Detection_method=source_analysis indicates this is not directly runtime-observable from a single trace field; must be caught at build-time by asserting the routing implementation. Borderline numerical vs moe: chose moe because the bug is specific to MoE router algorithm, not generic numerical math. parallel_dim=none because single-GPU MoE reproduces (anti-example 6). pi_precond=true (precond is module_class==TopKGate); pattern P8 because runtime traces cannot easily distinguish topk-of-logits vs topk-of-softmax."
+}

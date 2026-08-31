@@ -1,0 +1,15 @@
+{
+  "bug_id": "O-NEW-57",
+  "framework": "olmo",
+  "category": "numerical",
+  "parallel_dimension": "FSDP",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["module_name", "wte_num_embeddings", "ff_out_out_features", "vocab_size", "embedding_size"],
+  "check_stage": "build",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P8",
+  "tier_field": "Tier 0",
+  "rationale": "wte sized by vocab_size while ff_out sized by embedding_size; padding rows backprop to nothing. Borderline sharding vs numerical: not a parallel-shard bug, it's a model-init shape inconsistency observable statically on named_modules (P8). pi_precond=true (precond is module pair wte+ff_out present)."
+}

@@ -1,0 +1,24 @@
+{
+  "version": "paper-funnel-v1",
+  "note": "Frozen per-framework stage sizes backing main-text funnel 420→5334→3436→357→45. Recompute by summing; LLM re-proposal is offline and not required for open reproduce.",
+  "paper_totals": {"L1": 420, "L2": 5334, "L3": 3436, "L4": 357, "Deploy": 45},
+  "per_framework": {
+    "L1": {"megatron": 121, "deepspeed": 103, "olmo": 99, "olmo_core": 97},
+    "L2": {"megatron": 1300, "deepspeed": 1397, "olmo": 1300, "olmo_core": 1337},
+    "L3": {"megatron": 992, "deepspeed": 680, "olmo": 899, "olmo_core": 865},
+    "L4": {"megatron": 104, "deepspeed": 83, "olmo": 81, "olmo_core": 89}
+  },
+  "skip_stress": {
+    "skip_l3_sample": 400,
+    "skip_l3_clean_fp": 114,
+    "skip_l3_csv": "core_algo/data/funnel_skip_l3_results.csv",
+    "skip_l4_csv": "overleaf/sdc_llm_icml_2025-v2-back-cc-new-branch/benchmark/eval/funnel_skip_l4_results.csv",
+    "skip_l3_csv_note": "Open package ships skip_l3 under core_algo/data/; overleaf path is fallback only.",
+    "paper_skip_l3_fp_rate": "114/400",
+    "paper_full_funnel_fp": "0/764"
+  },
+  "enumeration_model": {
+    "description": "L2/L1 expansion is parameter×scope enumeration (relation × param scope × pi_topo × pi_precond), not a second LLM call.",
+    "mean_expansion_L2_over_L1": 12.7
+  }
+}

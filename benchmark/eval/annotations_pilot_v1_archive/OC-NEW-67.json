@@ -1,0 +1,15 @@
+{
+  "bug_id": "OC-NEW-67",
+  "framework": "olmo-core",
+  "category": "lr_schedule",
+  "parallel_dimension": "combo",
+  "invariant_type": "implementation_equivalence",
+  "required_trace_fields": ["scheduler_class", "recipe_name", "warmup_steps", "decay_steps"],
+  "check_stage": "build",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "OLMoE3 recipe used CosWithWarmup where WSD was intended; both produce monotonic lr curves so runtime trace cannot distinguish them. Must be caught at build-time by asserting scheduler_class matches recipe intent. Borderline lr_schedule vs control_flow: chose lr_schedule because root cause is scheduler selection. pi_precond=true (precond is recipe==OLMoE3-WSD)."
+}

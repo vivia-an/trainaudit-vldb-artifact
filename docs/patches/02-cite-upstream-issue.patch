@@ -1,0 +1,18 @@
+Names the upstream issue for the production discovery. VLDB is single-blind, so the
+identifier can be given, which makes the paper's strongest claim checkable. The fix
+attribution is left exactly as it stands -- "maintainers confirmed and fixed" is accurate
+and must not be strengthened, because the authors' own PR (#4642) was closed in favour of
+a duplicate. Verified upstream state in docs/UPSTREAM_BUG_EVIDENCE.md.
+
+--- a/main.tex
++++ b/main.tex
+@@ -1095,7 +1095,8 @@
+ replica to Muon and another to AdamW. Had the planned one-week job continued,
+ it would have consumed approximately 43{,}000 H200 GPU-hours with divergent
+ optimizer state. We reported the fault upstream, where maintainers confirmed
+-and fixed the previously unrecorded bug; the same rule reproduces it on a
++and fixed the previously unrecorded bug (\texttt{NVIDIA/Megatron-LM} issue
++\#4641); the same rule reproduces it on a
+ Megatron-LM HEAD scan. This is one out-of-pool discovery intercepted in
+ production, not two independent bugs.
+ 

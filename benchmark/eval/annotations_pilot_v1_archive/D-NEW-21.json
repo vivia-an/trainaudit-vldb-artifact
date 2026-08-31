@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-21",
+  "framework": "deepspeed",
+  "category": "checkpoint",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["has_zero_optimizer_state", "zero_stage", "bf16_enabled"],
+  "check_stage": "build",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "Engine sets has_zero_optimizer_state = zero or bf16, so bf16 without ZeRO is wrongly flagged as having ZeRO state. Detected at build by asserting has_zero_optimizer_state == (zero_stage>0); a free-form module attribute, hence Tier 6. Borderline P8 vs P4: chose P8 because the wrong flag is set once in __init__ and never changes, single-GPU reproduces so parallel_dim=none."
+}

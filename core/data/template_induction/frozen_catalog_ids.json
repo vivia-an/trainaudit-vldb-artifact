@@ -1,0 +1,217 @@
+{
+  "version": "paper-catalog-T01-T35-frozen-2026-07-16",
+  "n_templates": 35,
+  "frozen_sha256": "cfa30e182a4aa5c6637423dcbd95f15cb20c2b34a1da80000f5df6c6b8176734",
+  "templates": [
+    {
+      "id": "T01",
+      "name": "cross-rank-replica-equality",
+      "relation": "equality_across_ranks",
+      "witness": "State that the parallelism recipe declares replicated (parameters, reduced gradients, loss-scale/overflow state, RNG for dropout, derived grad-norm scalars, bro"
+    },
+    {
+      "id": "T02",
+      "name": "logged-metric-reduction-consistency",
+      "relation": "equality_across_ranks",
+      "witness": "A metric reported to logs must be the designated cross-rank reduction of the per-rank values, hence identical on every rank, whenever distributed metric logging"
+    },
+    {
+      "id": "T03",
+      "name": "config-invariant-execution-equivalence",
+      "relation": "reference_equivalence",
+      "witness": "Outputs, gradients, and converged loss must be invariant (within tolerance) to performance-only execution configuration: parallel degree, sequence divisibility,"
+    },
+    {
+      "id": "T04",
+      "name": "spec-reference-conformance",
+      "relation": "reference_equivalence",
+      "witness": "A computed quantity (attention output/gradient, attention scale, normalization formula, routing selection/dispatch, LR schedule, RoPE numerics, gated-FFN activa"
+    },
+    {
+      "id": "T05",
+      "name": "designated-dtype-fidelity",
+      "relation": "dtype_preservation",
+      "witness": "Every tensor must carry its designated dtype at its point of use: gradients accumulate/reduce/communicate in the designated dtype, registered buffers and inputs"
+    },
+    {
+      "id": "T06",
+      "name": "storage-dtype-interpretation-match",
+      "relation": "dtype_preservation",
+      "witness": "The dtype used to read an on-disk token dataset must equal the dtype the file was written with, so token ids are not silently reinterpreted."
+    },
+    {
+      "id": "T07",
+      "name": "gradient-accumulation-conservation",
+      "relation": "conservation",
+      "witness": "The accumulated gradient must equal the exact sum of all per-micro-batch (per-rank) gradient contributions: starting from a zeroed buffer, each contribution add"
+    },
+    {
+      "id": "T08",
+      "name": "scale-factor-consistency",
+      "relation": "value_scaling_consistency",
+      "witness": "Every scaled or normalized quantity in the loss/gradient/metric path must carry exactly the factor mandated by its specification (parallel degree, token/sample "
+    },
+    {
+      "id": "T09",
+      "name": "gradient-norm-computation-fidelity",
+      "relation": "value_scaling_consistency",
+      "witness": "The reported/applied global gradient norm, logged per-parameter reduction metrics, and clip coefficient must equal a reference recomputation over the actual gra"
+    },
+    {
+      "id": "T10",
+      "name": "producer-consumer-completion-ordering",
+      "relation": "ordering",
+      "witness": "Any consumer of shared state (collective, forward read, deallocation, bucket copy, state snapshot) must be ordered after the producing operation has completed a"
+    },
+    {
+      "id": "T11",
+      "name": "checkpoint-restore-state-equality",
+      "relation": "restoration_after_reload",
+      "witness": "After checkpoint load, every element of training state (parameters, optimizer moments, LR/scheduler fields, RNG, derived caches) must equal the value it had at "
+    },
+    {
+      "id": "T12",
+      "name": "checkpoint-save-completeness",
+      "relation": "count_frequency_match",
+      "witness": "A saved checkpoint must contain the complete expected inventory: every parameter key, every optimizer-state key, and one shard/file per rank or partition group "
+    },
+    {
+      "id": "T13",
+      "name": "dataloader-bookkeeping-reset",
+      "relation": "restoration_after_reload",
+      "witness": "Data-loader bookkeeping (start index, iteration position) must be re-initialized to its defined starting value at run/epoch boundaries so the realized sample or"
+    },
+    {
+      "id": "T14",
+      "name": "scaling-scalar-finiteness",
+      "relation": "boundedness",
+      "witness": "Every scalar that multiplies or divides losses/gradients (loss scale, clip coefficient, loss-normalization denominator) must be finite and its denominator nonze"
+    },
+    {
+      "id": "T15",
+      "name": "counter-monotonic-progress",
+      "relation": "monotonicity",
+      "witness": "Cumulative training counters (optimizer step count, global FLOPs) must advance monotonically by their defined increment and never stall at zero, reset per step,"
+    },
+    {
+      "id": "T16",
+      "name": "positional-encoding-position-fidelity",
+      "relation": "index_consistency",
+      "witness": "The positional (rotary) encoding applied to each token must equal the spec encoding of that token's intended global position under the configured layout, includ"
+    },
+    {
+      "id": "T17",
+      "name": "loss-parameter-gradient-connectivity",
+      "relation": "gradient_flow",
+      "witness": "Every trainable parameter on an active loss path must receive a nonzero gradient: no loss term may be detached from the autograd graph and no routing or masking"
+    },
+    {
+      "id": "T18",
+      "name": "configured-value-effectiveness",
+      "relation": "config_effectiveness",
+      "witness": "The runtime-effective value of a user-configured setting (LR schedule overrides, softmax scale, optimizer-state layout mode, device/backend selection, named dat"
+    },
+    {
+      "id": "T19",
+      "name": "packed-sequence-attention-isolation",
+      "relation": "exclusivity",
+      "witness": "When multiple documents are packed into one sequence, attention mass across document boundaries must be exactly zero (block-diagonal mask honored by the backend"
+    },
+    {
+      "id": "T20",
+      "name": "padding-loss-exclusion",
+      "relation": "exclusivity",
+      "witness": "Padding (ignore-index) token positions must contribute zero to the training loss; the loss mask must exclude exactly the padding positions."
+    },
+    {
+      "id": "T21",
+      "name": "overflow-skip-step-validity",
+      "relation": "count_frequency_match",
+      "witness": "An optimizer step is skipped if and only if a genuine gradient overflow (non-finite gradient) occurred at that step; skip frequency must match overflow frequenc"
+    },
+    {
+      "id": "T22",
+      "name": "parameter-update-effectiveness",
+      "relation": "update_effectiveness",
+      "witness": "A non-skipped optimizer step with finite nonzero gradients must actually change each trainable parameter, and the tensor consumed by forward must be the optimiz"
+    },
+    {
+      "id": "T23",
+      "name": "unrelated-operation-state-preservation",
+      "relation": "state_preservation",
+      "witness": "A stateful object (residual-stream input, module identity attribute, global RNG state, persistent buffer, shared dataset cache) must retain its value across ope"
+    },
+    {
+      "id": "T24",
+      "name": "intra-run-recomputation-determinism",
+      "relation": "determinism",
+      "witness": "Re-executions of the same logical computation within one step (activation-checkpoint recompute passes, repeated per-subgroup metadata updates) must produce valu"
+    },
+    {
+      "id": "T25",
+      "name": "sharded-layout-conformance",
+      "relation": "sharding_layout_consistency",
+      "witness": "The layout, shape, contiguity, and distribution kind of every tensor an operation touches must equal the layout mandated by the active parallel configuration an"
+    },
+    {
+      "id": "T26",
+      "name": "exactly-once-side-effect",
+      "relation": "count_frequency_match",
+      "witness": "A per-boundary required event (aux-loss tracker increment per training step, final-checkpoint save per step, parameter-sync launch per microbatch id, weight-gra"
+    },
+    {
+      "id": "T27",
+      "name": "init-distribution-conformance",
+      "relation": "value_scaling_consistency",
+      "witness": "Parameter statistics immediately after initialization must conform to the configured initialization spec: correct (depth-scaled) standard deviation, correct tru"
+    },
+    {
+      "id": "T28",
+      "name": "master-working-weight-copy-fidelity",
+      "relation": "copy_consistency",
+      "witness": "At every designated synchronization point between high-precision master parameters and low-precision working parameters (master creation at init; master-to-work"
+    },
+    {
+      "id": "T29",
+      "name": "router-gate-probability-range-validity",
+      "relation": "boundedness",
+      "witness": "MoE router gate/combine weight values consumed downstream (expert selection and weighting, log/divide operations) must lie in the valid probability range: withi"
+    },
+    {
+      "id": "T30",
+      "name": "static-attention-pattern-mass-exclusion",
+      "relation": "exclusivity",
+      "witness": "Attention mass on (query, key) positions forbidden by the configured static attention pattern (causal order, sliding-window extent) must be exactly zero: the re"
+    },
+    {
+      "id": "T31",
+      "name": "sort-key-order-conformance",
+      "relation": "ordering",
+      "witness": "When a collection is consumed in an order defined by a sort key, the realized processing order must equal the order induced by the intended key semantics (numer"
+    },
+    {
+      "id": "T32",
+      "name": "pipeline-layer-partition-conformance",
+      "relation": "structural_integrity",
+      "witness": "The layer-to-pipeline-stage assignment realized at model construction must equal the partition mandated by the pipeline configuration: a monotone boundary cover"
+    },
+    {
+      "id": "T33",
+      "name": "supervision-label-index-range-validity",
+      "relation": "boundedness",
+      "witness": "Label indices consumed by a supervision loss must lie within the valid index range of that loss's target space (offset/fused vocabulary range, active expert ran"
+    },
+    {
+      "id": "T34",
+      "name": "training-step-budget-data-sufficiency",
+      "relation": "count_frequency_match",
+      "witness": "The number of training examples the data pipeline makes available (total constructed dataset instances, loader yield budget before exhaustion) must cover the co"
+    },
+    {
+      "id": "T35",
+      "name": "frozen-parameter-update-exclusion",
+      "relation": "exclusivity",
+      "witness": "Parameters designated as frozen — by requires_grad=False or by a configured freeze pattern — must be excluded from every update channel: never placed in trainab"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+===== TrainAudit on BUGGY (67c9e315~1) =====
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/bugs/O-NEW-1/trainaudit_driver.py:47: UserWarning: Full backward hook is firing when gradients are computed with respect to module outputs since no inputs require gradients. See https://docs.pytorch.org/docs/main/generated/torch.nn.Module.html#torch.nn.Module.register_full_backward_hook for more details.
+  loss.backward()
+=== 1/11 violations ===
+  [ok       ] T0-checkpoint-preserve-rng: no checkpoint.call events (rule passive)
+  [ok       ] T0-clip-grad-bounded: all 0 clip_grad calls bounded by max_norm
+  [ok       ] T0-dtype-propagation: checked 4 non-cast layer outputs (passive at T0; full join with pre-event is a T1 feature)
+  [ok       ] T0-initial-lr-present: no scheduler.init events (rule passive)
+  [ok       ] T0-build-has-modules: build snapshot has parameters and modules (1 snapshots)
+  [ok       ] T0-no-nan-inf: no NaN/Inf detected
+  [VIOLATION] T0-norm-output-unit-rms: 1 normalizer outputs have abnormal RMS
+  [ok       ] T0-optim-lr-positive: all 1 param_groups have positive lr
+  [ok       ] T0-optim-step-counter-monotonic: only 1 optim.step.post events (rule passive)
+  [ok       ] T0-softmax-degenerate: checked 0 softmax/router outputs, none degenerate
+  [ok       ] T0-token-id-in-vocab: no dataloader.batch events captured (rule passive)
+
+[O-NEW-1/trainaudit] BUG DETECTED via 1 rule(s):
+   - T0-norm-output-unit-rms: 1 normalizer outputs have abnormal RMS
+     evidence: {'sample': [{'event_id': 6, 'rms': 0.32910245656967163, 'module_class': 'RMSLayerNorm'}], 'n_normalizer_events': 1, 'violation_event_ids': [6]}
+
+===== TrainAudit on FIXED (67c9e315) =====
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/bugs/O-NEW-1/trainaudit_driver.py:47: UserWarning: Full backward hook is firing when gradients are computed with respect to module outputs since no inputs require gradients. See https://docs.pytorch.org/docs/main/generated/torch.nn.Module.html#torch.nn.Module.register_full_backward_hook for more details.
+  loss.backward()
+=== 0/11 violations ===
+  [ok       ] T0-checkpoint-preserve-rng: no checkpoint.call events (rule passive)
+  [ok       ] T0-clip-grad-bounded: all 0 clip_grad calls bounded by max_norm
+  [ok       ] T0-dtype-propagation: checked 4 non-cast layer outputs (passive at T0; full join with pre-event is a T1 feature)
+  [ok       ] T0-initial-lr-present: no scheduler.init events (rule passive)
+  [ok       ] T0-build-has-modules: build snapshot has parameters and modules (1 snapshots)
+  [ok       ] T0-no-nan-inf: no NaN/Inf detected
+  [ok       ] T0-norm-output-unit-rms: all 1 normalizer outputs within RMS [0.5,2.0]
+  [ok       ] T0-optim-lr-positive: all 1 param_groups have positive lr
+  [ok       ] T0-optim-step-counter-monotonic: only 1 optim.step.post events (rule passive)
+  [ok       ] T0-softmax-degenerate: checked 0 softmax/router outputs, none degenerate
+  [ok       ] T0-token-id-in-vocab: no dataloader.batch events captured (rule passive)
+
+[O-NEW-1/trainaudit] CLEAN: no rule violations
+

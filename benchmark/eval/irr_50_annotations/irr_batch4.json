@@ -1,0 +1,65 @@
+{
+  "annotator_id": "llm_independent_batch4",
+  "annotations": [
+    {
+      "bug_id": "O-004",
+      "category": "dtype",
+      "confidence": "medium",
+      "rationale": "reduce_dtype=bf16 precision; dtype config root"
+    },
+    {
+      "bug_id": "O-001",
+      "category": "numerical",
+      "confidence": "high",
+      "rationale": "shared layernorm wrong; normalization math"
+    },
+    {
+      "bug_id": "O-028",
+      "category": "dtype",
+      "confidence": "high",
+      "rationale": "params not cast to full precision in eval"
+    },
+    {
+      "bug_id": "O-006",
+      "category": "control_flow",
+      "confidence": "high",
+      "rationale": "global_step/start_index not reset on restore"
+    },
+    {
+      "bug_id": "O-NEW-10",
+      "category": "gradient_sync",
+      "confidence": "medium",
+      "rationale": "adaptive grad clipping EMA broken"
+    },
+    {
+      "bug_id": "O-035",
+      "category": "sharding",
+      "confidence": "medium",
+      "rationale": "FSDP flatten/shard breaks param_init_fn"
+    },
+    {
+      "bug_id": "O-007",
+      "category": "loss_computation",
+      "confidence": "high",
+      "rationale": "cross_entropy ignore_index kwarg renamed"
+    },
+    {
+      "bug_id": "O-030",
+      "category": "gradient_sync",
+      "confidence": "high",
+      "rationale": "FSDP+PP reduce-scatter race condition"
+    },
+    {
+      "bug_id": "O-008",
+      "category": "checkpoint",
+      "confidence": "high",
+      "rationale": "unsharded checkpoint save incorrect"
+    },
+    {
+      "bug_id": "O-029",
+      "category": "offload",
+      "confidence": "medium",
+      "rationale": "FSDP CPU offload grad accum replace not add"
+    }
+  ]
+}

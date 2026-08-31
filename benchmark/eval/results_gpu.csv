@@ -1,0 +1,27 @@
+bug_id,framework,category,phase,commit,verdict,rule_id,message
+B1,megatron-lm,moe_router_init,buggy,3c637fc0d~1,CLEAN,,no rule violations
+B1,megatron-lm,moe_router_init,fixed,3c637fc0d,CLEAN,,no rule violations
+B11,deepspeed,gradient_clipping,buggy,005afe12~1,BUG_DETECTED,T0-clip-grad-bounded,2 clip_grad calls left grad norm > max_norm
+B11,deepspeed,gradient_clipping,fixed,005afe12,CLEAN,,no rule violations
+B12,olmo-core,lr_schedule,buggy,6e330ba2~1,BUG_DETECTED,T0-initial-lr-present,1 scheduler-resume(s) found param_groups without initial_lr
+B12,olmo-core,lr_schedule,fixed,6e330ba2,CLEAN,,no rule violations
+B13,olmo,residual_connection,buggy,562c0fe0~1,BUG_DETECTED,T1-residual-stream-preserved,2/2 residual blocks: output closer to normed than to original input
+B13,olmo,residual_connection,fixed,562c0fe0,CLEAN,,no rule violations
+M-012,megatron-lm,dtype,buggy,db439037170b3bf2717d9ff2a8dd1c3f5549e359,BUG_DETECTED,T1-expert-bias-fp32,2 router(s) have non-fp32 expert_bias
+M-012,megatron-lm,dtype,fixed,a58768725f557c64c489b8ae09c6858a9b8c97ef,CLEAN,,no rule violations
+M-014,megatron-lm,numerical,buggy,83a53f2dd66afa9fcece6629135d04012a05639b,BUG_DETECTED,T0-softmax-degenerate,2 softmax/router outputs are degenerate one-hot
+M-020,megatron-lm,configuration_validation,buggy,64d816a39c41c17628eee49838a59c9693b6b036,BUG_DETECTED,T1-layer-count-strict,layer count mismatch: actual 4 (per-rank 2 × pp_size 2) != declared 5
+M-024,megatron-lm,dtype,buggy,74d9bcfff592f51482a3642fabcbaf6ce487e9c9,BUG_DETECTED,T1-jitter-preserves-dtype,2 jitter calls promoted dtype
+M-024,megatron-lm,dtype,fixed,20b395424d2e2bbfaab57b2f954294eb57c90c82,CLEAN,,
+M-NEW-5,megatron-lm,loss_scaling,buggy,87d9d2506~1,BUG_DETECTED,T1-router-has-calculate-per-token-loss,2 router(s) missing calculate_per_token_loss attr
+M-NEW-5,megatron-lm,loss_scaling,fixed,87d9d2506,CLEAN,,no rule violations
+O-002,olmo,numerical,buggy,3e307106af6561045ccc77ce2584d6fa55a634e3,BUG_DETECTED,T1-residual-stream-preserved,2/2 residual blocks: output closer to normed than to original input
+O-002,olmo,numerical,fixed,c482df74e054049a7f36f9a62f144667184a6f77,CLEAN,,no rule violations
+O-005,olmo,control_flow,buggy,0bc7f6c7,BUG_DETECTED,T0-checkpoint-preserve-rng,1 checkpoint calls used preserve_rng_state=False while dropout is present
+O-005,olmo,control_flow,fixed,204ad53c,CLEAN,,no rule violations
+O-NEW-1,olmo,normalization,buggy,67c9e315~1,BUG_DETECTED,T0-norm-output-unit-rms,1 normalizer outputs have abnormal RMS
+O-NEW-1,olmo,normalization,fixed,67c9e315,CLEAN,,no rule violations
+OC-NEW-2,olmo-core,optimizer,buggy,2b6cf996~1,BUG_DETECTED,T0-optim-step-counter-monotonic,optim state['step'] failed to increment in 4/4 transitions
+OC-NEW-2,olmo-core,optimizer,fixed,2b6cf996,CLEAN,,no rule violations
+OC-NEW-3,olmo-core,lr_schedule,buggy,f34e7ddc~1,BUG_DETECTED,T1-sqrt-decay-front-loaded,sqrt decay shape inverted: end-of-training |slope|=2.0412 >> start-of-training |slope|=0.5013
+OC-NEW-3,olmo-core,lr_schedule,fixed,f34e7ddc,CLEAN,,

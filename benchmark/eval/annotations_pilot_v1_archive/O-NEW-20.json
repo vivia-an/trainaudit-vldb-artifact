@@ -1,0 +1,15 @@
+{
+  "bug_id": "O-NEW-20",
+  "framework": "olmo",
+  "category": "numerical",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["param_name", "param_checksum", "use_mup", "step"],
+  "check_stage": "init",
+  "pi_schema_applicable": true,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P4",
+  "tier_field": "Tier 0",
+  "rationale": "Under muP, ff_out (MuReadout) must be zero post-init but reset_parameters re-inits with normal. Borderline numerical vs other: chose numerical because the bug breaks muP's coordinate-check scaling property. Hook reads ff_out.weight after construction under precond use_mup=True (P4, pi_schema+pi_precond)."
+}

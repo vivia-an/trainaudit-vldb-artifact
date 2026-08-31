@@ -1,0 +1,65 @@
+{
+  "annotator_id": "llm_independent_batch2",
+  "annotations": [
+    {
+      "bug_id": "M-003",
+      "category": "numerical",
+      "confidence": "medium",
+      "rationale": "wrong loss/gradient scaling math under CP"
+    },
+    {
+      "bug_id": "M-002",
+      "category": "numerical",
+      "confidence": "high",
+      "rationale": "attention backward impl wrong under CP"
+    },
+    {
+      "bug_id": "M-012",
+      "category": "dtype",
+      "confidence": "high",
+      "rationale": "fp32 buffer silently cast to bf16"
+    },
+    {
+      "bug_id": "M-023",
+      "category": "communication",
+      "confidence": "high",
+      "rationale": "p2p tensor shape mismatch under CP"
+    },
+    {
+      "bug_id": "D-010",
+      "category": "gradient_sync",
+      "confidence": "high",
+      "rationale": "gradient accumulation skipped when ga_steps=1"
+    },
+    {
+      "bug_id": "D-NEW-14",
+      "category": "lr_schedule",
+      "confidence": "high",
+      "rationale": "WarmupCosineLR returns wrong-length list"
+    },
+    {
+      "bug_id": "D-009",
+      "category": "moe",
+      "confidence": "high",
+      "rationale": "ZeRO-3 overwrites expert id, breaks routing"
+    },
+    {
+      "bug_id": "D-NEW-38",
+      "category": "gradient_sync",
+      "confidence": "medium",
+      "rationale": "sparse grad reduction not written back to param.grad"
+    },
+    {
+      "bug_id": "D-017",
+      "category": "gradient_sync",
+      "confidence": "high",
+      "rationale": "micro_step_id init bug breaks grad accumulation"
+    },
+    {
+      "bug_id": "D-005",
+      "category": "optimizer_state",
+      "confidence": "medium",
+      "rationale": "CPUAdam bias_correction2 inconsistent across subgroups"
+    }
+  ]
+}

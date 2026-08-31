@@ -1,0 +1,186 @@
+{
+  "batch": 4,
+  "decisions": [
+    {
+      "case_id": "OC-NEW-32",
+      "decision": "MATCH",
+      "template_id": "T27",
+      "guard_extension": "precondition: fan_in embedding init with nontrivial embed_scale - init std must compensate the multiplier",
+      "note": "Init-time weight-statistics spec conformance; std spec includes the embed_scale compensation."
+    },
+    {
+      "case_id": "M-NEW-53",
+      "decision": "MATCH",
+      "template_id": "T23",
+      "guard_extension": "topology: PP>1; phase: optimizer_step; precondition: VPP cuda-graph cast capture with shared mempool must not write other stages' param buffers",
+      "note": "Another stage's cast-graph replay is a non-designated writer of this stage's parameter buffer."
+    },
+    {
+      "case_id": "M-NEW-59",
+      "decision": "MATCH",
+      "template_id": "T24",
+      "guard_extension": "precondition: FP4 MoE recompute must use the quantization-aware checkpoint path so amax/scale state matches the original forward",
+      "note": "Operator re-resolved to determinism from relation_statement: recompute-vs-original self-comparison within one step."
+    },
+    {
+      "case_id": "OC-NEW-27",
+      "decision": "MATCH",
+      "template_id": "T01",
+      "guard_extension": "precondition: MultiGroupDDP MoE per-bucket grad reduce (comm-dtype downcast, no zeroed partial buckets)",
+      "note": "Reduced expert gradients are replicated state that must agree across the DP replication group."
+    },
+    {
+      "case_id": "D-NEW-46",
+      "decision": "MATCH",
+      "template_id": "T15",
+      "guard_extension": "precondition: engine construction must not eagerly step() and pre-increment state['step'] before any real update",
+      "note": "count_frequency_match coding is an equivalent restatement of T15's counter-increment-per-defined-event relation (O-023 precedent)."
+    },
+    {
+      "case_id": "O-NEW-68",
+      "decision": "MATCH",
+      "template_id": "T18",
+      "guard_extension": "precondition: fused CE z-loss - effective lse_square_scale must equal the configured z-loss multiplier",
+      "note": "config_honoring aliases to config_effectiveness; configured knob silently nullified by hard-coded 0.0."
+    },
+    {
+      "case_id": "M-NEW-38",
+      "decision": "MATCH",
+      "template_id": "T07",
+      "guard_extension": "precondition: mxfp8 reuse_grad_buf shared param/grad buffer must leave main_grad zero at first-accumulation start",
+      "note": "Nonzero accumulation start state violates the zeroed-buffer clause of T07's conservation predicate."
+    },
+    {
+      "case_id": "OC-NEW-64",
+      "decision": "MATCH",
+      "template_id": "T18",
+      "guard_extension": "precondition: dataset index-cache fingerprint must cover all layout-determining settings (sequence_length, bos_token_id)",
+      "note": "Operator re-resolved to config_effectiveness (O-NEW-56 precedent): served instance layout is the runtime-effective value of the configured sequence layout."
+    },
+    {
+      "case_id": "D-NEW-42",
+      "decision": "MATCH",
+      "template_id": "T11",
+      "guard_extension": "precondition: ZeRO-3 save must include requires_grad=False frozen parameters",
+      "note": "Restore-equality violated for frozen params omitted at save; witnessed by checksum round trip."
+    },
+    {
+      "case_id": "D-NEW-51",
+      "decision": "MATCH",
+      "template_id": "T07",
+      "guard_extension": "precondition: ZeRO-2 contiguous_gradients=False extra-large-param reduction reference cleared per iteration",
+      "note": "Operator re-resolved to conservation: stale previous-iteration gradient in the reduction is a foreign contribution violating sum-of-current-contributions."
+    },
+    {
+      "case_id": "OC-NEW-15",
+      "decision": "MATCH",
+      "template_id": "T26",
+      "guard_extension": null,
+      "note": "Operator re-resolved to count_frequency_match ('counted once per step'); existing act-recompute precondition covers it; independent of M-NEW-21."
+    },
+    {
+      "case_id": "M-NEW-39",
+      "decision": "MATCH",
+      "template_id": "T04",
+      "guard_extension": "precondition: MLA YaRN softmax scale computed from mscale_all_dim per the mscale formula",
+      "note": "Operator re-resolved to reference_equivalence: computed scale vs YaRN closed-form spec value."
+    },
+    {
+      "case_id": "D-NEW-30",
+      "decision": "MATCH",
+      "template_id": "T28",
+      "guard_extension": "precondition: ZeRO-2 CPU-offload writeback partition_id computed within each group's own real_dp_process_group",
+      "note": "Working-partition-equals-own-master-partition with destination slice per param group's process group; independent of D-NEW-29."
+    },
+    {
+      "case_id": "M-NEW-55",
+      "decision": "MATCH",
+      "template_id": "T25",
+      "guard_extension": "topology: DP>1; phase: init; precondition: bucket param_to_index must use globally padded per-param offsets",
+      "note": "Operator re-resolved to sharding_layout_consistency: optimizer slice offsets must equal the padded layout mandated by the DP config."
+    },
+    {
+      "case_id": "M-NEW-16",
+      "decision": "MATCH",
+      "template_id": "T23",
+      "guard_extension": "phase: optimizer_step; precondition: zeroing grad_data in shared mxfp8 storage must not touch pending-all-gather param bytes",
+      "note": "Grad-buffer zeroing is not a designated writer of other buckets' parameter data."
+    },
+    {
+      "case_id": "D-NEW-27",
+      "decision": "MATCH",
+      "template_id": "T05",
+      "guard_extension": "precondition: ZeRO-3 reduce-scatter buffer cast exactly when communication_data_type != model dtype (no inverted gate)",
+      "note": "Collective operand must carry the configured communication dtype at launch."
+    },
+    {
+      "case_id": "D-NEW-80",
+      "decision": "SINGLETON",
+      "template_id": null,
+      "guard_extension": null,
+      "note": "Padding-metadata conservation across ranks shares no objects with T07/T12/D-027 (§3.2)."
+    },
+    {
+      "case_id": "OC-NEW-18",
+      "decision": "MATCH",
+      "template_id": "T04",
+      "guard_extension": "precondition: HF-parity Qwen3 RMSNorm affine multiply in input dtype (cast before multiply)",
+      "note": "Operator re-resolved to reference_equivalence: violation witnessed only against the HF reference implementation (§3.4), like the existing HF-parity RoPE-dtype precondition."
+    },
+    {
+      "case_id": "M-NEW-9",
+      "decision": "MATCH",
+      "template_id": "T08",
+      "guard_extension": "precondition: MoE aux-loss metric under TP>1 free of tp_world_size factor and reduced over the designated group",
+      "note": "Accumulated-metric scale factor mandated by spec; TP factor applied erroneously."
+    },
+    {
+      "case_id": "M-NEW-44",
+      "decision": "MATCH",
+      "template_id": "T08",
+      "guard_extension": "precondition: DSA indexer aux loss divided by num_microbatches under gradient accumulation",
+      "note": "Same 1/num_microbatches obligation as the MoE aux-loss precondition, independent incident."
+    },
+    {
+      "case_id": "O-NEW-57",
+      "decision": "MATCH",
+      "template_id": "T18",
+      "guard_extension": "precondition: token embedding constructed with configured embedding_size (not vocab_size) when weight_tying=False",
+      "note": "Operator re-resolved to config_effectiveness (O-NEW-56 precedent): constructed module size must equal the configured value."
+    },
+    {
+      "case_id": "D-NEW-18",
+      "decision": "MATCH",
+      "template_id": "T07",
+      "guard_extension": null,
+      "note": "Covered by existing ZeRO-1/2-CPU-offload and accumulation-steps>1 preconditions; not evidently the same incident as existing T07 supports."
+    },
+    {
+      "case_id": "OC-NEW-38",
+      "decision": "MATCH",
+      "template_id": "T09",
+      "guard_extension": "precondition: DTensor grad norm unwrapped before metric recording (no extra cross-rank reduction)",
+      "note": "Reported grad-norm metric must equal reference recomputation; DTensor sharded clipping already a T09 concern."
+    },
+    {
+      "case_id": "O-NEW-26",
+      "decision": "SINGLETON",
+      "template_id": null,
+      "guard_extension": null,
+      "note": "Reset-to-initial over the trainer's global_step/LR state, not data-loader bookkeeping (T13 objects differ §3.2; T11 reset-vs-restore §3.3)."
+    },
+    {
+      "case_id": "D-NEW-19",
+      "decision": "MATCH",
+      "template_id": "T05",
+      "guard_extension": "precondition: extra-large-param reduction buffer allocated in configured communication dtype, not param.dtype",
+      "note": "Independent of D-NEW-51 (different defect and fix on the same code path, §4.1)."
+    }
+  ],
+  "n_matched": 23,
+  "n_new_singletons": 2,
+  "n_new_templates": 0,
+  "core_edits": [],
+  "templates_total_after": 29,
+  "singletons_total_after": 21
+}

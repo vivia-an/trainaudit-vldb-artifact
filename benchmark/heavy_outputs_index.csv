@@ -1,0 +1,28 @@
+# Heavy evaluation outputs kept outside git (see docs/DATA_AVAILABILITY.md)
+# rel_path,size_bytes,n_files
+sdc_llm_icml_2025/benchmark/eval/rebuttal_v1,9843011425,251
+sdc_llm_icml_2025/benchmark/eval/rebuttal_v1/C1_overhead_gpu,7097480638,175
+sdc_llm_icml_2025/benchmark/eval/rebuttal_v1/D_portability_tests,3992,2
+sdc_llm_icml_2025/benchmark/eval/rebuttal_v1/E_clean_run_fp_audit,2744668027,54
+sdc_llm_icml_2025/benchmark/eval/rebuttal_v1/SUMMARY.md,11396,1
+sdc_llm_icml_2025/benchmark/eval/rebuttal_v1/B1_diagnosis_accuracy,68144,6
+sdc_llm_icml_2025/benchmark/eval/rebuttal_v1/A2_ablation,16775,4
+sdc_llm_icml_2025/benchmark/eval/rebuttal_v1/A1_mining_funnel,762453,9
+sdc_llm_icml_2025/benchmark/eval/hunt_log,576536705,152
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_DEEPSPEED_BF16_ZERO0_DUAL_BUG,50081,4
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_DEEPSPEED_WARMUPCOSINE_MULTIGROUP,13673,4
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_OLMOCORE_FSDP_EXPERTS,13539,4
+sdc_llm_icml_2025/benchmark/eval/hunt_log/PAPER_SUMMARY.md,8872,1
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_OLMO_CKPT_SAVE_OVERWRITE_DROP,12871,4
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_OLMOCORE_ASYNC_CALLBACK_RACE,5721,2
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_DEEPSPEED_ZERO_OFFLOAD_MULTI_BACKWARD,60295,6
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_OLMOCORE_RNGCKPT,14961,4
+sdc_llm_icml_2025/benchmark/eval/hunt_log/INDEX.md,14394,1
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_DEEPSPEED_OVERLAP_COMM_BUFFER_LIFETIME,40829,6
+sdc_llm_icml_2025/benchmark/eval/hunt_log/novel_hunt,576212355,97
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_DEEPSPEED_ZERO3_STREAM_RACE_NAN,6824,2
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_MEGATRON_CUDAGRAPH_BUFFER_CORRUPTION,16707,4
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_DEEPSPEED_BF16_BOUNDARY_GRAD_LEAK,15440,4
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_OLMO_ADAPTIVE_CLIP_EMA_RESET,14212,4
+sdc_llm_icml_2025/benchmark/eval/hunt_log/CAND_OLMOCORE_EVAL_NOZEROGRAD,11075,4
+sdc_llm_icml_2025/benchmark/eval/hunt_log/static_findings.md,24856,1

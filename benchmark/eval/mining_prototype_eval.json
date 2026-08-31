@@ -1,0 +1,106 @@
+{
+  "n_prototypes": 5,
+  "n_buggy_traces": 2,
+  "n_healthy_traces": 5,
+  "prototypes": [
+    {
+      "id": "proto/comm.pre/tensor_pre.l2_norm_nonzero",
+      "description": "pre-allreduce gradient l2_norm must be > 0 (catches all-zero grad sent into comm)"
+    },
+    {
+      "id": "proto/comm.post/tensor_post.l2_norm_positive",
+      "description": "post-allreduce gradient l2_norm must be > 0 (catches comm collapse/scatter loss)"
+    },
+    {
+      "id": "proto/optim.step.pre/total_grad_l2_nonzero",
+      "description": "total_grad_l2 must be > 0 at every optim.step.pre (catches dead-grad before optimizer updates params)"
+    },
+    {
+      "id": "proto/module.fwd.post/output.l2_norm_nonzero",
+      "description": "every module forward output must have l2_norm > 0 (catches dead-activation paths e.g. dead block-0 MoE)"
+    },
+    {
+      "id": "proto/module.fwd.post/output.abs_max_nonzero",
+      "description": "every module forward output must have abs_max > 0 (catches all-zero activations differently from l2 sum)"
+    }
+  ],
+  "rows": [
+    {
+      "trace": "small_hybrid_moe (dead block-0 MoE)",
+      "kind": "BUG",
+      "verdicts": {
+        "tensor_pre.l2_norm_nonzero": 0,
+        "tensor_post.l2_norm_positive": 0,
+        "total_grad_l2_nonzero": 0,
+        "output.l2_norm_nonzero": 0,
+        "output.abs_max_nonzero": 0
+      }
+    },
+    {
+      "trace": "dense reordered_norm long (transient block-0 attn)",
+      "kind": "BUG",
+      "verdicts": {
+        "tensor_pre.l2_norm_nonzero": 0,
+        "tensor_post.l2_norm_positive": 0,
+        "total_grad_l2_nonzero": 0,
+        "output.l2_norm_nonzero": 0,
+        "output.abs_max_nonzero": 0
+      }
+    },
+    {
+      "trace": "olmo_core moe_hybrid (pre-norm)",
+      "kind": "ok",
+      "verdicts": {
+        "tensor_pre.l2_norm_nonzero": 0,
+        "tensor_post.l2_norm_positive": 0,
+        "total_grad_l2_nonzero": 0,
+        "output.l2_norm_nonzero": 0,
+        "output.abs_max_nonzero": 0
+      }
+    },
+    {
+      "trace": "olmo_core smallmoe (with shared_mlp)",
+      "kind": "ok",
+      "verdicts": {
+        "tensor_pre.l2_norm_nonzero": 0,
+        "tensor_post.l2_norm_positive": 0,
+        "total_grad_l2_nonzero": 0,
+        "output.l2_norm_nonzero": 0,
+        "output.abs_max_nonzero": 0
+      }
+    },
+    {
+      "trace": "olmo_core olmoe_1B_7B (production-scale)",
+      "kind": "ok",
+      "verdicts": {
+        "tensor_pre.l2_norm_nonzero": 0,
+        "tensor_post.l2_norm_positive": 0,
+        "total_grad_l2_nonzero": 0,
+        "output.l2_norm_nonzero": 0,
+        "output.abs_max_nonzero": 0
+      }
+    },
+    {
+      "trace": "olmo_core olmo2_370M (large dense reordered_norm)",
+      "kind": "ok",
+      "verdicts": {
+        "tensor_pre.l2_norm_nonzero": 0,
+        "tensor_post.l2_norm_positive": 0,
+        "total_grad_l2_nonzero": 0,
+        "output.l2_norm_nonzero": 0,
+        "output.abs_max_nonzero": 0
+      }
+    },
+    {
+      "trace": "megatron clean (dense)",
+      "kind": "ok",
+      "verdicts": {
+        "tensor_pre.l2_norm_nonzero": 0,
+        "tensor_post.l2_norm_positive": 0,
+        "total_grad_l2_nonzero": 0,
+        "output.l2_norm_nonzero": 0,
+        "output.abs_max_nonzero": 0
+      }
+    }
+  ]
+}

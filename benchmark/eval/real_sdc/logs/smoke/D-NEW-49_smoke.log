@@ -1,0 +1,49 @@
+Warning: Permanently added '[183.242.150.6]:32054' (ED25519) to the list of known hosts.
+===== TrainAudit on D-NEW-49 BUGGY (ae198e20~1) =====
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+[D-NEW-49] FAIL: deepspeed_import: ModuleNotFoundError: No module named 'torch._six'
+Traceback (most recent call last):
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/bugs/D-NEW-49/trainaudit_driver.py", line 58, in main
+    from deepspeed.runtime.dataloader import DeepSpeedDataLoader
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/__init__.py", line 14, in <module>
+    from . import module_inject
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/module_inject/__init__.py", line 1, in <module>
+    from .replace_module import replace_transformer_layer, revert_transformer_layer
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/module_inject/replace_module.py", line 732, in <module>
+    from ..pipe import PipelineModule
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/pipe/__init__.py", line 1, in <module>
+    from ..runtime.pipe import PipelineModule, LayerSpec, TiedLayerSpec
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/pipe/__init__.py", line 1, in <module>
+    from .module import PipelineModule, LayerSpec, TiedLayerSpec
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/pipe/module.py", line 15, in <module>
+    from .. import utils as ds_utils
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/utils.py", line 19, in <module>
+    from torch._six import inf
+ModuleNotFoundError: No module named 'torch._six'
+
+
+===== TrainAudit on D-NEW-49 FIXED (ae198e20) =====
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+[D-NEW-49] FAIL: deepspeed_import: ModuleNotFoundError: No module named 'torch._six'
+Traceback (most recent call last):
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/bugs/D-NEW-49/trainaudit_driver.py", line 58, in main
+    from deepspeed.runtime.dataloader import DeepSpeedDataLoader
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/__init__.py", line 14, in <module>
+    from . import module_inject
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/module_inject/__init__.py", line 1, in <module>
+    from .replace_module import replace_transformer_layer, revert_transformer_layer
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/module_inject/replace_module.py", line 732, in <module>
+    from ..pipe import PipelineModule
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/pipe/__init__.py", line 1, in <module>
+    from ..runtime.pipe import PipelineModule, LayerSpec, TiedLayerSpec
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/pipe/__init__.py", line 1, in <module>
+    from .module import PipelineModule, LayerSpec, TiedLayerSpec
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/pipe/module.py", line 15, in <module>
+    from .. import utils as ds_utils
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/DeepSpeed/deepspeed/runtime/utils.py", line 19, in <module>
+    from torch._six import inf
+ModuleNotFoundError: No module named 'torch._six'
+
+

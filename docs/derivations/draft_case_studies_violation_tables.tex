@@ -1,0 +1,60 @@
+% ============================================================
+% DRAFT — Case Studies rewritten as VIOLATION TABLES (T7)
+% 统一格式: raw trace rows → compiled SQL → 非空 violation table → diagnosis (空=pass / 非空=violation)。
+% 三案分别覆盖 schema / topology-metadata / behavior 三类信号。
+% 由 SIGMOD 实验循环 Iter8(#4641)+ Iter12(Case1/3)成稿。**尚未并入 main.tex**,待确认替换 §6.5。
+% 落地注记: 每案的逻辑 relation 是 coredump(step,stage,data JSON)上的视图;部分需训练侧补字段(见各案 note)。
+% ============================================================
+
+% ---------- Case 2: #4641 Muon+PP+MTP optimizer routing (topology/metadata 层) ----------
+\paragraph{Case 2 — optimizer-routing (Megatron \#4641).}
+\emph{Relation} \texttt{optimizer\_routing(param\_name, pp\_stage, group\_index, optimizer\_id)} = view over
+\texttt{optimizer\_group}(group\_index/lr/betas $\to$ optimizer\_id) $\bowtie$ \texttt{optimizer\_param\_state}(param\_name),
+taken from the init-time snapshot after param-group registration.
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+param\_name & pp\_stage & group & optimizer\_id \\\midrule
+word\_embeddings & 0        & 0 & AdamW \\
+word\_embeddings & last(MTP) & 1 & Muon  \\\bottomrule
+\end{tabular}
+\end{center}
+\emph{Constraint SQL}: \texttt{SELECT param\_name, array\_agg(DISTINCT optimizer\_id) FROM optimizer\_routing WHERE tied GROUP BY param\_name HAVING COUNT(DISTINCT optimizer\_id) > 1;}
+\quad\emph{Violation table}: \texttt{word\_embeddings $\to$ \{AdamW, Muon\}}.
+\quad\emph{Diagnosis}: one tied group updated by two optimizers across PP $\to$ silent divergence; fires \texttt{MEGATRON\_TIED\_EMBED\_OPT\_ROUTING} before the first optimizer step.
+\emph{Instrumentation note}: \texttt{dump\_optimizer\_state} currently omits \texttt{group\_index} on param rows; add it (or join by dump order) to run this SQL.
+
+% ---------- Case 1: SFT tokenizer chat-template (schema 层, pi_topo = T) ----------
+\paragraph{Case 1 — chat-template vocab integrity (SFT tokenizer).}
+\emph{Relation} \texttt{chat\_template\_render(delimiter, n\_vocab\_ids, n\_bpe\_pieces)} captured at the \texttt{post-tokenize} hook; topology-independent ($\pi_{\text{topo}}=\top$), restricted to the SFT phase ($\pi_{\text{precond}}$).
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+delimiter & n\_vocab\_ids & n\_bpe\_pieces \\\midrule
+\texttt{<SPECIAL\_10>} & 0 & 6 \\\bottomrule
+\end{tabular}
+\end{center}
+\emph{Constraint SQL}: \texttt{SELECT delimiter, n\_vocab\_ids, n\_bpe\_pieces FROM chat\_template\_render WHERE n\_vocab\_ids <> 1 OR n\_bpe\_pieces > 1;}
+\quad\emph{Violation table}: \texttt{<SPECIAL\_10> $\to$ (0 ids, 6 pieces)}.
+\quad\emph{Diagnosis}: the \texttt{nemotron-h-aligned} chat-template emits role delimiters absent from the tokenizer vocabulary, so the BPE backend silently shatters each into 6 subwords; loss is bitwise-identical to a correct run while SWE-bench pass rate diverges (28.8\% vs 44.5\%). Fires \texttt{SFT\_CHAT\_TEMPLATE\_VOCAB\_INTEGRITY} at step~1.
+\emph{Instrumentation note}: needs a post-tokenize hook recording rendered-delimiter $\to$ tokenization (not in the current model/optimizer dumps).
+
+% ---------- Case 3: DeepSpeed multi-backward grad loss (behavior 层) ----------
+\paragraph{Case 3 — multi-backward gradient loss (DeepSpeed ZeRO-offload).}
+\emph{Relation} \texttt{backward\_invocation(step, n\_backward, n\_grad\_applied)} from call-event counts at the backward / \texttt{zero\_grad} hookpoints (ZeRO-2 + CPU offload, grad-accum=1).
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+step & n\_backward & n\_grad\_applied & $\Delta\theta$ (obs / exp) \\\midrule
+k & 4 & 1 & 2.479887 / 7.146901 (2.88$\times$) \\\bottomrule
+\end{tabular}
+\end{center}
+\emph{Constraint SQL}: \texttt{SELECT step, n\_backward, n\_grad\_applied FROM backward\_invocation WHERE n\_backward > 1 AND n\_grad\_applied < n\_backward;}
+\quad\emph{Violation table}: \texttt{step=k $\to$ (4 backward, 1 applied)}.
+\quad\emph{Diagnosis}: only the last of 4 backward passes contributes gradient; the other 3 are silently dropped (observed $\Delta\theta$ matches the last-only oracle exactly). Policy loss still descends; fires \texttt{multi-backward-per-step-fragile-config} before the optimizer step.
+\emph{Instrumentation note}: needs per-step backward-invocation counting at the backward/\texttt{zero\_grad} hookpoints.
+
+% ------------------------------------------------------------
+% 三案信号类: Case1 = schema (pi_schema); Case2 = topology/metadata (pi_topo+pi_precond); Case3 = behavior/event。
+% 统一叙事: 每案都是 coredump 视图上的一条 guarded constraint, 空结果=clean / 非空=violation table+diagnosis。
+% ------------------------------------------------------------

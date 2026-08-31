@@ -1,0 +1,14 @@
+{
+  "bug_id": "M-NEW-33",
+  "framework": "megatron-lm",
+  "category": "checkpoint",
+  "parallel_dimension": "EP",
+  "invariant_type": "completeness",
+  "required_trace_fields": ["chained_optimizer.param_groups", "inner_optimizer.param_groups", "is_chained_optimizer"],
+  "check_stage": "checkpoint_load",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P7",
+  "tier_field": "Tier 6",
+  "rationale": "After load_state_dict, ChainedOptimizer.param_groups must equal concat of inner.param_groups by identity. Stage=checkpoint_load. completeness (list-equivalence). Layer=schema_topo_precond: precond is is_chained_optimizer. P7 over P8: only observable after runtime load mutates groups.",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P7_P8"]
+}

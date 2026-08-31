@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-2",
+  "framework": "deepspeed",
+  "category": "lr_schedule",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["lr_per_group", "num_param_groups", "step"],
+  "check_stage": "before_optimizer",
+  "pi_schema_applicable": true,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P1",
+  "tier_field": "Tier 3",
+  "rationale": "WarmupCosineLR.get_lr() returns a scalar instead of a list of length num_param_groups. Single-rank reproduces, so parallel_dim=none. Checked by reading lr trace and asserting len(get_lr())==num_param_groups before optimizer.step. pi_schema+pi_precond (precond: scheduler is WarmupCosineLR). P1 (trace equality) over P5 because grad bounds are not involved."
+}

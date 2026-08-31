@@ -1,0 +1,459 @@
+{
+  "metadata": {
+    "experiment": "E1_pattern",
+    "batch": 3,
+    "n_bugs": 90
+  },
+  "per_bug": {
+    "D-NEW-80": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "ZeRO padding recorded only on last DP rank → middle padding ranks save junk into optimizer state, so per-rank flat-param shards diverge from the canonical-derived value within the same DP group ⇒ P3 cross-rank replication of the post-trim flat-param. Not P6: structure (param sizes) is fine, only per-rank padded values are wrong."
+    },
+    "D-NEW-81": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "TopKGate.wg silently rebound to a fresh fp32 Linear in forward — gate weight is never reduced across DP ranks and never updated by the ZeRO optimizer, so wg.weight diverges across DP ranks (each rank holds an untracked local copy). P3 cross-rank replication. Not P1: dtypes match locally; the bug is parameter identity/replication."
+    },
+    "D-NEW-9": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P4"],
+      "rationale": "BF16 lp_grads not cleared → stale gradient buildup. detection_method=runtime_hook but the invariant is 'lp_grads zeroed after accumulate'; this resembles a counter/state-reset rule but doesn't fit P8 (counter consistency) cleanly. Could be framed as 'clear_lp_grads must be called once per step' (P4-ish) but speculative; flagging uncertain only."
+    },
+    "M-NEW-1": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "torch.sigmoid receives bf16 logits when the spec requires fp32; sigmoid is a non-cast function whose input/output dtype must match expectation ⇒ P1 dtype preservation (matches few-shot Example 2). Not P2: no missing 1/N scaling factor."
+    },
+    "M-NEW-10": {
+      "patterns_hit": ["P6"],
+      "patterns_uncertain": [],
+      "rationale": "Gate not sliced when num_query_groups < tp_size → gate.shape[2] != num_attention_heads_per_partition. Build/forward-time shape vs config mismatch ⇒ P6 Structural Integrity. Not P3: shape itself is wrong, not weight values across ranks."
+    },
+    "M-NEW-11": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P4"],
+      "rationale": "FusedAdam.use_decoupled_grad never set → param.grad stays None and optimizer silently no-ops. Could be expressed as 'optimizer must read >=1 non-zero grad per step' (P4-ish counter), but no canonical P1-P8 rule for 'flag must be True'. Closest is P4 with very low confidence."
+    },
+    "M-NEW-12": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "expert_bias persistent buffer mutated by graph warmup; post-capture buffer differs from pre-capture. Bitwise buffer-equality check is not in the P1-P8 catalog (P5 is train↔eval/checkpoint, not graph warmup). Not P3: buffer is per-rank and not a cross-rank divergence."
+    },
+    "M-NEW-13": {
+      "patterns_hit": ["P6"],
+      "patterns_uncertain": [],
+      "rationale": "permute() pads tokens to 16 even without quantization → returned token count != sum(tokens_per_expert). This is a shape/structure invariant (output length must match config) ⇒ P6. Not P2: padding adds zero tokens not a numeric scaling factor."
+    },
+    "M-NEW-14": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "When expt_dp_size==1 dispatch_param_gather skipped, param_gather_dispatched flag never flips True; finish_param_sync hence never runs. Function-call mismatch — expected K=1 finish_param_sync per step, observed 0 ⇒ P4 invocation frequency. Not P8: this is not a counter init/reset, it's a missing call."
+    },
+    "M-NEW-15": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "FusedAdam.master_weights flag is True when it should be False under M-FSDP+precision-aware optimizer. Source/config-only bug observed only by inspecting the flag value; not a runtime invariant in the P1-P8 catalog (P6 is structural shape, not config flags)."
+    },
+    "M-NEW-16": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P3"],
+      "rationale": "mxfp8 reuse_grad_buf zeros wrong buffer wiping other buckets' params. Resulting param-data zeroing would diverge across DP ranks if timing varies, but the primary symptom is local param corruption, not a cross-rank check. Flag P3 uncertain at <60%."
+    },
+    "M-NEW-17": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "FSDP main_grad not reconstructed via get_main_grad → stale grad buffer used for accumulation. Not a dtype/scaling/replication/count invariant in P1-P8; the actual rule is 'after backward main_grad must equal get_main_grad()' which is FSDP-specific and not catalog-covered."
+    },
+    "M-NEW-18": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Buggy boolean condition selects wrong master_weights flag for bf16+precision-aware optimizer. Pure config-flag mismatch, no runtime numeric/structural invariant in P1-P8 catches it."
+    },
+    "M-NEW-19": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "expert_bias added BEFORE sigmoid then used as routing probability — algorithmic ordering bug. Output shape and dtype are correct, no cross-rank divergence; like Example 4 (D-NEW-1 topk-then-softmax), this is source-only. None of P1-P8 catches a wrongly-ordered sigmoid composition."
+    },
+    "M-NEW-20": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "calculate_per_token_loss path missed multiplying by context_parallel_size, so post-CP-divide gradient is off by 1/cp_size. Cross-N-rank scaling factor missing ⇒ P2 (matches few-shot Example 5 / O-003 style). Not P4: numeric scale, not a call count."
+    },
+    "M-NEW-21": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "save_to_aux_losses_tracker called twice when activation checkpointing reruns router — exact P4 invocation frequency mismatch (expected K=1 per training-mode forward, observed 2). Identical pattern to M-010 in sanity set. Not P2: no missing scaling factor."
+    },
+    "M-NEW-22": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "Encoder receives sum of decoder TP grads when it should receive mean (factor of N missing) ⇒ classic P2 Scaling Consistency violation across N ranks. Not P3: gradients not expected to be identical, but their aggregate scale is wrong."
+    },
+    "M-NEW-23": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "expert_gradient_scaling_factor uses 1/ep_size when DP!=EDP, post-reduce expert grad ends up scaled by 1/(ep_size*edp_size) instead of 1/dp_size. Missing/wrong N-factor across N ranks ⇒ P2. Not P3: divergence in scale, not in value identity."
+    },
+    "M-NEW-24": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Hardcoded k=2 instead of num_groups//group_topk in topk — algorithmic constant bug. Output shape/dtype correct, no cross-rank divergence, no scaling factor pattern. Like Example 4 (D-NEW-1) or M-014: source-only algorithmic error not caught by P1-P8."
+    },
+    "M-NEW-26": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Router weight re-randomized outside RNG fork on the perform_initialization=False branch → weight diverges across DP ranks. Direct match to few-shot Example 1 (M-005): P3 Cross-Rank Replication."
+    },
+    "M-NEW-27": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "topk-then-softmax with k=1 yields constant 1.0 prob and zero router gradient. Pure algorithmic ordering bug — same family as Example 4 / M-014. No P1-P8 catches monotonicity-equivalent topk reordering or zero gradient (gradient signals are not cataloged)."
+    },
+    "M-NEW-28": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "Float16Module.cuda() silently downcasts expert_bias buffer from fp32 to bf16 each iteration. Buffer dtype no longer equals registered dtype across pass-through ⇒ P1 dtype preservation (identical to M-012 in sanity set)."
+    },
+    "M-NEW-29": {
+      "patterns_hit": ["P6"],
+      "patterns_uncertain": [],
+      "rationale": "MambaStack uses naive even-PP offset when uneven first/last PP stage layers configured → selected layer offsets disagree with configured architecture. Build-time structural mismatch ⇒ P6 (analogous to M-020 layer-count drop). Not P3: layer identity itself is wrong, not weight values."
+    },
+    "M-NEW-3": {
+      "patterns_hit": ["P1", "P7"],
+      "patterns_uncertain": [],
+      "rationale": "_bias_dropout_add_func downcasts residual to x.dtype (bf16) instead of upcasting x to fp32 — residual stream loses fp32 precision. P1 dtype preservation (input fp32 → output bf16 across non-cast add) AND P7 residual-stream integrity (residual not preserved as the original input). Not P2: no scaling factor."
+    },
+    "M-NEW-30": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "MoE aux loss not divided by tp_size before all-reduce → effective gradient inflated by tp_size. Classic missing 1/N scaling factor across N TP ranks ⇒ P2 (matches few-shot Example 5 verbatim)."
+    },
+    "M-NEW-31": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "LinearWithFrozenWeight backward skips TP all-reduce of dgrad → grad_input differs across TP ranks (should be replicated post-allreduce). Detection invariant: 'grad_input identical across TP ranks' ⇒ P3 Cross-Rank Replication. Not P2: missing call, not missing scale."
+    },
+    "M-NEW-32": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "apply_input_jitter applied AFTER gating instead of BEFORE — algorithmic placement bug. Tensor shapes/dtypes correct, no cross-rank divergence, no scaling factor. Source-only ordering bug not caught by P1-P8."
+    },
+    "M-NEW-33": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P5"],
+      "rationale": "ChainedOptimizer.load_state_dict leaves outer self.param_groups detached after checkpoint resume, freezing LR. Resembles P5 (state must be restored after checkpoint load) but invariant is structural identity (param_groups must alias inner optimizer's groups), not scalar state. Flagging P5 uncertain."
+    },
+    "M-NEW-34": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Fancy indexing collapses (token, expert_slot) layout for topk>1 — tokens routed to wrong experts. Algorithmic indexing bug, no dtype/scaling/replication/structural invariant catches the per-token routing correctness; output shape is still correct. P1-P8 do not cover indexing-layout bugs."
+    },
+    "M-NEW-35": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "MoE token gather/scatter skipped when TP>1 but SP=False → each TP rank sees its local incomplete token set, produces wrong outputs that disagree across TP ranks. Cross-rank divergence on outputs that should be replicated post-gather ⇒ P3."
+    },
+    "M-NEW-36": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P4"],
+      "rationale": "MTP per-layer loss assigned (=) instead of accumulated (+=) within log window → only last iter's value survives. detection_method=function_call_counting suggests P4 framing, but the rule is value accumulation not call frequency; ambiguous, flagging P4 uncertain."
+    },
+    "M-NEW-38": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "main_grad starts non-zero on first iter (equals param data) due to copy into shared buffer before forward_pre_hook is registered. Specific to first-iter init ordering; not a dtype/scaling/replication invariant. P5 (state restoration) doesn't apply (no train/eval transition); P8 (counter) doesn't apply."
+    },
+    "M-NEW-39": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "MLA softmax_scale built from config.mscale instead of config.mscale_all_dim — wrong scalar constant in attention. Output shapes/dtypes correct; no cross-rank divergence; not a 1/N scaling factor (it's a model-architecture constant, not aggregation scale). Source-only algorithmic constant bug."
+    },
+    "M-NEW-4": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": ".float() on already-fp32 tensor returns alias; subsequent in-place subtract corrupts saved-for-backward activation. Tensor-aliasing/in-place safety is not in P1-P8 catalog. Not P1: dtypes are all fp32; not P3: bug is per-rank corruption."
+    },
+    "M-NEW-40": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "ViT local-spec uses AttnMaskType.causal instead of no_mask → bidirectional attention silently turned causal. Output shape/dtype unchanged; no cross-rank divergence; the bug is a config enum value. Source/config-only, not in P1-P8."
+    },
+    "M-NEW-41": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "GPTDataset returns aliased cached_loss_mask; in-place pad mutation pollutes cache for later samples. Tensor-aliasing/data-loading bug; per-sample mask values diverge from spec but no cross-rank or dtype/scale invariant fires. Not in P1-P8."
+    },
+    "M-NEW-42": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "GradReducePipeline scales gbuf.data once per bucket → cumulative scaling factor (1/dp_size)**num_buckets instead of 1/dp_size. Wrong multiplicative scaling factor across N ranks ⇒ P2 Scaling Consistency."
+    },
+    "M-NEW-43": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "DDP target_gradient_scaling_factor uses 1/dp_size instead of 1/(dp_size*cp_size) when CP>1, leaving residual cp_size factor in updates. Missing N (cp_size) factor in cross-rank scaling ⇒ P2 (analogous to M-NEW-20)."
+    },
+    "M-NEW-44": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "DSAIndexerLossAutoScaler missing /num_microbatches divisor → indexer aux-loss gradient is num_microbatches× too large. Missing 1/N scaling factor where N is microbatches accumulated ⇒ P2 (analogous to D-026 / M-NEW-30)."
+    },
+    "M-NEW-45": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "TEGroupedMLP fused-ops backward_dw never invokes _trigger_wgrad_accumulation_and_reduce_hooks on linear_fc1/fc2; expected K=1 per backward, observed K=0 → param.grad not cleared and AccumulateGrad double-counts. P4 invocation frequency mismatch. Not P2: it's a missing call not a missing scale."
+    },
+    "M-NEW-46": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "isend handle.wait() never called before deallocate_output_tensor (expected K=1 wait per send, observed 0) → next stage receives stale buffer. P4 invocation frequency on wait(). Not P3: corrupted activations are between stages, not within a parallel group."
+    },
+    "M-NEW-47": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "all_gathered_input not contiguous-checked before fused wgrad GEMM — kernel reads via flat data_ptr. Tensor-stride/contiguity invariant is not part of P1-P8 (closest is P6 structural shape; but shape is fine, only stride is wrong)."
+    },
+    "M-NEW-5": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "Title states 'aux loss not scaled by num_tokens in per_token_loss mode' — missing /num_tokens scaling factor analogous to M-NEW-30/M-NEW-44. P2 Scaling Consistency. Limited fields (no root_cause) but invariant family is clear from title."
+    },
+    "M-NEW-51": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "tensor_parallel.checkpoint runs CheckpointFunction during graph warmup/capture, corrupting captured graph. Graph-capture-vs-eager numerical mismatch is not in the P1-P8 catalog (P5 covers train↔eval, not graph warmup boundary)."
+    },
+    "M-NEW-52": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P4"],
+      "rationale": "_CudagraphReplayNode unconditionally copies user_input into cudagraph_input even when data_ptrs match → self-copy overwrites in-place results. Could be framed as 'copy_ must be called K=0 when ptrs match' (P4) but it's really a conditional-call bug; flagging P4 uncertain."
+    },
+    "M-NEW-53": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "DDP cast cudagraph manager missing num_warmup_steps=0 and VPP-stage tag, so VPP stages share captured buffers across mempool. Graph-capture-config bug; not in P1-P8 catalog."
+    },
+    "M-NEW-54": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "FP32 shard_model_param built without .detach() → shard participates in autograd, doubling grad contributions. The invariant is requires_grad=False/grad_fn is None on a derived view — a structural autograd-graph property not covered by P1-P8 (P6 is shape/dim, not autograd flags)."
+    },
+    "M-NEW-55": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "_ParamAndGradBucket builds local param_to_index ignoring per-param padding; offset map diverges from global padded layout. Index/offset structural invariant not catalogued in P1-P8 (closest P6 but P6 is dims/shapes, not bucket offsets)."
+    },
+    "M-NEW-56": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "Latent MoE backward_dw never calls fc1_latent_proj/fc2_latent_proj.backward_dw — expected K=1 per backward each, observed K=0; latent projection weights have main_grad=0 forever. P4 invocation frequency mismatch (analogous to M-NEW-45)."
+    },
+    "M-NEW-57": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "_CudagraphReplayNode skips per-module DelayedScaling restore on FP4-only path → stale amax history each replay. FP-recipe restoration is not a runtime check pattern in P1-P8."
+    },
+    "M-NEW-58": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "_CudaGraphRunner enables FP8/FP4 capture for keep-mamba-stack-attention-linear-in-bf16 layers, silently casting frozen-bf16 linears to FP8. Config-flag scoping bug; no runtime cross-rank/scaling/structural invariant in P1-P8 directly catches this."
+    },
+    "M-NEW-59": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "FP4-only path picks tensor_parallel.checkpoint instead of te_checkpoint for moe_layer_recompute, breaking FP4 amax tracking. Recompute-vs-forward FP-recipe consistency not in P1-P8."
+    },
+    "M-NEW-6": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Title 'group_limited_topk uses num_groups instead of topk in inner topk' — same algorithmic constant family as M-NEW-24 (hardcoded k). Output shape/dtype correct; no cross-rank/scaling/structural invariant fires. Source-only."
+    },
+    "M-NEW-60": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "set_save_original_input gated FP8-only, missed for FP4 → linear_proj caches FP4-quantized tensor, recompute mismatches forward. Forward/recompute equivalence is not in P1-P8 catalog."
+    },
+    "M-NEW-61": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "MultimodalRotaryEmbedding sliced along wrong seq_dim and missing cp_group → each CP rank gets wrong rotary embedding for its sequence partition. Algorithmic axis-error (similar in family to D-027 wrong-axis softmax). Not P3: each CP rank holds a DIFFERENT (correct) shard, the bug is selecting the wrong one — values are not expected to be replicated."
+    },
+    "M-NEW-62": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "make_viewless_tensor result assigned to local 'output' but function returns hidden_states → returned tensor remains a view, downstream isend reuses storage and corrupts pipeline activations. View-aliasing/storage invariant not in P1-P8 (P6 is shape/dim only)."
+    },
+    "M-NEW-64": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "DSL keeps params_dtype=fp32 when mixed_precision_dtype='bf16' (legacy path forced bf16). Pure config-coherence bug — observed only by reading the config object value, not via runtime dtype or shape on tensors flowing through ops. Not P1: per-op dtypes still preserve their inputs."
+    },
+    "M-NEW-65": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "ChainedOptimizer.split_state_dict only assigns state_dicts[0] → expert sub-optimizer receives None and silently skips its load → expert params stay default-initialized after resume. P5 explicitly covers checkpoint save/load round-trip — sub-optimizer state not restored. Not P3: replication is fine pre-resume; only post-resume restoration fails."
+    },
+    "M-NEW-67": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "get_grads_for_norm checks fsdp_param BEFORE precision-aware-optimizer branch → reads stale param.grad instead of decoupled_grad, grad_norm wrong. Branch-ordering bug on a config-derived gate; not in P1-P8 (norm is logged but not a cross-rank-replication or scale invariant in the catalog sense)."
+    },
+    "M-NEW-68": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P6"],
+      "rationale": "HybridCP pad_granularity hardcoded to 32 instead of 128 → per-CP-rank shards misaligned for HybridEP dispatcher. Structural alignment with config-required boundary; weakly P6-shaped (alignment vs config) but P6 is normally about layer-count/dim, not byte alignment. Flagging P6 uncertain."
+    },
+    "M-NEW-69": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Buggy gate uses use_precision_aware_optimizer instead of the FP8-aware derivative → reads decoupled_grad (None) under FP8, grad_norm reports 0.0. Same family as M-NEW-67: config-flag mux bug, not in P1-P8."
+    },
+    "M-NEW-7": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Title 'z-loss metric tracking missing avg_group — not averaged across ranks' → per-rank metric values diverge where they should be the cross-rank mean. Cross-rank replication of logged metrics violated ⇒ P3 (analogous to O-014 throughput-metric bug, O-NEW-30 MoE aux-loss not all-reduced)."
+    },
+    "M-NEW-8": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Title 'config.softmax_scale ignored in attention forward paths' — wrong constant used in attention. Algorithmic constant bug like M-NEW-39: output shapes/dtypes correct, no cross-rank or scaling-factor invariant catches it."
+    },
+    "M-NEW-9": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": ["P3"],
+      "rationale": "Title 'aux_loss metric incorrectly scaled by TP world_size, missing reduce_group' — looks like missing 1/tp_size factor (P2) plus possibly missing all-reduce so per-rank values diverge (P3). Primary classification P2 (scaling); P3 flagged uncertain due to terse title."
+    },
+    "O-NEW-1": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "RMSNorm uses L2 norm instead of root-mean-square — missing 1/sqrt(d) factor inside the norm. Not P2: this is a per-tensor algorithmic constant inside a single op, not an aggregation across N ranks. Output shape/dtype OK; source-only algorithmic bug."
+    },
+    "O-NEW-10": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Self-referential EMA update on grad_norm_exp_avg breaks adaptive clipping. With only title available, the bug is a wrong update rule on a scalar; not a dtype/scaling/replication/count invariant in P1-P8. Source-only."
+    },
+    "O-NEW-11": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "SDP attention bias kept fp32 with -inf, then downcast to bf16/fp16 at the SDP call — non-cast SDP function effectively receives downcasted -inf that propagates as NaN through softmax. P1 dtype preservation across the SDP non-cast op (input bias dtype mismatch). Not P3: per-rank NaN, not a replication issue."
+    },
+    "O-NEW-13": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "FLOPs counter accumulates wrongly across resumes — running total not strictly non-decreasing in tokens. Logging/metrics-only bug downstream of training; no P1-P8 runtime invariant for monotone metric accumulators (P5 is checkpoint state restoration of training state, not derived metrics)."
+    },
+    "O-NEW-14": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "clip_grads_and_collect_metrics reduces over WORLD instead of HSDP shard PG → with N replicas the all-reduced norm is N× the true value, and per-replica reduced values disagree with ground-truth. Cross-rank replication of the reduced metric violated ⇒ P3. Could also touch P2 (factor of N), but root cause is wrong group, not missing /N."
+    },
+    "O-NEW-15": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "should_step AND-ed with is_outlier inverted — optim.step called K≈0 times on normal steps (should be K=1) and K=1 on outliers. Direct P4 invocation frequency mismatch on optim.step."
+    },
+    "O-NEW-16": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "torch.device('mps') used as bool is always truthy → script always sets MPS init_device. Pure Python truthiness bug detectable only by inspecting cfg post-bootstrap; runtime tensor invariants don't fire. Not in P1-P8."
+    },
+    "O-NEW-17": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "muP set_base_shapes rescales params on checkpoint resume → param norms after from_checkpoint differ from saved checkpoint norms. Checkpoint round-trip state-restoration violated ⇒ P5 (matches O-016 / M-NEW-65 family)."
+    },
+    "O-NEW-18": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "On restart, restore_checkpoint resets every group's lr to base cfg.lr, wiping muP per-group lr/width_mult scaling. Train state (per-group lr) not properly restored after checkpoint round-trip ⇒ P5 (analogous to O-016 initial_lr-after-resume bug)."
+    },
+    "O-NEW-19": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "OLMoBlock 'normal' init divides ff_out by sqrt(2*n_layers) → init std is config.init_std/sqrt(2L) instead of config.init_std. Init-time value bug; not a cross-rank, dtype, scaling-aggregation, or count invariant. Source-only."
+    },
+    "O-NEW-2": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Causal mask built as 1-triu inverts attention direction. Output shape/dtype correct, no cross-rank divergence; algorithmic boolean bug. Same family as Example 4 (D-NEW-1) — source-only."
+    },
+    "O-NEW-20": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "OLMo.reset_parameters always init_normal on transformer.ff_out, including under muP where ff_out should be zero-initialized (MuReadout). Init-time value bug specific to muP; not a runtime P1-P8 pattern."
+    },
+    "O-NEW-21": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Per-block ff_proj built as MuReadout with readout_zero_init=True under use_mup → every block's FFN starts with zero weight. Init-time value bug; same family as O-NEW-20 — not a runtime P1-P8 pattern."
+    },
+    "O-NEW-22": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "muP attention scale uses 1/d instead of 1/sqrt(d) at base width — wrong attention temperature constant. Source-level algorithmic constant bug analogous to M-NEW-39; output shape/dtype correct, no cross-rank/scaling-aggregation invariant."
+    },
+    "O-NEW-24": {
+      "patterns_hit": ["P7"],
+      "patterns_uncertain": [],
+      "rationale": "Under norm_after, attn_norm applied to QKV-projection input (qkv = attn_norm(att_proj(x))) instead of to the attention output before residual add — residual stream sees the wrong (not-original) tensor. Direct P7 Residual Stream Integrity violation (analogous to O-002 in sanity set)."
+    },
+    "O-NEW-26": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "global_step not reset on restore_checkpoint with restore_dataloader=False → resumed run keeps checkpoint's step counter, skipping warmup. P5 covers checkpoint save/load round-trip — global_step is training state not properly restored to user-intended value (matches O-006 in sanity set)."
+    },
+    "O-NEW-27": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P5"],
+      "rationale": "Multi-epoch training does not reset dataset.start_index → next epoch resumes from previous offset. Resembles P5 state-restoration but the spec target is across-epoch reset, not train↔eval or checkpoint save/load. Flagging P5 uncertain at <60%."
+    },
+    "O-NEW-28": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P5"],
+      "rationale": "Restart at later epoch double-mixes epoch into PRNG seed → shuffle order differs from original. Related to checkpoint resume reproducibility, but the exact spec is about RNG-derived ordering, which fits P5 (state restoration on resume) only loosely. Flagging uncertain."
+    },
+    "O-NEW-29": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Optimizer metric tensors stay on CPU → all_reduce silently uses gloo or fails partial-reduce. Device-placement structural bug; not P1 (dtype is fine), not P3 (NCCL device mismatch is observed before any cross-rank value compare), not P6 (no shape/dim mismatch)."
+    },
+    "O-NEW-3": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "z_squared / mask.mean() instead of (z_squared * mask).mean() — wrong reduction algebra. Output is a tensor instead of scalar (per detection_signal), but P6 doesn't catch this (P6 is build-time module shape, not loss reduction shape). No 1/N aggregation factor across ranks. Source-only."
+    },
+    "O-NEW-30": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "MoE lb_batch_loss / moe_z_batch_loss not all-reduced → each rank logs its local value. After the metric reduction block these should be identical across ranks; they aren't ⇒ P3 Cross-Rank Replication of metrics (matches O-014, M-NEW-7 family)."
+    },
+    "O-NEW-31": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "Hardcoded num_model_replicas=1 in HSDP → all_reduce sums identical replica norms with no /N divisor, reported norm is N× true. Missing 1/N scaling factor across N replicas ⇒ P2 (analogous to D-026, M-NEW-30)."
+    },
+    "O-NEW-32": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "After all_reduce(SUM) in HYBRID_SHARD with N replicas, sums consumed without /N → per-param avg metrics inflated by replica count. Missing 1/N scaling factor ⇒ P2 (essentially the same root-cause family as O-NEW-31)."
+    },
+    "O-NEW-33": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "FullCheckpointer drops og_keys_to_new mapping during optim restore → optimizer state for renamed params silently zeroed/misattached after checkpoint resume with new block_group_size. P5 checkpoint round-trip restoration — optimizer state per-parameter not preserved (similar to M-NEW-65)."
+    },
+    "O-NEW-35": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Param-group classifier uses '.norm.' substring requiring trailing dot → q_norm/k_norm leaf weights misrouted into decay group. Pure name-classification bug at param-group construction; not in P1-P8 (P6 is structural shape, not group membership)."
+    },
+    "O-NEW-36": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "all_sums/all_norms/all_numels concatenated on dim=-1 then reduced; subsequent split(1) splits per-parameter rows instead of separating categories. Tensor-layout/reduction-bookkeeping bug producing meaningless per-param metrics. Not in P1-P8 catalog (closest P6 but no shape-vs-config mismatch is exposed externally)."
+    }
+  }
+}

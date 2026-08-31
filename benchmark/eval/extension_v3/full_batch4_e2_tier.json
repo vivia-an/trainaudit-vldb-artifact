@@ -1,0 +1,663 @@
+{
+  "metadata": {
+    "experiment": "E2_tier",
+    "batch": 4,
+    "n_bugs": 90
+  },
+  "per_bug": {
+    "O-NEW-38": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "dtype",
+        "param_name"
+      ],
+      "rationale": "uint16 vs uint32 memmap dtype is a config/dtype field check; visible at Tier 0 via dataset/dataloader dtype attribute."
+    },
+    "O-NEW-39": {
+      "min_tier_required": "5-6",
+      "fields_required": [
+        "function_call_count",
+        "step"
+      ],
+      "rationale": "Detection requires counting how often _do_adaptive_clipping runs with collect_param_metrics=True per step; Type-B hook (function-call count) is Tier 5-6."
+    },
+    "O-NEW-4": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "dtype",
+        "param_name"
+      ],
+      "rationale": "RoPE sin/cos dtype mismatch shows up as fp32 cached buffer vs bf16/fp16 input; observable from dtype field in Tier 0."
+    },
+    "O-NEW-40": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "Hard-coded cutoff_factor=3.0 changes the truncated-normal weight distribution; param checksum at init step diverges from configured-cutoff baseline. Tier 0."
+    },
+    "O-NEW-49": {
+      "min_tier_required": 3,
+      "fields_required": [
+        "learning_rate",
+        "step"
+      ],
+      "rationale": "Final linear-decay segment jumps LR back to base then decays; LR-vs-step trace at the cosine->linear handoff is the cheapest signal. Tier 3."
+    },
+    "O-NEW-5": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "Embedding init missing sqrt(d_model) factor: param checksum/std at step 0 diverges from spec. Tier 0."
+    },
+    "O-NEW-51": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Worker-local leftover-index slicing produces overlapping shards; runtime trace has no field for dataloader worker shard membership."
+    },
+    "O-NEW-53": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "start_index not reset means epoch-2 sees fewer examples; only dataloader-internal cursor state would reveal it, which is not in the schema."
+    },
+    "O-NEW-55": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "muP zero-init of ff_proj overwritten by truncated-normal: param checksum at init step differs from MuReadout expectation. Tier 0."
+    },
+    "O-NEW-56": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_name",
+        "shape"
+      ],
+      "rationale": "q_norm forced to elementwise_affine=True introduces an extra weight parameter relative to k_norm; named-parameter list / shape diff at Tier 0."
+    },
+    "O-NEW-57": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "shape",
+        "param_name"
+      ],
+      "rationale": "wte.num_embeddings != ff_out.out_features is a pure shape mismatch readable from Tier 0 shape field."
+    },
+    "O-NEW-6": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "shape",
+        "param_name"
+      ],
+      "rationale": "Flash-attn input layout (B,H,S,D) vs (B,S,H,D) is detectable from tensor shape annotation at the call site (Tier 0 shape)."
+    },
+    "O-NEW-60": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "Skipping reset_parameters() leaves FSDP-default init; param checksum/std at step 0 diverges from configured init. Tier 0."
+    },
+    "O-NEW-61": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_name",
+        "dtype"
+      ],
+      "rationale": "ff_out built without device=init_device leaves it on cpu/cuda instead of meta; device field at Tier 0 shows the mismatch."
+    },
+    "O-NEW-62": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "Missing reset_parameters when infshapes is None leaves default (near-zero) weights; param checksum at step 0 diverges. Tier 0."
+    },
+    "O-NEW-63": {
+      "min_tier_required": 3,
+      "fields_required": [
+        "learning_rate",
+        "step"
+      ],
+      "rationale": "WarmupLR vs WarmupDecayLR: LR stays constant after warmup instead of decaying — visible from learning_rate trace, Tier 3."
+    },
+    "O-NEW-64": {
+      "min_tier_required": 3,
+      "fields_required": [
+        "learning_rate",
+        "step"
+      ],
+      "rationale": "warmup_min_lr=0 vs base_lr*0.1 is detectable from the LR trajectory during warmup. Tier 3."
+    },
+    "O-NEW-65": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Retention policy bug only visible from on-disk checkpoint directory listing; no trace field tracks file-system state."
+    },
+    "O-NEW-66": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "max_steps treated as examples vs example*batch_size: dataset truncation is internal to IterableDataset and not exposed as a trace field."
+    },
+    "O-NEW-67": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "shape",
+        "param_name"
+      ],
+      "rationale": "max_sequence_length=1024 vs 2048 changes RoPE cache and attention-bias buffer shapes; pure Tier 0 shape check."
+    },
+    "O-NEW-68": {
+      "min_tier_required": 2,
+      "fields_required": [
+        "loss_value",
+        "step"
+      ],
+      "rationale": "lse_square_scale=0 silently drops the auxiliary z-loss term; visible by comparing loss component magnitudes. Tier 2."
+    },
+    "O-NEW-69": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_name",
+        "shape"
+      ],
+      "rationale": "eos_token_id=0 vs 50279 is a config/scalar parameter visible via the model config (param_name eos_token_id), Tier 0."
+    },
+    "O-NEW-7": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "Wrong layer (ff_out vs ff_proj) initialized: at step 0 the un-initialized layer's checksum differs from its config-prescribed distribution. Tier 0."
+    },
+    "O-NEW-70": {
+      "min_tier_required": 2,
+      "fields_required": [
+        "loss_value",
+        "step"
+      ],
+      "rationale": "MoE LB loss not divided by num_micro_batches inflates loss magnitude proportional to grad-accum count; loss-value trace, Tier 2."
+    },
+    "O-NEW-8": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Attention norm overwriting residual is an op-level activation-flow bug; runtime parameter/loss trace cannot localize it without forward-activation introspection."
+    },
+    "O-NEW-9": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "dtype",
+        "param_name"
+      ],
+      "rationale": "Token IDs truncated to uint16: dataset/loader dtype field exposes the wrong width at Tier 0."
+    },
+    "OC-NEW-1": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "dtype",
+        "param_name"
+      ],
+      "rationale": "as_tensor casts float probs to int — observable as a dtype mismatch on the soft_target_probs tensor at Tier 0."
+    },
+    "OC-NEW-10": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "dtype",
+        "param_name"
+      ],
+      "rationale": "rope_full_precision=True promotes q/k to fp32 for the rotary multiply — dtype field on the rotary intermediate exposes it. Tier 0."
+    },
+    "OC-NEW-11": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "Init std uses d_model**-0.5 instead of fan_in**-0.5 — at step 0 the linear weight std diverges from spec; Tier 0 param checksum."
+    },
+    "OC-NEW-12": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Per-document positions not propagated: post-RoPE q/k differs only in the rotary-applied activation; no parameter or loss-level fingerprint."
+    },
+    "OC-NEW-13": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Per-batch position miscompute is an activation-level forward bug invisible in the parameter/grad/loss trace fields."
+    },
+    "OC-NEW-14": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "A_log/dt_bias left as torch.empty (uninit) yields step-0 checksums far outside the GDN-prescribed distribution. Tier 0."
+    },
+    "OC-NEW-15": {
+      "min_tier_required": "5-6",
+      "fields_required": [
+        "function_call_count",
+        "step"
+      ],
+      "rationale": "Activation checkpointing reruns forward, double-counting the aux-loss metric accumulator; needs Type-B function-call count. Tier 5-6."
+    },
+    "OC-NEW-16": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "dtype",
+        "param_name"
+      ],
+      "rationale": "Default uint16 token_dtype vs uint32 file is a dataloader dtype mismatch visible at Tier 0."
+    },
+    "OC-NEW-17": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Enum value -> file path mismatch is a config-string bug; no runtime trace field carries the data-mix file path identity that distinguishes 0625 from 0725."
+    },
+    "OC-NEW-18": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Cast-back-before-multiply vs after-multiply is op-level ordering inside RMSNorm forward; intermediate activations are not in the schema."
+    },
+    "OC-NEW-19": {
+      "min_tier_required": "5-6",
+      "fields_required": [
+        "function_call_count",
+        "has_nan",
+        "step"
+      ],
+      "rationale": "Recompute uses fresh RNG mask: gradients silently inconsistent. Detection needs hooking dropout RNG-state preserve flag (module attribute) — Tier 5-6."
+    },
+    "OC-NEW-2": {
+      "min_tier_required": 4,
+      "fields_required": [
+        "optimizer_state_cksum",
+        "step"
+      ],
+      "rationale": "Missing step.add_ keeps Adam step counter stuck — directly visible in optimizer state at Tier 4."
+    },
+    "OC-NEW-20": {
+      "min_tier_required": 1,
+      "fields_required": [
+        "grad_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "Expert/router grads force-zeroed when freeze is off: gradient checksum on those params is exactly 0 instead of nonzero. Tier 1."
+    },
+    "OC-NEW-21": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Config encode/decode round-trip pollution is offline serialization behavior; no runtime trace field captures dataclass-field metadata."
+    },
+    "OC-NEW-22": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Global vs per-document RoPE positions affect post-RoPE activations only; parameter/grad/loss trace cannot distinguish."
+    },
+    "OC-NEW-23": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "dtype",
+        "param_name"
+      ],
+      "rationale": "token_dtype default uint16 vs required uint32 is a dataloader dtype field. Tier 0."
+    },
+    "OC-NEW-24": {
+      "min_tier_required": 1,
+      "fields_required": [
+        "grad_norm",
+        "pp_rank",
+        "step"
+      ],
+      "rationale": "Sum-of-norms vs sqrt(sum-of-squares) gives different total grad_norm; comparing PP-reduced grad_norm to expected formula at Tier 1."
+    },
+    "OC-NEW-25": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Concurrent cache-write race depends on filesystem rename ordering; no trace schema field captures it."
+    },
+    "OC-NEW-26": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Same-seed tmp filename collision is a filesystem race not surfaced in the trace schema."
+    },
+    "OC-NEW-27": {
+      "min_tier_required": "5-6",
+      "fields_required": [
+        "function_call_count",
+        "param_name",
+        "step"
+      ],
+      "rationale": "Per-bucket grad reduce skipped: each parameter gets one-by-one all-reduce with wrong comm_dtype — needs to count NCCL all-reduce calls (Type-B hook). Tier 5-6."
+    },
+    "OC-NEW-28": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "dtype",
+        "param_name"
+      ],
+      "rationale": "Mamba.forward casts using stale self.dtype: input activation dtype != live conv1d weight dtype, exposed by parameter dtype field. Tier 0."
+    },
+    "OC-NEW-29": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "F.silu(w1(h), w3(h)) drops gating: forward activation differs but parameter/grad/loss may match shape; op-level forward issue, not in schema."
+    },
+    "OC-NEW-3": {
+      "min_tier_required": 3,
+      "fields_required": [
+        "learning_rate",
+        "step"
+      ],
+      "rationale": "Wrong sqrt-decay formula gives a different LR-vs-step curve. Tier 3."
+    },
+    "OC-NEW-30": {
+      "min_tier_required": 2,
+      "fields_required": [
+        "loss_value",
+        "step"
+      ],
+      "rationale": "Sigmoid underflow to 0 propagates -inf/NaN through downstream log/divide into the final loss; loss_value trace catches it at Tier 2 (cheaper than Tier 5-6 has_nan)."
+    },
+    "OC-NEW-31": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "dtype",
+        "param_name"
+      ],
+      "rationale": "fused linear+CE accumulating gradient in bf16 vs fp32 is exposed by the gradient buffer's dtype field. Tier 0."
+    },
+    "OC-NEW-32": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "fan_in init ignoring embed_scale leaves embedding std=1.0; step-0 param checksum diverges. Tier 0."
+    },
+    "OC-NEW-33": {
+      "min_tier_required": "5-6",
+      "fields_required": [
+        "function_call_count",
+        "step",
+        "num_tokens"
+      ],
+      "rationale": "Double-counting tokens_processed needs to compare counter delta with global_batch_size — requires either function-call-count or num_tokens. Tier 5-6."
+    },
+    "OC-NEW-34": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "ComplexRotaryEmbedding ignores cu_doc_lens: bug lives in forward activations only."
+    },
+    "OC-NEW-35": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Stale data-loader iterator state (tokens_processed/batches_processed not reset) is internal eval-loop state not exposed in the schema."
+    },
+    "OC-NEW-36": {
+      "min_tier_required": "5-6",
+      "fields_required": [
+        "function_call_count",
+        "step"
+      ],
+      "rationale": "Bookkeeping callback ordering vs future state requires counting/sequencing of callback invocations — Type-B hook, Tier 5-6."
+    },
+    "OC-NEW-38": {
+      "min_tier_required": 1,
+      "fields_required": [
+        "grad_norm",
+        "tp_rank",
+        "step"
+      ],
+      "rationale": "DTensor grad_norm with replication semantics gives wrong reduced value; comparing recorded grad_norm across TP ranks at Tier 1 reveals the inconsistency."
+    },
+    "OC-NEW-39": {
+      "min_tier_required": 1,
+      "fields_required": [
+        "grad_norm",
+        "pp_rank",
+        "step"
+      ],
+      "rationale": "PP grad-norm not all-reduced across PP: per-PP-stage grad_norm trace diverges from globally-reduced expectation. Tier 1."
+    },
+    "OC-NEW-4": {
+      "min_tier_required": 2,
+      "fields_required": [
+        "loss_value",
+        "step"
+      ],
+      "rationale": "Division by zero when all instances masked yields NaN loss — observable directly from the loss_value trace at Tier 2 (lower than the Tier 5-6 has_nan flag)."
+    },
+    "OC-NEW-41": {
+      "min_tier_required": "5-6",
+      "fields_required": [
+        "loss_value",
+        "num_tokens",
+        "dp_rank",
+        "step"
+      ],
+      "rationale": "Per-rank loss divisor uses local token count: requires num_tokens per DP rank to detect cross-rank divisor mismatch. Tier 5-6."
+    },
+    "OC-NEW-42": {
+      "min_tier_required": 3,
+      "fields_required": [
+        "loss_value",
+        "micro_step_id",
+        "step"
+      ],
+      "rationale": "Metric not divided by num_micro_batches: metric inflated by grad-accum factor. Need loss_value plus micro_step_id to relate the inflation to accumulation count. Tier 3."
+    },
+    "OC-NEW-43": {
+      "min_tier_required": 2,
+      "fields_required": [
+        "loss_value",
+        "dp_rank",
+        "step"
+      ],
+      "rationale": "SkipStepOptimizer fed pre-allreduce loss: per-rank loss_value diverges across DP — Tier 2 with DP rank coord."
+    },
+    "OC-NEW-44": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Sliding-window off-by-one in flash-attn config affects attention activations only; no observable trace fingerprint at runtime."
+    },
+    "OC-NEW-45": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "shape",
+        "param_name"
+      ],
+      "rationale": "Externally-rounded head_dim disagrees with FLA's internal layout: layer dimensions/shape mismatch visible at Tier 0."
+    },
+    "OC-NEW-46": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "BLT byte embeddings stay at default kaiming instead of teacher-stat scaled: step-0 param checksum diverges. Tier 0."
+    },
+    "OC-NEW-47": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "TE backend silently ignores cu_doc_lens: cross-document attention is an activation-level effect not exposed in the schema."
+    },
+    "OC-NEW-48": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Python `and` short-circuit on tensors yields a wrong mask at op level inside flex_attention; activation-only effect."
+    },
+    "OC-NEW-49": {
+      "min_tier_required": 1,
+      "fields_required": [
+        "grad_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "freeze_params=['teacher.*'] missed shared 'blocks.*': grad_cksum on teacher-shared block params is nonzero when it should be exactly zero. Tier 1."
+    },
+    "OC-NEW-5": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "uint32 * -1 overflow in document packing sort affects in-memory ordering; resulting trace fields look bit-similar."
+    },
+    "OC-NEW-50": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "freeze_experts assigned in __init__ instead of dataclass field: OmegaConf merge drops it offline; runtime trace cannot see the missing config field."
+    },
+    "OC-NEW-51": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "MLA's wq_a/wkv_a/wkv_b never initialized (left at meta/default); step-0 param checksum on those params diverges from spec. Tier 0."
+    },
+    "OC-NEW-52": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Doubled source_group_size only changes data-permutation grouping; no trace schema field captures source-group-size effect on document order."
+    },
+    "OC-NEW-53": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_name",
+        "shape"
+      ],
+      "rationale": "use_head_qk_norm flag changes the qk-norm parameter shape (per-head vs per-channel); pure Tier 0 shape/parameter check."
+    },
+    "OC-NEW-54": {
+      "min_tier_required": 2,
+      "fields_required": [
+        "loss_value",
+        "step"
+      ],
+      "rationale": "log(sum(exp)) underflow yields -inf in loss component that propagates into final loss; loss_value at Tier 2 is the cheapest signal."
+    },
+    "OC-NEW-55": {
+      "min_tier_required": 2,
+      "fields_required": [
+        "loss_value",
+        "step"
+      ],
+      "rationale": "Mean over padded positions vs over valid positions changes the ratio-loss target value; loss-value comparison at Tier 2."
+    },
+    "OC-NEW-56": {
+      "min_tier_required": 2,
+      "fields_required": [
+        "loss_value",
+        "step"
+      ],
+      "rationale": "Embed loss not normalized by loss_div_factor: loss-value scale mismatch detectable at Tier 2."
+    },
+    "OC-NEW-58": {
+      "min_tier_required": 2,
+      "fields_required": [
+        "loss_value",
+        "step"
+      ],
+      "rationale": "Wrong divisor (input_ids.numel vs byte-position count) changes loss scale; observable at Tier 2."
+    },
+    "OC-NEW-59": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "fp32 upcast inside flex_attention vs bf16 changes only attention forward activations; loss difference is small/cumulative, not a clear runtime fingerprint."
+    },
+    "OC-NEW-6": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Sliding window size off-by-one affects attention activations only; no trace field exposes it at runtime."
+    },
+    "OC-NEW-60": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Missing label_offsets in one branch shifts CE comparison vocabulary slice; loss differs minutely but no canonical trace fingerprint isolates it."
+    },
+    "OC-NEW-61": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Pad positions polluted by boundary mask AND failure: label tensor at masked positions changes value but ignore_index handling makes loss-trace effect ambiguous; not surfaced by schema fields."
+    },
+    "OC-NEW-63": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Round-down per-source instances shortens dataset; only visible from offline dataset-length accounting, not runtime trace."
+    },
+    "OC-NEW-64": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Cache fingerprint missed sequence_length/bos_token_id: stale cache reused — dataloader-internal cache identity not in the runtime schema."
+    },
+    "OC-NEW-65": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Expert label one-hot at index 3 vs only 3 active experts is dataloader label-tensor content; trace schema does not record per-token expert labels."
+    },
+    "OC-NEW-66": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_cksum",
+        "param_name",
+        "step"
+      ],
+      "rationale": "Attention gate w_g never initialized: step-0 param checksum on w_g matches torch.empty/default rather than trunc-normal. Tier 0."
+    },
+    "OC-NEW-67": {
+      "min_tier_required": 3,
+      "fields_required": [
+        "learning_rate",
+        "step"
+      ],
+      "rationale": "CosWithWarmup vs WSD scheduler differ in lr trajectory shape (cosine decay vs stable plateau then decay); LR trace at Tier 3."
+    },
+    "OC-NEW-7": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "dtype",
+        "param_name"
+      ],
+      "rationale": "Custom as_tensor truncates float to int — dtype field at Tier 0 reveals the cast."
+    },
+    "OC-NEW-8": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "z_loss is detached: value enters logged loss but no gradient. Forward loss looks correct; only way to detect is observing zero gradient on the regularizer's source — op-level requires_grad inspection, not in schema."
+    },
+    "OC-NEW-9": {
+      "min_tier_required": 1,
+      "fields_required": [
+        "grad_norm",
+        "step"
+      ],
+      "rationale": "alpha decays to 0 and ce_loss is detached -> backward sees zero gradient; grad_norm collapses to ~0 unexpectedly. Tier 1."
+    },
+    "M-NEW-MUON-MTP": {
+      "min_tier_required": 0,
+      "fields_required": [
+        "param_name",
+        "pp_rank"
+      ],
+      "rationale": "Tied word_embeddings on MTP-only PP stage missing is_embedding_or_output_parameter tag: parameter attribute (named-parameter list) at Tier 0 reveals routing inconsistency across PP stages."
+    }
+  }
+}

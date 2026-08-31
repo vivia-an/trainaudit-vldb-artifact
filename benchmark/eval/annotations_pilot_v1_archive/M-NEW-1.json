@@ -1,0 +1,15 @@
+{
+  "bug_id": "M-NEW-1",
+  "framework": "megatron-lm",
+  "category": "dtype",
+  "parallel_dimension": "none",
+  "invariant_type": "dtype_consistency",
+  "required_trace_fields": ["op_name", "input_dtype", "step"],
+  "check_stage": "after_forward",
+  "pi_schema_applicable": true,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P4",
+  "tier_field": "Tier 0",
+  "rationale": "Sigmoid for aux-loss must run in fp32; the buggy code feeds bf16 logits in. Root cause is dtype, not MoE topology (single-GPU reproduces, so parallel_dim=none per anti-example 6). Detected by hooking the op and checking input dtype == fp32 under precondition 'op == sigmoid_for_aux_loss', so pi_schema+pi_precond=true. Borderline P1 vs P4: chose P4 because op-level input dtype is not a default trace field, needs runtime hook."
+}

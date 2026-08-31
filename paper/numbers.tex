@@ -1,0 +1,26 @@
+% numbers.tex — Real-SE headline numbers, single source of truth.
+% Shared by main.tex and appendix.tex (both \input this file); change counts here only.
+% NOTE: Wilson CI quoted in §5.2 prose must be recomputed if any count changes.
+%       Current CI for 17/18: [74.2%, 99.0%].
+% DECISION 2026-07-15: O-022 NOT restored (no issue/commit pair, source_analysis-only,
+% table6_current_audit.csv:23). Real-SE locked at 17 real commit-pair cases +
+% 1 boundary case (O-003) = 18, matching real_sdc_manifest.json.
+% Dual reporting: 17/17 detector-coverable and 17/18 overall.
+% Baseline denominator is 17, NOT 18: TrainCheck/Naive runs on O-003 are declared
+% values without run logs (LC1_smoke.log has TrainAudit only); until baselines are
+% re-run on O-003, TrainCheck is 5/17 and Naive 0/17 (legacy, pending TC-semantics rewrite).
+\newcommand{\NumRealSE}{18}            % total Real-SE cases (TrainAudit detection denominator)
+\newcommand{\NumRealSEReal}{17}        % real commit-pair cases (= detector-coverable)
+\newcommand{\NumRealSEBoundary}{1}     % observability-boundary case (O-003)
+\newcommand{\NumRealSEDet}{17}         % Real-SE cases TrainAudit detects
+\newcommand{\RealSEDetRate}{94.4\%}
+\newcommand{\NumFixedReplay}{17}       % completed paired fixed replays (M-020's fix rejects the
+                                       % faulty config via assertion, not a clean run — footnote it)
+\newcommand{\NumBaselineEval}{17}      % cases with executed baseline runs (O-003 pending re-run)
+\newcommand{\NumTCDet}{5}              % TrainCheck detections (5 detected / 11 miss / 1 infer failure)
+\newcommand{\TCDetRate}{29.4\%}
+% Composite forms used in tables and headline sentences.
+\newcommand{\RealSEDetFrac}{\NumRealSEDet/\NumRealSE\ (\RealSEDetRate)}
+\newcommand{\TCDetFrac}{\NumTCDet/\NumBaselineEval\ (\TCDetRate)}
+\newcommand{\NaiveDetFrac}{0/\NumBaselineEval\ (0.0\%)}
+\newcommand{\FixedFPFrac}{0/\NumFixedReplay\ (0.0\%)}

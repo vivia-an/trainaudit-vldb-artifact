@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-64",
+  "framework": "deepspeed",
+  "category": "gradient_sync",
+  "parallel_dimension": "TP",
+  "invariant_type": "implementation_equivalence",
+  "required_trace_fields": ["global_grad_norm", "tp_size", "step", "tensor_model_parallel"],
+  "check_stage": "before_optimizer",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": true,
+  "pi_precond_applicable": true,
+  "pattern_id": "P3",
+  "tier_field": "Tier 1",
+  "rationale": "FP16_Optimizer skips TP-sliced grads as if replicated, undercounting global_grad_norm by sqrt(tp_size). Borderline gradient_sync vs communication: per anti-example 3, root cause is wrong reduction mask (which slices to sum), not group config, so gradient_sync. Detection compares TP=k norm to TP=1 reference, requires topology and only valid for TP-sliced params, so pi_topo+pi_precond=true."
+}

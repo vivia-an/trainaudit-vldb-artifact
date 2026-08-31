@@ -1,0 +1,209 @@
+{
+  "meta": {
+    "count": 17,
+    "source": "paper_table_baseline_3way.md Per-bug verdict (TrainAudit DETECTED column)",
+    "rule_message_source": "benchmark/eval/results.csv buggy-phase verdict + rule_id + message",
+    "ground_truth_source": "benchmark/bugs/<bug_id>/config.json fields: title, root_cause, invariant",
+    "schema": [
+      "bug_id",
+      "framework",
+      "category",
+      "rule_id",
+      "rule_message",
+      "ground_truth_title",
+      "ground_truth_summary",
+      "ground_truth_invariant",
+      "rca_chain"
+    ],
+    "rca_note": "Current TrainAudit runtime emits rule_id + rule_message only. Multi-hop RCA agent drill-down was not stored per-case; rca_chain left empty across the board. L2 verdict therefore N/A for all 17 records (cf. SPEC §8 Multi-rule fire + Known Failure Modes 'RCA chain missing')."
+  },
+  "cases": [
+    {
+      "bug_id": "B1",
+      "framework": "megatron-lm",
+      "category": "moe_router_init",
+      "rule_id": "T1-replica-cksum-equal",
+      "rule_message": "1 replica params diverged across replica group",
+      "ground_truth_title": "SwitchMLP router torch.nn.Linear init not wrapped in data-parallel RNG tracker",
+      "ground_truth_summary": "SwitchMLP router init does torch.nn.Linear(...) outside any RNG tracker fork; if default CUDA RNG state is asymmetric across TP ranks at construction, router weights diverge. Fix wraps init in get_cuda_rng_tracker().fork(get_data_parallel_rng_tracker_name()).",
+      "ground_truth_invariant": "During SwitchMLP construction, router weight init must execute inside a get_cuda_rng_tracker().fork(<data-parallel name>) context; equivalently, after init the router weights should be replicated (equal) across the appropriate replica group.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "B2",
+      "framework": "megatron-lm",
+      "category": "tensor_parallel_grad",
+      "rule_id": "T1-grad-replica-cksum-equal",
+      "rule_message": "1 replica params' gradients diverged across replica group (B2-style backward all-reduce miss)",
+      "ground_truth_title": "LinearWithFrozenWeight backward forgets to all-reduce grad_input across TP",
+      "ground_truth_summary": "LinearWithFrozenWeight.backward returns grad_input without all-reducing across TP ranks; each rank only sees its column-shard, so the upstream gradient is wrong by a factor of N (TP size).",
+      "ground_truth_invariant": "After backward of linear_with_frozen_weight on TP=N, grad_input must equal the sum across the N TP ranks (i.e., post-allreduce replicated value).",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "B3",
+      "framework": "deepspeed",
+      "category": "communication_dtype",
+      "rule_id": "T1-comm-dtype-matches-training",
+      "rule_message": "1 comm op(s) used dtype != declared training_dtype (bfloat16)",
+      "ground_truth_title": "DeepSpeedEngine.communication_data_type defaults to fp32 when only bfloat16 is enabled",
+      "ground_truth_summary": "DeepSpeedEngine.communication_data_type returned torch.float32 when bf16_enabled but no explicit comm dtype, so allreduce/reduce ran in fp32 silently breaking the bf16 contract. Fix returns torch.bfloat16 when bfloat16_enabled.",
+      "ground_truth_invariant": "engine.communication_data_type() must be torch.bfloat16 when only bf16 is enabled; equivalently, comm op dtype must match the declared training dtype.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "B8",
+      "framework": "deepspeed",
+      "category": "moe_parallel_grouping",
+      "rule_id": "T1-process-group-size-correct",
+      "rule_message": "1 parallelism group(s) have wrong size (declared != actual)",
+      "ground_truth_title": "InferenceEngine creates EP groups with num_experts instead of ep_size",
+      "ground_truth_summary": "InferenceEngine.__init__ called self._create_ep_parallel_group(config.moe.moe_experts) — should be (config.moe.ep_size). EP group ends up with wrong size; when num_experts > world_size, construction fails or creates malformed groups.",
+      "ground_truth_invariant": "Each parallelism group (EP/DP/TP) must have size equal to its declared configuration value; here EP group size must equal ep_size, not num_experts.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "B11",
+      "framework": "deepspeed",
+      "category": "gradient_clipping",
+      "rule_id": "T0-clip-grad-bounded",
+      "rule_message": "1 clip_grad calls left grad norm > max_norm",
+      "ground_truth_title": "clip_grad_norm_ uses torch.max instead of torch.min for clip_coef",
+      "ground_truth_summary": "deepspeed/runtime/utils.py:clip_grad_norm_ used torch.max(1, max_norm/total_norm) so clip_coef=1 when grads exceed threshold (no clipping). Fix changes max -> min so clip_coef <= 1 properly clips.",
+      "ground_truth_invariant": "After clip_grad_norm_, ||grad|| must be <= max_norm (within tolerance).",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "B12",
+      "framework": "olmo-core",
+      "category": "lr_schedule",
+      "rule_id": "T0-initial-lr-present",
+      "rule_message": "1 scheduler-resume(s) found param_groups without initial_lr",
+      "ground_truth_title": "AdamWConfig.build does not set initial_lr on param_groups; restart-time peak LR lost",
+      "ground_truth_summary": "AdamWConfig.build() returned torch.optim.AdamW without setting initial_lr on each param_group. PyTorch LRScheduler with last_epoch>=0 requires initial_lr; without it, peak LR after restart is lost.",
+      "ground_truth_invariant": "After AdamWConfig.build(model), every param_group must contain the key 'initial_lr'.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "B13",
+      "framework": "olmo",
+      "category": "residual_connection",
+      "rule_id": "T1-residual-stream-preserved",
+      "rule_message": "1/1 residual blocks: output closer to normed than to original input",
+      "ground_truth_title": "OLMoSequentialBlock attn_norm overwrites residual stream",
+      "ground_truth_summary": "OLMoSequentialBlock.forward did `x = self.attn_norm(x)` clobbering the residual stream so the identity path uses the normed x instead of the original input.",
+      "ground_truth_invariant": "After calling self.attn_norm, the residual variable x must equal the original input (not the normed version); i.e., residual stream must be preserved across the norm.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "M-012",
+      "framework": "megatron-lm",
+      "category": "dtype",
+      "rule_id": "T1-expert-bias-fp32",
+      "rule_message": "1 router(s) have non-fp32 expert_bias",
+      "ground_truth_title": "TopKRouter expert_bias gets wrong dtype (bf16 instead of fp32)",
+      "ground_truth_summary": "Float16Module converts all registered buffers to bf16/fp16. expert_bias is a fp32 buffer that gets silently downcast, causing precision loss in routing decisions.",
+      "ground_truth_invariant": "expert_bias.dtype must be torch.float32 during routing; bf16/fp16 = bug.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "M-014",
+      "framework": "megatron-lm",
+      "category": "numerical",
+      "rule_id": "T0-softmax-degenerate",
+      "rule_message": "2 softmax/router outputs are degenerate one-hot",
+      "ground_truth_title": "MoE Router topk=1 with post-softmax gives trivial probabilities and zero gradient",
+      "ground_truth_summary": "topk-then-softmax with k=1: softmax over a single value is always 1.0, producing zero gradient for the router. Router weights never learn.",
+      "ground_truth_invariant": "Router routing probabilities must have non-trivial distribution; all probs == 1.0 (degenerate one-hot) means zero gradient = bug.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "M-020",
+      "framework": "megatron-lm",
+      "category": "configuration_validation",
+      "rule_id": "T1-layer-count-strict",
+      "rule_message": "layer count mismatch: actual 20 (per-rank 4 × pp_size 5) != declared 24",
+      "ground_truth_title": "Pipeline parallel silently trains with fewer layers than configured",
+      "ground_truth_summary": "Integer division (num_layers // pp_size) silently drops layers when not evenly divisible. No assertion existed outside the virtual pipeline block, so training proceeds with fewer layers than configured.",
+      "ground_truth_invariant": "Actual total transformer layers across all PP ranks must equal the configured num_layers.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "M-024",
+      "framework": "megatron-lm",
+      "category": "dtype",
+      "rule_id": "T1-jitter-preserves-dtype",
+      "rule_message": "1 jitter calls promoted dtype",
+      "ground_truth_title": "Router input jitter dtype bug — silent fp32 promotion",
+      "ground_truth_summary": "torch.distributions.uniform.Uniform creates fp32 tensors by default. Multiplying bf16 input by fp32 jitter silently promotes the result to fp32, breaking the bf16 dtype contract for router input.",
+      "ground_truth_invariant": "apply_input_jitter output dtype must equal input dtype; dtype promotion from bf16 to fp32 = bug.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "M-NEW-5",
+      "framework": "megatron-lm",
+      "category": "loss_scaling",
+      "rule_id": "T1-router-has-calculate-per-token-loss",
+      "rule_message": "1 router(s) missing calculate_per_token_loss attr",
+      "ground_truth_title": "MoE aux loss not scaled by num_tokens in per_token_loss mode",
+      "ground_truth_summary": "When the router is configured for per-token loss mode, the MoE aux loss is missing the /num_tokens scaling factor; the router module lacks the calculate_per_token_loss attribute that the loss-scaling path expects.",
+      "ground_truth_invariant": "In per-token loss mode, every router module must expose a calculate_per_token_loss attribute so the aux loss is correctly normalized by num_tokens.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "O-005",
+      "framework": "olmo",
+      "category": "control_flow",
+      "rule_id": "T0-checkpoint-preserve-rng",
+      "rule_message": "1 checkpoint calls used preserve_rng_state=False while dropout is present",
+      "ground_truth_title": "preserve_rng_state incorrectly set to False with dropout",
+      "ground_truth_summary": "Boolean condition is inverted: preserve_rng_state = (all_dropout == 0) instead of not(all_dropout == 0). With dropout active, activation checkpointing then re-runs forward with a different RNG state, corrupting gradients.",
+      "ground_truth_invariant": "When dropout > 0 is present in a block, activation checkpointing must use preserve_rng_state=True.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "O-NEW-1",
+      "framework": "olmo",
+      "category": "normalization",
+      "rule_id": "T0-norm-output-unit-rms",
+      "rule_message": "3 normalizer outputs have abnormal RMS",
+      "ground_truth_title": "RMSNorm uses L2 norm instead of root-mean-square — wrong normalization",
+      "ground_truth_summary": "x.norm(2) is L2 norm sqrt(sum(x^2)), not RMS sqrt(mean(x^2)). The normalizer divides by L2 instead of RMS, so output magnitude is wrong by a factor of sqrt(d).",
+      "ground_truth_invariant": "After RMSNorm, output.pow(2).mean(-1) should be approximately 1.0 (unit RMS).",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "O-NEW-9",
+      "framework": "olmo",
+      "category": "data_processing",
+      "rule_id": "T0-token-id-in-vocab",
+      "rule_message": "2 dataloader batches have out-of-range ids",
+      "ground_truth_title": "Token IDs silently truncated to 16-bit by modulo 2^16",
+      "ground_truth_summary": "Token IDs from the dataloader are silently truncated to 16-bit by an implicit modulo 2^16, so IDs beyond uint16 range wrap around. The model then trains/embedding-lookups on the wrong tokens.",
+      "ground_truth_invariant": "Every token id emitted by the dataloader must lie in [0, vocab_size); out-of-range ids = bug.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "OC-NEW-2",
+      "framework": "olmo-core",
+      "category": "optimizer",
+      "rule_id": "T0-optim-step-counter-monotonic",
+      "rule_message": "optim state['step'] failed to increment in 3/3 transitions",
+      "ground_truth_title": "Adam step counter not incremented — bias correction permanently wrong",
+      "ground_truth_summary": "step.add_(step_factor) was commented out in adamw_step, so optimizer state 'step' never increments. Adam bias-correction term therefore stays at step=0 forever.",
+      "ground_truth_invariant": "Optimizer state 'step' must strictly increment by 1 at every optimizer.step() call.",
+      "rca_chain": []
+    },
+    {
+      "bug_id": "OC-NEW-3",
+      "framework": "olmo-core",
+      "category": "lr_schedule",
+      "rule_id": "T1-sqrt-decay-front-loaded",
+      "rule_message": "sqrt decay shape inverted: end-of-training |slope|=3.2000 >> start-of-training |slope|=0.0000",
+      "ground_truth_title": "sqrt decay LR schedule uses wrong formula — decay curve inverted",
+      "ground_truth_summary": "sqrt decay scheduler uses sqrt(progress) instead of 1-sqrt(1-progress); the decay curve shape is inverted (flat at start, steep at end) rather than the intended front-loaded fast decay.",
+      "ground_truth_invariant": "sqrt decay LR must decay fast initially and slow at the end (|slope| at start >> |slope| at end).",
+      "rca_chain": []
+    }
+  ]
+}

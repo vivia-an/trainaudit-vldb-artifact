@@ -1,0 +1,64 @@
+{
+  "tool": "naive",
+  "n_bugs": 8,
+  "buggy_detection": "0/8",
+  "fixed_fp": "0/8",
+  "results": [
+    {
+      "bug_id": "ID1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "buggy_rc": 0,
+      "fixed_rc": 0
+    },
+    {
+      "bug_id": "CC1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "buggy_rc": 0,
+      "fixed_rc": 0
+    },
+    {
+      "bug_id": "PE1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "buggy_rc": 0,
+      "fixed_rc": 0
+    },
+    {
+      "bug_id": "AV1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "buggy_rc": 0,
+      "fixed_rc": 0
+    },
+    {
+      "bug_id": "TA1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "buggy_rc": 0,
+      "fixed_rc": 0
+    },
+    {
+      "bug_id": "SC1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "buggy_rc": 0,
+      "fixed_rc": 0
+    },
+    {
+      "bug_id": "CW1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "buggy_rc": 0,
+      "fixed_rc": 0
+    },
+    {
+      "bug_id": "LN1",
+      "buggy_detected": false,
+      "fixed_fp": false,
+      "buggy_rc": 0,
+      "fixed_rc": 0
+    }
+  ]
+}

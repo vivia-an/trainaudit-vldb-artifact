@@ -1,0 +1,133 @@
+{
+  "metadata": {
+    "batch": 2,
+    "n_bugs": 31,
+    "phase": "2.1 open coding"
+  },
+  "per_bug": {
+    "B11": {
+      "labels": ["clip-coef-direction-flip", "post-clip-norm-bound", "min-vs-max-confusion", "grad-norm-postcondition", "value-range-postcondition", "clipping-no-op-detection"],
+      "rationale_30c": "torch.max vs min flips clip; check post-clip ||grad||<=max_norm bound."
+    },
+    "B12": {
+      "labels": ["param-group-key-completeness", "initial-lr-missing-on-group", "scheduler-precondition-key", "optimizer-build-postcondition", "restart-state-key-required", "schema-key-presence"],
+      "rationale_30c": "Missing initial_lr key on param_group breaks LRScheduler restart contract."
+    },
+    "B9": {
+      "labels": ["branch-selection-precondition", "uneven-heads-routing-guard", "divisibility-precondition", "scatter-idx-stage-discriminator", "algorithm-variant-selection", "second-all2all-path-mismatch"],
+      "rationale_30c": "Wrong-branch when scatter_idx<2 + divisibility fails; routing precondition violated."
+    },
+    "D-NEW-12": {
+      "labels": ["config-key-typo-silent-ignore", "config-attr-stale", "user-config-roundtrip", "config-string-mismatch", "schema-key-presence", "engine-config-reflection"],
+      "rationale_30c": "Constant string typo: user value silently dropped; config-roundtrip check needed."
+    },
+    "D-NEW-13": {
+      "labels": ["cpu-offload-grad-accumulation", "micro-step-counter-completeness", "ga-step-precondition", "monotonic-grad-buffer-update", "buffer-update-frequency", "invocation-frequency-microstep"],
+      "rationale_30c": "CPU buffer not updated every micro-step; needs monotonic-update-per-microstep check."
+    },
+    "D-NEW-18": {
+      "labels": ["multiple-backward-grad-merge", "cpu-offload-grad-accumulation", "buffer-update-frequency", "monotonic-grad-buffer-update", "invocation-frequency-backward", "ga-step-precondition"],
+      "rationale_30c": "Multi-backward CPU-offload loses grads; same family as D-NEW-13."
+    },
+    "D-NEW-19": {
+      "labels": ["dtype-mismatch-comm-vs-param", "comm-dtype-config-vs-actual", "all-reduce-dtype-consistency", "extra-large-param-path", "dtype-preservation-comm", "config-attr-stale"],
+      "rationale_30c": "Uses param.dtype not comm_dtype on allreduce; dtype-config-vs-actual check."
+    },
+    "D-NEW-20": {
+      "labels": ["optimizer-class-selection-mismatch", "config-implies-optimizer-type", "algorithm-variant-selection", "bf16-fp32-accum-without-zero", "init-time-class-postcondition", "config-attr-stale"],
+      "rationale_30c": "Wrong optimizer class chosen for bf16+fp32-accum config; class-vs-config check."
+    },
+    "D-NEW-21": {
+      "labels": ["checkpoint-format-vs-config-mismatch", "zero-stage-implies-ckpt-shape", "ckpt-shape-postcondition", "config-implies-ckpt-layout", "checkpoint-load-precondition", "algorithm-variant-selection"],
+      "rationale_30c": "Non-ZeRO bf16 ckpt treated as ZeRO-sharded; ckpt-layout-vs-config check."
+    },
+    "D-NEW-3": {
+      "labels": ["frozen-param-in-optimizer-group", "requires-grad-filter-completeness", "param-group-membership-rule", "optimizer-group-construction", "schema-key-filter", "trainable-set-postcondition"],
+      "rationale_30c": "requires_grad=False params leak into optimizer groups; membership filter."
+    },
+    "D-NEW-36": {
+      "labels": ["loss-scale-version-mismatch", "prev-vs-new-scale-confusion", "unscale-factor-consistency", "step-order-coupling", "scale-roundtrip-equality", "stale-scale-stat"],
+      "rationale_30c": "Unscale uses post-decay scale not prev_scale; scale-version-coupling check."
+    },
+    "D-NEW-38": {
+      "labels": ["sparse-tensor-rebind-loses-grad", "param-grad-aliasing", "in-place-vs-rebind", "post-allreduce-grad-binding", "tensor-identity-preservation", "sparse-grad-roundtrip"],
+      "rationale_30c": "SparseTensor wrapper rebinds local var; param.grad keeps stale; aliasing check."
+    },
+    "D-NEW-43": {
+      "labels": ["frozen-param-silent-update", "requires-grad-data-immutability", "frozen-param-in-fp16-partition", "frozen-leak-in-zero3", "param-data-stability", "trainable-set-postcondition"],
+      "rationale_30c": "ZeRO3 includes frozen params in partition; check p.data unchanged across step."
+    },
+    "D-NEW-46": {
+      "labels": ["adam-step-counter-fake-increment", "init-time-side-effect-on-state", "step-counter-zero-at-init", "optimizer-state-init-purity", "counter-consistency-init", "warmup-step-purity"],
+      "rationale_30c": "Construction calls inner.step(); state['step'] should be 0 post-init."
+    },
+    "D-NEW-49": {
+      "labels": ["len-semantics-batch-vs-sample", "dataloader-len-formula", "batch-count-vs-sample-count", "scheduler-input-shape", "sampler-len-roundtrip", "off-by-batch-size-factor"],
+      "rationale_30c": "len() returns sample count not batch count; algebraic len-formula check."
+    },
+    "D-NEW-51": {
+      "labels": ["stale-param-reference-across-iter", "extra-large-param-leak", "config-implied-state-must-be-none", "iteration-boundary-cleanup", "contiguous-grad-precondition", "stale-state-detection"],
+      "rationale_30c": "Stale extra_large_param ref when contiguous_gradients=False; cleanup invariant."
+    },
+    "D-NEW-54": {
+      "labels": ["replication-factor-wrong-axis", "moe-ckpt-dp-vs-seqdp", "topology-aware-ckpt-metadata", "sp-divides-dp-precondition", "ckpt-roundtrip-bitexact", "config-attr-stale"],
+      "rationale_30c": "MoE ckpt records dp_world_size not seq_dp; ckpt roundtrip-bitexact check."
+    },
+    "D-NEW-56": {
+      "labels": ["topk-locations-stale-after-capacity", "cumsum-locations-recompute", "moe-dispatch-locations-invariant", "stale-state-after-update", "capacity-update-side-effect", "dispatch-positions-consistency"],
+      "rationale_30c": "drop_tokens=False forgets locations recompute; cumsum-mask postcondition."
+    },
+    "D-NEW-66": {
+      "labels": ["cached-norm-stale-after-overwrite", "set-grad-must-refresh-norm", "norm-cache-coupling", "cpu-offload-norm-cache", "stat-stale-after-write", "value-roundtrip-norm-cache"],
+      "rationale_30c": "set_local_grad omits norm cache refresh; cache-must-track-grad invariant."
+    },
+    "D-NEW-67": {
+      "labels": ["fp16-without-grad-scaler", "loss-scale-required-precondition", "autocast-stage-config-mismatch", "config-implies-required-component", "fp16-underflow-prevention", "missing-component-init"],
+      "rationale_30c": "fp16 autocast w/o GradScaler; config requires loss-scale component."
+    },
+    "D-NEW-70": {
+      "labels": ["buffer-tail-garbage-allreduce", "narrow-vs-full-buffer", "uninitialized-tail-elements", "ipg-buffer-slice-precondition", "valid-prefix-only", "stale-tail-in-collective"],
+      "rationale_30c": "Full buffer averaged incl stale tail; must narrow to elements_in_ipg_bucket."
+    },
+    "D-NEW-71": {
+      "labels": ["uninit-padding-in-collective", "torch-empty-not-zeros", "padding-must-be-zero", "reduce-scatter-padding-contam", "garbage-bytes-allreduce", "buffer-init-precondition"],
+      "rationale_30c": "torch.empty pad bytes contaminate reduce_scatter; padding must be zero."
+    },
+    "D-NEW-75": {
+      "labels": ["numel-vs-size0-confusion", "kernel-elem-count-arg", "first-dim-only-update", "param-update-completeness", "off-by-numel-factor", "all-elements-must-update"],
+      "rationale_30c": "size(0) instead of numel(); only row 0 updated; element-completeness check."
+    },
+    "D-NEW-79": {
+      "labels": ["scheduler-init-must-write-lr", "lr-roundtrip-at-construct", "first-step-uses-stale-lr", "scheduler-pg-lr-equality", "init-time-side-effect-required", "warmup-init-lr-write"],
+      "rationale_30c": "Scheduler ctor must write lr to param_groups; get_lr==pg.lr postcondition."
+    },
+    "D-NEW-8": {
+      "labels": ["hardcoded-default-overrides-config", "warmup-max-lr-default-trap", "config-attr-stale", "lr-inheritance-from-optimizer", "default-vs-user-config", "schedule-lr-equality"],
+      "rationale_30c": "warmup_max_lr defaults 0.001 not optimizer lr; default-overrides-user check."
+    },
+    "D-NEW-9": {
+      "labels": ["lp-grad-not-cleared", "stale-grad-buildup", "clear-flag-default-wrong", "grad-buffer-clear-postcondition", "accumulation-residue", "boolean-flag-default-trap"],
+      "rationale_30c": "lp_grads stale across step; clear_lp_grads flag wrong default."
+    },
+    "M-NEW-11": {
+      "labels": ["grad-attr-name-mismatch", "decoupled-grad-vs-grad", "fsdp-fusedadam-flag-required", "config-implied-flag-must-set", "grad-source-attr-coupling", "schema-attr-routing"],
+      "rationale_30c": "FusedAdam reads param.grad but FSDP writes decoupled_grad; flag coupling."
+    },
+    "M-NEW-12": {
+      "labels": ["persistent-buffer-mutation-during-warmup", "cuda-graph-warmup-purity", "buffer-bitwise-roundtrip", "save-restore-buffer-completeness", "warmup-side-effect-on-buffer", "moe-router-bias-stability"],
+      "rationale_30c": "Warmup mutates expert_bias buffer; pre/post-warmup bitwise equality."
+    },
+    "M-NEW-15": {
+      "labels": ["duplicate-master-weights", "fsdp-master-weights-flag", "config-implied-flag-coupling", "stale-duplicate-copy-update", "precision-aware-flag-mismatch", "optimizer-internal-state-mode"],
+      "rationale_30c": "FusedAdam keeps own master_weights duplicating FSDP; flag-coupling check."
+    },
+    "M-NEW-16": {
+      "labels": ["wrong-buffer-zeroed", "shared-storage-aliasing", "grad-vs-param-buffer-confusion", "cross-bucket-storage-contam", "zero-not-corrupt-other", "buffer-aliasing-precondition"],
+      "rationale_30c": "Zeroing grad_data wipes shared param_data of other buckets; aliasing check."
+    },
+    "M-NEW-17": {
+      "labels": ["main-grad-rebuild-required", "fsdp-param-grad-attr-protocol", "stale-main-grad-buffer", "get-main-grad-call-required", "grad-buffer-refresh-frequency", "fsdp-protocol-coupling"],
+      "rationale_30c": "FSDP main_grad needs get_main_grad() per-iter; stale buffer otherwise."
+    }
+  }
+}

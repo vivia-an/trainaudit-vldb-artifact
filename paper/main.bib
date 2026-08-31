@@ -1,0 +1,615 @@
+@misc{B1,
+  title        = {Megatron: {SwitchMLP} router weights are not synchronized within the tensor parallelism group},
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/issues/599}{Megatron issue \#599}}
+}
+@misc{B2,
+  title        = {Megatron: {LinearWithFrozenWeight} backward fix when {TP} \textgreater{} 1},
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/commit/5fffdfc737f14297bc3781dfc9e273199d1df52e}{Megatron commit \#5fffdfc}}
+}
+@misc{B3,
+  title        = {DeepSpeed: {FP16} used for all reduce even if {BFLOAT16} is enabled},
+  howpublished = {\href{https://github.com/deepspeedai/DeepSpeed/issues/2071}{DeepSpeed issue \#2071}}
+}
+@misc{B4,
+  title        = {Megatron: {Fix} for get\_data\_parallel\_src\_rank},
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/commit/9ad1944db1f97000377dc5aee36dcd656b1ae4a2}{Megatron commit \#9ad1944}}
+}
+@misc{B5,
+  title        = {Megatron: {Fix} scaling down expert grads},
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/commit/3373641ff1093073181e219265e8c8ee58d8587c}{Megatron commit \#3373641}}
+}
+@misc{B6,
+  title        = {Megatron: {Fix} bug in distopt allgathers with interleaved pipeline parallelism for old {MCore}},
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/pull/483}{Megatron PR \#483}}
+}
+@misc{B7,
+  title        = {Megatron: {Fix} bug when eval, dropout\_p turns to 0 forever},
+  howpublished = {\href{https://github.com/NVIDIA/Megatron-LM/pull/411}{Megatron PR \#411}}
+}
+@misc{B8,
+  title        = {DeepSpeed: {Fix} misuse of num\_experts as expert parallel group size (ep\_size)},
+  howpublished = {\href{https://github.com/deepspeedai/DeepSpeed/pull/7551}{DeepSpeed PR \#7551}}
+}
+@misc{B9,
+  title        = {DeepSpeed: {Uneven} head sequence parallelism},
+  howpublished = {\href{https://github.com/deepspeedai/DeepSpeed/issues/6774}{DeepSpeed issue \#6774}}
+}
+@misc{B10,
+  title        = {DeepSpeed: {Fix} gradient accumulation for {Z2+offload}},
+  howpublished = {\href{https://github.com/deepspeedai/DeepSpeed/pull/6550}{DeepSpeed PR \#6550}}
+}
+@misc{B11,
+  title        = {DeepSpeed: {Fix} gradient clipping},
+  howpublished = {\href{https://github.com/deepspeedai/DeepSpeed/pull/5150}{DeepSpeed PR \#5150}}
+}
+@misc{B12,
+  title        = {OLMo-core: {Fix} setting peak LR on restarts},
+  howpublished = {\href{https://github.com/allenai/OLMo-core/pull/27}{OLMo-core PR \#27}}
+}
+@misc{B13,
+  title        = {OLMo: Ensure attn\_norm does not affect the residual stream},
+  howpublished = {\href{https://github.com/allenai/OLMo/pull/680}{OLMo PR \#680}}
+}
+@misc{B14,
+  title        = {OLMo: Fix mean reduction in cross entropy loss},
+  howpublished = {\href{https://github.com/allenai/OLMo/pull/523}{OLMo PR \#523}}
+}
+@misc{B15,
+  title        = {OLMo: {Fix} Z-loss calculation},
+  howpublished = {\href{https://github.com/allenai/OLMo/pull/634}{OLMo PR \#634}}
+}
+@inproceedings{narayanan2021efficient,
+  author    = {Narayanan, Deepak and Shoeybi, Mohammad and Casper, Jared and LeGresley, Patrick and Patwary, Mostofa and Korthikanti, Vijay and Vainbrand, Dmitri and Kashinkunti, Prethvi and Bernauer, Julie and Catanzaro, Bryan and Phanishayee, Amar and Zaharia, Matei},
+  title     = {Efficient Large-Scale Language Model Training on {GPU} Clusters Using Megatron-{LM}},
+  booktitle = {Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis},
+  series    = {SC '21},
+  year      = {2021},
+  pages     = {1--15},
+  publisher = {Association for Computing Machinery},
+  address   = {St. Louis, Missouri},
+}
+
+@inproceedings{jiang2025traincheck,
+  author    = {Jiang, Yuxuan and Zhou, Ziming and Xu, Boyu and Liu, Beijie and Xu, Runhui and Huang, Peng},
+  title     = {Training with Confidence: Catching Silent Errors in Deep Learning Training with Automated Proactive Checks},
+  booktitle = {Proceedings of the 19th {USENIX} Symposium on Operating Systems Design and Implementation ({OSDI} '25)},
+  year      = {2025},
+  pages     = {313--329},
+  address   = {Boston, MA, USA},
+  publisher = {{USENIX} Association},
+  month     = jul,
+  url       = {https://www.usenix.org/conference/osdi25/presentation/jiang},
+  isbn      = {978-1-939133-47-2},
+}
+
+@inproceedings{abadi2016tensorflow,
+  author    = {Abadi, Mart{\'\i}n and Barham, Paul and Chen, Jianmin and Chen, Zhifeng and Davis, Andy and Dean, Jeffrey and Devin, Matthieu and Ghemawat, Sanjay and Irving, Geoffrey and others},
+  title     = {{TensorFlow}: A System for Large-Scale Machine Learning},
+  booktitle = {Proceedings of the 12th {USENIX} Conference on Operating Systems Design and Implementation},
+  series    = {{OSDI} '16},
+  year      = {2016},
+  pages     = {265--283},
+  address   = {Savannah, GA, USA},
+  publisher = {{USENIX} Association},
+}
+@misc{zang2025towards,
+      title={Towards Understanding Bugs in Distributed Training and Inference Frameworks for Large Language Models},
+      author={Xiao Yu and Haoxuan Chen and Feifei Niu and Xing Hu and Jacky Wai Keung and Xin Xia},
+      year={2025},
+      eprint={2506.10426},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE}
+}
+
+@misc{yang2021rise,
+      title={Rise of Distributed Deep Learning Training in the Big Model Era: From a Software Engineering Perspective}, 
+      author={Zhenheng Yang and Binhang Qi and Rong Qu and Hangyu Zhu and Zehui Chen and Haoxiang Lin and Yuxuan Liu and Yuming Chen and Liuyi Yao and Pinjia He},
+      year={2021},
+      eprint={2112.06222},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE}
+}
+
+@article{chen2023understanding,
+  author    = {Chen, Junjie and Liang, Yihua and Shen, Qingchao and Jiang, Jiajun and Li, Shuochuan},
+  title     = {Toward Understanding Deep Learning Framework Bugs},
+  journal   = {ACM Trans. Softw. Eng. Methodol.},
+  volume    = {32},
+  number    = {6},
+  year      = {2023},
+  pages     = {156:1--156:32},
+  publisher = {ACM}
+}
+
+%% ouyang2025trainverify merged into trainverify2025 below
+
+@inproceedings{chen2021autotrainer,
+  author    = {Chen, Peixuan and Kim, Sunghun},
+  title     = {{AUTOTRAINER}: An Automatic {DNN} Training Problem Detection and Repair System},
+  booktitle = {2021 IEEE/ACM 43rd International Conference on Software Engineering (ICSE)},
+  pages     = {361--372},
+  year      = {2021},
+  publisher = {IEEE}
+}
+
+@inproceedings{zhang2024verifying,
+  author    = {Zhang, Yiteng and Liu, Zirui and Zang, Zhiqiang and Guo, Keyan and Li, Haoxiang and Xiao, Wencong and Xu, Mengwei},
+  title     = {Verifying Semantic Equivalence of Large Models with Equality Saturation},
+  booktitle = {Proceedings of the 33rd ACM SIGSOFT International Symposium on Software Testing and Analysis},
+  series    = {ISSTA 2024},
+  year      = {2024},
+  pages     = {267–-279},
+  publisher = {ACM}
+}
+
+@inproceedings{liu2024investigating,
+  author    = {Liu, Gaoxiang and Chen, Tao and Wang, Yanlin and Liu, Yepang},
+  title     = {Investigating and Detecting Silent Bugs in PyTorch Programs},
+  booktitle = {2024 IEEE International Conference on Software Analysis, Evolution and Reengineering (SANER)},
+  year      = {2024},
+  publisher = {IEEE}
+}
+
+@inproceedings{jhoo2022static,
+  author    = {Jhoo, Ho Young and Kim, Sehoon and Song, Woosung and Park, Kyuyeon and Lee, DongKwon and Yi, Kwangkeun},
+  title     = {A Static Analyzer for Detecting Tensor Shape Errors in Deep Neural Network Training Code},
+  booktitle = {Proceedings of the ACM/IEEE 44th International Conference on Software Engineering: Companion Proceedings},
+  series    = {ICSE '22},
+  year      = {2022},
+  pages     = {337--338},
+  publisher = {ACM}
+}
+
+@misc{bekman2022bloom,
+  author       = {Bekman, Stas},
+  title        = {{BLOOM}: Megatron-{DeepSpeed}},
+  year         = {2022},
+  howpublished = {\url{https://huggingface.co/blog/bloom-megatron-deepspeed}},
+  note         = {Accessed: 2025-09-18}
+}
+
+@misc{deepseekai2025deepseekv3technicalreport,
+      title={DeepSeek-V3 Technical Report}, 
+      author={DeepSeek-AI and Aixin Liu and Bei Feng and Bing Xue and Bingxuan Wang and Bochao Wu and Chengda Lu and Chenggang Zhao and Chengqi Deng and Chenyu Zhang and Chong Ruan and Damai Dai and Daya Guo and Dejian Yang and Deli Chen and Dongjie Ji and Erhang Li and Fangyun Lin and Fucong Dai and Fuli Luo and Guangbo Hao and Guanting Chen and Guowei Li and H. Zhang and Han Bao and Hanwei Xu and Haocheng Wang and Haowei Zhang and Honghui Ding and Huajian Xin and Huazuo Gao and Hui Li and Hui Qu and J. L. Cai and Jian Liang and Jianzhong Guo and Jiaqi Ni and Jiashi Li and Jiawei Wang and Jin Chen and Jingchang Chen and Jingyang Yuan and Junjie Qiu and Junlong Li and Junxiao Song and Kai Dong and Kai Hu and Kaige Gao and Kang Guan and Kexin Huang and Kuai Yu and Lean Wang and Lecong Zhang and Lei Xu and Leyi Xia and Liang Zhao and Litong Wang and Liyue Zhang and Meng Li and Miaojun Wang and Mingchuan Zhang and Minghua Zhang and Minghui Tang and Mingming Li and Ning Tian and Panpan Huang and Peiyi Wang and Peng Zhang and Qiancheng Wang and Qihao Zhu and Qinyu Chen and Qiushi Du and R. J. Chen and R. L. Jin and Ruiqi Ge and Ruisong Zhang and Ruizhe Pan and Runji Wang and Runxin Xu and Ruoyu Zhang and Ruyi Chen and S. S. Li and Shanghao Lu and Shangyan Zhou and Shanhuang Chen and Shaoqing Wu and Shengfeng Ye and Shengfeng Ye and Shirong Ma and Shiyu Wang and Shuang Zhou and Shuiping Yu and Shunfeng Zhou and Shuting Pan and T. Wang and Tao Yun and Tian Pei and Tianyu Sun and W. L. Xiao and Wangding Zeng and Wanjia Zhao and Wei An and Wen Liu and Wenfeng Liang and Wenjun Gao and Wenqin Yu and Wentao Zhang and X. Q. Li and Xiangyue Jin and Xianzu Wang and Xiao Bi and Xiaodong Liu and Xiaohan Wang and Xiaojin Shen and Xiaokang Chen and Xiaokang Zhang and Xiaosha Chen and Xiaotao Nie and Xiaowen Sun and Xiaoxiang Wang and Xin Cheng and Xin Liu and Xin Xie and Xingchao Liu and Xingkai Yu and Xinnan Song and Xinxia Shan and Xinyi Zhou and Xinyu Yang and Xinyuan Li and Xuecheng Su and Xuheng Lin and Y. K. Li and Y. Q. Wang and Y. X. Wei and Y. X. Zhu and Yang Zhang and Yanhong Xu and Yanhong Xu and Yanping Huang and Yao Li and Yao Zhao and Yaofeng Sun and Yaohui Li and Yaohui Wang and Yi Yu and Yi Zheng and Yichao Zhang and Yifan Shi and Yiliang Xiong and Ying He and Ying Tang and Yishi Piao and Yisong Wang and Yixuan Tan and Yiyang Ma and Yiyuan Liu and Yongqiang Guo and Yu Wu and Yuan Ou and Yuchen Zhu and Yuduan Wang and Yue Gong and Yuheng Zou and Yujia He and Yukun Zha and Yunfan Xiong and Yunxian Ma and Yuting Yan and Yuxiang Luo and Yuxiang You and Yuxuan Liu and Yuyang Zhou and Z. F. Wu and Z. Z. Ren and Zehui Ren and Zhangli Sha and Zhe Fu and Zhean Xu and Zhen Huang and Zhen Zhang and Zhenda Xie and Zhengyan Zhang and Zhewen Hao and Zhibin Gou and Zhicheng Ma and Zhigang Yan and Zhihong Shao and Zhipeng Xu and Zhiyu Wu and Zhongyu Zhang and Zhuoshu Li and Zihui Gu and Zijia Zhu and Zijun Liu and Zilin Li and Ziwei Xie and Ziyang Song and Ziyi Gao and Zizheng Pan},
+      year={2025},
+      eprint={2412.19437},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2412.19437}, 
+}
+
+@misc{yang2025qwen3technicalreport,
+      title={Qwen3 Technical Report}, 
+      author={An Yang and Anfeng Li and Baosong Yang and Beichen Zhang and Binyuan Hui and Bo Zheng and Bowen Yu and Chang Gao and Chengen Huang and Chenxu Lv and Chujie Zheng and Dayiheng Liu and Fan Zhou and Fei Huang and Feng Hu and Hao Ge and Haoran Wei and Huan Lin and Jialong Tang and Jian Yang and Jianhong Tu and Jianwei Zhang and Jianxin Yang and Jiaxi Yang and Jing Zhou and Jingren Zhou and Junyang Lin and Kai Dang and Keqin Bao and Kexin Yang and Le Yu and Lianghao Deng and Mei Li and Mingfeng Xue and Mingze Li and Pei Zhang and Peng Wang and Qin Zhu and Rui Men and Ruize Gao and Shixuan Liu and Shuang Luo and Tianhao Li and Tianyi Tang and Wenbiao Yin and Xingzhang Ren and Xinyu Wang and Xinyu Zhang and Xuancheng Ren and Yang Fan and Yang Su and Yichang Zhang and Yinger Zhang and Yu Wan and Yuqiong Liu and Zekun Wang and Zeyu Cui and Zhenru Zhang and Zhipeng Zhou and Zihan Qiu},
+      year={2025},
+      eprint={2505.09388},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2505.09388}, 
+}
+
+@inproceedings{study_guan_2023,
+author = {Guan, Hao and Xiao, Ying and Li, Jiaying and Liu, Yepang and Bai, Guangdong},
+title = {A Comprehensive Study of Real-World Bugs in Machine Learning Model Optimization},
+year = {2023},
+isbn = {9781665457019},
+publisher = {IEEE Press},
+url = {https://doi.org/10.1109/ICSE48619.2023.00024},
+doi = {10.1109/ICSE48619.2023.00024},
+abstract = {Due to the great advance in machine learning (ML) techniques, numerous ML models are expanding their application domains in recent years. To adapt for resource-constrained platforms such as mobile and Internet of Things (IoT) devices, pre-trained models are often processed to enhance their efficiency and compactness, using optimization techniques such as pruning and quantization. Similar to the optimization process in other complex systems, e.g., program compilers and databases, optimizations for ML models can contain bugs, leading to severe consequences such as system crashes and financial loss. While bugs in training, compiling and deployment stages have been extensively studied, there is still a lack of systematic understanding and characterization of model optimization bugs (MOBs).In this work, we conduct the first empirical study to identify and characterize MOBs. We collect a comprehensive dataset containing 371 MOBs from TensorFlow and PyTorch, the most extensively used open-source ML frameworks, covering the entire development time span of their optimizers (May 2019 to August 2022). We then investigate the collected bugs from various perspectives, including their symptoms, root causes, life cycles, detection and fixes. Our work unveils the status quo of MOBs in the wild, and reveals their features on which future detection techniques can be based. Our findings also serve as a warning to the developers and the users of ML frameworks, and an appeal to our research community to enact dedicated countermeasures.},
+booktitle = {Proceedings of the 45th International Conference on Software Engineering},
+pages = {147–158},
+numpages = {12},
+keywords = {machine learning, model optimization, bugs},
+location = {Melbourne, Victoria, Australia},
+series = {ICSE '23}
+}
+
+@inproceedings{nnsmith_2023,
+author = {Liu, Jiawei and Lin, Jinkun and Ruffy, Fabian and Tan, Cheng and Li, Jinyang and Panda, Aurojit and Zhang, Lingming},
+title = {NNSmith: Generating Diverse and Valid Test Cases for Deep Learning Compilers},
+year = {2023},
+isbn = {9781450399166},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3575693.3575707},
+doi = {10.1145/3575693.3575707},
+abstract = {Deep-learning (DL) compilers such as TVM and TensorRT are increasingly being used to optimize deep neural network (DNN) models to meet performance, resource utilization and other requirements. Bugs in these compilers can result in models whose semantics differ from the original ones, producing incorrect results that corrupt the correctness of downstream applications. However, finding bugs in these compilers is challenging due to their complexity. In this work, we propose a new fuzz testing approach for finding bugs in deep-learning compilers. Our core approach consists of (i) generating diverse yet valid DNN test models that can exercise a large part of the compiler's transformation logic using light-weight operator specifications; (ii) performing gradient-based search to find model inputs that avoid any floating-point exceptional values during model execution, reducing the chance of missed bugs or false alarms; and (iii) using differential testing to identify bugs. We implemented this approach in NNSmith which has found 72 new bugs for TVM, TensorRT, ONNXRuntime, and PyTorch to date. Of these 58 have been confirmed and 51 have been fixed by their respective project maintainers.},
+booktitle = {Proceedings of the 28th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2},
+pages = {530–543},
+numpages = {14},
+keywords = {Fuzzing, Deep Learning Compilers, Compiler Testing},
+location = {Vancouver, BC, Canada},
+series = {ASPLOS 2023}
+}
+
+@article{silent_bug_2024,
+author = {Tambon, Florian and Nikanjam, Amin and An, Le and Khomh, Foutse and Antoniol, Giuliano},
+title = {Silent bugs in deep learning frameworks: an empirical study of Keras and TensorFlow},
+year = {2023},
+issue_date = {Jan 2024},
+publisher = {Kluwer Academic Publishers},
+address = {USA},
+volume = {29},
+number = {1},
+issn = {1382-3256},
+url = {https://doi.org/10.1007/s10664-023-10389-6},
+doi = {10.1007/s10664-023-10389-6},
+journal = {Empirical Softw. Engg.},
+month = nov,
+numpages = {34},
+keywords = {Deep learning, Bug analysis, Empirical study, Keras, TensorFlow}
+}
+@inproceedings{chen2023autoagents,
+  author    = {Chen, Guangyao and Dong, Siwei and Shu, Yu and Zhang, Ge and Seshadri, Jaward and Karlsson, Borje F. and Fu, Jie and Shi, Yemin},
+  title     = {AutoAgents: A Framework for Automatic Agent Generation},
+  booktitle = {Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing},
+  series    = {EMNLP '23},
+  year      = {2023},
+  pages     = {11681--11697},
+  publisher = {Association for Computational Linguistics}
+}
+
+
+@misc{shoeybi2019megatron,
+  title     = {{Megatron-LM}: Training Multi-Billion Parameter Language Models Using Model Parallelism},
+  author    = {Shoeybi, Mohammad and Patwary, Mostofa and Puri, Raul and LeGresley, Patrick and Casper, Jared and Catanzaro, Bryan},
+  year      = {2019},
+  eprint    = {1909.08053},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.CL},
+  url       = {https://arxiv.org/abs/1909.08053},
+}
+
+
+@inproceedings{rasley2020deepspeed,
+  title={{DeepSpeed}: System Optimizations Enable Training Deep Learning Models with Over 100 Billion Parameters},
+  author={Rasley, Jeff and Rajbhandari, Samyam and Ruwase, Olatunji and He, Yuxiong},
+  booktitle={Proceedings of the 26th ACM SIGKDD international conference on knowledge discovery \& data mining},
+  pages={3505--3506},
+  year={2020},
+  publisher={ACM},
+  address={Virtual Event},
+  doi={10.1145/3394486.3406703}
+}
+
+@inproceedings{rajbhandari2020zero,
+  title={{ZeRO}: Memory Optimizations Toward Training Trillion Parameter Models},
+  author={Rajbhandari, Samyam and Rasley, Jeff and Ruwase, Olatunji and He, Yuxiong},
+  booktitle={SC20: International Conference for High Performance Computing, Networking, Storage and Analysis},
+  pages={1--16},
+  year={2020},
+  publisher={IEEE},
+  address={Atlanta, GA, USA},
+  doi={10.1109/SC41405.2020.00024}
+}
+
+@article{huang2019gpipe,
+  title={{GPipe}: Efficient Training of Giant Neural Networks Using Pipeline Parallelism},
+  author={Huang, Yanping and Cheng, Youlong and Bapna, Ankur and Firat, Orhan and Chen, Dehao and Chen, Mia and Lee, HyoukJoong and Ngiam, Jiquan and Le, Quoc V and Wu, Yonghui and others},
+  journal={Advances in neural information processing systems},
+  volume={32},
+  pages={103--112},
+  year={2019},
+  url={https://papers.nips.cc/paper/8717-gpipe-efficient-training-of-giant-neural-networks-using-pipeline-parallelism}
+}
+
+
+@inproceedings{micikevicius2018mixed,
+  title={Mixed Precision Training},
+  author={Micikevicius, Paulius and Narang, Sharan and Alben, Jonah and Diamos, Gregory and Elsen, Erich and Garcia, David and Ginsburg, Boris and Houston, Michael and Kuchaiev, Oleksii and Venkatesh, Ganesh and others},
+  booktitle={International Conference on Learning Representations},
+  year={2018},
+  publisher={OpenReview.net},
+  address={Vancouver, BC, Canada},
+  url={https://openreview.net/forum?id=r1gs9JgRZ},
+  numpages={10}
+}
+
+@article{li2020pytorch,
+  title={PyTorch distributed: experiences on accelerating data parallel training},
+  author={Li, Shen and Zhao, Yanli and Varma, Rohan and Salpekar, Omkar and Noordhuis, Pieter and Li, Teng and Paszke, Adam and Smith, Jeff and Vaughan, Brian and Damania, Pritam and others},
+  journal={Proceedings of the VLDB Endowment},
+  volume={13},
+  number={12},
+  pages={3005--3018},
+  year={2020},
+  publisher={VLDB Endowment},
+  doi={10.14778/3415478.3415530}
+}
+
+@inproceedings{pascanu2013difficulty,
+  title={On the difficulty of training recurrent neural networks},
+  author={Pascanu, Razvan and Mikolov, Tomas and Bengio, Yoshua},
+  booktitle={Proceedings of the 30th International Conference on Machine Learning},
+  pages={1310--1318},
+  year={2013},
+  publisher={PMLR},
+  address={Atlanta, GA, USA},
+  series={Proceedings of Machine Learning Research},
+  volume={28}
+}
+
+
+@article{ernst2007daikon,
+  title={The Daikon system for dynamic detection of likely invariants},
+  author={Ernst, Michael D and Perkins, Jeff H and Guo, Philip J and McCamant, Stephen and Pacheco, Carlos and Tschantz, Matthew S and Xiao, Chen},
+  journal={Science of computer programming},
+  volume={69},
+  number={1-3},
+  pages={35--45},
+  year={2007},
+  publisher={Elsevier},
+  doi={10.1016/j.scico.2007.01.015}
+}
+
+
+@inproceedings{lepikhingshard,
+  title={GShard: Scaling Giant Models with Conditional Computation and Automatic Sharding},
+  author={Lepikhin, Dmitry and Lee, HyoukJoong and Xu, Yuanzhong and Chen, Dehao and Firat, Orhan and Huang, Yanping and Krikun, Maxim and Shazeer, Noam and Chen, Zhifeng},
+  booktitle={International Conference on Learning Representations},
+  year={2020}
+}
+
+
+@inproceedings{markidis2018nvidia,
+  title={{NVIDIA} Tensor Core Programmability, Performance \& Precision},
+  author={Markidis, Stefano and Der Chien, Steven Wei and Laure, Erwin and Peng, Ivy Bo and Vetter, Jeffrey S},
+  booktitle={2018 IEEE International Parallel and Distributed Processing Symposium Workshops ({IPDPSW})},
+  pages={522--531},
+  year={2018},
+  publisher={IEEE},
+  address={Vancouver, BC, Canada},
+  doi={10.1109/IPDPSW.2018.00091}
+}
+
+@article{wang2018training,
+  title={Training deep neural networks with 8-bit floating point numbers},
+  author={Wang, Naigang and Choi, Jungwook and Brand, Daniel and Chen, Chia-Yu and Gopalakrishnan, Kailash},
+  journal={Advances in neural information processing systems},
+  volume={31},
+  pages={7675--7684},
+  year={2018},
+  url={https://papers.nips.cc/paper/7997-training-deep-neural-networks-with-8-bit-floating-point-numbers}
+}
+
+@inproceedings{grant2018inferring,
+  title={Inferring and asserting distributed system invariants},
+  author={Grant, Stewart and Cech, Hendrik and Beschastnikh, Ivan},
+  booktitle={Proceedings of the 40th International Conference on Software Engineering},
+  pages={1149--1159},
+  year={2018},
+  publisher={ACM},
+  address={Gothenburg, Sweden},
+  doi={10.1145/3180155.3180199}
+}
+
+@article{barr2015oracle,
+  title={The Oracle Problem in Software Testing: A Survey},
+  author={Barr, Earl T. and Harman, Mark and McMinn, Phil and Shahbaz, Muzammil and Yoo, Shin},
+  journal={IEEE Transactions on Software Engineering},
+  volume={41},
+  number={5},
+  pages={507--525},
+  year={2015},
+  publisher={IEEE},
+  doi={10.1109/TSE.2014.2372785}
+}
+
+@inproceedings{jiang2024megascale,
+  title={{MegaScale}: Scaling Large Language Model Training to More Than 10,000 {GPUs}},
+  author={Jiang, Ziheng and Lin, Haibin and Zhong, Yinmin and Huang, Qi and Chen, Yangrui and Zhang, Zhi and Peng, Yanghua and Li, Xiang and Xie, Cong and Nong, Shibiao and Jia, Yulu and He, Sun and Chen, Hongmin and Bai, Zhihao and Hou, Qi and Yan, Shipeng and Zhou, Ding and Sheng, Yiyao and Jiang, Zhuo and Xu, Haohan and Wei, Haoran and Zhang, Zhang and Nie, Pengfei and Zou, Leqi and Zhao, Sida and Xiang, Liang and Liu, Zherui and Li, Zhe and Jia, Xiaoying and Ye, Jianxi and Jin, Xin and Liu, Xin},
+  booktitle={Proceedings of the 21st USENIX Symposium on Networked Systems Design and Implementation},
+  series={NSDI '24},
+  year={2024}
+}
+
+@inproceedings{xie2021docter,
+  title={{DocTer}: Documentation Guided Fuzzing for Testing Deep Learning {API} Functions},
+  author={Xie, Danning and Li, Yitong and Kim, Mijung and Pham, Hung Viet and Tan, Lin and Zhang, Xiangyu and Godfrey, Michael W.},
+  booktitle={Proceedings of the 31st ACM SIGSOFT International Symposium on Software Testing and Analysis},
+  year={2022},
+  publisher={ACM},
+  doi={10.1145/3533767.3534220}
+}
+
+@inproceedings{chakraborty2023ranking,
+  title={Ranking {LLM}-Generated Loop Invariants for Program Verification},
+  author={Chakraborty, Saikat and Lahiri, Shuvendu K. and Fakhoury, Sarah and Musuvathi, Madanlal and Lal, Akash and Rastogi, Aseem and Senthilnathan, Aditya and Sharma, Rahul and Swamy, Nikhil},
+  booktitle={Findings of the Association for Computational Linguistics: EMNLP 2023},
+  pages={9164--9175},
+  year={2023}
+}
+
+@misc{ttrace2025,
+  title={{TTrace}: Lightweight Error Checking and Diagnosis for Distributed Training},
+  author={Jiang, Haitian and Zhu, Shaowei and Zhang, Zhen and Song, Zhenyu and Fu, Xinwei and Jia, Zhen and Wang, Yida and Li, Jinyang},
+  year={2025},
+  eprint={2506.09280},
+  archivePrefix={arXiv},
+  primaryClass={cs.DC},
+  url={https://arxiv.org/abs/2506.09280},
+}
+
+@misc{trainverify2025,
+  title={{TrainVerify}: Equivalence-Based Verification for Distributed {LLM} Training},
+  author={Lu, Yunchi and Miao, Youshan and Tan, Cheng and Huang, Peng and Zhu, Yi and Zhang, Xian and Yang, Fan},
+  year={2025},
+  eprint={2506.15961},
+  archivePrefix={arXiv},
+  primaryClass={cs.LG}
+}
+
+@inproceedings{pei2023can,
+  title={Can Large Language Models Reason about Program Invariants?},
+  author={Pei, Kexin and Bieber, David and Shi, Kensen and Sutton, Charles and Yin, Pengcheng},
+  booktitle={Proceedings of the 40th International Conference on Machine Learning},
+  pages={27496--27520},
+  year={2023},
+  series={Proceedings of Machine Learning Research},
+  volume={202},
+  publisher={PMLR},
+  address={Honolulu, HI, USA},
+  url={https://proceedings.mlr.press/v202/pei23a.html}
+}
+
+@inproceedings{pandita2012inferring,
+  title={Inferring Method Specifications from Natural Language {API} Descriptions},
+  author={Pandita, Rahul and Xiao, Xusheng and Zhong, Hao and Xie, Tao and Oney, Stephen and Paradkar, Amit},
+  booktitle={Proceedings of the 34th International Conference on Software Engineering (ICSE)},
+  pages={815--825},
+  year={2012},
+  publisher={IEEE},
+  address={Zurich, Switzerland},
+  doi={10.1109/ICSE.2012.6227137}
+}
+
+@inproceedings{leesatapornwongsa2016taxdc,
+  title={{TaxDC}: A Taxonomy of Non-Deterministic Concurrency Bugs in Datacenter Distributed Systems},
+  author={Leesatapornwongsa, Tanakorn and Lukman, Jeffrey F and Lu, Shan and Gunawi, Haryadi S},
+  booktitle={Proceedings of the 21st International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS)},
+  pages={517--530},
+  year={2016},
+  publisher={ACM},
+  address={Atlanta, GA, USA},
+  doi={10.1145/2872362.2872374}
+}
+
+@inproceedings{gunawi2014bugs,
+  title={What Bugs Live in the Cloud? A Study of 3000+ Issues in Cloud Systems},
+  author={Gunawi, Haryadi S and Hao, Mingzhe and Leesatapornwongsa, Tanakorn and Patana-anake, Tiratat and Do, Thanh and Adityatama, Jeffry and Lu, Shan and others},
+  booktitle={Proceedings of the ACM Symposium on Cloud Computing (SoCC)},
+  pages={1--14},
+  year={2014},
+  publisher={ACM},
+  address={Seattle, WA, USA},
+  doi={10.1145/2670979.2670986}
+}
+
+@inproceedings{zhang2018empirical,
+  title={An Empirical Study on {TensorFlow} Program Bugs},
+  author={Zhang, Yuhao and Chen, Yifan and Cheung, Shing-Chi and Xiong, Yingfei and Zhang, Lu},
+  booktitle={Proceedings of the 27th ACM SIGSOFT International Symposium on Software Testing and Analysis (ISSTA)},
+  pages={129--140},
+  year={2018},
+  publisher={ACM},
+  address={Amsterdam, Netherlands},
+  doi={10.1145/3213846.3213866}
+}
+
+%% SIGMOD/PACMMOD papers (journal mode: article entries with journal Proc. ACM Manag. Data)
+@article{qure2024,
+  title     = {{QURE}: {AI}-Assisted and Automatically Verified {UDF} Inlining},
+  author    = {Siddiqui, Tarique and K\"{o}nig, Arnd Christian and Cao, Jiashen and Yan, Cong and Lahiri, Shuvendu K.},
+  journal   = {Proc. ACM Manag. Data},
+  volume    = {3},
+  number    = {1},
+  articleno = {66},
+  numpages  = {26},
+  year      = {2025},
+  month     = {feb},
+  publisher = {ACM},
+  doi       = {10.1145/3709716}
+}
+
+@article{aquapipe2025,
+  title     = {{AquaPipe}: A Quality-Aware Pipeline for Knowledge Retrieval and Large Language Models},
+  author    = {Yu, Runjie and Huang, Weizhou and Bai, Shuhan and Zhou, Jian and Wu, Fei},
+  journal   = {Proc. ACM Manag. Data},
+  volume    = {3},
+  number    = {1},
+  articleno = {11},
+  numpages  = {26},
+  year      = {2025},
+  month     = {jan},
+  publisher = {ACM},
+  doi       = {10.1145/3709661}
+}
+
+@article{snails2025,
+  title     = {{SNAILS}: Schema Naming Assessments for Improved {LLM}-Based {SQL} Inference},
+  author    = {Luoma, Kyle and Kumar, Arun},
+  journal   = {Proc. ACM Manag. Data},
+  volume    = {3},
+  number    = {1},
+  articleno = {77},
+  numpages  = {26},
+  year      = {2025},
+  month     = {feb},
+  publisher = {ACM},
+  doi       = {10.1145/3709727}
+}
+
+@article{fan2008cfd,
+  author    = {Wenfei Fan and Floris Geerts and Xibei Jia and Anastasios Kementsietsidis},
+  title     = {Conditional Functional Dependencies for Capturing Data Inconsistencies},
+  journal   = {ACM Transactions on Database Systems (TODS)},
+  volume    = {33},
+  number    = {2},
+  pages     = {6:1--6:48},
+  year      = {2008},
+  doi       = {10.1145/1366102.1366103}
+}
+
+@article{chu2013discovering,
+  author    = {Xu Chu and Ihab F. Ilyas and Paolo Papotti},
+  title     = {Discovering Denial Constraints},
+  journal   = {Proceedings of the VLDB Endowment (PVLDB)},
+  volume    = {6},
+  number    = {13},
+  pages     = {1498--1509},
+  year      = {2013},
+  doi       = {10.14778/2536258.2536262}
+}
+
+@inproceedings{song2021autovalidate,
+  author    = {Jie Song and Yeye He},
+  title     = {Auto-Validate: Unsupervised Data Validation Using Data-Domain Patterns Inferred from Data Lakes},
+  booktitle = {Proceedings of the 2021 International Conference on Management of Data (SIGMOD)},
+  pages     = {1678--1691},
+  year      = {2021},
+  publisher = {ACM},
+  address   = {Xi'an, China},
+  doi       = {10.1145/3448016.3457250}
+}
+
+@article{schelter2018deequ,
+  author    = {Sebastian Schelter and Dustin Lange and Philipp Schmidt and Meltem Celikel and Felix Biessmann and Andreas Grafberger},
+  title     = {Automating Large-Scale Data Quality Verification},
+  journal   = {Proceedings of the VLDB Endowment (PVLDB)},
+  volume    = {11},
+  number    = {12},
+  pages     = {1781--1794},
+  year      = {2018},
+  doi       = {10.14778/3229863.3229867}
+}
+
+@misc{dixit2021silent,
+  author    = {Harish Dattatraya Dixit and Sneha Pendharkar and Matt Beadon and Chris Mason and Tejasvi Chakravarthy and Bharath Muthiah and Sriram Sankar},
+  title     = {Silent Data Corruptions at Scale},
+  year      = {2021},
+  eprint    = {2102.11245},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.AR},
+  url       = {https://arxiv.org/abs/2102.11245},
+}
+
+@inproceedings{hochschild2021cores,
+  author    = {Peter H. Hochschild and Paul Turner and Jeffrey C. Mogul and Rama Govindaraju and Parthasarathy Ranganathan and David E. Culler and Amin Vahdat},
+  title     = {Cores That Don't Count},
+  booktitle = {Proceedings of the Workshop on Hot Topics in Operating Systems ({HotOS})},
+  year      = {2021},
+  pages     = {9--16},
+  publisher = {ACM},
+  address   = {Ann Arbor, MI, USA},
+  doi       = {10.1145/3458336.3465297},
+}
+
+@inproceedings{chen2021deployment,
+  author    = {Zhenpeng Chen and Huihan Yao and Yiling Lou and Yanbin Cao and Yuanqiang Liu and Haoyu Wang and Xuanzhe Liu},
+  title     = {An Empirical Study on Deployment Faults of Deep Learning Based Mobile Applications},
+  booktitle = {Proceedings of the 43rd International Conference on Software Engineering (ICSE)},
+  pages     = {674--685},
+  year      = {2021},
+  publisher = {IEEE}
+}

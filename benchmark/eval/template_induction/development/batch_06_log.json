@@ -1,0 +1,186 @@
+{
+  "batch": 6,
+  "decisions": [
+    {
+      "case_id": "OC-NEW-12",
+      "decision": "MATCH",
+      "template_id": "T16",
+      "guard_extension": "precondition: non-fused RotaryEmbedding path in packed mode: attention must forward the provided cu_doc_lens to the rotary module so positions restart at each document boundary",
+      "note": "invariance_across_config re-resolved to index_consistency from the relation statement (applied rotary position must equal the intended per-document position); independent of OC-NEW-13 (cu_doc_lens not forwarded at all vs per-element boundaries in batched packing)."
+    },
+    {
+      "case_id": "D-NEW-8",
+      "decision": "MATCH",
+      "template_id": "T18",
+      "guard_extension": "precondition: WarmupLR without an explicit warmup_max_lr must inherit the user-configured optimizer param-group learning rate as its peak LR, not a hard-coded default",
+      "note": "value_scaling_consistency re-resolved to config_effectiveness: the witness is effective peak LR vs the user's own configured optimizer LR, not a scale factor in the training path."
+    },
+    {
+      "case_id": "M-NEW-10",
+      "decision": "MATCH",
+      "template_id": "T25",
+      "guard_extension": "precondition: self-attention output_gate under TP with num_query_groups < tensor_model_parallel_size: each TP rank must apply its own gate slice aligned with its query-group partition, not the full unsliced gate",
+      "note": "structural_integrity re-resolved to sharding_layout_consistency (rank consumes slice_r(gate), already T25's schema form); independent of seed case M-023 (different gate module and defect)."
+    },
+    {
+      "case_id": "OC-NEW-61",
+      "decision": "MATCH",
+      "template_id": "T20",
+      "guard_extension": "precondition: fused-boundary label offsetting on variable-length byte batches: the boundary mask must be ANDed with the byte validity mask so padded positions keep ignore_index and contribute zero loss",
+      "note": "Same exclusivity relation over loss contributions at padding positions (labels leaving ignore_index at pad positions make padding contribute to CE); difference is a precondition guard."
+    },
+    {
+      "case_id": "D-NEW-59",
+      "decision": "MATCH",
+      "template_id": "T03",
+      "guard_extension": "precondition: ZeRO-3 quantized-gradient (qgZ) all-to-all reduction must slice communication buffers by the actual node-local world size (no hard-coded GPUs-per-node count), matching the unquantized allreduce reference within quantization error",
+      "note": "invariance_across_config (alias reference_equivalence): quantized vs standard gradient reduction is a performance-neutral knob whose paired-run witness is T03's signal class."
+    },
+    {
+      "case_id": "M-NEW-6",
+      "decision": "MATCH",
+      "template_id": "T18",
+      "guard_extension": "precondition: group-limited MoE routing: the realized per-token selected-expert count must equal the configured topk (inner topk call must use topk, not num_groups)",
+      "note": "count_frequency_match re-resolved to config_effectiveness following the OC-NEW-6 sliding-window-extent precedent: realized selected-expert count vs the user-configured topk."
+    },
+    {
+      "case_id": "D-NEW-12",
+      "decision": "MATCH",
+      "template_id": "T05",
+      "guard_extension": "topology: SP>1; precondition: sequence-parallel communication buffers must honor the configured seq_parallel_communication_data_type (the consumed config key must match the user-facing spelling, no silent ignore)",
+      "note": "Follows the T05 communication_data_type precedent: the designated dtype of SP communication buffers is the user-configured value."
+    },
+    {
+      "case_id": "D-NEW-53",
+      "decision": "MATCH",
+      "template_id": "T08",
+      "guard_extension": "precondition: AutoEP MoE under ZeRO-2: the per-rank loss must carry the ep_size factor before backward so reduced expert gradients match the ep_size=1 baseline",
+      "note": "Missing ep_size multiplicative factor on the loss/expert-gradient path; independent of D-NEW-73 (manual-API parity incident)."
+    },
+    {
+      "case_id": "O-NEW-24",
+      "decision": "MATCH",
+      "template_id": "T04",
+      "guard_extension": "precondition: Post-LN (norm_after) sequential block: the attention normalization must be applied to the attention output immediately before the residual add, per the Post-LN reference formula, not to the QKV projection output",
+      "note": "ordering re-resolved to reference_equivalence: norm placement is normalization-formula conformance against the Post-LN spec, witnessed by residual-input statistics vs the reference block formula."
+    },
+    {
+      "case_id": "D-NEW-64",
+      "decision": "MATCH",
+      "template_id": "T09",
+      "guard_extension": "precondition: fp16 fused-optimizer global grad norm under TP: every TP rank's slices of genuinely TP-sliced parameters must contribute to the norm (replicated params counted once), not only tp_rank 0",
+      "note": "conservation re-resolved to value_scaling_consistency: grads_for_norm completeness over TP shards is already T09's schema clause."
+    },
+    {
+      "case_id": "OC-NEW-28",
+      "decision": "MATCH",
+      "template_id": "T05",
+      "guard_extension": "precondition: modules re-wrapped by a sharding framework (FSDP/FSDP2) after construction must cast input activations using the live parameter dtype at forward time, not a construction-time dtype snapshot",
+      "note": "Input activation at kernel entry must carry the designated (live post-wrapping parameter) dtype."
+    },
+    {
+      "case_id": "D-NEW-14",
+      "decision": "SINGLETON",
+      "template_id": null,
+      "guard_extension": null,
+      "note": "Per-param-group LR-list cardinality matches no existing template's objects and no earlier singleton shares relation+objects."
+    },
+    {
+      "case_id": "O-NEW-55",
+      "decision": "MATCH",
+      "template_id": "T27",
+      "guard_extension": "precondition: block-level MuReadout (ff_proj) under use_mup: block reset_parameters must not unconditionally re-apply generic normal init over the muP-prescribed zero/special readout init",
+      "note": "Init statistics must conform to the muP prescription; independent of the earlier model-level muP-readout support (different module and defect)."
+    },
+    {
+      "case_id": "O-NEW-61",
+      "decision": "MATCH",
+      "template_id": "T27",
+      "guard_extension": "precondition: readout ff_out must be constructed with the configured init_device so the meta-init/FSDP materialization pipeline applies the designed init scale (no default-device kaiming escape)",
+      "note": "Post-init weight statistics escape the configured init pipeline via a missing device kwarg; independent of O-NEW-55 and of the torch>=2.1 reset_parameters support (different defects)."
+    },
+    {
+      "case_id": "OC-NEW-65",
+      "decision": "SINGLETON",
+      "template_id": null,
+      "guard_extension": null,
+      "note": "Label-index range validity shares no objects with the existing boundedness templates/singletons."
+    },
+    {
+      "case_id": "D-NEW-23",
+      "decision": "MATCH",
+      "template_id": "T03",
+      "guard_extension": "precondition: ZeRO-1/2 with use_multi_rank_bucket_allreduce=False: the single-destination reduce path must produce gradients on the receiving rank equivalent to the bucket-allreduce path (the passed destination rank must not be silently overridden to None)",
+      "note": "invariance_across_config (alias reference_equivalence): collective-path selection is a performance-neutral knob; witness is a paired-config gradient checksum comparison."
+    },
+    {
+      "case_id": "D-NEW-44",
+      "decision": "MATCH",
+      "template_id": "T11",
+      "guard_extension": "topology: TP>1 and EP>1; precondition: MoE checkpoint save with expert parallelism and TP>1 must write every TP rank's non-expert model-states shard (not only mp_rank_00, no exp_dp_rank short-circuit) so each TP rank restores its own saved shard",
+      "note": "Primary relation is per-TP-rank save/restore equality keyed to the correct rank; the missing-file count is the secondary witness only."
+    },
+    {
+      "case_id": "OC-NEW-4",
+      "decision": "MATCH",
+      "template_id": "T14",
+      "guard_extension": null,
+      "note": "Zero loss-normalization divisor under full instance masking is T14's existing precondition verbatim; different repo from O-015, counts independently."
+    },
+    {
+      "case_id": "D-NEW-69",
+      "decision": "MATCH",
+      "template_id": "T10",
+      "guard_extension": "precondition: ZeRO-1/2 overlap_comm: the compute stream must wait on the reduction stream before the next gradient bucket is written into the shared ipg buffer an in-flight allreduce is still reading",
+      "note": "Classic producer-consumer stream hazard: buffer rewrite must happen-after the in-flight allreduce read completes."
+    },
+    {
+      "case_id": "O-NEW-69",
+      "decision": "MATCH",
+      "template_id": "T18",
+      "guard_extension": "precondition: document-boundary/EOS handling must use the configured tokenizer's actual eos_token_id, not a hard-coded token id",
+      "note": "config_honoring already aliases to config_effectiveness: the effective boundary token id must equal the value implied by the configured tokenizer (named-data-mix resolution precedent)."
+    },
+    {
+      "case_id": "M-NEW-22",
+      "decision": "MATCH",
+      "template_id": "T08",
+      "guard_extension": "topology: PP>1; precondition: encoder-decoder pipeline boundary with encoder TP < decoder TP: cross-stage gradients received from multiple decoder TP ranks must be averaged, not summed (no TP-fanout inflation of the boundary gradient)",
+      "note": "Boundary gradient carries a spurious TP-fanout multiplicative factor; sum-vs-mean is a scale-factor obligation."
+    },
+    {
+      "case_id": "O-NEW-10",
+      "decision": "MATCH",
+      "template_id": "T26",
+      "guard_extension": "phase: optimizer_step; precondition: adaptive gradient clipping with grad_norm_exp_avg tracking: each step's observed gradient norm must enter the EMA update exactly once (the EMA must never be updated from its own previous value)",
+      "note": "Exactly-once incorporation of the per-step observation into a statistic update (count(event, step)==1, violated with count 0 by the self-referential update)."
+    },
+    {
+      "case_id": "M-NEW-36",
+      "decision": "MATCH",
+      "template_id": "T26",
+      "guard_extension": "phase: any; precondition: per-layer auxiliary (MTP) loss tracking with log_interval>1: each iteration's loss must be accumulated into the logging-window tracker exactly once, not overwritten by assignment",
+      "note": "conservation re-resolved to count_frequency_match: same aux-loss-tracker object and exactly-once-per-iteration event as T26 support M-NEW-21 (there double-counted under recompute, here dropped by overwrite)."
+    },
+    {
+      "case_id": "O-NEW-27",
+      "decision": "MATCH",
+      "template_id": "T13",
+      "guard_extension": null,
+      "note": "Same-incident (§4.1) with existing T13 support O-NEW-53: identical trainer epoch-rollover start_index-not-reset trigger already recorded near-verbatim in T13's preconditions, so it counts once (support unchanged)."
+    },
+    {
+      "case_id": "O-NEW-4",
+      "decision": "MATCH",
+      "template_id": "T05",
+      "guard_extension": "precondition: cached rotary sin/cos tables under bf16/fp16 mixed precision must be cast to the query/key compute dtype at the point of application",
+      "note": "RoPE cache dtype at the application site must equal the designated compute dtype under the mixed-precision recipe."
+    }
+  ],
+  "n_matched": 23,
+  "n_new_singletons": 2,
+  "n_new_templates": 0,
+  "core_edits": [],
+  "templates_total_after": 32,
+  "singletons_total_after": 23
+}

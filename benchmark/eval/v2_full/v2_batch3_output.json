@@ -1,0 +1,1754 @@
+{
+  "metadata": {
+    "batch": 3,
+    "n_bugs": 91,
+    "prompt_version": "annotate_prompt.md v2"
+  },
+  "annotations": [
+    {
+      "bug_id": "M-NEW-3",
+      "framework": "megatron-lm",
+      "category": "dtype",
+      "parallel_dimension": "none",
+      "invariant_type": "dtype_consistency",
+      "required_trace_fields": [
+        "op_name",
+        "output_dtype",
+        "config.fp32_residual_connection",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "Tier 0",
+      "rationale": "When fp32_residual_connection=True, residual must stay fp32 but bias_dropout_add downcasts. Detection reads op output dtype (Tier 0) under precond 'this site, this flag', so layer=schema_topo_precond not schema_only (anti-ex 1). P4 over P1: op-level dtype is not in default trace.",
+      "borderline_flags": [
+        "PATTERN_AMBIGUOUS_P1_P4"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-31",
+      "framework": "megatron-lm",
+      "category": "gradient_sync",
+      "parallel_dimension": "TP",
+      "invariant_type": "cross_rank_equality",
+      "required_trace_fields": [
+        "param_name",
+        "grad_input_checksum",
+        "tp_rank",
+        "step",
+        "tensor_model_parallel"
+      ],
+      "check_stage": "after_backward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P3",
+      "tier_field": "Tier 1",
+      "rationale": "After LinearWithFrozenWeight backward in column-parallel TP mode, grad_input must agree across TP ranks post all-reduce; bug skips it. Cross-rank rule depends on tensor_model_parallel attr (anti-ex 2), so layer=schema_topo_precond. P3 over P4 because detection is rank comparison, not attr read.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-32",
+      "framework": "megatron-lm",
+      "category": "moe",
+      "parallel_dimension": "none",
+      "invariant_type": "implementation_equivalence",
+      "required_trace_fields": [],
+      "check_stage": "other",
+      "minimum_sufficient_layer": "none",
+      "pattern_id": "none",
+      "tier_field": "exceeds_tier6",
+      "rationale": "apply_input_jitter on logits (after gating) instead of input (before). Both paths produce well-formed logits and routing; only z-loss gradient direction differs. detection_method=source_analysis, no runtime field separates buggy from clean. Per anti-ex 9: pattern=none, layer=none, exceeds_tier6.",
+      "borderline_flags": [
+        "SOURCE_ONLY_DETECTION"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-34",
+      "framework": "megatron-lm",
+      "category": "moe",
+      "parallel_dimension": "EP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "op_name",
+        "local_indices_shape",
+        "global_local_map_sum",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "Tier 5",
+      "rationale": "BaseMoELayer fancy-indexing on bool mask breaks token->expert layout when topk>1 + EP>1. Invariant: local_indices.shape == global_local_map.sum(). Precond on topk + EP makes layer schema_topo_precond. P4 because dispatch op output is not a default trace field. Tier 5: layer_id / op outputs needed.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-35",
+      "framework": "megatron-lm",
+      "category": "moe",
+      "parallel_dimension": "TP",
+      "invariant_type": "implementation_equivalence",
+      "required_trace_fields": [
+        "op_name",
+        "moe_output_checksum",
+        "tp_rank",
+        "config.tensor_model_parallel_size",
+        "config.sequence_parallel"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P3",
+      "tier_field": "Tier 0",
+      "rationale": "TP>1 + SP=False + EP=1 silently skips MoE token gather, so each TP rank's MoE output is incomplete and disagrees. Cross-TP comparison plus precond on TP/SP config (rule changes by config) -> schema_topo_precond. P3 because detection is rank-disagreement, not attr lookup.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-36",
+      "framework": "megatron-lm",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "total_loss_dict[mtp_name]",
+        "iteration",
+        "log_interval",
+        "step"
+      ],
+      "check_stage": "before_optimizer",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 3",
+      "rationale": "MTPLossLoggingHelper assigns instead of accumulating; within a log_interval window total_loss_dict[mtp_name] should equal running sum. Precond log_interval>1 + MTP -> schema_topo_precond. P7 over P1: tracked field is internal accumulator, not standard trace.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-38",
+      "framework": "megatron-lm",
+      "category": "gradient_sync",
+      "parallel_dimension": "DP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "param_name",
+        "main_grad_checksum",
+        "iteration_index",
+        "reuse_grad_buf_for_mxfp8_param_ag"
+      ],
+      "check_stage": "main_grad_in_backward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P5",
+      "tier_field": "Tier 1",
+      "rationale": "Before first backward of an iter, every weight's main_grad must be zero, not equal to param data. Bug copies main params into shared grad buffer when forward_pre_hook disabled. Precond reuse_grad_buf+overlap+first iter -> schema_topo_precond. P5 over P7: grad value/scale check.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-39",
+      "framework": "megatron-lm",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_class",
+        "softmax_scale",
+        "config.mscale",
+        "config.mscale_all_dim",
+        "rotary_scaling_factor"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "MultiLatentAttention.softmax_scale built once at __init__ from wrong config field (mscale instead of mscale_all_dim). Frozen at construction, statically inspectable on the built module -> P8 (anti-ex 10). Precond YaRN+mscale!=mscale_all_dim -> schema_topo_precond. Tier 6: module attr snapshot.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-4",
+      "framework": "megatron-lm",
+      "category": "numerical",
+      "parallel_dimension": "TP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "op_name",
+        "input_tensor_id",
+        "output_tensor_id",
+        "is_aliased",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "exceeds_tier6",
+      "rationale": ".float() on already-fp32 input returns same tensor; subsequent in-place op aliases autograd-saved activation. Storage-aliasing inspection at op output not in standard schema -> exceeds_tier6. Precond input_dtype==fp32+this op -> schema_topo_precond. P4 over P1: aliasing field is op-level.",
+      "borderline_flags": [
+        "EXCEEDS_TIER6"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-40",
+      "framework": "megatron-lm",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_class",
+        "module.attn_mask_type",
+        "ViT_layer_spec_path"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "ViT local layer spec sets self_attention.attn_mask_type=causal instead of no_mask, frozen at __init__. Statically discoverable on named_modules in ViT subtree -> P8 (anti-ex 10). Precond ViT local-spec path -> schema_topo_precond. Tier 6: module attr lives at named_modules class snapshot.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-41",
+      "framework": "megatron-lm",
+      "category": "data_loading",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "dataset_call_id",
+        "cached_loss_mask_checksum",
+        "step"
+      ],
+      "check_stage": "other",
+      "minimum_sufficient_layer": "none",
+      "pattern_id": "none",
+      "tier_field": "exceeds_tier6",
+      "rationale": "GPTDataset returns aliased cached_loss_mask; downstream in-place padding mutates the cache and corrupts later samples. Detection requires hooking inside dataloader __getitem__ (cache-state mutation). Per anti-ex 9: source-only / dataloader-internal -> pattern=none, layer=none, exceeds_tier6.",
+      "borderline_flags": [
+        "SOURCE_ONLY_DETECTION",
+        "EXCEEDS_TIER6"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-42",
+      "framework": "megatron-lm",
+      "category": "gradient_sync",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "bucket_id",
+        "bucket_data_norm_pre",
+        "bucket_data_norm_post",
+        "gradient_scaling_factor",
+        "num_buckets"
+      ],
+      "check_stage": "before_optimizer",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P5",
+      "tier_field": "Tier 1",
+      "rationale": "Megatron-FSDP scales whole gbuf instead of per-bucket, giving cumulative scale (1/dp_size)^num_buckets. Invariant: post-scale bucket norm = pre-norm/scaling_factor (not /factor^N). Precond FSDP + multi-bucket -> schema_topo_precond. P5 over P7: grad-magnitude bound, not call count.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-43",
+      "framework": "megatron-lm",
+      "category": "communication",
+      "parallel_dimension": "CP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "target_gradient_scaling_factor",
+        "data_parallel_world_size",
+        "context_parallel_world_size",
+        "step"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P6",
+      "tier_field": "Tier 5",
+      "rationale": "DDP target_gradient_scaling_factor=1/dp_size when CP>1, but reduction collective spans dp*cp. Group config bug at DDP build time. P6 over P5: it's a topology/group-config check, not a grad-norm bound. Precond CP>1 + average_in_collective -> schema_topo_precond. Tier 5: world_size fields.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-44",
+      "framework": "megatron-lm",
+      "category": "loss_computation",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "DSAIndexerLossAutoScaler.loss_scale",
+        "MTPLossAutoScaler.loss_scale",
+        "num_microbatches",
+        "calculate_per_token_loss"
+      ],
+      "check_stage": "before_optimizer",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P1",
+      "tier_field": "Tier 3",
+      "rationale": "DSAIndexerLossAutoScaler.loss_scale must equal loss_scale/num_microbatches at backward (matches MTP scaler); bug omits divisor. P1 over P5: single-field equals expected ratio. Precond DSA+microbatches>1+!per_token_loss -> schema_topo_precond. Tier 3: num_microbatches is control variable.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-45",
+      "framework": "megatron-lm",
+      "category": "gradient_sync",
+      "parallel_dimension": "DP",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "module_id",
+        "wgrad_hook_call_count_per_iter",
+        "step"
+      ],
+      "check_stage": "after_backward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 6",
+      "rationale": "TEGroupedMLP fused-ops backward_dw never triggers wgrad-accumulate-and-reduce hooks on original linear_fc1/fc2; DDP fails to zero param.grad and AccumulateGrad double-counts. Per-module hook fire-count is a set: completeness over value_equality (anti-ex 12). P7. Precond fused path + overlap. Tier 6.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-46",
+      "framework": "megatron-lm",
+      "category": "communication",
+      "parallel_dimension": "PP",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "isend_handle_id",
+        "wait_called",
+        "deallocate_called",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "exceeds_tier6",
+      "rationale": "Interleaved 1F1B doesn't wait on async P2P send before deallocating source buffer. Per-handle invariant: every isend handle has wait() before deallocate. Set of (handle, wait_called) -> completeness (anti-ex 12). P7 over P6: call ordering, not group config. Precond VPP+async P2P. exceeds_tier6.",
+      "borderline_flags": [
+        "EXCEEDS_TIER6"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-47",
+      "framework": "megatron-lm",
+      "category": "numerical",
+      "parallel_dimension": "TP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "op_name",
+        "all_gathered_input.is_contiguous",
+        "step"
+      ],
+      "check_stage": "after_backward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "exceeds_tier6",
+      "rationale": "wgrad GEMM reads via flat data_ptr arithmetic; non-contiguous all_gathered_input silently produces wrong values. Invariant: all_gathered_input.is_contiguous() at op entry. Precond SP+TP path. P4 over P1: is_contiguous is op-level metadata not in default schema -> exceeds_tier6.",
+      "borderline_flags": [
+        "EXCEEDS_TIER6"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-51",
+      "framework": "megatron-lm",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "implementation_equivalence",
+      "required_trace_fields": [
+        "is_graph_warmup",
+        "is_graph_capturing",
+        "function_call_target",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "exceeds_tier6",
+      "rationale": "tensor_parallel.checkpoint dispatches CheckpointFunction.apply during graph warmup, corrupting captured graph. Invariant: under graph_warmup/capturing, must call function(*args) directly. P7 over P4: phase-flag dispatch. Layer schema_topo_precond. exceeds_tier6: graph state not in schema.",
+      "borderline_flags": [
+        "EXCEEDS_TIER6"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-52",
+      "framework": "megatron-lm",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "op_name",
+        "user_input.data_ptr",
+        "cudagraph_input.data_ptr",
+        "copy_called"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "exceeds_tier6",
+      "rationale": "_CudagraphReplayNode unconditionally copy_(user_input) overwrites in-place results when data_ptrs match. Invariant: copy_ only when data_ptr differs. Storage-pointer + call hook required, not in standard schema. P7 over P4: call-site flag check. Layer schema_topo_precond. exceeds_tier6.",
+      "borderline_flags": [
+        "EXCEEDS_TIER6"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-53",
+      "framework": "megatron-lm",
+      "category": "control_flow",
+      "parallel_dimension": "PP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "CudaGraphManager.num_warmup_steps",
+        "vp_stage",
+        "cuda_graph_use_single_mempool",
+        "step"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "DDP cast cudagraph manager built without num_warmup_steps=0 and shares mempool across VPP, so captured cast for one VPP stage writes another's params. Invariant set at construction -> P8 (anti-ex 10) over P7. Precond DDP cuda_graph + VPP. Tier 6: manager attrs sit on named_modules class snapshot.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-54",
+      "framework": "megatron-lm",
+      "category": "optimizer_state",
+      "parallel_dimension": "DP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "param_name",
+        "shard_model_param.requires_grad",
+        "shard_model_param.grad_fn"
+      ],
+      "check_stage": "init",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 4",
+      "rationale": "DistributedOptimizer FP32 shard_model_param uses non-detached view; grad_fn stays attached. Invariant: requires_grad==False AND grad_fn is None. Detection after _build runs but before step 0 -> init stage (anti-ex 10), not build. P7 over P8: state inspectable only at runtime, not at named_modules.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-55",
+      "framework": "megatron-lm",
+      "category": "optimizer_state",
+      "parallel_dimension": "DP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "param_name",
+        "bucket.param_to_index[param]",
+        "param_index_map[param]",
+        "bucket.offset"
+      ],
+      "check_stage": "init",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 4",
+      "rationale": "_ParamAndGradBucket builds local param_to_index ignoring per-param padding; optimizer slices misaligned offsets. Invariant: bucket map = param_index_map[p][0..1] - bucket.offset. P7 (structural map check). Precond DistOpt + non-multiple-of-dp -> schema_topo_precond. Tier 4.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-56",
+      "framework": "megatron-lm",
+      "category": "moe",
+      "parallel_dimension": "EP",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "module_class",
+        "fc1_latent_proj.backward_dw_call_count",
+        "fc2_latent_proj.backward_dw_call_count",
+        "step"
+      ],
+      "check_stage": "after_backward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 6",
+      "rationale": "MoELayer.backward_dw skips fc1/fc2_latent_proj.backward_dw, freezing latent-proj weights. Set of must-fire backward calls -> completeness over value_equality (anti-ex 12). P7 (call count). Precond moe_latent_size + fine-grained backward -> schema_topo_precond. Tier 6.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-57",
+      "framework": "megatron-lm",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_id",
+        "fp4_enabled",
+        "fp8_enabled",
+        "delayed_scaling_amax_history_call_count"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 6",
+      "rationale": "_CudagraphReplayNode only checks fp8_enabled; under FP4-only, per-module DelayedScaling restore is skipped, amax history drifts. Per-module call-count gate -> P7 over P4 (recipe state not op input). Precond fp4 + cuda_graph -> schema_topo_precond. Tier 6: recipe state on named_modules.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-58",
+      "framework": "megatron-lm",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_class",
+        "config.keep_mamba_stack_attention_linear_in_bf16",
+        "runner.fp8_enabled",
+        "runner.fp4_enabled"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "_CudaGraphRunner unconditionally enables FP8/FP4 even on bf16-kept mamba attention linears. Invariant: when keep_mamba_in_bf16 + non-MoE TransformerLayer, fp8/fp4 enabled must be False. Frozen at runner __init__ -> P8 (anti-ex 10). Precond on layer class -> schema_topo_precond. Tier 6.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-59",
+      "framework": "megatron-lm",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_id",
+        "is_moe_layer",
+        "moe_layer_recompute",
+        "config.fp8",
+        "config.fp4",
+        "selected_recompute_function"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "TransformerLayer selects te_checkpoint only when fp8 set; FP4-only loses amax tracking via plain tensor_parallel.checkpoint. Selection fixed at __init__ -> P8 over P7 (anti-ex 10). Precond is_moe_layer + moe_recompute + (fp8|fp4) -> schema_topo_precond. Tier 6: module attr on named_modules.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-6",
+      "framework": "megatron-lm",
+      "category": "moe",
+      "parallel_dimension": "EP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "op_name",
+        "topk_k_argument",
+        "config.moe_router_topk",
+        "config.moe_router_num_groups",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "Tier 6",
+      "rationale": "group_limited_topk passes num_groups instead of topk to inner topk, returning wrong k experts. Invariant: inner topk's k == config.moe_router_topk. Precond group_limited_topk path -> schema_topo_precond. P4 over P1: k arg is op call-site value not in default trace. Tier 6.",
+      "borderline_flags": [
+        "INFERRED_FROM_SPARSE_CONFIG"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-60",
+      "framework": "megatron-lm",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_class",
+        "config.fp4",
+        "config.fp8",
+        "linear_proj.save_original_input"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "Attention.set_save_original_input gate is FP8-only; under FP4 the linear_proj caches the FP4-quantized tensor and selective-recompute backward mismatches forward. Set at __init__, statically assertable -> P8 over P7 (anti-ex 10). Precond fp4|(fp8 non-delayed) -> schema_topo_precond. Tier 6.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-61",
+      "framework": "megatron-lm",
+      "category": "communication",
+      "parallel_dimension": "CP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_id",
+        "rotary_emb_per_cp_rank",
+        "seq_dim_argument",
+        "cp_group_argument",
+        "cp_rank"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P6",
+      "tier_field": "Tier 5",
+      "rationale": "MultimodalRotaryEmbedding slices on wrong dim and omits cp_group, so each CP rank sees a wrong rotary slice. Invariant: per-CP-rank slice = get_pos_emb_on_this_cp_rank(global, seq_dim=0, group=cp_group). P6 over P3: topology/group-config bug. Precond CP>1 + multimodal mrope. Tier 5.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-62",
+      "framework": "megatron-lm",
+      "category": "communication",
+      "parallel_dimension": "PP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_class",
+        "output.is_view",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "exceeds_tier6",
+      "rationale": "MambaStack returns hidden_states (non-viewless) instead of make_viewless_tensor result, sending aliased buffer to next PP stage. Invariant: returned tensor.is_view()==False. P4 over P7: op output attr check, not call-count. Precond hybrid Mamba+VPP. exceeds_tier6: is_view not in standard schema.",
+      "borderline_flags": [
+        "EXCEEDS_TIER6"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-64",
+      "framework": "megatron-lm",
+      "category": "dtype",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "TransformerConfig.bf16",
+        "TransformerConfig.params_dtype",
+        "mixed_precision_dtype"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 0",
+      "rationale": "Hybrid DSL CommonLayerConfig fails to derive params_dtype from mixed_precision_dtype. Invariant: bf16=True + default params_dtype implies params_dtype==torch.bfloat16. Built into config at construction -> P8 (anti-ex 10). Precond DSL recipe path -> schema_topo_precond. Tier 0.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-65",
+      "framework": "megatron-lm",
+      "category": "checkpoint",
+      "parallel_dimension": "none",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "state_dicts_index",
+        "state_dict_is_none",
+        "len_model_chunks",
+        "step"
+      ],
+      "check_stage": "checkpoint_load",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 6",
+      "rationale": "ChainedOptimizer.split_state_dict only assigns state_dicts[0] in single-chunk branch, leaving sub-optimizers state=None. Set of must-be-non-None entries -> completeness over value_equality (anti-ex 12). P7 (structural assertion). Precond ChainedOpt + len(chunks)==1 -> schema_topo_precond. Tier 6.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-69",
+      "framework": "megatron-lm",
+      "category": "optimizer_state",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "config.fp8",
+        "config.fp8_recipe",
+        "config.use_precision_aware_optimizer",
+        "decoupled_grad_path_taken"
+      ],
+      "check_stage": "before_optimizer",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 6",
+      "rationale": "MegatronOptimizer.get_grads_for_norm dispatches on use_precision_aware_optimizer instead of no_fp8_or_ds_fp8 derived flag, so under FP8+precision-aware it reads decoupled_grad=None and grad_norm=0. P7 (dispatch-flag check). Precond fp8 + precision_aware -> schema_topo_precond. Tier 6.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "M-NEW-7",
+      "framework": "megatron-lm",
+      "category": "loss_computation",
+      "parallel_dimension": "TP",
+      "invariant_type": "cross_rank_equality",
+      "required_trace_fields": [
+        "metric_name",
+        "z_loss_per_rank",
+        "tp_rank",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P3",
+      "tier_field": "Tier 2",
+      "rationale": "z-loss metric tracking missing avg_group: per-rank values reported instead of averaged. Invariant: logged z_loss identical across ranks within avg_group. P3 over P1: cross-rank disagreement on should-be-replicated metric. Precond metric configured to average. Tier 2.",
+      "borderline_flags": [
+        "INFERRED_FROM_SPARSE_CONFIG"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-8",
+      "framework": "megatron-lm",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_id",
+        "config.softmax_scale",
+        "module.softmax_scale",
+        "step"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "config.softmax_scale ignored by attention forward path; module's effective scale != config. Invariant: module.softmax_scale == config.softmax_scale when set. P8 over P4: statically inspectable on built attention module. Precond config.softmax_scale set -> schema_topo_precond. Tier 6.",
+      "borderline_flags": [
+        "INFERRED_FROM_SPARSE_CONFIG"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-9",
+      "framework": "megatron-lm",
+      "category": "loss_computation",
+      "parallel_dimension": "TP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "metric_name",
+        "aux_loss_value",
+        "tp_world_size",
+        "reduce_group",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P3",
+      "tier_field": "Tier 2",
+      "rationale": "aux_loss metric scaled by TP world_size and missing reduce_group, so logged value is wrong by tp_size. P3 over P1: cross-rank disagreement on a metric that should agree. Precond MoE + TP>1 -> schema_topo_precond. Tier 2: loss value. Inferred from sparse config; rationale flagged accordingly.",
+      "borderline_flags": [
+        "INFERRED_FROM_SPARSE_CONFIG"
+      ]
+    },
+    {
+      "bug_id": "M-NEW-MUON-MTP",
+      "framework": "megatron-lm",
+      "category": "optimizer_state",
+      "parallel_dimension": "PP",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "param_name",
+        "is_embedding_or_output_parameter",
+        "pp_rank",
+        "optimizer_class"
+      ],
+      "check_stage": "init",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 6",
+      "rationale": "MTP-only last PP stage's tied word_embeddings replica isn't tagged is_embedding_or_output_parameter, so Muon picks it up while AdamW handles PP rank 0's copy. Tag-coverage on a set -> completeness over value_equality (anti-ex 12). P7. Precond Muon+PP+MTP. Tier 6: named_parameters set.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-001",
+      "framework": "olmo",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_id",
+        "attn_norm_id",
+        "ff_norm_id",
+        "block_type"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "Sequential block shares one LayerNorm for both attention and FFN paths instead of two separate norms. Invariant: id(self.norm) != id(self.norm2). Frozen at __init__, statically inspectable on named_modules -> P8 over P4 (anti-ex 10). Precond block_type=sequential -> schema_topo_precond. Tier 6.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-002",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "op_name",
+        "residual_input_id",
+        "x_after_attn_norm_id",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "exceeds_tier6",
+      "rationale": "x = self.attn_norm(x) overwrites residual variable so residual connection uses normed input. Invariant: residual tensor identity == original input id at residual add. P4 over P1: tensor-identity is op-level. Precond pre-norm path. exceeds_tier6: identity not in schema.",
+      "borderline_flags": [
+        "EXCEEDS_TIER6"
+      ]
+    },
+    {
+      "bug_id": "O-003",
+      "framework": "olmo",
+      "category": "loss_computation",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "z_loss_value",
+        "z_loss_denominator",
+        "num_micro_batches",
+        "batch_size_in_tokens",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P5",
+      "tier_field": "Tier 3",
+      "rationale": "Z-loss divided by num_micro_batches instead of batch_size_in_tokens, so scale is off by ~seq_len. Invariant: z_loss denominator == batch_size_in_tokens. P5 over P1: loss-magnitude scale check. Precond softmax_aux_loss + grad_acc>1 -> schema_topo_precond. Tier 3: control-variable counters.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-004",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "bounded_change",
+      "required_trace_fields": [
+        "output_logit_norm",
+        "step",
+        "num_nodes",
+        "reduce_dtype"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P5",
+      "tier_field": "Tier 1",
+      "rationale": "FSDP reduce_dtype=bf16 makes output logit norm grow unbounded at >4 nodes; PPL goes Inf while loss looks normal. Invariant: logit norm growth is bounded vs steps. P5 over P1: norm-magnitude bound check. Precond FSDP + bf16 reduce + multinode -> schema_topo_precond. Tier 1: norm stats.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-005",
+      "framework": "olmo",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "preserve_rng_state",
+        "all_dropout",
+        "activation_checkpointing_enabled"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "Boolean inverted: preserve_rng_state = (all_dropout==0) instead of !=. Invariant: dropout>0 + activation_ckpt implies preserve_rng_state==True. Set once at construction -> P8 over P7 (statically assertable on config). Precond on dropout+ckpt -> schema_topo_precond. Tier 6: RNG state.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-006",
+      "framework": "olmo",
+      "category": "data_loading",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "restore_dataloader",
+        "global_step_at_resume"
+      ],
+      "check_stage": "init",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P1",
+      "tier_field": "Tier 0",
+      "rationale": "When restore_dataloader=False, global_step must reset to 0 at resume; bug skips reset. Single field equals expected constant -> P1 over P7. Precond resume + restore_dataloader=False -> schema_topo_precond. Tier 0: step counter is a Tier 0 field. Detection at init stage, before step 0.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-007",
+      "framework": "olmo",
+      "category": "loss_computation",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "op_name",
+        "cross_entropy_kwargs",
+        "ignore_index_param_name",
+        "flash_attn_version"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 6",
+      "rationale": "Flash-attn>=2.5.8 renamed ignored_index -> ignore_index; OLMo still passes ignored_index, kwarg silently dropped. Invariant: cross_entropy_loss kwargs match installed flash-attn API. Static call-site inspectable -> P8 over P4 (anti-ex 10). Precond flash-attn version -> schema_topo_precond. Tier 6.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-008",
+      "framework": "olmo",
+      "category": "checkpoint",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "checkpoint_path",
+        "saved_state_dict_keys",
+        "expected_state_dict_keys",
+        "loss_at_resume",
+        "loss_pre_save"
+      ],
+      "check_stage": "checkpoint_load",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 0",
+      "rationale": "Unsharded checkpoint save bug leaves state incomplete; loss is discontinuous at resume. Set of saved-vs-expected keys -> completeness over value_equality (anti-ex 12). check_stage=load (root in save, observed at load, anti-ex 7). P7 over P1. Precond unsharded path -> schema_topo_precond. Tier 0.",
+      "borderline_flags": [
+        "INFERRED_FROM_SPARSE_CONFIG"
+      ]
+    },
+    {
+      "bug_id": "O-009",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_id",
+        "k_norm.weight.shape",
+        "head_dim",
+        "n_kv_heads",
+        "d_model"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 0",
+      "rationale": "k_norm size mis-computed for GQA: code uses d_model/n_kv_heads instead of head_dim*n_kv_heads. Invariant: k_norm.weight.shape == (head_dim*n_kv_heads,). Frozen at __init__, statically assertable from named_parameters -> P8 over P1 (anti-ex 10). Precond GQA + attn_layer_norm. Tier 0: shape.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-010",
+      "framework": "olmo-core",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "monotonic",
+      "required_trace_fields": [
+        "optimizer_class",
+        "state.step",
+        "optim_step_call_count"
+      ],
+      "check_stage": "before_optimizer",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 4",
+      "rationale": "SkipStepAdamW never increments step; Adam bias correction stays at step 0 forever. Invariant: state['step']==N after N step() calls (monotonic). P7 over P1: step counter. Precond optimizer is SkipStepAdamW -> schema_topo_precond. Tier 4: optimizer state.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-011",
+      "framework": "olmo-core",
+      "category": "communication",
+      "parallel_dimension": "CP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "block_id",
+        "rope_buffer_id",
+        "rope_buffer_checksum",
+        "cp_rank"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P6",
+      "tier_field": "Tier 6",
+      "rationale": "Different transformer blocks share the same RoPE buffer under CP, so all blocks use the same un-sharded positional encoding. Invariant: each block's RoPE buffer checksum is unique under CP. P6 over P3: rotary buffer per CP partition is a topology check. Precond CP>1 -> schema_topo_precond. Tier 6.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-012",
+      "framework": "olmo-core",
+      "category": "sharding",
+      "parallel_dimension": "TP",
+      "invariant_type": "cross_rank_equality",
+      "required_trace_fields": [
+        "module_id",
+        "ce_loss",
+        "z_loss",
+        "tp_rank",
+        "is_distributed_tensor",
+        "param_distribution"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P3",
+      "tier_field": "Tier 2",
+      "rationale": "LMHead fused_linear loss treats ce_loss/z_loss as distributed tensor (should be local) and w_out lacks TP wrapper. Invariant: TP-mode loss == non-TP loss; w_out distribution = DP+TP. P3 over P1: cross-TP loss disagreement. Precond TP + LMHead fused_linear -> schema_topo_precond. Tier 2: loss.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-013",
+      "framework": "olmo-core",
+      "category": "loss_computation",
+      "parallel_dimension": "none",
+      "invariant_type": "implementation_equivalence",
+      "required_trace_fields": [],
+      "check_stage": "other",
+      "minimum_sufficient_layer": "none",
+      "pattern_id": "none",
+      "tier_field": "exceeds_tier6",
+      "rationale": "Buggy fused CE loss variant under-performs vs native PyTorch CE; both produce well-formed loss values, only training trajectory diverges. Detection requires reference run + comparison (impl-equivalence). Per anti-ex 9: pattern=none, layer=none, exceeds_tier6.",
+      "borderline_flags": [
+        "SOURCE_ONLY_DETECTION"
+      ]
+    },
+    {
+      "bug_id": "O-014",
+      "framework": "olmo-core",
+      "category": "communication",
+      "parallel_dimension": "DP",
+      "invariant_type": "cross_rank_equality",
+      "required_trace_fields": [
+        "metric_name",
+        "metric_value",
+        "rank",
+        "reduce_type"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P3",
+      "tier_field": "Tier 2",
+      "rationale": "Throughput metrics not using reduce_type=max, so non-zero ranks report partially-reduced values. Invariant: metric values across ranks agree post-reduce. P3 over P1: cross-rank disagreement on should-agree metric. Precond throughput metrics under DDP -> schema_topo_precond. Tier 2: logged metric.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-015",
+      "framework": "olmo-core",
+      "category": "loss_computation",
+      "parallel_dimension": "none",
+      "invariant_type": "value_range",
+      "required_trace_fields": [
+        "loss_value",
+        "instance_mask_sum",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P5",
+      "tier_field": "Tier 2",
+      "rationale": "Instance masking divides by zero when all tokens masked, producing NaN loss. Invariant: loss must be finite when instance_mask_sum==0. value_range over value_equality (NaN boundary). P5 over P1: loss-bound check. Precond instance mask can be all-zero -> schema_topo_precond. Tier 2: loss.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-016",
+      "framework": "olmo-core",
+      "category": "lr_schedule",
+      "parallel_dimension": "none",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "param_group_index",
+        "param_group_keys",
+        "initial_lr_present"
+      ],
+      "check_stage": "init",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 4",
+      "rationale": "Optimizer param_groups missing initial_lr; LR scheduler breaks after resume. Invariant: every group contains key 'initial_lr'. completeness over value_equality (set of required keys, anti-ex 12). P7 over P1: structural completeness. Precond optimizer constructed -> schema_topo_precond. Tier 4.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-017",
+      "framework": "olmo-core",
+      "category": "lr_schedule",
+      "parallel_dimension": "none",
+      "invariant_type": "implementation_equivalence",
+      "required_trace_fields": [
+        "scheduler_class",
+        "lr_value",
+        "step",
+        "warmup_steps",
+        "decay_steps"
+      ],
+      "check_stage": "before_optimizer",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P1",
+      "tier_field": "Tier 3",
+      "rationale": "CosWithWarmupAndLinearDecay scheduler init buggy; emitted lr curve does not match analytic cosine+warmup+linear formula. P1 over P7: single lr field equals expected reference value. impl-equivalence (compare to formula). Precond this scheduler -> schema_topo_precond. Tier 3.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-018",
+      "framework": "olmo-core",
+      "category": "sharding",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "implementation_equivalence",
+      "required_trace_fields": [],
+      "check_stage": "other",
+      "minimum_sufficient_layer": "none",
+      "pattern_id": "none",
+      "tier_field": "exceeds_tier6",
+      "rationale": "ReorderedNormTransformerBlock + fine-grained FSDP wrap + activation ckpt produce different forward/backward results than baseline. No clear runtime invariant — only side-by-side reference reveals it (impl-equivalence). Per anti-ex 9: pattern=none, layer=none, exceeds_tier6.",
+      "borderline_flags": [
+        "SOURCE_ONLY_DETECTION"
+      ]
+    },
+    {
+      "bug_id": "O-019",
+      "framework": "olmo-core",
+      "category": "data_loading",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "evaluator_run_id",
+        "data_loader_state.bookkeeping",
+        "first_batch_index"
+      ],
+      "check_stage": "other",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "exceeds_tier6",
+      "rationale": "LM evaluator dataloader bookkeeping not reset between runs; runs see different orders. Invariant: at start of each run, bookkeeping == reset value. P7 (state-reset assertion). Precond between repeated runs -> schema_topo_precond. exceeds_tier6: dataloader-internal field not in schema.",
+      "borderline_flags": [
+        "EXCEEDS_TIER6"
+      ]
+    },
+    {
+      "bug_id": "O-020",
+      "framework": "olmo-core",
+      "category": "data_loading",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [],
+      "check_stage": "other",
+      "minimum_sufficient_layer": "none",
+      "pattern_id": "none",
+      "tier_field": "exceeds_tier6",
+      "rationale": "SourceMixtureDataset truncates source files instead of random sampling. Both produce a valid stream and well-formed loss; only long-run distribution differs. No runtime hook on training fields can tell. Per anti-ex 9: source-only -> pattern=none, layer=none, exceeds_tier6.",
+      "borderline_flags": [
+        "SOURCE_ONLY_DETECTION"
+      ]
+    },
+    {
+      "bug_id": "O-021",
+      "framework": "olmo-core",
+      "category": "data_loading",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [],
+      "check_stage": "other",
+      "minimum_sufficient_layer": "none",
+      "pattern_id": "none",
+      "tier_field": "exceeds_tier6",
+      "rationale": "Missing global_batch_size in SourceMixtureDatasetConfig causes rounding error and sample repetition. detection_method=source_analysis: only minor mixture proportion drift, not detectable on training trace. Per anti-ex 9: source-only -> pattern=none, layer=none, exceeds_tier6.",
+      "borderline_flags": [
+        "SOURCE_ONLY_DETECTION"
+      ]
+    },
+    {
+      "bug_id": "O-022",
+      "framework": "olmo-core",
+      "category": "data_loading",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [],
+      "check_stage": "other",
+      "minimum_sufficient_layer": "none",
+      "pattern_id": "none",
+      "tier_field": "exceeds_tier6",
+      "rationale": "SourceMixtureDatasetConfig.build() calls random.seed(self.seed), corrupting global RNG. detection_method=source_analysis: signal is process-level RNG state outside any training trace. Per anti-ex 9: source-only -> pattern=none, layer=none, exceeds_tier6.",
+      "borderline_flags": [
+        "SOURCE_ONLY_DETECTION"
+      ]
+    },
+    {
+      "bug_id": "O-023",
+      "framework": "olmo-core",
+      "category": "loss_computation",
+      "parallel_dimension": "none",
+      "invariant_type": "dtype_consistency",
+      "required_trace_fields": [
+        "dataset_class",
+        "label_mask.dtype",
+        "label_mask_padding_value"
+      ],
+      "check_stage": "other",
+      "minimum_sufficient_layer": "none",
+      "pattern_id": "none",
+      "tier_field": "exceeds_tier6",
+      "rationale": "NumpyPaddedFSLDataset uses torch.ones_like(input_ids) yielding int64 mask with padding=pad_token_id instead of bool/False. detection=source_analysis: dtype lives at dataloader output, not standard training trace. Per anti-ex 9: source-only -> pattern=none, layer=none, exceeds_tier6.",
+      "borderline_flags": [
+        "SOURCE_ONLY_DETECTION"
+      ]
+    },
+    {
+      "bug_id": "O-024",
+      "framework": "olmo-core",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_id",
+        "depth",
+        "output_proj_init_std",
+        "expected_depth_scaled_std"
+      ],
+      "check_stage": "init",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 0",
+      "rationale": "Self-equality (a==a) makes depth-scaled output projection init never fire; all layers get identical scale. Invariant: per-layer output_proj std == expected depth-scaled std. P7 over P8: detection at runtime init after weight materialization, not statically. Precond depth-scaled init. Tier 0.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-025",
+      "framework": "olmo-core",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_range",
+      "required_trace_fields": [
+        "global_train_flops",
+        "global_train_flops_dtype",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_only",
+      "pattern_id": "P1",
+      "tier_field": "Tier 0",
+      "rationale": "global_train_flops int overflows for 7B models after ~107K steps, producing negative MFU. Invariant: global_train_flops is float OR remains in plausible range. Single field check, no rank compare, no precond -> schema_only (anti-ex 'not all bugs need precond'). P1 over P7. Tier 0.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-026",
+      "framework": "olmo",
+      "category": "checkpoint",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "param_name",
+        "param_checksum_pre_load",
+        "param_checksum_post_load",
+        "fsdp_strategy",
+        "load_state_dict_called_between_fwd_bwd"
+      ],
+      "check_stage": "checkpoint_load",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P1",
+      "tier_field": "Tier 0",
+      "rationale": "FSDP FULL_SHARD silently ignores load_state_dict between forward and backward. Invariant: post-load param_checksum equals loaded checkpoint's checksum. P1 over P7: single field equals expected. Precond FSDP FULL_SHARD + load between fwd/bwd -> schema_topo_precond. Tier 0: param checksum.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-027",
+      "framework": "olmo",
+      "category": "control_flow",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "implementation_equivalence",
+      "required_trace_fields": [],
+      "check_stage": "other",
+      "minimum_sufficient_layer": "none",
+      "pattern_id": "none",
+      "tier_field": "exceeds_tier6",
+      "rationale": "torch.compile + FSDP set_ produces stale results because CSE eliminates set_; eager is correct. Two implementations diverge but each is well-formed (impl-equivalence). Detection requires running both and comparing outputs. Per anti-ex 9: source-only -> pattern=none, layer=none, exceeds_tier6.",
+      "borderline_flags": [
+        "SOURCE_ONLY_DETECTION"
+      ]
+    },
+    {
+      "bug_id": "O-028",
+      "framework": "olmo",
+      "category": "dtype",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "dtype_consistency",
+      "required_trace_fields": [
+        "op_name",
+        "input_dtype",
+        "expected_dtype",
+        "model_eval_mode",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "Tier 0",
+      "rationale": "FSDP eval mode fails to cast some params to full precision; SDPA receives mixed fp32/bf16 inputs. Invariant: when model.eval(), attention layer inputs are configured eval dtype. P4 over P1: op input dtype hook (anti-ex 1). Precond FSDP-wrapped + eval -> schema_topo_precond. Tier 0.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-029",
+      "framework": "olmo",
+      "category": "gradient_sync",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "param_name",
+        "main_grad_pre",
+        "main_grad_post_reduce",
+        "no_sync_active",
+        "cpu_offload_enabled",
+        "step"
+      ],
+      "check_stage": "after_backward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P5",
+      "tier_field": "Tier 1",
+      "rationale": "FSDP grad accumulation outside no_sync() with CPU offload replaces grads instead of accumulating. Invariant: post-reduce grad equals sum across micro-batches, not just latest. P5 over P7: grad-accumulation magnitude check. Precond FSDP + outside no_sync + CPU offload. Tier 1.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-030",
+      "framework": "olmo",
+      "category": "communication",
+      "parallel_dimension": "PP",
+      "invariant_type": "cross_rank_equality",
+      "required_trace_fields": [
+        "param_name",
+        "grad_checksum",
+        "rank",
+        "step",
+        "fsdp_post_backward_callback_called"
+      ],
+      "check_stage": "after_backward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P3",
+      "tier_field": "Tier 1",
+      "rationale": "FSDP+PP backward path skips _root_post_backward_final_callback, exposing reduce-scatter race. Invariant: post-backward grads deterministic across PP/DP. P3 over P5: race produces cross-rank inconsistency, not bound violation. Precond FSDP+PP+zero-bubble -> schema_topo_precond. Tier 1.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-031",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "value_range",
+      "required_trace_fields": [
+        "loss_value",
+        "step",
+        "world_size",
+        "fsdp_reduce_dtype"
+      ],
+      "check_stage": "after_backward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P5",
+      "tier_field": "Tier 2",
+      "rationale": "FSDP bf16 reduce_dtype causes accumulation instability at large scale (>=48x8 GPUs). Invariant: loss should not diverge with bf16 vs fp32 reduce_dtype. P5 over P1: loss-bound check. Precond FSDP + reduce_dtype=bf16 + large world_size -> schema_topo_precond. Tier 2: loss.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-032",
+      "framework": "olmo",
+      "category": "gradient_sync",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "clip_coef",
+        "max_norm",
+        "total_norm",
+        "epsilon",
+        "world_size"
+      ],
+      "check_stage": "after_backward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P5",
+      "tier_field": "Tier 1",
+      "rationale": "Gradient clip epsilon 1e-6 added per-rank instead of once; clip coefficient varies with world_size. Invariant: clip_coef = max_norm/(total_norm+eps), world_size-invariant. P5 over P3: scale-invariance bound, not pure rank disagreement. Precond DTensor grad clip + FSDP. Tier 1.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-033",
+      "framework": "olmo",
+      "category": "checkpoint",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "completeness",
+      "required_trace_fields": [
+        "state_dict_keys_inner",
+        "state_dict_keys_wrapped",
+        "use_orig_params",
+        "fsdp_strategy"
+      ],
+      "check_stage": "checkpoint_save",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 6",
+      "rationale": "FSDP use_orig_params=True + FULL_SHARD: inner module state_dict missing some sub-module params; wrapped state_dict is correct. Invariant: state_dict key set is complete. completeness over value_equality (anti-ex 12: set of param names). P7 over P1. Precond. Tier 6: named_parameters set.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-034",
+      "framework": "olmo",
+      "category": "dtype",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "dtype_consistency",
+      "required_trace_fields": [
+        "op_name",
+        "saved_activation_dtype",
+        "recomputed_activation_dtype",
+        "step"
+      ],
+      "check_stage": "after_backward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "Tier 0",
+      "rationale": "FSDPv2 _pre_forward skips dtype casting during recomputation; saved bf16 vs recomputed fp32 mismatch. Invariant: recomputed activation dtype == saved activation dtype. P4 over P1: op input dtype hook (anti-ex 1). Precond FSDPv2 + activation_ckpt -> schema_topo_precond. Tier 0: dtype.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-035",
+      "framework": "olmo",
+      "category": "sharding",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "cross_rank_equality",
+      "required_trace_fields": [
+        "param_name",
+        "param_checksum",
+        "rank",
+        "param_init_fn_used",
+        "sync_module_states"
+      ],
+      "check_stage": "init",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P3",
+      "tier_field": "Tier 0",
+      "rationale": "FSDP param_init_fn + sync_module_states=True: re-init after flatten/shard changes shapes so RNG diverges; model never learns. Invariant: post-init param checksums agree across DP-replicated dims. P3 over P1: cross-rank equality. Precond all three flags -> schema_topo_precond. Tier 0.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-036",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "implementation_equivalence",
+      "required_trace_fields": [],
+      "check_stage": "other",
+      "minimum_sufficient_layer": "none",
+      "pattern_id": "none",
+      "tier_field": "exceeds_tier6",
+      "rationale": "Meta-device init then move-to-GPU + FSDP wrap produces different numerics than direct GPU init, even with identical params. Detection requires running both and comparing forward outputs (impl-equivalence). Per anti-ex 9: source-only -> pattern=none, layer=none, exceeds_tier6.",
+      "borderline_flags": [
+        "SOURCE_ONLY_DETECTION"
+      ]
+    },
+    {
+      "bug_id": "O-037",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "implementation_equivalence",
+      "required_trace_fields": [],
+      "check_stage": "other",
+      "minimum_sufficient_layer": "none",
+      "pattern_id": "none",
+      "tier_field": "exceeds_tier6",
+      "rationale": "FSDP2 block-level fully_shard then whole-model wrap produces gradient precision degradation, even single GPU. Both wrappers complete normally; only side-by-side comparison reveals it (impl-equivalence). Per anti-ex 9: source-only -> pattern=none, layer=none, exceeds_tier6.",
+      "borderline_flags": [
+        "SOURCE_ONLY_DETECTION"
+      ]
+    },
+    {
+      "bug_id": "O-038",
+      "framework": "olmo",
+      "category": "gradient_sync",
+      "parallel_dimension": "TP",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "grad_norm",
+        "scale_divisor",
+        "world_size",
+        "dp_size",
+        "tp_size",
+        "step"
+      ],
+      "check_stage": "after_backward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P5",
+      "tier_field": "Tier 1",
+      "rationale": "TP grad-norm scaler divides by world_size instead of DP size; clipping threshold drifts with TP degree. Invariant: grad_norm scaler divisor = DP size (TP-invariant). P5 over P3: scale-invariance bound. Precond TP enabled -> schema_topo_precond. Tier 1: grad stats.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-039",
+      "framework": "olmo-core",
+      "category": "checkpoint",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "checkpoint_save_call_count",
+        "is_final_step",
+        "resumed_from_checkpoint",
+        "step"
+      ],
+      "check_stage": "checkpoint_save",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 6",
+      "rationale": "Trainer saves a duplicate final checkpoint after restart, overwriting the existing correct file. Invariant: at final step, checkpoint_save_call_count == 1 (not 2). P7 over P1: call-count assertion. Precond resumed_from_checkpoint -> schema_topo_precond. Tier 6: named-modules-level call counter.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-040",
+      "framework": "olmo-core",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "a100_peak_tflops_constant"
+      ],
+      "check_stage": "build",
+      "minimum_sufficient_layer": "schema_only",
+      "pattern_id": "P1",
+      "tier_field": "Tier 0",
+      "rationale": "A100 BF16 peak constant set to 312 TFLOPS instead of 624, doubling reported MFU. Invariant: a100_peak_tflops == 624. Single global constant vs known correct value, no rank-compare, no precond -> schema_only (anti-ex 'not all bugs need precond'). P1 over P7. Tier 0.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-NEW-1",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_range",
+      "required_trace_fields": [
+        "op_name",
+        "rmsnorm_output_pow2_mean",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "Tier 0",
+      "rationale": "RMSNorm uses x.norm(2) (L2 norm) instead of RMS, mis-scaling output. Invariant: post-RMSNorm output.pow(2).mean(-1) ~ 1.0. P4 over P1: op-output stat hook, not in default schema. Precond RMSNorm module -> schema_topo_precond. Tier 0: derivable from values. value_range matches approx-equal form.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-NEW-11",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_range",
+      "required_trace_fields": [
+        "op_name",
+        "attention_output_has_nan",
+        "autocast_dtype",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "Tier 0",
+      "rationale": "Attention bias built fp32 with -inf, downcast to bf16 yields -inf; softmax produces NaN under autocast. Invariant: attention output has no NaN when mask applied. P4 over P1: post-SDPA output value hook. Precond AMP/autocast + masked seqs -> schema_topo_precond. Tier 0: NaN flag.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-NEW-13",
+      "framework": "olmo",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "monotonic",
+      "required_trace_fields": [
+        "total_training_Gflops",
+        "global_total_tokens",
+        "step",
+        "resumed"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 3",
+      "rationale": "FLOPs counter multiplies per-sequence flops by global_batch_size each step, leading to non-monotonic Gflops across resumes. Invariant: total_training_Gflops strictly non-decreasing. P7 over P1: counter monotonicity. Precond speed monitor + restart -> schema_topo_precond. Tier 3: control variable.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-NEW-14",
+      "framework": "olmo",
+      "category": "gradient_sync",
+      "parallel_dimension": "FSDP",
+      "invariant_type": "cross_rank_equality",
+      "required_trace_fields": [
+        "total_grad_norm",
+        "rank",
+        "process_group_used",
+        "fsdp_strategy"
+      ],
+      "check_stage": "after_backward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P6",
+      "tier_field": "Tier 1",
+      "rationale": "HSDP per-shard grad norm reduced over WORLD instead of shard PG, double-counts across replicas. Invariant: per-replica total_grad_norm == un-replicated full-model norm; WORLD multiplies by N. P6 over P3: process-group config bug, not pure rank-disagreement. Precond HYBRID_SHARD + replicas. Tier 1.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-NEW-15",
+      "framework": "olmo",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "should_step",
+        "is_outlier",
+        "optim_step_called",
+        "step"
+      ],
+      "check_stage": "before_optimizer",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 3",
+      "rationale": "Outlier-loss skip-step logic inverted: optim.step only fires on outlier batches, skipping normal steps. Invariant: should_step==True on the vast majority of (non-outlier) steps. P7 over P1: control-flag assertion. Precond outlier detector enabled -> schema_topo_precond. Tier 3.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-NEW-16",
+      "framework": "olmo",
+      "category": "control_flow",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "cfg.distributed_strategy",
+        "cfg.model.init_device",
+        "torch.cuda.is_available"
+      ],
+      "check_stage": "init",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 6",
+      "rationale": "torch.device('mps') used as boolean is always truthy; init_device always rewritten to 'mps' and distributed disabled even on CUDA hosts. Invariant: at bootstrap end, init_device matches actual backend. P7 over P8: runtime-init flag, not static module attr. Precond train.py entry. Tier 6.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-NEW-17",
+      "framework": "olmo",
+      "category": "checkpoint",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "param_name",
+        "param_norm_pre_load",
+        "param_norm_post_load_then_init",
+        "use_mup"
+      ],
+      "check_stage": "checkpoint_load",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P1",
+      "tier_field": "Tier 0",
+      "rationale": "OLMo.__init__ unconditionally calls set_base_shapes which rescales params; on from_checkpoint this fires after load and rescales again. Invariant: post-from_checkpoint param norms == saved checkpoint norms. P1 over P7: single field equals expected. Precond use_mup + from_checkpoint. Tier 0.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-NEW-18",
+      "framework": "olmo",
+      "category": "lr_schedule",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "param_group_name",
+        "group_lr",
+        "cfg_lr",
+        "width_mult",
+        "is_resume"
+      ],
+      "check_stage": "before_optimizer",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P1",
+      "tier_field": "Tier 3",
+      "rationale": "Restart resets every param_group's lr to cfg.lr, wiping muP per-group scaling. Invariant: post-restart muP matrix-like group lr = cfg.lr/width_mult, not cfg.lr. P1 over P7: single field equals expected per-group ratio. Precond muP + resume + multi-group -> schema_topo_precond. Tier 3.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-NEW-19",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "param_name",
+        "ff_out.weight.std",
+        "config.init_std",
+        "config.n_layers"
+      ],
+      "check_stage": "init",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P1",
+      "tier_field": "Tier 0",
+      "rationale": "OLMoBlock 'normal' init divides ff_out by sqrt(2*n_layers) post-init, leaving std below configured. Invariant: ff_out.weight.std at init == config.init_std (within noise). P1 over P7: single param-stat equals expected. Precond init_fn=normal + multilayer. Tier 0.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-NEW-2",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "op_name",
+        "causal_mask_value",
+        "position_0_attended_indices",
+        "step"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "Tier 0",
+      "rationale": "Causal mask inverted: 1-triu() masks lower triangle, future tokens attend to past. Invariant: position 0's attended indices avg = 0 (only attends to itself). P4 over P1: op-output assertion via hook. Precond causal attention path -> schema_topo_precond. Tier 0: mask values / index.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-NEW-21",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "module_id",
+        "ff_proj.weight.std",
+        "use_mup",
+        "module_class"
+      ],
+      "check_stage": "init",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P8",
+      "tier_field": "Tier 0",
+      "rationale": "OLMoSequentialBlock.ff_proj built as MuReadout with readout_zero_init=True under use_mup; every block's ff_proj is zero-init. Invariant: ff_proj.weight std non-zero under use_mup. Wrong class fixed at __init__ -> P8 (anti-ex 10) over P1. Precond use_mup + default mlp_hidden_size. Tier 0: param std.",
+      "borderline_flags": [
+        "PATTERN_AMBIGUOUS_P1_P8"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-22",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "op_name",
+        "attn_scale_value",
+        "head_dim",
+        "n_heads",
+        "mup_base_n_heads",
+        "use_mup"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "Tier 0",
+      "rationale": "muP attention scale = 1/d instead of sqrt(base_d)/d, mismatching SP scale at base width. Invariant: when use_mup and n_heads==mup_base_n_heads, attn_scale == 1/sqrt(head_dim). P4 over P1: scale read at op site. Precond use_mup + SDPA path -> schema_topo_precond. Tier 0.",
+      "borderline_flags": []
+    },
+    {
+      "bug_id": "O-NEW-24",
+      "framework": "olmo",
+      "category": "numerical",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "op_name",
+        "attn_norm_input_id",
+        "att_proj_input_id",
+        "norm_after"
+      ],
+      "check_stage": "after_forward",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P4",
+      "tier_field": "exceeds_tier6",
+      "rationale": "Under norm_after=True, attn_norm applied to QKV-projection output instead of attention output before residual add. Invariant: att_proj input unnormed; attn_norm on attention output. P4 over P1: tensor identity at intermediate site. Precond norm_after=True. exceeds_tier6.",
+      "borderline_flags": [
+        "EXCEEDS_TIER6"
+      ]
+    },
+    {
+      "bug_id": "O-NEW-27",
+      "framework": "olmo",
+      "category": "data_loading",
+      "parallel_dimension": "none",
+      "invariant_type": "value_equality",
+      "required_trace_fields": [
+        "dataset.start_index",
+        "epoch_index",
+        "step"
+      ],
+      "check_stage": "init",
+      "minimum_sufficient_layer": "schema_topo_precond",
+      "pattern_id": "P7",
+      "tier_field": "Tier 6",
+      "rationale": "Multi-epoch training does not reset dataset.start_index; new epoch resumes from previous offset. Invariant: at start of every epoch, dataset.start_index == 0. P7 over P1: counter reset assertion. Precond max_epochs>1 + epoch boundary -> schema_topo_precond. Tier 6: dataloader bookkeeping.",
+      "borderline_flags": []
+    }
+  ]
+}

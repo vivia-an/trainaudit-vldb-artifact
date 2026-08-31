@@ -1,0 +1,169 @@
+{
+  "metadata": {
+    "experiment": "E2_tier",
+    "n_bugs": 32,
+    "subset": "32 cross-pool sanity"
+  },
+  "per_bug": {
+    "D-011": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "dp_rank", "step"],
+      "rationale": "Cross-DP param checksum divergence after optimizer step is detectable purely from Tier 0 fields; no need for grad/loss/optimizer state."
+    },
+    "D-014": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "step"],
+      "rationale": "Stale ping-pong buffer manifests as small but systematic grad-norm deviation versus reference; Tier 1 grad stats sufficient (parameter cksum lag would be too noisy at 0.3%)."
+    },
+    "D-015": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "step"],
+      "rationale": "Misplaced overflow return causes optimizer step to be skipped: parameter checksum stays unchanged across steps, observable at Tier 0."
+    },
+    "D-021": {
+      "min_tier_required": "5-6",
+      "fields_required": ["has_nan", "param_name", "dp_rank", "step"],
+      "rationale": "Race produces random NaN in partitioned weights; reliable detection needs has_nan flag (Tier 5-6). Param checksum diverges but NaN flag is the canonical signal."
+    },
+    "D-025": {
+      "min_tier_required": "5-6",
+      "fields_required": ["ep_rank", "step"],
+      "rationale": "EP group built with wrong size (0 groups) only visible via ep_rank topology field; Tier 5-6."
+    },
+    "D-026": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "ep_rank", "step"],
+      "rationale": "MoE expert grads scaled by 1/ep_size — grad_norm on expert params deviates from expected by that factor. Tier 1 grad stats suffice (ep_rank used to scope, but value diff is in grad_norm)."
+    },
+    "D-027": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Wrong softmax dim is an op-level forward computation issue; no schema field (param/grad/loss/optstate) records intermediate coef tensor's per-dim sum. Source-only."
+    },
+    "D-029": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "ep_rank", "step"],
+      "rationale": "MoE CPU offload averaging on wrong device produces grad_norm differing from reference; Tier 1 grad stats."
+    },
+    "D-038": {
+      "min_tier_required": "5-6",
+      "fields_required": ["has_nan", "grad_cksum", "param_name", "step"],
+      "rationale": "inf->NaN propagation through clipping detected via has_nan flag on gradients; Tier 5-6 (grad_norm alone wouldn't distinguish NaN from inf reliably)."
+    },
+    "D-040": {
+      "min_tier_required": "5-6",
+      "fields_required": ["num_tokens", "dp_rank", "step"],
+      "rationale": "Zero-sized microbatches at DP boundary detectable via per-rank num_tokens field (Tier 5-6); param/grad cksum divergence is downstream and noisy."
+    },
+    "M-005": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "tp_rank", "step"],
+      "rationale": "SwitchMLP router weight cross-TP-rank checksum divergence — canonical Tier 0 case (analogous to few-shot example 1)."
+    },
+    "M-008": {
+      "min_tier_required": 3,
+      "fields_required": ["learning_rate", "step"],
+      "rationale": "Loss-scaler stuck => LR pinned at 0; learning_rate field (Tier 3) is the cleanest signal. Loss-trend (Tier 2) also works but LR=0 is more direct."
+    },
+    "M-010": {
+      "min_tier_required": "5-6",
+      "fields_required": ["function_call_count", "step"],
+      "rationale": "save_to_aux_losses_tracker called twice per step under recompute — Type-B hook function-call count, Tier 5-6 (matches few-shot example 6)."
+    },
+    "M-012": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "expert_bias buffer downcast bf16 vs registered fp32 detected via dtype field; pure Tier 0."
+    },
+    "M-014": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "step"],
+      "rationale": "topk-then-softmax with k=1 produces zero router gradient — detectable as grad_norm==0 on router.weight at Tier 1."
+    },
+    "M-020": {
+      "min_tier_required": 0,
+      "fields_required": ["param_name", "pp_rank", "step"],
+      "rationale": "Silent layer drop visible in param_name enumeration across PP ranks (fewer transformer layer names than configured); Tier 0 structural check."
+    },
+    "M-021": {
+      "min_tier_required": 0,
+      "fields_required": ["param_cksum", "param_name", "dp_rank", "ep_rank", "step"],
+      "rationale": "Expert params diverge across expert-DP ranks AND stay unchanged across steps — both detectable via Tier 0 param checksum across rank coords."
+    },
+    "M-024": {
+      "min_tier_required": 0,
+      "fields_required": ["dtype", "param_name", "step"],
+      "rationale": "Jitter output dtype promoted bf16->fp32 — a dtype-invariant violation directly captured at Tier 0."
+    },
+    "M-033": {
+      "min_tier_required": 1,
+      "fields_required": ["grad_norm", "param_name", "step"],
+      "rationale": "Aux-loss gradient scaled 1/dp_size too small — observable in grad_norm of router params at Tier 1."
+    },
+    "O-002": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "Residual-stream corruption causes initial loss to spike from ~10 to ~60 — Tier 2 loss_value scale check."
+    },
+    "O-003": {
+      "min_tier_required": 2,
+      "fields_required": ["loss_value", "step"],
+      "rationale": "z-loss averaged over instances rather than tokens — magnitude mismatch visible in loss_value (Tier 2)."
+    },
+    "O-005": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Forward/backward dropout-mask mismatch is op-level activation divergence; no schema field captures recomputed activation values. Source-only."
+    },
+    "O-006": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Dataloader internal start_index not reset; dataloader internal state is explicitly listed unobservable in tier mapping."
+    },
+    "O-009": {
+      "min_tier_required": 0,
+      "fields_required": ["shape", "param_name", "step"],
+      "rationale": "Wrong k_norm size is a tensor-shape invariant violation — Tier 0 shape field directly catches it."
+    },
+    "O-010": {
+      "min_tier_required": 4,
+      "fields_required": ["optimizer_state_cksum", "param_name", "step"],
+      "rationale": "Optimizer state['step'] never increments — directly observable in Adam optimizer state checksum at Tier 4."
+    },
+    "O-014": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Training-loop metric-reporting code path; reported throughput value lives outside the parameter/grad/loss/optstate schema. Source-level reporting bug."
+    },
+    "O-016": {
+      "min_tier_required": 3,
+      "fields_required": ["learning_rate", "step"],
+      "rationale": "Missing initial_lr yields wrong LR after checkpoint resume — directly visible in learning_rate field (Tier 3)."
+    },
+    "O-021": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Mixture rounding inside dataloader produces sample repetition — dataloader internal state, explicitly unobservable per tier mapping."
+    },
+    "O-022": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Global Python RNG state corruption affecting reproducibility — dataloader/RNG internal state, not in trace schema."
+    },
+    "O-023": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "label_mask tensor (intermediate dataloader/loss-construction tensor) dtype/value bug — not captured by parameter/grad/loss schema; op/dataloader-internal."
+    },
+    "O-025": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Integer overflow in MFU/flops counter is a metrics-tracking variable outside the parameter/grad/loss/optstate trace schema; source-only."
+    },
+    "O-040": {
+      "min_tier_required": "unobservable",
+      "fields_required": [],
+      "rationale": "Hardcoded peak-FLOPS constant used only in MFU reporting; no runtime trace field can distinguish 312 vs 624 — source constant."
+    }
+  }
+}

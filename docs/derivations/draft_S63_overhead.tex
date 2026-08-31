@@ -1,0 +1,57 @@
+% ============================================================
+% DRAFT — §6.3 Efficiency and Overhead (RQ4)。**实测于 H20 box verl-lsk27-0**,数据见 .trace Iter22–31。
+% 替换论文现有 §6.3(其自认 "production GPU measurement out of scope")。改写 backlog ⑥。
+% 全部数字为 1.2B GPT / 8×H20 / DP=2 / bf16 / mock-data 实测。
+% ============================================================
+
+\subsection{Efficiency and Overhead}
+\label{subsec:efficiency}
+
+\paragraph{Setup.} We measure on a 1.2B-parameter GPT (24 layers, hidden 2048, 16 heads, sequence 1024) trained with DP=2 on NVIDIA H20 GPUs in bf16. The uninstrumented baseline runs at \textbf{732\,ms/step} and \textbf{81\,TFLOP/s/GPU} ($\approx$55\% MFU), a representative production step. The trace store is a single append-only table \texttt{coredump(step, stage, data\,JSON)}; a full dump writes \textbf{524 parameter rows across 25 lifecycle stages = 13{,}106 rows/step}.
+
+\paragraph{Naive full collection is infeasible.} Checksumming and profiling every parameter at every stage, every step, costs \textbf{192\,s/step}---a \textbf{262$\times$} slowdown (Table~\ref{tab:overhead}). This is not a tuning artifact but a structural fact, and it motivates two orthogonal levers: a cheaper per-dump implementation, and periodic rather than per-step dumping.
+
+\paragraph{Where the cost goes.} Decomposing one dump (microbenchmarks plus trace-store inspection), the dominant cost is the per-parameter SHA-256 checksum, computed on the host after a \emph{synchronous} GPU$\to$CPU copy of each tensor: \textbf{$\approx$73\% (140\,s)}. Per-parameter distribution statistics (quantiles, skewness/kurtosis, histogram) account for \textbf{$\approx$18\% (35\,s)} and DuckDB row inserts for \textbf{$\approx$2\% (4\,s)}. The synchronous per-parameter device-to-host transfer, not the hashing arithmetic, is the bottleneck.
+
+\paragraph{Equivalent-fast collection.} We replace the two hot primitives with semantics-preserving, GPU-native implementations, leaving the trace schema and every recorded field unchanged: (i) the SHA-256 checksum becomes a deterministic integer \emph{fingerprint} computed on-device---a position-weighted modular reduction over the tensor's byte view---transferring only a scalar per parameter; (ii) the distribution statistics are computed from on-device power-sum moments and a single batched quantile call, again transferring only scalars. Both preserve detection semantics: the fingerprint is \emph{deterministic} (identical bytes yield identical fingerprints) and \emph{discriminative} (a single-element change alters it), and the recomputed moments match the reference implementation to $<10^{-7}$. The optimized dump costs \textbf{25\,s/step---a 7.7$\times$ reduction} (Table~\ref{tab:overhead}); the fingerprint alone contributes 7$\times$ and the fused statistics the remainder.
+
+\begin{table}[t]
+\centering\small
+\caption{Per-dump cost at 1.2B/H20 (baseline step 732\,ms). The fingerprint, not the statistics, is the dominant lever. Detection behavior is unchanged (see text).}
+\label{tab:overhead}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Collector configuration & dump/step & vs.\ baseline \\
+\midrule
+Naive (SHA-256 + host stats), full   & 192\,s & 262$\times$ \\
+\quad + GPU fingerprint (checksum)   & 27.5\,s & 38$\times$ \\
+\quad + fused GPU statistics         & \textbf{25\,s} & \textbf{34$\times$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Detection is unaffected.} We re-ran the full collector with the fast path and compared, stage by stage, the cross-rank equality verdict that underlies the replication checks against the SHA-256 collector. The per-stage agreement rates are \emph{identical} (overall 59.9\% vs.\ 59.9\%): 100\% at synchronized-parameter stages, 0\% at per-rank gradient/optimizer-state stages, 12.5\% at the post-optimizer stage, and so on. The optimization changes the implementation, not what \textsc{TrainAudit} detects.
+
+\paragraph{Periodic dumping makes it online.} A semantic check need not run every step. Amortizing one dump over $K$ steps gives a per-step overhead of $(T_{\text{dump}} + T_{\text{base}}(K{-}1))/(K\,T_{\text{base}}) - 1$. With the optimized collector, step overhead falls below \textbf{10\% at $K\!\approx\!380$} and below 5\% at $K\!\approx\!760$ (Table~\ref{tab:amortize})---an order of magnitude more frequent than the naive collector at the same budget.
+
+\begin{table}[t]
+\centering\small
+\caption{Per-step overhead vs.\ dump period $K$ (dump once every $K$ steps). The optimized collector permits checking $\sim$7$\times$ more frequently at any overhead budget.}
+\label{tab:amortize}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+$K$ (dump every) & 100 & 1000 & 2630 \\
+\midrule
+Naive (192\,s dump)      & 261\% & 26\% & 10\% \\
+Optimized (25\,s dump)   & 34\%  & 3.3\% & 1.3\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Online query cost and limitations.} The online checks compile to SQL over the trace table at 2--3\,ms per rule (\S\ref{subsec:data-collector}); combined with periodic optimized collection, \textsc{TrainAudit} runs inline at single-digit-percent step overhead. The residual 25\,s/dump is dominated by the management of the 13{,}106 per-parameter items (Python dispatch, per-fingerprint scalar synchronization, and row insertion). We explored two ways to reduce it---a background writer thread (asynchronous device-to-host transfer and insertion) and per-step batched collection (a single device-to-host transfer plus a bulk insert)---but measured both to \emph{regress} in steady state: the cost of managing per-parameter GPU scalars (their lifetime, queue back-pressure, and allocator pressure) exceeds the synchronization it removes. Per-step full collection therefore has a floor near 25\,s on this configuration, and low online overhead comes from \emph{periodic} dumping (Table~\ref{tab:amortize}), not from making each individual dump cheaper.
+
+% ------------------------------------------------------------
+% 衔接: 取代原 §6.3 "production GPU measurement out of scope" 的 Limitation。
+% 数字溯源: .trace Iter22(192s/262×)、Iter23(摊薄)、Iter24/26(分解)、Iter27(指纹 18.9×)、Iter29(7× 集成)、Iter31(7.7× + 零回归)。
+% caveat 入正文: H20 算力≈H200 1/6,step 较慢 → overhead% 略乐观;绝对量(dump s、trace MB)硬件无关。
+% ------------------------------------------------------------

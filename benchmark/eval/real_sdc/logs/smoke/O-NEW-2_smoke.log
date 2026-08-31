@@ -1,0 +1,31 @@
+Warning: Permanently added '[183.242.150.6]:32462' (ED25519) to the list of known hosts.
+===== TrainAudit on O-NEW-2 BUGGY (6c4b8e15~1) =====
+Traceback (most recent call last):
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/bugs/O-NEW-2/trainaudit_driver.py", line 73, in main
+    runpy.run_path(_DETECT_PATH, run_name="__main__")
+  File "<frozen runpy>", line 291, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/bugs/O-NEW-2/detect.py", line 24, in <module>
+    from olmo.model import OlmoLlamaBlock
+ImportError: cannot import name 'OlmoLlamaBlock' from 'olmo.model' (/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/OLMo/olmo/model.py)
+[O-NEW-2] FAIL: detect.py: ImportError: cannot import name 'OlmoLlamaBlock' from 'olmo.model' (/volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/exp/frameworks/OLMo/olmo/model.py)
+
+===== TrainAudit on O-NEW-2 FIXED (6c4b8e1548f55ad1f3e638693c26de9ee932829f) =====
+
+============================================================
+[O-NEW-2] Causal mask direction check:
+  Correct mask - upper triangle attn sum: 0.000000 (should be ~0)
+  Correct mask - lower triangle attn sum: 5.3002 (should be >0)
+  Buggy mask   - upper triangle attn sum: 7.0000 (should be ~0 but isn't)
+  Buggy mask   - lower triangle attn sum: 0.875000 (should be >0 but ~0)
+
+  Runtime check via OlmoLlamaBlock._scaled_dot_product_attention:
+  Position 0 attended avg index: 0.0000 (correct: 0.0, buggy: >1)
+  Position 7 attended avg index: 2.7536
+
+[O-NEW-2] CLEAN: Causal mask is correct (position 0 avg=0.0000)
+============================================================
+
+[O-NEW-2] CLEAN: no trainaudit rule fired; detect.py reported no bug
+

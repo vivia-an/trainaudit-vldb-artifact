@@ -1,0 +1,15 @@
+{
+  "bug_id": "M-NEW-21",
+  "framework": "megatron-lm",
+  "category": "control_flow",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["function_name", "call_count_per_step", "torch_is_grad_enabled"],
+  "check_stage": "after_forward",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P7",
+  "tier_field": "Tier 6",
+  "rationale": "Aux loss tracker save called twice per step under activation checkpointing because guard checked self.training but not torch.is_grad_enabled(). Detection counts function calls per training step, gated on router module (precond). Borderline moe vs control_flow: chose control_flow because root cause is a missing condition guard, not MoE math. Single-GPU recompute reproduces, so parallel_dim=none (anti-example 6). P7 because counter check at hook point."
+}

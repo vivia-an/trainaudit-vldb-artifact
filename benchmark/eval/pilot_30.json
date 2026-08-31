@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "phase": 1,
+    "sampling": "stratified by framework, optional by category, ~1/3 reproduced",
+    "seed": 42
+  },
+  "bug_ids": [
+    "M-NEW-1",
+    "M-NEW-5",
+    "M-NEW-33",
+    "M-NEW-67",
+    "M-NEW-21",
+    "M-NEW-27",
+    "M-NEW-30",
+    "M-NEW-68",
+    "D-NEW-2",
+    "D-NEW-1",
+    "D-NEW-8",
+    "D-NEW-44",
+    "D-NEW-81",
+    "D-NEW-12",
+    "D-NEW-42",
+    "D-NEW-64",
+    "D-NEW-54",
+    "D-NEW-21",
+    "O-NEW-26",
+    "O-NEW-63",
+    "O-NEW-10",
+    "O-NEW-20",
+    "O-NEW-57",
+    "O-NEW-51",
+    "O-NEW-29",
+    "OC-NEW-1",
+    "OC-NEW-8",
+    "OC-NEW-67",
+    "OC-NEW-49",
+    "OC-NEW-19"
+  ]
+}

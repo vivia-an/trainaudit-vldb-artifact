@@ -1,0 +1,49 @@
+{
+  "input_l3_accepted_predicates": 39,
+  "l4_kept": 4,
+  "l4_rejected": 35,
+  "kept": [
+    {
+      "pred_id": "hyp/param/tsb/comm.post/tensor_post.l2_norm_positive",
+      "shape": "comm.post: tensor_post.l2_norm > 0",
+      "reason": "post-allreduce zero L2 indicates comm corruption / scatter loss / zeroed payload",
+      "novelty": "not in existing 25 rules — adds comm-post integrity check"
+    },
+    {
+      "pred_id": "hyp/param/sp/module.fwd.post/output.l2_norm_nonzero",
+      "shape": "module.fwd.post: output.l2_norm != 0",
+      "reason": "dead activation flag — zero forward output indicates layer collapse or weight zeroing",
+      "novelty": "complementary to T0-norm-output-rms (which checks unit-RMS for normalizers only)"
+    },
+    {
+      "pred_id": "hyp/param/sp/optim.step.pre/total_grad_l2_nonzero",
+      "shape": "optim.step.pre: total_grad_l2 != 0",
+      "reason": "zero pre-step total grad indicates backward graph cut or stuck training",
+      "novelty": "complements T0-grad-norm-finite (NaN/Inf-only)"
+    },
+    {
+      "pred_id": "hyp/csm/optim.step.post/state_step_min",
+      "shape": "optim.step.post: state_step_min monotonic across events",
+      "reason": "catches param-group stragglers / desync where one group's step fails to advance",
+      "novelty": "existing T0-optim-step-counter-monotonic only checks state_step_max"
+    }
+  ],
+  "rejected_categories": {
+    "duplicate_of_existing_rules": 3,
+    "trivial_config_check": 8,
+    "id_field_always_positive": 4,
+    "workload_data_artifact": 10,
+    "build_time_only": 3,
+    "redundant_with_kept": 5,
+    "other_trivial": 2
+  },
+  "yield_summary": {
+    "n_l1_hypotheses": 12,
+    "n_l1_source_files": 2,
+    "n_l2_predicates_emitted": 58,
+    "n_l3_accepted": 39,
+    "n_l4_kept": 4,
+    "yield_per_hypothesis": "4/12 = 33%",
+    "yield_per_l3_accepted": "4/39 = 10%"
+  }
+}

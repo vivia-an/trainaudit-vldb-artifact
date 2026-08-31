@@ -1,0 +1,15 @@
+{
+  "bug_id": "O-NEW-26",
+  "framework": "olmo",
+  "category": "control_flow",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["global_step", "restore_dataloader", "stage"],
+  "check_stage": "init",
+  "pi_schema_applicable": true,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P1",
+  "tier_field": "Tier 0",
+  "rationale": "restore_checkpoint forgot to reset global_step when restore_dataloader=False; LR scheduler then resumes mid-decay. Detected by trace assertion global_step==0 right after restore under that flag. Borderline P1 vs P7: chose P1 because step is a default trace field, not a runtime hook on module state. framework=olmo (allenai/OLMo per anti-example 8)."
+}

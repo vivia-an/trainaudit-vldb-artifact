@@ -1,0 +1,103 @@
+[
+ {
+  "case_id": "D-002",
+  "agreed_verdict": "INSUFFICIENT_EVIDENCE",
+  "rater_a_rationale": "root_cause merely restates the title ('a regression makes grad norms lower'), naming no compared objects or defect site, so no relation can be derived from the whitelisted fields.",
+  "rater_b_rationale": "The fields give only a symptom (grad-norm range dropped across versions) with no mechanism, so no expected relation or guard can be derived.",
+  "case": {
+   "bug_id": "D-002",
+   "framework": "deepspeed",
+   "repo": "microsoft/DeepSpeed",
+   "title": "Incorrect gradient computation in ZeRO-2 with DeepSpeed >= 0.17.6",
+   "description": "ZeRO-2 backward pass 中梯度计算存在回归 bug，导致梯度范数显著偏低（从 4.7-6.0 降到 1.6-3.2），训练质量悄然退化",
+   "root_cause": "ZeRO-2 backward pass 中梯度计算存在回归 bug，导致梯度范数显著偏低（从 4.7-6.0 降到 1.6-3.2），训练质量悄然退化",
+   "category": "gradient_sync",
+   "parallel_dimension": "DP",
+   "severity": "high",
+   "trigger_conditions": [],
+   "issue_url": "https://github.com/microsoft/DeepSpeed/issues/7718"
+  }
+ },
+ {
+  "case_id": "D-NEW-2",
+  "agreed_verdict": "SINGLETON_NEW_RELATION",
+  "rater_a_rationale": "The obligation is one scalar LR entry per optimizer param group from the scheduler's output — a scheduler-output-to-param-group correspondence count whose objects match no frozen template (not T18's configured-vs-effective value, not T12/T26's inventories).",
+  "rater_b_rationale": "The obligation is one LR entry per optimizer param group, whose counted object matches no frozen template's objects (not checkpoint inventory, skip events, or per-boundary side effects).",
+  "case": {
+   "bug_id": "D-NEW-2",
+   "framework": "deepspeed",
+   "repo": "deepspeed",
+   "title": "WarmupCosineLR returns scalar instead of per-group LR list",
+   "description": "",
+   "root_cause": "",
+   "category": "lr_schedule",
+   "parallel_dimension": null,
+   "severity": null,
+   "trigger_conditions": [],
+   "issue_url": ""
+  }
+ },
+ {
+  "case_id": "O-008",
+  "agreed_verdict": "INSUFFICIENT_EVIDENCE",
+  "rater_a_rationale": "root_cause merely restates the title ('incomplete or incorrect') and names no defect or fix, so the fields cannot discriminate a save-inventory count relation from a restored-value equality relation.",
+  "rater_b_rationale": "root_cause merely restates the title ('a bug exists') with no mechanism and no trigger conditions, so I cannot tell whether the obligation is save inventory completeness, restore value equality, or something else.",
+  "case": {
+   "bug_id": "O-008",
+   "framework": "olmo",
+   "repo": "allenai/OLMo",
+   "title": "Fix bug with saving unsharded checkpoint",
+   "description": "保存 unsharded checkpoint 时存在 bug，导致 checkpoint 状态不完整或不正确，从该 checkpoint 恢复训练会产生错误结果",
+   "root_cause": "保存 unsharded checkpoint 时存在 bug，导致 checkpoint 状态不完整或不正确，从该 checkpoint 恢复训练会产生错误结果",
+   "category": "checkpoint",
+   "parallel_dimension": "FSDP",
+   "severity": "high",
+   "trigger_conditions": [],
+   "issue_url": "https://github.com/allenai/OLMo/releases/tag/v0.2.3"
+  }
+ },
+ {
+  "case_id": "O-009",
+  "agreed_verdict": "SINGLETON_NEW_RELATION",
+  "rater_a_rationale": "The obligation is that a constructed QK-norm module's size equal the dimension implied by the configured n_kv_heads/n_heads under GQA — a derived config-vs-construction consistency that no frozen template's objects cover (not a parallel-layout contract, not an init statistic, not a single configured knob's effective value).",
+  "rater_b_rationale": "The obligation is that a constructed QK-norm module's size equal the dimension implied by the GQA head configuration — a derived config-to-module structural consistency, not a single configured knob's effective value (T18) nor an algorithm-spec formula (T04); no frozen template carries that object.",
+  "case": {
+   "bug_id": "O-009",
+   "framework": "olmo",
+   "repo": "allenai/OLMo",
+   "title": "Wrong size calculation for QK layer norm with GQA",
+   "description": "QK LayerNorm 的 size 计算错误，影响 attention 中 query/key 的归一化，可能导致注意力权重计算不准确",
+   "root_cause": "",
+   "category": "numerical",
+   "parallel_dimension": "none",
+   "severity": "medium",
+   "trigger_conditions": [
+    "attention_layer_norm=True",
+    "n_kv_heads < n_heads (GQA)"
+   ],
+   "issue_url": "https://github.com/allenai/OLMo/commit/8472d0b4"
+  }
+ },
+ {
+  "case_id": "O-040",
+  "agreed_verdict": "UNOBSERVABLE",
+  "rater_a_rationale": "The violated quantity is a hard-coded hardware datasheet constant; the training trace carries no signal that witnesses a 2x-low peak (training is unaffected and inflated MFU need not exceed 100%).",
+  "rater_b_rationale": "Whether the hard-coded 312 TFLOPS equals the device's true BF16 peak is settled by an external hardware datasheet; nothing in the run's own trace witnesses the constant being half its true value.",
+  "case": {
+   "bug_id": "O-040",
+   "framework": "olmo-core",
+   "repo": "allenai/OLMo-core",
+   "title": "A100 peak flops specification 2x too low",
+   "description": "A100 的 peak FLOPS 规格值被设置为实际值的一半，导致 MFU（Model FLOPS Utilization）计算结果被夸大为实际值的两倍",
+   "root_cause": "A100 BF16 peak = 624 TFLOPS but code used 312 TFLOPS, inflating MFU to unrealistic values.",
+   "category": "numerical",
+   "parallel_dimension": "none",
+   "severity": "low",
+   "trigger_conditions": [
+    "Training on A100 GPUs",
+    "MFU reporting"
+   ],
+   "issue_url": "https://github.com/allenai/OLMo-core/commit/db2b6eff"
+  }
+ }
+]

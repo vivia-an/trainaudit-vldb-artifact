@@ -1,0 +1,10 @@
+{
+ "seed_templates": 27,
+ "final_templates_after_dev": 35,
+ "templates_added_in_dev": 8,
+ "dev_cases": 186,
+ "dev_cumulative_coverage": 0.876,
+ "stopping_rule_triggered": false,
+ "simulated_stopping_point_batch": null,
+ "note": "Pre-registered stopping rule (3 consecutive batches with no new recurring template AND >=95% matched AND <5% new singletons AND no core edit) was NEVER satisfied over the full 186-case development stream; the longest qualifying streak is 1 batch(es). Post-stop regret is therefore undefined/not computable: the catalog did not saturate under the frozen criterion."
+}

@@ -1,0 +1,14 @@
+{
+  "bug_id": "M-NEW-1",
+  "framework": "megatron-lm",
+  "category": "dtype",
+  "parallel_dimension": "none",
+  "invariant_type": "dtype_consistency",
+  "required_trace_fields": ["op_name", "input_dtype", "step"],
+  "check_stage": "after_forward",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P4",
+  "tier_field": "Tier 0",
+  "rationale": "Sigmoid for aux-loss must run in fp32 but receives bf16 logits. Layer is schema_topo_precond per anti-example 1: detection reads one field (op input dtype) but needs precond guard 'this specific sigmoid in compute_routing_scores_for_aux_loss'. Borderline P1 vs P4: chose P4 because op input dtype is not a default trace field and needs runtime hook. parallel_dim=none per anti-example 6 (single-GPU MoE reproduces). Tier 0 because dtype is a Tier 0 field, scope is op-level not param-level.",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P1_P4"]
+}

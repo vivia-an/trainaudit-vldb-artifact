@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-57",
+  "framework": "olmo",
+  "category": "control_flow",
+  "parallel_dimension": "FSDP",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["module_name", "module_attr", "shape"],
+  "check_stage": "build",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "wte built with vocab_size while ff_out built with embedding_size; when embedding_size>vocab_size the loss softmax has phantom logits with no learnable embedding row. Pure static shape consistency check: read wte.num_embeddings and ff_out.out_features from named_modules at build time and assert equality (anti-example 10: build, not init — defined at __init__). P8 because detectable solely via named_modules static assertion. schema_topo_precond because the equality rule depends on config (weight_tying flag and embedding_size attr). Tier 6 (named_modules class snapshot). Borderline category numerical vs control_flow: chose control_flow because root cause is a config-key wiring mistake, not numerics.",
+  "borderline_flags": ["CATEGORY_AMBIGUOUS_control_flow_numerical"]
+}

@@ -1,0 +1,52 @@
+===== TrainAudit T1 on BUGGY (f34e7ddc~1) =====
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+=== 1/18 violations ===
+  [ok       ] T0-checkpoint-preserve-rng: no checkpoint.call events (rule passive)
+  [ok       ] T0-clip-grad-bounded: all 0 clip_grad calls bounded by max_norm
+  [ok       ] T0-dtype-propagation: checked 0 non-cast layer outputs (passive at T0; full join with pre-event is a T1 feature)
+  [ok       ] T0-initial-lr-present: no scheduler.init events (rule passive)
+  [ok       ] T0-build-has-modules: build snapshot has parameters and modules (1 snapshots)
+  [ok       ] T0-no-nan-inf: no NaN/Inf detected
+  [ok       ] T0-norm-output-unit-rms: all 0 normalizer outputs within RMS [0.5,2.0]
+  [ok       ] T0-optim-lr-positive: all 1 param_groups have positive lr
+  [ok       ] T0-optim-step-counter-monotonic: only 0 optim.step.post events (rule passive)
+  [ok       ] T0-softmax-degenerate: checked 0 softmax/router outputs, none degenerate
+  [ok       ] T0-token-id-in-vocab: no dataloader.batch events captured (rule passive)
+  [ok       ] T1-expert-bias-fp32: no router with expert_bias observed (rule passive)
+  [ok       ] T1-jitter-preserves-dtype: no jitter.probe events (rule passive)
+  [ok       ] T1-layer-count-strict: no declared num_layers (rule passive)
+  [ok       ] T1-replica-cksum-equal: all 0 replica params consistent across replica group
+  [ok       ] T1-residual-stream-preserved: no residual blocks observed (rule passive)
+  [ok       ] T1-router-has-calculate-per-token-loss: --calculate-per-token-loss not enabled (rule N/A)
+  [VIOLATION] T1-sqrt-decay-front-loaded: sqrt decay shape inverted: end-of-training |slope|=2.0412 >> start-of-training |slope|=0.5013
+
+[OC-NEW-3/trainaudit] BUG DETECTED via 1 rule(s):
+   - T1-sqrt-decay-front-loaded: sqrt decay shape inverted: end-of-training |slope|=2.0412 >> start-of-training |slope|=0.5013
+     evidence: {'slope_at_end_of_training': 2.041241452319315, 'slope_at_start_of_training': 0.501256289338003, 'n_samples': 101}
+
+===== TrainAudit T1 on FIXED (f34e7ddc) =====
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+=== 0/18 violations ===
+  [ok       ] T0-checkpoint-preserve-rng: no checkpoint.call events (rule passive)
+  [ok       ] T0-clip-grad-bounded: all 0 clip_grad calls bounded by max_norm
+  [ok       ] T0-dtype-propagation: checked 0 non-cast layer outputs (passive at T0; full join with pre-event is a T1 feature)
+  [ok       ] T0-initial-lr-present: no scheduler.init events (rule passive)
+  [ok       ] T0-build-has-modules: build snapshot has parameters and modules (1 snapshots)
+  [ok       ] T0-no-nan-inf: no NaN/Inf detected
+  [ok       ] T0-norm-output-unit-rms: all 0 normalizer outputs within RMS [0.5,2.0]
+  [ok       ] T0-optim-lr-positive: all 1 param_groups have positive lr
+  [ok       ] T0-optim-step-counter-monotonic: only 0 optim.step.post events (rule passive)
+  [ok       ] T0-softmax-degenerate: checked 0 softmax/router outputs, none degenerate
+  [ok       ] T0-token-id-in-vocab: no dataloader.batch events captured (rule passive)
+  [ok       ] T1-expert-bias-fp32: no router with expert_bias observed (rule passive)
+  [ok       ] T1-jitter-preserves-dtype: no jitter.probe events (rule passive)
+  [ok       ] T1-layer-count-strict: no declared num_layers (rule passive)
+  [ok       ] T1-replica-cksum-equal: all 0 replica params consistent across replica group
+  [ok       ] T1-residual-stream-preserved: no residual blocks observed (rule passive)
+  [ok       ] T1-router-has-calculate-per-token-loss: --calculate-per-token-loss not enabled (rule N/A)
+  [ok       ] T1-sqrt-decay-front-loaded: sqrt decay shape correct: start-of-training |slope|=10.0000 >= end-of-training |slope|=0.5343
+
+[OC-NEW-3/trainaudit] CLEAN
+

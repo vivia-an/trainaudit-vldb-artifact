@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-20",
+  "framework": "olmo",
+  "category": "numerical",
+  "parallel_dimension": "none",
+  "invariant_type": "value_equality",
+  "required_trace_fields": ["param_name", "param_checksum", "config.use_mup", "step"],
+  "check_stage": "build",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P4",
+  "tier_field": "Tier 0",
+  "rationale": "Under use_mup=true, transformer.ff_out.weight must remain all zeros after model construction (MuReadout zero-init), but reset_parameters re-runs init_normal and overwrites it. Detection reads ff_out.weight checksum at build time, conditional on config.use_mup attribute — a precond guard makes this schema_topo_precond, not schema_only (anti-example 1). P4 because we hook the module to read weight values vs config attr, not a static class-only check. Borderline P4 vs P8: the bug is a value, not a class choice, so P4. Tier 0 (param checksum).",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P4_P8"]
+}

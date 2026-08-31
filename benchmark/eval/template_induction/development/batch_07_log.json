@@ -1,0 +1,186 @@
+{
+  "batch": 7,
+  "decisions": [
+    {
+      "case_id": "D-NEW-79",
+      "decision": "MATCH",
+      "template_id": "T18",
+      "guard_extension": "precondition: scheduler attachment must initialize the optimizer param-group lr to the scheduler's step-0 value (warmup_min_lr) at construction",
+      "note": "value_scaling_consistency re-resolved to config_effectiveness per the D-NEW-8 precedent; independent of D-NEW-8's hard-coded peak-LR defect."
+    },
+    {
+      "case_id": "O-NEW-8",
+      "decision": "MATCH",
+      "template_id": "T23",
+      "guard_extension": null,
+      "note": "Evidently the same pre-LN residual-clobber incident as T23 supports B13/O-002 (near-verbatim issue text, no independent fix evidence); counts once per §4.1."
+    },
+    {
+      "case_id": "O-NEW-11",
+      "decision": "SINGLETON",
+      "template_id": null,
+      "guard_extension": null,
+      "note": "Bounded object (attention mask bias / attention-output finiteness under autocast) matches no existing bounded template or singleton per §3.2."
+    },
+    {
+      "case_id": "D-NEW-75",
+      "decision": "MATCH",
+      "template_id": "T22",
+      "guard_extension": "precondition: CPU Adam/Adagrad kernels must step numel() elements of ndim>=2 params, not size(0)",
+      "note": "count_frequency_match re-resolved to update_effectiveness; partial kernel extent leaves elements un-updated despite nonzero grads (T22 D-006 analog)."
+    },
+    {
+      "case_id": "OC-NEW-60",
+      "decision": "NEW_TEMPLATE",
+      "template_id": "T33",
+      "guard_extension": null,
+      "note": "Promoted with independent singleton OC-NEW-65: same boundedness relation over supervision label indices vs the valid target index range; differences guard-expressible (§2), two independent incidents (§4)."
+    },
+    {
+      "case_id": "B14",
+      "decision": "MATCH",
+      "template_id": "T08",
+      "guard_extension": "precondition: z-loss under reduction='mean' must be the scalar masked mean over non-ignore_index tokens; topology guard: single-rank",
+      "note": "Masked-mean normalization defect on a loss component; independent of B15 (different function and fix)."
+    },
+    {
+      "case_id": "O-NEW-15",
+      "decision": "SINGLETON",
+      "template_id": null,
+      "guard_extension": null,
+      "note": "Inverted outlier skip gate; the trigger object is a statistical outlier flag, not T21's gradient-overflow event, so not T21 plus guards (§2.2, §3.3)."
+    },
+    {
+      "case_id": "O-NEW-14",
+      "decision": "MATCH",
+      "template_id": "T09",
+      "guard_extension": "precondition: HSDP grad-norm reductions must span the shard process group (explicit process_group), not WORLD",
+      "note": "Independent of the O-NEW-31/O-NEW-32 replica-divisor incident (different fix)."
+    },
+    {
+      "case_id": "M-NEW-57",
+      "decision": "MATCH",
+      "template_id": "T03",
+      "guard_extension": "precondition: FP4 DelayedScaling with CUDA graphs must save/restore per-module recipe state around each replay to match the eager reference",
+      "note": "invariance_across_config aliases to reference_equivalence; witness is a paired eager-vs-replay run of the same code (T03, not T24's within-step self-comparison)."
+    },
+    {
+      "case_id": "M-NEW-35",
+      "decision": "MATCH",
+      "template_id": "T03",
+      "guard_extension": "precondition: MoE GroupedGEMM with TP>1, sequence_parallel=False, EP=1 must gather expert tokens across TP ranks so outputs match the TP=1 reference",
+      "note": "Output invariance to TP degree, a performance-only knob."
+    },
+    {
+      "case_id": "M-NEW-64",
+      "decision": "MATCH",
+      "template_id": "T05",
+      "guard_extension": "precondition: config-DSL recipe path must materialize parameters in the configured mixed-precision dtype (params_dtype derived from mixed_precision_dtype)",
+      "note": "Designated-dtype fidelity at init, following the zero.Init target-dtype precedent."
+    },
+    {
+      "case_id": "D-NEW-28",
+      "decision": "MATCH",
+      "template_id": "T07",
+      "guard_extension": "precondition: extra-large param reduction under bf16 + grad_accum_dtype=fp32 + ZeRO-1 CPU offload must consume the accumulated fp32 buffer, not raw bf16 param.grad",
+      "note": "Reduced gradient must be the accumulated designated buffer (T07 designated-destination clause)."
+    },
+    {
+      "case_id": "M-NEW-43",
+      "decision": "MATCH",
+      "template_id": "T08",
+      "guard_extension": "topology guard: DP>1 and CP>1; precondition: gradient scaling divisor must equal dp_size*cp_size, the span of the reduction collective",
+      "note": "Directly instantiates T08's cp_size term in spec_scale."
+    },
+    {
+      "case_id": "M-NEW-17",
+      "decision": "MATCH",
+      "template_id": "T07",
+      "guard_extension": "precondition: Megatron-FSDP gradient_accumulation_fusion must reconstruct the live main_grad (get_main_grad) each iteration",
+      "note": "Stale accumulation buffer breaks the sum-of-microbatch-contributions invariant."
+    },
+    {
+      "case_id": "D-NEW-13",
+      "decision": "MATCH",
+      "template_id": "T07",
+      "guard_extension": null,
+      "note": "Evidently the same ZeRO CPU-offload copy-vs-accumulate micro_step_id incident already recorded verbatim in T07's preconditions; counts once per §4.1."
+    },
+    {
+      "case_id": "OC-NEW-35",
+      "decision": "MATCH",
+      "template_id": "T13",
+      "guard_extension": "precondition: evaluator loader position counters must reset to zero at each eval-pass start under eval_duration truncation (reset(), not only reshuffle())",
+      "note": "Loader bookkeeping reset at a run boundary; different repo than seed support O-019, counts independently."
+    },
+    {
+      "case_id": "OC-NEW-1",
+      "decision": "MATCH",
+      "template_id": "T05",
+      "guard_extension": "precondition: as_tensor conversion must preserve the floating-point dtype of non-bool numpy arrays (soft-label probabilities not truncated to int); phase: data_loading",
+      "note": "Input tensor must retain its declared dtype at the point of use."
+    },
+    {
+      "case_id": "M-NEW-31",
+      "decision": "MATCH",
+      "template_id": "T01",
+      "guard_extension": null,
+      "note": "Evidently the same LinearWithFrozenWeight missing-TP-all-reduce incident as T01 support B2 (precondition records the defect verbatim); counts once per §4.1."
+    },
+    {
+      "case_id": "M-NEW-61",
+      "decision": "MATCH",
+      "template_id": "T16",
+      "guard_extension": "precondition: mrope under CP>1 must slice along the sequence axis with the correct cp_group so each rank's rotary positions match its own sequence partition",
+      "note": "invariance_across_config re-resolved to index_consistency per the OC-NEW-12 precedent."
+    },
+    {
+      "case_id": "B15",
+      "decision": "MATCH",
+      "template_id": "T08",
+      "guard_extension": "precondition: softmax_auxiliary_loss z-loss must be normalized by batch_size_in_tokens, not num_micro_batches",
+      "note": "Wrong normalization divisor on an auxiliary loss; independent of B14 (different function and fix)."
+    },
+    {
+      "case_id": "OC-NEW-58",
+      "decision": "MATCH",
+      "template_id": "T08",
+      "guard_extension": "precondition: each multi-granularity loss component must be divided by the position count of its own granularity (byte vs patch positions)",
+      "note": "Independent of T08 support OC-NEW-56 (wrong-granularity denominator vs missing finalize)."
+    },
+    {
+      "case_id": "M-NEW-45",
+      "decision": "MATCH",
+      "template_id": "T07",
+      "guard_extension": "precondition: fused-ops backward_dw wgrad hooks must fire on the parameter-owning modules so param.grad is cleared and each expert wgrad enters main_grad exactly once",
+      "note": "Double-counted contribution violates T07's added-exactly-once clause; independent of T26 support M-NEW-56 (missing invocation, different defect)."
+    },
+    {
+      "case_id": "M-NEW-3",
+      "decision": "MATCH",
+      "template_id": "T05",
+      "guard_extension": "precondition: fp32 residual through bias-dropout-add must retain fp32 (upcast the compute branch to the residual dtype, never downcast the residual)",
+      "note": "Residual stream dtype fidelity at the point of use."
+    },
+    {
+      "case_id": "OC-NEW-51",
+      "decision": "MATCH",
+      "template_id": "T27",
+      "guard_extension": "precondition: isinstance-ordered init dispatch must reach the subclass branch (subclass before parent) so subclass-specific projections receive their designated init",
+      "note": "structural_integrity re-resolved to value_scaling_consistency; uninitialized-memory weights are T27's never-uninitialized clause."
+    },
+    {
+      "case_id": "D-NEW-45",
+      "decision": "MATCH",
+      "template_id": "T07",
+      "guard_extension": "precondition: multi-param-group backward hooks must bind each parameter's own group index (no late-bound closure) so gradients route to the owning group's reduction bucket",
+      "note": "structural_integrity re-resolved to conservation; wrong-bucket routing violates T07's designated-destination clause."
+    }
+  ],
+  "n_matched": 22,
+  "n_new_singletons": 2,
+  "n_new_templates": 1,
+  "core_edits": [],
+  "templates_total_after": 33,
+  "singletons_total_after": 24
+}

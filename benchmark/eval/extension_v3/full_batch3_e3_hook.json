@@ -1,0 +1,459 @@
+{
+  "metadata": {
+    "experiment": "E3_hook",
+    "batch": 3,
+    "n_bugs": 90
+  },
+  "per_bug": {
+    "D-NEW-80": {
+      "earliest_observable": "checkpoint_save",
+      "hooks_observable": ["checkpoint_save", "checkpoint_load"],
+      "rationale": "groups_padding mis-recorded only matters when ZeRO checkpoint state is saved/loaded; mismatched padding values surface at the checkpoint tap (junk optimizer state)."
+    },
+    "D-NEW-81": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward", "after-forward", "main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "TopKGate.wg gets rebound to a fresh fp32 Linear in forward; wg.weight identity changes vs. ZeRO-tracked param, observable from the first after-forward and the param stays unchanged across steps so before-forward also sees it."
+    },
+    "D-NEW-9": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": ["main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "lp_grads not cleared after HP accumulation; stale low-precision grad buffer detectable during/after backward and before optimizer step."
+    },
+    "M-NEW-1": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Sigmoid input dtype is wrong inside forward; routing scores diverge from fp32 reference at the after-forward tap."
+    },
+    "M-NEW-10": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Gate is not sliced per TP rank; wrong attention output shows up immediately after forward (gate.shape mismatch with per-partition heads)."
+    },
+    "M-NEW-11": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": ["main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "FusedAdam reads param.grad (None/stale) instead of decoupled_grad; missing decoupled_grad presence is observable as zero/None grad before optimizer.step."
+    },
+    "M-NEW-12": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward", "after-forward", "main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "expert_bias buffer is mutated during graph warmup; post-warmup buffer differs from pre-warmup at before-forward of the first captured step."
+    },
+    "M-NEW-13": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Permute pads tokens unnecessarily; returned token count != sum(tokens_per_expert), observable as a value/structural mismatch at after-forward."
+    },
+    "M-NEW-14": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward", "after-forward", "main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "param_gather_dispatched stays False so finish_param_sync never runs; expert params are stale at before-forward (function-call counter and param staleness both visible)."
+    },
+    "M-NEW-15": {
+      "earliest_observable": "build",
+      "hooks_observable": ["build", "before-optimizer"],
+      "rationale": "FusedAdam.master_weights flag set wrong at construction; build.snapshot of optimizer config catches it. Stale master copy causes wrong updates visible at before-optimizer."
+    },
+    "M-NEW-16": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward", "after-forward"],
+      "rationale": "Zeroing grad_data wipes other buckets' param_data; at before-forward of the next step, those param chunks read all-zero (cross-rank param divergence)."
+    },
+    "M-NEW-17": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": ["main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "main_grad pointer stale because get_main_grad never called; wrong wgrad accumulation visible during/after backward."
+    },
+    "M-NEW-18": {
+      "earliest_observable": "build",
+      "hooks_observable": ["build", "before-optimizer"],
+      "rationale": "FusedAdam master_weights flag derived wrong from config; observable at build snapshot of optimizer construction and at before-optimizer (precision mismatch in step)."
+    },
+    "M-NEW-19": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "expert_bias added before sigmoid distorts probs; routing probabilities differ from invariant value inside forward."
+    },
+    "M-NEW-20": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward", "main-grad-in-backward", "after-backward"],
+      "rationale": "Loss missing CP scale factor; final scaled loss at after-forward fails value_scaling_check, propagating into grads."
+    },
+    "M-NEW-21": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Aux-loss tracker incremented twice per router forward under recompute; function-call count mismatch at the after-forward tap."
+    },
+    "M-NEW-22": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": ["main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "Encoder->decoder PP gradient summed not averaged; scale anomaly visible during backward gradient reduction and after-backward."
+    },
+    "M-NEW-23": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "Expert grad scaling wrong when EDP != DP; effective post-reduce scale != 1/dp_size, detectable as grad value-scaling anomaly after-backward."
+    },
+    "M-NEW-24": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Hardcoded k=2 in group_limited_topk yields wrong group scores inside routing during forward."
+    },
+    "M-NEW-26": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward", "after-forward", "main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "Router weight re-randomized differently across DP ranks at init; cross-rank param divergence visible at the very first before-forward."
+    },
+    "M-NEW-27": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "Softmax-after-topk for k=1 has zero gradient w.r.t. router logits; router weight grad is identically zero, observable post-backward."
+    },
+    "M-NEW-28": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward", "after-forward", "main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "Float16Module.cuda() downcasts expert_bias to bf16; buffer dtype invariant violated at before-forward."
+    },
+    "M-NEW-29": {
+      "earliest_observable": "build",
+      "hooks_observable": ["build"],
+      "rationale": "Layer-selection offset wrong at MambaStack build under uneven PP; structural mismatch caught at build.snapshot before training."
+    },
+    "M-NEW-3": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Residual stream silently downcast inside _bias_dropout_add_func; activation dtype mismatch observable after forward."
+    },
+    "M-NEW-30": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "Aux-loss coefficient not divided by tp_size; effective gradient scaling wrong after the all-reduce, visible after-backward."
+    },
+    "M-NEW-31": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": ["main-grad-in-backward", "after-backward"],
+      "rationale": "Frozen-weight Linear backward skips dgrad all-reduce; cross-rank grad_input inequality visible during/after backward."
+    },
+    "M-NEW-32": {
+      "earliest_observable": "unobservable",
+      "hooks_observable": [],
+      "rationale": "apply_input_jitter applied after gating instead of before; semantic ordering bug detectable only by source analysis (detection_method = source_analysis)."
+    },
+    "M-NEW-33": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": ["checkpoint_load", "before-optimizer"],
+      "rationale": "ChainedOptimizer.param_groups stale after load_state_dict; structural identity check fails at checkpoint_load and LR updates fail to propagate at before-optimizer."
+    },
+    "M-NEW-34": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Wrong fancy-indexing produces malformed local_indices; tokens routed to wrong experts during MoE dispatch in forward."
+    },
+    "M-NEW-35": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "MoE token gather/scatter skipped when SP=False and EP=1; per-TP-rank expert outputs wrong, visible after forward."
+    },
+    "M-NEW-36": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "MTP per-layer loss overwritten not summed; running-sum invariant violated as soon as the second iteration's loss is written."
+    },
+    "M-NEW-38": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": ["main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "On first iter, main_grad starts holding param values instead of zeros; first accumulation poisons the grad, observable during backward."
+    },
+    "M-NEW-39": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "MLA softmax_scale built from wrong mscale field; value differs from invariant; attention probabilities distorted in forward."
+    },
+    "M-NEW-4": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": ["main-grad-in-backward", "after-backward"],
+      "rationale": "In-place subtraction on aliased fp32 logits corrupts saved tensor for autograd; backward grads wrong, observable during/after backward."
+    },
+    "M-NEW-40": {
+      "earliest_observable": "build",
+      "hooks_observable": ["build", "after-forward"],
+      "rationale": "Local ViT spec wires causal attn_mask_type at build; config invariant fails at build.snapshot. Effect (wrong attention pattern) also surfaces in forward outputs."
+    },
+    "M-NEW-41": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Aliased cached_loss_mask mutated in place; second sample sees a mask that is no longer all-ones, value invariant fails during data load / forward."
+    },
+    "M-NEW-42": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": ["main-grad-in-backward", "after-backward"],
+      "rationale": "GradReducePipeline scales whole gbuf instead of bucket; cumulative scaling wrong, visible in bucket.data magnitude during/after backward."
+    },
+    "M-NEW-43": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "Gradient scaling factor missing context_parallel multiplier; final reduced grads off by cp_size, visible after backward."
+    },
+    "M-NEW-44": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "DSA indexer loss not divided by num_microbatches; aux-loss gradient scale anomaly visible post-backward."
+    },
+    "M-NEW-45": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": ["main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "DDP wgrad accumulate-and-reduce hooks not triggered on fused GroupedLinears; function-call count mismatch and double-counted main_grad observable during/after backward."
+    },
+    "M-NEW-46": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "isend wait skipped before deallocation; downstream PP stage receives corrupted activations in its forward."
+    },
+    "M-NEW-47": {
+      "earliest_observable": "main-grad-in-backward",
+      "hooks_observable": ["main-grad-in-backward", "after-backward"],
+      "rationale": "Non-contiguous all_gathered_input read by wgrad GEMM; wrong wgrad values during backward."
+    },
+    "M-NEW-5": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward", "after-backward"],
+      "rationale": "Aux loss not scaled by num_tokens in per-token mode; loss value at after-forward fails scaling check, propagating to gradients."
+    },
+    "M-NEW-51": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "CheckpointFunction runs during graph warmup/capture; replayed graph values diverge from eager during forward."
+    },
+    "M-NEW-52": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Unconditional copy_ overwrites in-place result; corruption surfaces in forward activations under graph replay."
+    },
+    "M-NEW-53": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward", "after-forward"],
+      "rationale": "Cast cudagraph warmup + shared mempool corrupts captured param-cast outputs across VPP; param buffer wrong at before-forward of the affected stage."
+    },
+    "M-NEW-54": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward", "main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "shard_model_param built without detach; structural invariant (requires_grad/grad_fn) violated at construction, visible at first before-forward via param-state snapshot."
+    },
+    "M-NEW-55": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": ["main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "Distributed-optimizer param_to_index misaligned with padded global map; optimizer reads/writes wrong slices, visible at before-optimizer."
+    },
+    "M-NEW-56": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["main-grad-in-backward", "after-backward", "before-optimizer"],
+      "rationale": "fc1/fc2_latent_proj.backward_dw never called; their main_grad stays zero, function-call count and grad-value checks both fail post-backward."
+    },
+    "M-NEW-57": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "FP4 path skips DelayedScaling recipe restore; replay uses stale amax history, forward output drifts vs. eager."
+    },
+    "M-NEW-58": {
+      "earliest_observable": "build",
+      "hooks_observable": ["build", "after-forward"],
+      "rationale": "_CudaGraphRunner.__init__ enables FP8/FP4 capture for bf16-only layers; config invariant violation at build, with quantization effects in forward."
+    },
+    "M-NEW-59": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Wrong recompute path used for FP4 + MoE recompute; amax tracking broken, forward/recompute scales mismatch within forward."
+    },
+    "M-NEW-6": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "group_limited_topk uses num_groups instead of topk for inner topk; routing scores wrong inside forward."
+    },
+    "M-NEW-60": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward", "main-grad-in-backward"],
+      "rationale": "set_save_original_input not called for FP4; cached activation is FP4-quantized, recompute mismatch visible in forward / backward recompute."
+    },
+    "M-NEW-61": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "MultimodalRotaryEmbedding sliced on wrong axis with wrong cp_group; per-CP-rank rotary slice wrong, observable in forward output value."
+    },
+    "M-NEW-62": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "make_viewless_tensor result dropped; non-viewless tensor sent across PP stages; corrupted activations visible in next-stage forward."
+    },
+    "M-NEW-64": {
+      "earliest_observable": "build",
+      "hooks_observable": ["build", "before-forward"],
+      "rationale": "DSL config materializes params in fp32 despite mixed_precision_dtype=bf16; config invariant violation at build, param dtype visible at before-forward."
+    },
+    "M-NEW-65": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": ["checkpoint_load", "before-forward"],
+      "rationale": "split_state_dict only assigns index 0 for single-chunk MoE; sub-optimizers receive None at load, expert params left default-initialized, surfacing right after load."
+    },
+    "M-NEW-67": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "Wrong gating reads stale param.grad instead of decoupled_grad; grad-norm computed from wrong tensors after backward."
+    },
+    "M-NEW-68": {
+      "earliest_observable": "build",
+      "hooks_observable": ["build", "after-forward"],
+      "rationale": "pad_granularity 32 vs 128 set at data-loader construction; config invariant violation at build, downstream HybridEP dispatcher mixes tokens at after-forward."
+    },
+    "M-NEW-69": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "Wrong precision-aware flag selects decoupled_grad branch under FP8; grad-norm reads None and reports 0, visible after backward / before optimizer."
+    },
+    "M-NEW-7": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "z-loss metric not averaged across ranks; cross-rank inequality of metric value visible at after-forward."
+    },
+    "M-NEW-8": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "config.softmax_scale ignored in attention forward; attention output value differs from intended, visible after forward."
+    },
+    "M-NEW-9": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward", "after-backward"],
+      "rationale": "aux_loss metric scaled wrong by TP world size; value-scaling check fails on the metric at after-forward."
+    },
+    "O-NEW-1": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "RMSNorm computes L2 not RMS; output's mean-square deviates from 1.0 inside forward."
+    },
+    "O-NEW-10": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": ["before-optimizer"],
+      "rationale": "EMA self-referential update on grad_norm_exp_avg; optimizer-state corruption visible at before-optimizer."
+    },
+    "O-NEW-11": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Attention bias -inf downcast to bf16 yields NaNs in softmax; NaN in attention output detectable post-forward."
+    },
+    "O-NEW-13": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": ["checkpoint_load", "after-forward"],
+      "rationale": "FLOPs counter reset after resume violates monotonicity; visible at first step after checkpoint_load."
+    },
+    "O-NEW-14": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward", "before-optimizer"],
+      "rationale": "Grad-norm reduction uses WORLD instead of HSDP shard PG; cross-replica equality of reduced norm fails after backward."
+    },
+    "O-NEW-15": {
+      "earliest_observable": "before-optimizer",
+      "hooks_observable": ["before-optimizer"],
+      "rationale": "Inverted should_step skips optim.step on normal batches; optimizer-step function-call count drops sharply, visible before-optimizer."
+    },
+    "O-NEW-16": {
+      "earliest_observable": "build",
+      "hooks_observable": ["build"],
+      "rationale": "Bootstrap forces MPS/CPU before training; config invariant on init_device fails at build.snapshot."
+    },
+    "O-NEW-17": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": ["checkpoint_load", "before-forward"],
+      "rationale": "muP set_base_shapes rescales params again on load; param norms after load do not match saved norms (visible at checkpoint_load tap and at before-forward of first resumed step)."
+    },
+    "O-NEW-18": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": ["checkpoint_load", "before-optimizer"],
+      "rationale": "Restart resets all groups' lr to base, wiping muP per-group scaling; optimizer state at first step after load shows wrong group lrs."
+    },
+    "O-NEW-19": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward"],
+      "rationale": "ff_out divided by sqrt(2*n_layers) at init; param std deviates from config.init_std, observable at before-forward of step 1."
+    },
+    "O-NEW-2": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "Inverted causal mask makes future tokens visible; attention pattern wrong inside forward (e.g., position 0 attends to non-zero indices)."
+    },
+    "O-NEW-20": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward"],
+      "rationale": "muP requires zero-init of ff_out, but reset_parameters overwrites with normal init; param value invariant fails before first forward."
+    },
+    "O-NEW-21": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward"],
+      "rationale": "Each block's ff_proj zero-initialized via MuReadout under muP; param.std == 0, fails value invariant at before-forward."
+    },
+    "O-NEW-22": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "muP attention scale 1/d instead of sqrt(base_d)/d; attention output scale differs from SP reference, visible in forward."
+    },
+    "O-NEW-24": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "norm_after path applies attn_norm before att_proj; semantic deviation from Post-LN visible in forward output values."
+    },
+    "O-NEW-26": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": ["checkpoint_load", "before-optimizer"],
+      "rationale": "global_step not reset when restore_dataloader=False; counter mismatch surfaces right after checkpoint_load and at the first before-optimizer (LR uses wrong step)."
+    },
+    "O-NEW-27": {
+      "earliest_observable": "before-forward",
+      "hooks_observable": ["before-forward"],
+      "rationale": "dataset.start_index not reset on epoch rollover; data-loading invariant fails at the start of new epoch (observable via input batch IDs at before-forward)."
+    },
+    "O-NEW-28": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": ["checkpoint_load", "before-forward"],
+      "rationale": "Seed corrupted by seed+epoch increment on resume; data ordering differs from original run, visible at first before-forward after load."
+    },
+    "O-NEW-29": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward"],
+      "rationale": "Optimizer metric tensors on CPU instead of GPU; structural device invariant fails during the all_reduce stage after backward."
+    },
+    "O-NEW-3": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "z_loss reduction divides by mask.mean() instead of masked-mean; loss is unreduced/wrong-shape after forward."
+    },
+    "O-NEW-30": {
+      "earliest_observable": "after-forward",
+      "hooks_observable": ["after-forward"],
+      "rationale": "MoE lb/z auxiliary losses logged without all-reduce; cross-rank equality of metric fails right after forward."
+    },
+    "O-NEW-31": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward"],
+      "rationale": "Hardcoded num_model_replicas=1 inflates HSDP reduced grad norms by N; value scaling check on grad_norm fails after backward."
+    },
+    "O-NEW-32": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward"],
+      "rationale": "Reduced sums/norms not divided by num_model_replicas; value scaling check fails on per-param metrics after backward."
+    },
+    "O-NEW-33": {
+      "earliest_observable": "checkpoint_load",
+      "hooks_observable": ["checkpoint_load", "before-optimizer"],
+      "rationale": "Optim state loaded against renamed param keys without translation; missing/zeroed entries detectable at checkpoint_load and at first before-optimizer."
+    },
+    "O-NEW-35": {
+      "earliest_observable": "build",
+      "hooks_observable": ["build", "before-optimizer"],
+      "rationale": "Param-group classifier regex misses leaf q/k/ff_norm weights; optimizer param-group structural invariant fails at build (group construction)."
+    },
+    "O-NEW-36": {
+      "earliest_observable": "after-backward",
+      "hooks_observable": ["after-backward"],
+      "rationale": "all_sums/norms/numels concatenated and split wrong; structural shape invariant fails on the post-reduce tensor after backward."
+    }
+  }
+}

@@ -1,0 +1,484 @@
+[
+  {
+    "config": "olmo_core_dense_actckpt_2rank",
+    "rule_id": "T1-fwd-output-block-uniformity",
+    "n_violations": 2,
+    "msg": "2 block-level fwd output outlier(s)",
+    "sample": [
+      {
+        "module_class": "Linear",
+        "block_idx": 0,
+        "block_l2_median": 3.4509923458099365,
+        "cross_block_l2_median": 576.6029205322266,
+        "deviation_x": 167.08322208605182,
+        "module_name": "blocks.0._checkpoint_wrapped_module.attention.w_q",
+        "sample_event_id": 16,
+        "issue": "block 0 Linear fwd output l2 3.45e+00 departs 167.1x from cross-block median 5.77e+02"
+      },
+      {
+        "module_class": "Attention",
+        "block_idx": 0,
+        "block_l2_median": 0.29346466064453125,
+        "cross_block_l2_median": 245.38729858398438,
+        "deviation_x": 836.1732484076433,
+        "module_name": "blocks.0._checkpoint_wrapped_module.attention",
+        "sample_event_id": 31,
+        "issue": "block 0 Attention fwd output l2 2.93e-01 departs 836.2x from cross-block median 2.45e+02"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_dense_actckpt_2rank",
+    "rule_id": "T1-grad-flow-block-uniformity",
+    "n_violations": 2,
+    "msg": "2 block-level grad-flow outlier(s)",
+    "sample": [
+      {
+        "module_class": "FSDPReorderedNormTransformerBlock",
+        "block_idx": 0,
+        "block_ratio": 135.64814261296104,
+        "cross_block_median": 1.0841918097289072,
+        "deviation_x": 125.11452438187915,
+        "module_name": "blocks.0._checkpoint_wrapped_module",
+        "sample_event_id": 836,
+        "issue": "block 0 FSDPReorderedNormTransformerBlock grad ratio 1.36e+02 departs 125.1x from cross-block median 1.08e+00"
+      },
+      {
+        "module_class": "CheckpointWrapper",
+        "block_idx": 0,
+        "block_ratio": 135.64814261296104,
+        "cross_block_median": 1.0841918097289072,
+        "deviation_x": 125.11452438187915,
+        "module_name": "blocks.0",
+        "sample_event_id": 837,
+        "issue": "block 0 CheckpointWrapper grad ratio 1.36e+02 departs 125.1x from cross-block median 1.08e+00"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_dense_reordered",
+    "rule_id": "T1-fwd-output-block-uniformity",
+    "n_violations": 2,
+    "msg": "2 block-level fwd output outlier(s)",
+    "sample": [
+      {
+        "module_class": "Linear",
+        "block_idx": 0,
+        "block_l2_median": 3.445521831512451,
+        "cross_block_l2_median": 579.2140197753906,
+        "deviation_x": 168.1063270236596,
+        "module_name": "blocks.0.attention.w_q",
+        "sample_event_id": 14,
+        "issue": "block 0 Linear fwd output l2 3.45e+00 departs 168.1x from cross-block median 5.79e+02"
+      },
+      {
+        "module_class": "Attention",
+        "block_idx": 0,
+        "block_l2_median": 0.2937789410352707,
+        "cross_block_l2_median": 262.62520599365234,
+        "deviation_x": 893.9551795924062,
+        "module_name": "blocks.0.attention",
+        "sample_event_id": 29,
+        "issue": "block 0 Attention fwd output l2 2.94e-01 departs 894.0x from cross-block median 2.63e+02"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_dense_reordered",
+    "rule_id": "T1-grad-flow-block-uniformity",
+    "n_violations": 1,
+    "msg": "1 block-level grad-flow outlier(s)",
+    "sample": [
+      {
+        "module_class": "FSDPReorderedNormTransformerBlock",
+        "block_idx": 0,
+        "block_ratio": 136.65741170294035,
+        "cross_block_median": 1.0750508734410718,
+        "deviation_x": 127.1171579680886,
+        "module_name": "blocks.0",
+        "sample_event_id": 533,
+        "issue": "block 0 FSDPReorderedNormTransformerBlock grad ratio 1.37e+02 departs 127.1x from cross-block median 1.08e+00"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_dense_reordered_long",
+    "rule_id": "T1-fwd-output-block-uniformity",
+    "n_violations": 3,
+    "msg": "3 block-level fwd output outlier(s)",
+    "sample": [
+      {
+        "module_class": "Linear",
+        "block_idx": 0,
+        "block_l2_median": 3.6589642763137817,
+        "cross_block_l2_median": 924.8398590087891,
+        "deviation_x": 252.76001326269238,
+        "module_name": "blocks.0.attention.w_q",
+        "sample_event_id": 14,
+        "issue": "block 0 Linear fwd output l2 3.66e+00 departs 252.8x from cross-block median 9.25e+02"
+      },
+      {
+        "module_class": "Attention",
+        "block_idx": 0,
+        "block_l2_median": 0.34141121804714203,
+        "cross_block_l2_median": 815.8706359863281,
+        "deviation_x": 2389.7007270384206,
+        "module_name": "blocks.0.attention",
+        "sample_event_id": 29,
+        "issue": "block 0 Attention fwd output l2 3.41e-01 departs 2389.7x from cross-block median 8.16e+02"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_dense_reordered_long",
+    "rule_id": "T1-grad-flow-block-uniformity",
+    "n_violations": 1,
+    "msg": "1 block-level grad-flow outlier(s)",
+    "sample": [
+      {
+        "module_class": "FSDPReorderedNormTransformerBlock",
+        "block_idx": 0,
+        "block_ratio": 114.13443906559534,
+        "cross_block_median": 1.010403979536914,
+        "deviation_x": 112.95921371757184,
+        "module_name": "blocks.0",
+        "sample_event_id": 533,
+        "issue": "block 0 FSDPReorderedNormTransformerBlock grad ratio 1.14e+02 departs 113.0x from cross-block median 1.01e+00"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_moe",
+    "rule_id": "T1-fwd-output-block-uniformity",
+    "n_violations": 5,
+    "msg": "5 block-level fwd output outlier(s)",
+    "sample": [
+      {
+        "module_class": "MoEMLP",
+        "block_idx": 0,
+        "block_l2_median": 0.029416076838970184,
+        "cross_block_l2_median": 1622.0452880859375,
+        "deviation_x": 55141.455366919115,
+        "module_name": "blocks.0.feed_forward_moe.experts.mlp",
+        "sample_event_id": 19,
+        "issue": "block 0 MoEMLP fwd output l2 2.94e-02 departs 55141.5x from cross-block median 1.62e+03"
+      },
+      {
+        "module_class": "ParallelMLP",
+        "block_idx": 0,
+        "block_l2_median": 0.0009440226713195443,
+        "cross_block_l2_median": 416.83702087402344,
+        "deviation_x": 441554.0362938247,
+        "module_name": "blocks.0.feed_forward_moe.experts",
+        "sample_event_id": 20,
+        "issue": "block 0 ParallelMLP fwd output l2 9.44e-04 departs 441554.0x from cross-block median 4.17e+02"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_moe",
+    "rule_id": "T1-grad-flow-block-uniformity",
+    "n_violations": 2,
+    "msg": "2 block-level grad-flow outlier(s)",
+    "sample": [
+      {
+        "module_class": "MoEMLP",
+        "block_idx": 0,
+        "block_ratio": 0.0016646096431586325,
+        "cross_block_median": 0.5171145878824478,
+        "deviation_x": 310.6521640119853,
+        "module_name": "blocks.0.feed_forward_moe.experts.mlp",
+        "sample_event_id": 977,
+        "issue": "block 0 MoEMLP grad ratio 1.66e-03 departs 310.7x from cross-block median 5.17e-01"
+      },
+      {
+        "module_class": "FSDPMoEHybridReorderedNormTransformerBlock",
+        "block_idx": 0,
+        "block_ratio": 146.54481803085784,
+        "cross_block_median": 1.1286067702954647,
+        "deviation_x": 129.84577258250275,
+        "module_name": "blocks.0",
+        "sample_event_id": 981,
+        "issue": "block 0 FSDPMoEHybridReorderedNormTransformerBlock grad ratio 1.47e+02 departs 129.8x from cross-block median 1.13e+00"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_moe_ep2",
+    "rule_id": "T1-fwd-output-block-uniformity",
+    "n_violations": 3,
+    "msg": "3 block-level fwd output outlier(s)",
+    "sample": [
+      {
+        "module_class": "Linear",
+        "block_idx": 0,
+        "block_l2_median": 6.890012264251709,
+        "cross_block_l2_median": 1813.6541137695312,
+        "deviation_x": 263.2294463653619,
+        "module_name": "blocks.0.attention.w_q",
+        "sample_event_id": 20,
+        "issue": "block 0 Linear fwd output l2 6.89e+00 departs 263.2x from cross-block median 1.81e+03"
+      },
+      {
+        "module_class": "Attention",
+        "block_idx": 0,
+        "block_l2_median": 0.8189457654953003,
+        "cross_block_l2_median": 933.0476684570312,
+        "deviation_x": 1139.3277891762732,
+        "module_name": "blocks.0.attention",
+        "sample_event_id": 35,
+        "issue": "block 0 Attention fwd output l2 8.19e-01 departs 1139.3x from cross-block median 9.33e+02"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_moe_ep2",
+    "rule_id": "T1-grad-flow-block-uniformity",
+    "n_violations": 2,
+    "msg": "2 block-level grad-flow outlier(s)",
+    "sample": [
+      {
+        "module_class": "FSDPMoEMLP",
+        "block_idx": 0,
+        "block_ratio": 0.001661093626346504,
+        "cross_block_median": 0.5277435852723252,
+        "deviation_x": 317.70851257377467,
+        "module_name": "blocks.0.feed_forward_moe.experts.mlp",
+        "sample_event_id": 1060,
+        "issue": "block 0 FSDPMoEMLP grad ratio 1.66e-03 departs 317.7x from cross-block median 5.28e-01"
+      },
+      {
+        "module_class": "FSDPMoEHybridReorderedNormTransformerBlock",
+        "block_idx": 0,
+        "block_ratio": 143.48702056641253,
+        "cross_block_median": 1.1204945374873263,
+        "deviation_x": 128.05686754009318,
+        "module_name": "blocks.0",
+        "sample_event_id": 1077,
+        "issue": "block 0 FSDPMoEHybridReorderedNormTransformerBlock grad ratio 1.43e+02 departs 128.1x from cross-block median 1.12e+00"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_moe_long",
+    "rule_id": "T1-fwd-output-block-uniformity",
+    "n_violations": 8,
+    "msg": "8 block-level fwd output outlier(s)",
+    "sample": [
+      {
+        "module_class": "MoEMLP",
+        "block_idx": 0,
+        "block_l2_median": 0.03454238921403885,
+        "cross_block_l2_median": 10291.980712890625,
+        "deviation_x": 297952.1957533765,
+        "module_name": "blocks.0.feed_forward_moe.experts.mlp",
+        "sample_event_id": 19,
+        "issue": "block 0 MoEMLP fwd output l2 3.45e-02 departs 297952.2x from cross-block median 1.03e+04"
+      },
+      {
+        "module_class": "ParallelMLP",
+        "block_idx": 0,
+        "block_l2_median": 0.0011318109463900328,
+        "cross_block_l2_median": 2906.312255859375,
+        "deviation_x": 2567842.505083735,
+        "module_name": "blocks.0.feed_forward_moe.experts",
+        "sample_event_id": 20,
+        "issue": "block 0 ParallelMLP fwd output l2 1.13e-03 departs 2567842.5x from cross-block median 2.91e+03"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_moe_long",
+    "rule_id": "T1-grad-flow-block-uniformity",
+    "n_violations": 2,
+    "msg": "2 block-level grad-flow outlier(s)",
+    "sample": [
+      {
+        "module_class": "MoEMLP",
+        "block_idx": 0,
+        "block_ratio": 0.0018800352403571293,
+        "cross_block_median": 1.0419864661770206,
+        "deviation_x": 554.2377311922547,
+        "module_name": "blocks.0.feed_forward_moe.experts.mlp",
+        "sample_event_id": 977,
+        "issue": "block 0 MoEMLP grad ratio 1.88e-03 departs 554.2x from cross-block median 1.04e+00"
+      },
+      {
+        "module_class": "FSDPMoEHybridReorderedNormTransformerBlock",
+        "block_idx": 0,
+        "block_ratio": 142.93433671993972,
+        "cross_block_median": 1.0319813346193552,
+        "deviation_x": 138.5047693451363,
+        "module_name": "blocks.0",
+        "sample_event_id": 981,
+        "issue": "block 0 FSDPMoEHybridReorderedNormTransformerBlock grad ratio 1.43e+02 departs 138.5x from cross-block median 1.03e+00"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_multigroup",
+    "rule_id": "T1-fwd-output-block-uniformity",
+    "n_violations": 2,
+    "msg": "2 block-level fwd output outlier(s)",
+    "sample": [
+      {
+        "module_class": "Linear",
+        "block_idx": 0,
+        "block_l2_median": 3.439630150794983,
+        "cross_block_l2_median": 574.4987945556641,
+        "deviation_x": 167.02342094044133,
+        "module_name": "blocks.0.attention.w_q",
+        "sample_event_id": 14,
+        "issue": "block 0 Linear fwd output l2 3.44e+00 departs 167.0x from cross-block median 5.74e+02"
+      },
+      {
+        "module_class": "Attention",
+        "block_idx": 0,
+        "block_l2_median": 0.2923775017261505,
+        "cross_block_l2_median": 259.29310607910156,
+        "deviation_x": 886.8435654189399,
+        "module_name": "blocks.0.attention",
+        "sample_event_id": 29,
+        "issue": "block 0 Attention fwd output l2 2.92e-01 departs 886.8x from cross-block median 2.59e+02"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_multigroup",
+    "rule_id": "T1-grad-flow-block-uniformity",
+    "n_violations": 1,
+    "msg": "1 block-level grad-flow outlier(s)",
+    "sample": [
+      {
+        "module_class": "FSDPReorderedNormTransformerBlock",
+        "block_idx": 0,
+        "block_ratio": 137.85700796533257,
+        "cross_block_median": 1.0762856641998635,
+        "deviation_x": 128.08589071732993,
+        "module_name": "blocks.0",
+        "sample_event_id": 533,
+        "issue": "block 0 FSDPReorderedNormTransformerBlock grad ratio 1.38e+02 departs 128.1x from cross-block median 1.08e+00"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_olmo2_370M",
+    "rule_id": "T1-fwd-output-block-uniformity",
+    "n_violations": 3,
+    "msg": "3 block-level fwd output outlier(s)",
+    "sample": [
+      {
+        "module_class": "Linear",
+        "block_idx": 0,
+        "block_l2_median": 9.181987285614014,
+        "cross_block_l2_median": 4898.5518798828125,
+        "deviation_x": 533.4958247609072,
+        "module_name": "blocks.0.attention.w_q",
+        "sample_event_id": 14,
+        "issue": "block 0 Linear fwd output l2 9.18e+00 departs 533.5x from cross-block median 4.90e+03"
+      },
+      {
+        "module_class": "Attention",
+        "block_idx": 0,
+        "block_l2_median": 1.2776138186454773,
+        "cross_block_l2_median": 5810.71728515625,
+        "deviation_x": 4548.101468812193,
+        "module_name": "blocks.0.attention",
+        "sample_event_id": 29,
+        "issue": "block 0 Attention fwd output l2 1.28e+00 departs 4548.1x from cross-block median 5.81e+03"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_olmo2_370M",
+    "rule_id": "T1-grad-flow-block-uniformity",
+    "n_violations": 1,
+    "msg": "1 block-level grad-flow outlier(s)",
+    "sample": [
+      {
+        "module_class": "FSDPReorderedNormTransformerBlock",
+        "block_idx": 0,
+        "block_ratio": 259.9834726103414,
+        "cross_block_median": 1.0094837474717169,
+        "deviation_x": 257.54101862608286,
+        "module_name": "blocks.0",
+        "sample_event_id": 1045,
+        "issue": "block 0 FSDPReorderedNormTransformerBlock grad ratio 2.60e+02 departs 257.5x from cross-block median 1.01e+00"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_olmoe",
+    "rule_id": "T1-fwd-output-block-uniformity",
+    "n_violations": 4,
+    "msg": "4 block-level fwd output outlier(s)",
+    "sample": [
+      {
+        "module_class": "Linear",
+        "block_idx": 0,
+        "block_l2_median": 4.541451454162598,
+        "cross_block_l2_median": 570.2470932006836,
+        "deviation_x": 125.56494304877073,
+        "module_name": "blocks.0.attention.w_q",
+        "sample_event_id": 14,
+        "issue": "block 0 Linear fwd output l2 4.54e+00 departs 125.6x from cross-block median 5.70e+02"
+      },
+      {
+        "module_class": "Attention",
+        "block_idx": 0,
+        "block_l2_median": 0.45006290078163147,
+        "cross_block_l2_median": 276.3600616455078,
+        "deviation_x": 614.0476390423402,
+        "module_name": "blocks.0.attention",
+        "sample_event_id": 29,
+        "issue": "block 0 Attention fwd output l2 4.50e-01 departs 614.0x from cross-block median 2.76e+02"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_smallmoe",
+    "rule_id": "T1-fwd-output-block-uniformity",
+    "n_violations": 3,
+    "msg": "3 block-level fwd output outlier(s)",
+    "sample": [
+      {
+        "module_class": "Linear",
+        "block_idx": 0,
+        "block_l2_median": 6.889661073684692,
+        "cross_block_l2_median": 1837.1536254882812,
+        "deviation_x": 266.653701225646,
+        "module_name": "blocks.0.attention.w_q",
+        "sample_event_id": 14,
+        "issue": "block 0 Linear fwd output l2 6.89e+00 departs 266.7x from cross-block median 1.84e+03"
+      },
+      {
+        "module_class": "Attention",
+        "block_idx": 0,
+        "block_l2_median": 0.8246898055076599,
+        "cross_block_l2_median": 1240.4934692382812,
+        "deviation_x": 1504.1940144690673,
+        "module_name": "blocks.0.attention",
+        "sample_event_id": 29,
+        "issue": "block 0 Attention fwd output l2 8.25e-01 departs 1504.2x from cross-block median 1.24e+03"
+      }
+    ]
+  },
+  {
+    "config": "olmo_core_smallmoe",
+    "rule_id": "T1-grad-flow-block-uniformity",
+    "n_violations": 1,
+    "msg": "1 block-level grad-flow outlier(s)",
+    "sample": [
+      {
+        "module_class": "FSDPMoEReorderedNormTransformerBlock",
+        "block_idx": 0,
+        "block_ratio": 151.79699672865047,
+        "cross_block_median": 1.040526944042645,
+        "deviation_x": 145.8847342663615,
+        "module_name": "blocks.0",
+        "sample_event_id": 861,
+        "issue": "block 0 FSDPMoEReorderedNormTransformerBlock grad ratio 1.52e+02 departs 145.9x from cross-block median 1.04e+00"
+      }
+    ]
+  }
+]

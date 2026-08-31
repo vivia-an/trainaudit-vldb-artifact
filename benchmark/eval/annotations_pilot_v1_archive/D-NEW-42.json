@@ -1,0 +1,15 @@
+{
+  "bug_id": "D-NEW-42",
+  "framework": "deepspeed",
+  "category": "checkpoint",
+  "parallel_dimension": "DP",
+  "invariant_type": "completeness",
+  "required_trace_fields": ["param_name", "requires_grad", "checkpoint_keys"],
+  "check_stage": "checkpoint_load",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P7",
+  "tier_field": "Tier 0",
+  "rationale": "ZeRO3 omits frozen params from checkpoint; detected by comparing module.named_parameters() set vs saved keys at load (anti-example 7). Borderline P7 vs P8: chose P7 because the check fires only when an actual save/load runs (state-counter on saved-key set), not a pure build-time assertion. parallel_dim=DP because ZeRO3 shards along DP."
+}

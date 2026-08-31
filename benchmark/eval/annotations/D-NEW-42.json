@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-42",
+  "framework": "deepspeed",
+  "category": "checkpoint",
+  "parallel_dimension": "DP",
+  "invariant_type": "completeness",
+  "required_trace_fields": ["param_name", "requires_grad", "checkpoint_param_set", "step"],
+  "check_stage": "checkpoint_save",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "ZeRO3 only saves trainable params; frozen params silently omitted. Detection compares model.named_parameters() set vs the saved state dict's param-name set (anti-example 12: completeness, not value_equality). Layer is schema_topo_precond: precond is 'ZeRO stage 3 + has frozen params' and check is scoped to checkpoint_save phase, but rule is the same per rank without cross-rank topology. P8 because named_parameters set vs saved-name set is statically observable on each rank at save time. Tier 6 needs named_parameters set field.",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P8_P7"]
+}

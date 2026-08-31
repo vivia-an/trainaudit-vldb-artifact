@@ -1,0 +1,14 @@
+{
+  "bug_id": "O-NEW-63",
+  "framework": "olmo",
+  "category": "lr_schedule",
+  "parallel_dimension": "DP",
+  "invariant_type": "monotonic",
+  "required_trace_fields": ["lr", "step", "warmup_steps"],
+  "check_stage": "before_optimizer",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P1",
+  "tier_field": "Tier 3",
+  "rationale": "DeepSpeedTrainer used WarmupLR (warmup-then-flat) instead of WarmupDecayLR (warmup-then-decay), so post-warmup lr plateaus rather than decaying. Detection observes lr over consecutive steps after warmup and asserts monotonic decrease toward warmup_min_lr (monotonic, not implementation_equivalence: no reference run needed since flat-vs-decreasing is directly visible from the lr trace). Layer is schema_topo_precond — single rank but precond guards 'step > warmup_steps' and the assertion only valid in the decay phase. P1 reads lr (Tier 3 control variable). category=lr_schedule per table A mapping of scheduler bugs.",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P1_none"]
+}

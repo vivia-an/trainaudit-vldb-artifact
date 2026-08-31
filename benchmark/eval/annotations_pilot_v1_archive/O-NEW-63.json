@@ -1,0 +1,15 @@
+{
+  "bug_id": "O-NEW-63",
+  "framework": "olmo",
+  "category": "lr_schedule",
+  "parallel_dimension": "DP",
+  "invariant_type": "monotonic",
+  "required_trace_fields": ["lr", "step", "warmup_steps"],
+  "check_stage": "before_optimizer",
+  "pi_schema_applicable": true,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P1",
+  "tier_field": "Tier 3",
+  "rationale": "DeepSpeed scheduler set to WarmupLR not WarmupDecayLR, so LR plateaus after warmup instead of decaying. Detected from lr trace: post-warmup lr must be monotonically decreasing. Borderline P1 vs P8: chose P1 because both scheduler types are valid configs (build-time assert can't tell intent), the symptom only shows in the runtime lr sequence. framework=olmo (allenai/OLMo per anti-example 8)."
+}

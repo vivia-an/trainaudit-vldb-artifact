@@ -1,0 +1,29 @@
+% ============================================================
+% DRAFT — Related Work 的 SIGMOD 重定位(reframe 第⑪项 / reference "相关工作要补")
+% 现有 §Related Work(main.tex L936–962)是 ML/systems 味(6 段:bug studies / ML debugging /
+%   invariant checking[含 Daikon ernst2007daikon, TrainCheck] / LLM code analysis / runtime monitoring / scaling)。
+% 本草稿补 3 段数据管理视角,**AUGMENT** §Related Work(不替换现有段)。
+% 新增 \cite key(需在 main.bib 手加,勿臆造元数据 —— 记 INTEGRATION_MAP §E):
+%   - fan2008cfd       (Fan et al., Conditional Functional Dependencies, PODS'08 / TODS)
+%   - chu2013discovering (Chu et al., Discovering Denial Constraints, PVLDB'13)
+%   - qure             (QURE, Microsoft Research; LLM-generated SQL 验证等价于 UDF)
+%   - (observability/trace 数据系统可引一篇,如 Honeycomb/CockroachDB telemetry 或综述;暂留 TODO)
+% 既有可复用:ernst2007daikon(Daikon)、jiang2025traincheck(TrainCheck)。
+% ============================================================
+
+\paragraph{Data-quality constraints and dependency discovery.}
+A long line of data-management research expresses correctness as constraints over relations and discovers or repairs violations automatically. Conditional functional dependencies~\cite{fan2008cfd} extend functional dependencies with value conditions to capture context-dependent data-quality rules, and denial constraints~\cite{chu2013discovering} generalize these to arbitrary predicate combinations that no tuple (or tuple pair) may satisfy. \textsc{TrainAudit} adopts this relational-constraint view but targets a setting these formalisms do not reach: a constraint over distributed-training traces is valid only under the \emph{active parallel topology and training phase}. A cross-rank replication equality, for instance, must hold for data-parallel replicas yet must \emph{not} be applied to tensor-parallel shards of the same parameter---a distinction no value condition or tuple-pair predicate can express, because it depends on runtime configuration metadata rather than on the data values themselves. Our topology guard $\pi_{\text{topo}}$ and phase guard $\pi_{\text{precond}}$ are exactly the missing dimension, lifting data-quality constraints from static tables to the configuration-dependent relations of a running training job.
+
+\paragraph{Trace and observability data management.}
+Treating execution and telemetry traces as queryable data is now standard in observability and runtime-analytics systems, which ingest event streams into columnar or time-series stores and answer post-hoc analytical queries. \textsc{TrainAudit} follows this storage discipline---each rank streams its runtime state into a single append-only relation \texttt{coredump(step, stage, data\,JSON)}, over which logical relations are views and every check compiles to SQL---but shifts the contribution from \emph{storing} traces to \emph{enforcing semantic contracts} over them: the verified constraints are the artifact, and the trace store exists to make them evaluable in-line at single-digit-percent step overhead (\S\ref{subsec:efficiency}). Where observability systems surface what happened for a human to interpret, \textsc{TrainAudit} decides, at the query level, whether what happened is correct.
+
+\paragraph{Verified LLM-assisted data systems.}
+LLMs increasingly synthesize artifacts inside data systems, but their output is untrusted and must be validated before use. QURE~\cite{qure} is representative: it has an LLM rewrite a user-defined function into SQL and then \emph{proves the rewrite equivalent} to the original UDF before inlining it into the query optimizer, so that an unreliable generator can still yield a sound optimization. \textsc{TrainAudit} shares this generate-then-validate discipline but its correctness target is different, because there is no reference program to be equivalent to. We do not prove program equivalence; instead, \textsc{TrainAudit} validates whether an LLM-generated candidate is a \emph{sound guarded constraint} over training traces: it must be grounded in framework evidence, survive topology and phase counterexamples, and remain silent on clean traces before it can enter online checking. This reframes the trustworthiness question from ``is the generated query equivalent to a known function'' to ``is the generated constraint a faithful, non-spurious encoding of a semantic contract the training system must satisfy''---the verification funnel of \S\ref{subsec:verified-mining-ablation} is our answer, and its 93\% candidate rejection rate quantifies how much unverified LLM output it filters.
+
+% ------------------------------------------------------------
+% 衔接: AUGMENT §Related Work —— 插在现有 "Invariant checking and program verification" 段之后、
+%   "LLM-based code analysis" 段之前最自然(数据管理 3 段成组)。
+% 与既有不重复: 现有 Daikon 在 invariant-checking 段讲"动态不变量检测";本处 Daikon 不再重述,
+%   改从 data-quality-constraint 谱系切入(CFD/DC),并把 QURE 对照独立成段(reference 强调的核心)。
+% INTEGRATION_MAP: 在 §A 加第 8 行(related work → §Related Work AUGMENT),§E 补 bib keys。
+% ------------------------------------------------------------

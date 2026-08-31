@@ -1,0 +1,18 @@
+case_id,arm_a_detected,arm_b_detected,fixed_side_fp,status,note
+B1,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+B3,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+B8,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+B11,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+B12,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+M-020,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+O-005,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+O-NEW-9,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+OC-NEW-2,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+D-NEW-9,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+O-NEW-5,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+O-NEW-3,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+M-010,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+D-029,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+O-040,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+M-NEW-33,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/
+OC-NEW-22,NOT_RUN,NOT_RUN,NOT_RUN,BLOCKED,requires GPU replay; eval-gpu-0 / beijing-olmo-gpu unresolvable from this cluster and no cached buggy/fixed duckdb trace exists under benchmark/bugs/

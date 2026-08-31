@@ -1,0 +1,111 @@
+title: Silent semantic violation from inconsistent micro_step_id sequencing
+diagram_type: workflow
+audience: paper
+direction: top_to_bottom
+nodes:
+  - id: init_row
+    text: Initialization path
+    type: process
+    group: panel_a
+    priority: high
+  - id: reset_row
+    text: Reset path
+    type: process
+    group: panel_a
+    priority: high
+  - id: mismatch
+    text: expected ID = 1, observed ID = 0
+    type: note
+    group: panel_a
+    priority: high
+  - id: step1_state
+    text: step 1 state
+    type: process
+    group: panel_b
+    priority: high
+  - id: step1_branch
+    text: id == 1 ?
+    type: decision
+    group: panel_b
+    priority: high
+  - id: step1_action
+    text: accumulate G1
+    type: result
+    group: panel_b
+    priority: high
+  - id: step2_state
+    text: step 2 state
+    type: process
+    group: panel_b
+    priority: high
+  - id: step2_branch
+    text: id == 1 ?
+    type: decision
+    group: panel_b
+    priority: high
+  - id: step2_bug
+    text: copy G2 only
+    type: result
+    group: panel_b
+    priority: high
+  - id: step2_expected
+    text: accumulate G2 into G1 + G2
+    type: note
+    group: panel_b
+    priority: medium
+edges:
+  - from: init_row
+    to: mismatch
+    label: compare
+    style: solid
+  - from: reset_row
+    to: mismatch
+    label: compare
+    style: solid
+  - from: step1_state
+    to: step1_branch
+    label: evaluate
+    style: solid
+  - from: step1_branch
+    to: step1_action
+    label: False
+    style: solid
+  - from: step1_action
+    to: step2_state
+    label: next micro-step
+    style: solid
+  - from: step2_state
+    to: step2_branch
+    label: evaluate
+    style: solid
+  - from: step2_branch
+    to: step2_bug
+    label: True
+    style: solid
+  - from: step2_branch
+    to: step2_expected
+    label: expected path
+    style: dashed
+groups:
+  - id: panel_a
+    name: Counter sequence
+    purpose: Show the off-by-one mismatch after reset
+  - id: panel_b
+    name: Control-flow consequence
+    purpose: Show why the branch flips and loses G1
+annotations:
+  - target: mismatch
+    text: first post-reset state is inconsistent
+  - target: step2_bug
+    text: overwrite discards prior accumulation
+style:
+  theme: clean_scientific
+  palette: blue_red_gray
+  line_style: orthogonal
+  emphasis_rule: highlight only the buggy branch in red
+review_checklist:
+  - Panel A should show the mismatch in one glance
+  - Panel B should read as a causal chain, not a pile of boxes
+  - The expected path should be secondary and dashed
+  - Red should only mark the bug, not normal control flow
+  - Node text should remain short enough for a single-column figure

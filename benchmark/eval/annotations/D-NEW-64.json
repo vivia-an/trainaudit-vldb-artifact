@@ -1,0 +1,14 @@
+{
+  "bug_id": "D-NEW-64",
+  "framework": "deepspeed",
+  "category": "gradient_sync",
+  "parallel_dimension": "TP",
+  "invariant_type": "implementation_equivalence",
+  "required_trace_fields": [],
+  "check_stage": "before_optimizer",
+  "minimum_sufficient_layer": "none",
+  "pattern_id": "none",
+  "tier_field": "exceeds_tier6",
+  "rationale": "FP16_Optimizer.get_grad_norm wrongly skips tp_rank>0 slices for genuine TP-sliced params. Reported total_norm is finite, valid-looking, ~1/sqrt(tp_size) of truth. Per anti-example 11, detection requires running a TP=1 reference with same seed/batch and comparing grad-norm — implementation_equivalence with no observable runtime field that reveals the mistake on a single buggy run. Therefore source-only: pattern=none, layer=none, tier=exceeds_tier6. category=gradient_sync because root cause is reduction-mask logic, not communication-group misconfig (anti-example 3).",
+  "borderline_flags": ["SOURCE_ONLY_DETECTION", "CATEGORY_AMBIGUOUS_gradient_sync_numerical"]
+}

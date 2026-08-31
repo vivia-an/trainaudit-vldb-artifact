@@ -1,0 +1,6 @@
+duckdb>=1.0.0
+pyyaml>=6.0
+pydantic>=2.0
+# LLM mining (optional; only needed for run_miner.py)
+autogen>=0.9.9
+pyautogen>=0.10.0

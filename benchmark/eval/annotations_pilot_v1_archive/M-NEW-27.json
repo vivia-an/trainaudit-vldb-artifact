@@ -1,0 +1,15 @@
+{
+  "bug_id": "M-NEW-27",
+  "framework": "megatron-lm",
+  "category": "moe",
+  "parallel_dimension": "none",
+  "invariant_type": "value_range",
+  "required_trace_fields": ["module_class", "config_moe_router_topk", "config_use_pre_softmax"],
+  "check_stage": "build",
+  "pi_schema_applicable": false,
+  "pi_topo_applicable": false,
+  "pi_precond_applicable": true,
+  "pattern_id": "P8",
+  "tier_field": "Tier 6",
+  "rationale": "When topk==1 with post-softmax, softmax of length-1 vector is constant 1.0 with zero gradient. Detectable at build by asserting NOT(topk==1 AND use_pre_softmax==False) on TopKRouter (precond). Single-GPU MoE reproduces, so parallel_dim=none (anti-example 6). Borderline numerical vs moe: chose moe because the bug is specific to MoE router topk algorithm. P8 over P5 because static config check is cheaper than runtime grad-norm probe."
+}

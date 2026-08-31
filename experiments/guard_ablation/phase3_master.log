@@ -1,0 +1,134 @@
+
+====================================
+Phase 3 plan: 108 cells, batch=12
+====================================
+  [launch] lib_full × cksum_before_backward_bitwise_level_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × cksum_before_backward_bitwise_level_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × cksum_before_backward_bitwise_level_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × distribution_shape_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × distribution_shape_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × distribution_shape_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × dtype_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × dtype_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × dtype_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × grad_existence_test_db (DP=2 TP=1 PP=1)
+  [batch] waiting for 12 cells to drain (12/108 launched)...
+  [launch] lib_no_topo × grad_existence_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × grad_existence_test_db (DP=2 TP=1 PP=1)
+  [batch] drained at 22:38:15
+  [launch] lib_full × higher_order_stats_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × higher_order_stats_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × higher_order_stats_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × lr_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × lr_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × lr_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × main_grad_after_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × main_grad_after_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × main_grad_after_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × main_grad_test_db (DP=2 TP=1 PP=1)
+  [batch] waiting for 12 cells to drain (24/108 launched)...
+  [launch] lib_no_topo × main_grad_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × main_grad_test_db (DP=2 TP=1 PP=1)
+  [batch] drained at 22:38:15
+  [launch] lib_full × optim_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × optim_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × optim_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × optim_state_after_step_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × optim_state_after_step_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × optim_state_after_step_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × optim_state_before_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × optim_state_before_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × optim_state_before_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × optim_state_before_optim_step_test_db (DP=2 TP=1 PP=1)
+  [batch] waiting for 12 cells to drain (36/108 launched)...
+  [launch] lib_no_topo × optim_state_before_optim_step_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × optim_state_before_optim_step_test_db (DP=2 TP=1 PP=1)
+  [batch] drained at 23:04:16
+  [launch] lib_full × optimizer_state_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × optimizer_state_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × optimizer_state_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × param_bitwise_after_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × param_bitwise_after_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × param_bitwise_after_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × param_bitwise_before_optim_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × param_bitwise_before_optim_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × param_bitwise_before_optim_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × quantile_test_db (DP=2 TP=1 PP=1)
+  [batch] waiting for 12 cells to drain (48/108 launched)...
+  [launch] lib_no_topo × quantile_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × quantile_test_db (DP=2 TP=1 PP=1)
+  [batch] drained at 23:29:47
+  [launch] lib_full × requires_grad_after_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × requires_grad_after_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × requires_grad_after_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × requires_grad_before_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × requires_grad_before_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × requires_grad_before_backward_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × requires_grad_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × requires_grad_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × requires_grad_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × shape_test_db (DP=2 TP=1 PP=1)
+  [batch] waiting for 12 cells to drain (60/108 launched)...
+  [launch] lib_no_topo × shape_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × shape_test_db (DP=2 TP=1 PP=1)
+  [batch] drained at 23:53:18
+  [launch] lib_full × sharded_same_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_topo × sharded_same_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_no_precond × sharded_same_test_db (DP=2 TP=1 PP=1)
+  [launch] lib_full × tp_attn_proj_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_attn_proj_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_attn_proj_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_full × tp_embedding_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_embedding_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_embedding_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_full × tp_grad_boundary_jump_test_db (DP=1 TP=2 PP=1)
+  [batch] waiting for 12 cells to drain (72/108 launched)...
+  [launch] lib_no_topo × tp_grad_boundary_jump_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_grad_boundary_jump_test_db (DP=1 TP=2 PP=1)
+  [batch] drained at 00:17:18
+  [launch] lib_full × tp_grad_distribution_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_grad_distribution_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_grad_distribution_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_full × tp_grad_nan_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_grad_nan_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_grad_nan_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_full × tp_grad_same_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_grad_same_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_grad_same_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_full × tp_layernorm_bias_test_db (DP=1 TP=2 PP=1)
+  [batch] waiting for 12 cells to drain (84/108 launched)...
+  [launch] lib_no_topo × tp_layernorm_bias_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_layernorm_bias_test_db (DP=1 TP=2 PP=1)
+  [batch] drained at 00:34:19
+  [launch] lib_full × tp_layernorm_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_layernorm_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_layernorm_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_full × tp_main_grad_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_main_grad_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_main_grad_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_full × tp_mlp_fc1_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_mlp_fc1_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_mlp_fc1_test_db (DP=1 TP=2 PP=1)
+  [batch] waiting for 12 cells to drain (96/108 launched)...
+  [launch] lib_full × tp_optim_state_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_optim_state_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_optim_state_test_db (DP=1 TP=2 PP=1)
+  [batch] drained at 00:51:50
+  [launch] lib_full × tp_qkv_boundary_jump_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_qkv_boundary_jump_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_qkv_boundary_jump_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_full × tp_qkv_distribution_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_qkv_distribution_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_qkv_distribution_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_full × tp_requires_grad_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_requires_grad_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_full × tp_shared_experts_same_test_db (DP=1 TP=2 PP=1)
+  [batch] waiting for 12 cells to drain (108/108 launched)...
+  [launch] lib_no_precond × tp_requires_grad_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_topo × tp_shared_experts_same_test_db (DP=1 TP=2 PP=1)
+  [launch] lib_no_precond × tp_shared_experts_same_test_db (DP=1 TP=2 PP=1)
+  [batch] drained at 01:08:50
+
+====================================
+Phase 3 done: 108 cells launched.
+Aggregate with: python3 scripts/ablation/aggregate_fp.py --reports-dir logs/ablation_d1 --library-json config/lib_full.json --csv-out logs/ablation_d1/d1_results.csv

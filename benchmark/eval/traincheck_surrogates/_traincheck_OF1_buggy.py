@@ -1,0 +1,89 @@
+from traincheck import annotate_stage
+import os
+os.environ['ML_DAIKON_OUTPUT_DIR'] = "/tmp/tc_OF1/trace_buggy"
+
+from traincheck.utils import register_custom_excepthook
+if os.environ.get("ML_DAIKON_DEBUG") == "1":
+    print("ML_DAIKON_DEBUG is set to 1, registering custom excepthook")
+    register_custom_excepthook(True)
+
+import traincheck.config.config as general_config
+general_config.INSTR_DESCRIPTORS = False
+general_config.MODEL_TRACKER_STYLE = 'proxy'
+import traincheck.proxy_wrapper.proxy_config as proxy_config
+proxy_config.__dict__.update({'proxy_log_dir': '/tmp/tc_OF1/trace_buggy/proxy_log.json'})
+
+from traincheck.proxy_wrapper.proxy import Proxy
+
+import glob
+import importlib
+from traincheck.proxy_wrapper.proxy_config import auto_observer_config
+spec = importlib.util.find_spec('traincheck')
+if spec and spec.origin:
+    traincheck_folder = os.path.dirname(spec.origin)
+    print("traincheck folder: ", traincheck_folder)
+else:
+    raise Exception("traincheck is not installed properly")
+print("auto observer enabled with observing depth: ", auto_observer_config["enable_auto_observer_depth"])
+enable_auto_observer_depth = auto_observer_config["enable_auto_observer_depth"]
+neglect_hidden_func = auto_observer_config["neglect_hidden_func"]
+neglect_hidden_module = auto_observer_config["neglect_hidden_module"]
+observe_then_unproxy = auto_observer_config["observe_then_unproxy"]
+observe_up_to_depth = auto_observer_config["observe_up_to_depth"]
+if observe_up_to_depth:
+    print("observe up to the depth of the function call")
+else:
+    print("observe only the function call at the depth")
+from traincheck.static_analyzer.graph_generator.call_graph_parser import add_observer_given_call_graph
+
+log_files = glob.glob(
+    os.path.join(traincheck_folder, "static_analyzer", "func_level", "*.log")
+)
+print("log_files: ", log_files)
+for log_file in log_files:
+    add_observer_given_call_graph(
+        log_file,
+        depth=enable_auto_observer_depth,
+        observe_up_to_depth=observe_up_to_depth,
+        neglect_hidden_func=neglect_hidden_func,
+        neglect_hidden_module=neglect_hidden_module,
+        observe_then_unproxy=observe_then_unproxy,
+    )
+'OF1 surrogate (buggy): CPU-offload optimizer state restored at wrong dtype.\n\nBlueprint: D-029 / DeepSpeed ZeRO + CPU offload family. The grad-norm tensor is\noffloaded to CPU for memory savings, then restored to GPU before the norm computation.\nThe buggy code restores it as fp16 (half) instead of preserving the original fp32,\nintroducing a sub-percent drift in the clip-grad threshold and hence in the optimizer\nupdate magnitude.\n\nIn our CPU-only surrogate, we model "offload" by serializing tensor through a\nhalf-precision round-trip in the buggy path; fixed path preserves dtype.\n'
+import torch
+from traincheck.instrumentor.tracer import Instrumentor
+Instrumentor(torch, scan_proxy_in_args=True, use_full_instr=False, funcs_to_instr=None, API_dump_stack_trace=False).instrument()
+import torch.nn as nn
+from traincheck.instrumentor.tracer import Instrumentor
+Instrumentor(nn, scan_proxy_in_args=True, use_full_instr=False, funcs_to_instr=None, API_dump_stack_trace=False).instrument()
+
+def fake_offload_then_restore(t, restore_dtype):
+    """Simulate offload to CPU then bring-back, with a configurable restore dtype."""
+    cpu_copy = t.detach().clone()
+    return cpu_copy.to(restore_dtype).to(t.dtype)
+
+def main():
+    annotate_stage('init')
+    torch.manual_seed(0)
+    model = nn.Sequential(nn.Linear(16, 32), nn.Linear(32, 8))
+    model = Proxy(model, recurse=True, logdir=proxy_config.proxy_log_dir, var_name='model')
+    opt = torch.optim.AdamW(model.parameters(), lr=0.001)
+    grad_norms = []
+    for step in range(20):
+        opt.zero_grad()
+        x = torch.randn(4, 16)
+        y = model(x).pow(2).sum()
+        y.backward()
+        gnorm = torch.norm(torch.cat([p.grad.flatten() for p in model.parameters()]))
+        gnorm_after_offload = fake_offload_then_restore(gnorm, restore_dtype=torch.float16)
+        grad_norms.append(gnorm_after_offload.item())
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=gnorm_after_offload.item() * 0.99)
+        annotate_stage('training')
+        opt.step()
+    final_param = next(model.parameters()).norm().item()
+    avg_gnorm = sum(grad_norms) / len(grad_norms)
+    print(f'[OF1_buggy] avg grad_norm seen by clip = {avg_gnorm:.6f}')
+    print(f'[OF1_buggy] final param norm = {final_param:.6f}')
+    return (avg_gnorm, final_param)
+if __name__ == '__main__':
+    main()

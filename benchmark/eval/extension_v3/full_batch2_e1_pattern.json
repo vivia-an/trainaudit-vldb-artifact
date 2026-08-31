@@ -1,0 +1,459 @@
+{
+  "metadata": {
+    "experiment": "E1_pattern",
+    "batch": 2,
+    "n_bugs": 90
+  },
+  "per_bug": {
+    "O-034": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "Recomputation activation dtype is fp32 instead of bf16 — non-cast hook output dtype must match input dtype. Classic P1 dtype-preservation. Not P3: divergence is per-rank dtype mismatch, not cross-rank value disagreement."
+    },
+    "O-035": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P3"],
+      "rationale": "param_init_fn + sync_module_states with shape change after flatten/shard yields different RNG sequences. Could surface as P3 cross-rank divergence if sync_module_states fails, but symptom is 'model not learning' not specifically rank divergence; under 60% confidence."
+    },
+    "O-036": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Meta-device init vs direct GPU init produces different numerical behavior despite identical-looking buffers. Source-level init-path bug; no runtime P1-P8 invariant fires (dtype OK, shapes OK, ranks consistent across paths)."
+    },
+    "O-037": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "FSDP2 block-level wrapping causes gradient precision degradation reproducible on single GPU. Source-level numerical correctness issue without specific runtime invariant in catalog (dtype unchanged, no cross-rank check, no scaling factor)."
+    },
+    "O-038": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "Grad norm scaler divides by world_size instead of dp_size, so 1/N factor uses wrong N — missing/incorrect scaling factor when aggregating. P2 Scaling Consistency. Not P3: per-rank value error from wrong scale, not cross-rank divergence."
+    },
+    "O-039": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Trainer redundantly saves final checkpoint after restart, possibly overwriting good one. Filesystem state bug, not runtime tensor/topology invariant. P5 covers state restoration not save-side overwrite; P4 is per-step call count not boundary save logic."
+    },
+    "B1": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Router torch.nn.Linear init outside RNG tracker fork — replicated weights diverge across TP ranks. Few-shot Example 1: P3 Cross-Rank Replication."
+    },
+    "B10": {
+      "patterns_hit": ["P8"],
+      "patterns_uncertain": [],
+      "rationale": "micro_step_id initialised at 0 instead of -1; first global step ids start at 1, sequence inconsistent between init and reset. Few-shot Example 3: P8 Counter Consistency."
+    },
+    "B11": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "torch.max vs torch.min in clip_coef: gradients above threshold are not clipped. Runtime symptom is grad norm > max_norm post-clip, but none of P1-P8 encode the clip post-condition; P2 scaling is about cross-rank N-factor not within-rank thresholding."
+    },
+    "B12": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "AdamWConfig.build forgets to set initial_lr on param_groups; LRScheduler restart silently uses wrong peak. Source-level structural bug at construction; not P5 (no train→eval flip), not P6 (model structure, not optimizer dict)."
+    },
+    "B13": {
+      "patterns_hit": ["P7"],
+      "patterns_uncertain": [],
+      "rationale": "OLMoSequentialBlock attn_norm overwrites residual stream — residual uses normed x rather than original input. Direct P7 Residual Stream Integrity violation."
+    },
+    "B14": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "z_loss masked-mean formula divides by mean of mask instead of multiplying-then-mean. Source-level scalar formula error; no P1-P8 invariant (no cross-rank, no scaling-by-N, no dtype, no counter)."
+    },
+    "B15": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P2"],
+      "rationale": "z_loss divided by num_micro_batches instead of batch_size_in_tokens. Could be cast as P2 wrong scaling factor, but P2 specifically targets cross-rank N (1/N or N) — here divisor is per-rank token count. Below 60% confidence on P2."
+    },
+    "B2": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "LinearWithFrozenWeight backward forgets all-reduce of grad_input across TP — each rank holds its column-shard only. Replicated grad_input diverges across TP ranks → P3 Cross-Rank Replication."
+    },
+    "B3": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "communication_data_type returns fp32 when bf16-only enabled, so allreduce silently runs in fp32. Non-cast collective input/output dtype mismatch with model dtype contract → P1 dtype preservation."
+    },
+    "B4": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "get_data_parallel_src_rank wrong formula returns wrong DP-source rank under PP>1. Subsequent broadcasts seed from wrong rank, so DP-replicated state diverges across DP ranks → P3."
+    },
+    "B5": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "expert_grads not divided by dp_world_size after sync — missing 1/N factor across DP ranks. Direct P2 Scaling Consistency."
+    },
+    "B6": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "param_sync_func gate uses wrong upper bound (num_microbatches vs total_num_microbatches) so it is invoked too few times per step. Detection method explicitly counts invocations → P4 Invocation Frequency."
+    },
+    "B7": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "FlashSelfAttention.dropout_p mutated to 0 in eval branch and never restored. Train-relevant attribute not restored after train→eval→train. Direct P5 State Restoration."
+    },
+    "B8": {
+      "patterns_hit": ["P6"],
+      "patterns_uncertain": [],
+      "rationale": "EP groups created with num_experts instead of ep_size — built parallel topology size mismatches config. Build-time structural mismatch → P6. Not P3: bug is at init topology, not runtime weight value."
+    },
+    "B9": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "single_all_to_all branch gate routes to uneven path on second all2all when divisibility fails. Algorithmic branching bug; output is wrong but dtype/shape/cross-rank values pass; no specific P1-P8 invariant catches branch-misroute."
+    },
+    "D-NEW-1": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "TopKGate applies topk to logits not post-softmax gates. Few-shot Example 4: source-only algorithmic bug; softmax monotonicity may match indices, no runtime pattern fires."
+    },
+    "D-NEW-12": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Config-key typo silently ignores user's seq_parallel_communication_data_type. Source/config-string bug at parse time; could be a P6-adjacent config invariant but P6 is about model structure (layers/dims), not config-key spelling."
+    },
+    "D-NEW-13": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P4"],
+      "rationale": "copy_grads_in_partition only accumulates when ga_steps>1 — missing path for ga_steps==1 with multiple micro_steps. Could surface as P4 (CPU buffer update missed on certain micro-steps), but rule is conditional, not 'exactly K calls'. Below 60% confidence."
+    },
+    "D-NEW-14": {
+      "patterns_hit": ["P6"],
+      "patterns_uncertain": [],
+      "rationale": "get_lr returns scalar/[0.0] instead of per-param-group list — structural mismatch between LR list length and number of optimizer param groups. P6 Structural Integrity (config-derived structural shape)."
+    },
+    "D-NEW-15": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "BF16+ZeRO0 path hits `pass` so zero_grad is skipped — zero_grad called 0 times per step instead of K=1. Direct P4 Invocation Frequency miss."
+    },
+    "D-NEW-16": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Stream sync uses default_stream instead of current_stream causing races. Identical to D-021 sanity case: source-only stream-sync bug, NaN/garbage non-deterministic, no P1-P8 invariant."
+    },
+    "D-NEW-17": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P2"],
+      "rationale": "Loss double-scaled in backward — scale_if_loss applied to gas_scaled_loss. Could be P2 if double-scale is exactly N or 1/N factor, but root cause text is empty so confidence below 60%."
+    },
+    "D-NEW-18": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "ZeRO-1/2 CPU-offload gradient loss with multiple backward() per step. Root cause text empty; based on title, gradients lost across multiple backward calls — likely a counter/reset issue but no concrete signal to confidently bind."
+    },
+    "D-NEW-19": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P1"],
+      "rationale": "extra_large_param uses param.dtype instead of comm_dtype, gradient silently dropped. Could be P1 dtype-preservation if reduction-input dtype mismatch is observable, but root cause text is empty; below 60% confidence."
+    },
+    "D-NEW-2": {
+      "patterns_hit": ["P6"],
+      "patterns_uncertain": [],
+      "rationale": "WarmupCosineLR returns scalar instead of per-group LR list — same structural shape mismatch as D-NEW-14. P6 Structural Integrity."
+    },
+    "D-NEW-20": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "BF16_Optimizer path incorrectly selected for bf16+fp32_grad_accum without ZeRO. Source-level dispatch routing bug; downstream effects depend on subsequent code; no direct P1-P8 invariant binds tightly."
+    },
+    "D-NEW-21": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "bf16-without-ZeRO incorrectly treated as having ZeRO optimizer state in checkpoint. Checkpoint metadata mis-classification; resume may load wrong shape but bug-text empty for invariant binding."
+    },
+    "D-NEW-22": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "ZeRO 1/2 elastic ckpt alignment ignores nccl_start_alignment_factor — optimizer state slices misaligned and silently restored to wrong parameters. P5 covers ckpt save/load round-trip equality of optimizer state."
+    },
+    "D-NEW-23": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "allreduce_bucket forces rank=None, never takes the dist.reduce single-dest path. Detection method is function_call_counting: dist.reduce expected K times, observed 0; dist.all_reduce called extra. Direct P4 Invocation Frequency."
+    },
+    "D-NEW-24": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Off-by-one in IPG bucket `<` vs `<=` — last param's grad never copied/reduced, owning rank receives stale/zero gradient. Replicated reduced-grad differs from local computation across ranks → P3."
+    },
+    "D-NEW-25": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "load_module_only with bf16 silently skips refresh_fp32_params; fp32 master weights not initialized from loaded bf16 module. Checkpoint round-trip state-restoration violation → P5."
+    },
+    "D-NEW-26": {
+      "patterns_hit": ["P6"],
+      "patterns_uncertain": [],
+      "rationale": "Copy-paste typo: quantized_nontrainable_weights config value assigned to wrong attribute (quantized_weights). Detection is config_invariant — built model structure (which params are quantized) mismatches config. P6 Structural Integrity."
+    },
+    "D-NEW-27": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "Comparison inverted: cast happens only when no cast is needed, so reduce_scatter runs on wrong dtype. Non-cast collective input dtype mismatches expected — direct P1 dtype-preservation (dtype_invariant)."
+    },
+    "D-NEW-28": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "extra_large_param reduction takes raw param.grad instead of get_gradient_for_reduction — wrong tensor/dtype object enters reduction. Detection labelled dtype_invariant: P1 dtype/object identity violation."
+    },
+    "D-NEW-29": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Outer-loop partition_id used across MoE param groups — wrong rank's slice in bit16_partitions written. Detection method is cross_rank_equality: P3 Cross-Rank Replication / partition-correctness."
+    },
+    "D-NEW-3": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Frozen params included in optimizer groups. Structural-ish but P6 is model-shape; this is optimizer-list contents. No bit-level cross-rank divergence (all ranks make same wrong inclusion); source-level pre-condition violation."
+    },
+    "D-NEW-30": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Outer-scope partition_id used across multi-group ZeRO2+CPU-offload — every group except first receives wrong rank's partition. Detection: cross_rank_equality → P3."
+    },
+    "D-NEW-31": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "param_to_partition_ids built from non-reordered group while reduction uses round_robin order — partition owner mismatch causes some grads attributed to wrong owner, never appear on intended rank. P3 Cross-Rank Replication of grad partitions."
+    },
+    "D-NEW-32": {
+      "patterns_hit": ["P6"],
+      "patterns_uncertain": [],
+      "rationale": "partition_balanced returns degenerate boundary list, last PP stage has zero layers — build-time structural mismatch between PP world size and parts-per-stage. P6 Structural Integrity."
+    },
+    "D-NEW-33": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "MiCS save_non_zero_checkpoint=True on every rank instead of exactly S ranks — checkpoint write function called too many times. Detection method explicitly function_call_counting → P4 Invocation Frequency."
+    },
+    "D-NEW-34": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "all_gather_coalesced builds buffer assuming single ds_tensor dtype; mixed-dtype param groups silently aliased — gathered param.dtype mismatches ds_tensor.dtype. Direct dtype_invariant → P1."
+    },
+    "D-NEW-35": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "Train and eval coordinators share InflightParamRegistry — stale handles cross train↔eval mode switch yielding stale param values. Train→eval→train state-isolation violation → P5 State Restoration."
+    },
+    "D-NEW-36": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P2"],
+      "rationale": "_global_grad_norm unscaled with new loss_scale instead of prev_scale used at backward. Could cast as P2 wrong scaling factor, but P2 targets cross-rank 1/N or N; this is a temporal scale mismatch within rank. Below 60% confidence."
+    },
+    "D-NEW-38": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Sparse-grad branch wraps param.grad.data into SparseTensor without writing back; updated values stored on temporary, sparse grads silently dropped. Source-level reference-rebinding bug; runtime symptom is grad==0 but P3 won't fire if all ranks see same zeroing."
+    },
+    "D-NEW-39": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "PP _aggregate_total_loss broadcast: sender uses bf16, non-last stages init fp32 receive buffer — broadcast writes bf16 bytes into fp32 tensor. Direct dtype_invariant → P1."
+    },
+    "D-NEW-40": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "zero_wrapper .to(target_fp_dtype) returns non-Parameter; model still references original Parameter with wrong dtype. Detection: dtype_invariant — model.param.dtype != target_fp_dtype after init wrap. P1."
+    },
+    "D-NEW-42": {
+      "patterns_hit": ["P6"],
+      "patterns_uncertain": [],
+      "rationale": "ZeRO3 ckpt iterates only trainable params, frozen params not saved at all. After load, reconstructed checkpoint missing tensors that exist in module.named_parameters(). Structural mismatch → P6 (or arguably P5 round-trip; P6 is closer because saved-set differs from model-set)."
+    },
+    "D-NEW-43": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "Frozen params included in fp16 partitions and Adam state — silently un-frozen, p.data changes across optimizer.step. Could be P5-adjacent (frozen-state preservation invariant) but P5 is about train↔eval; closer to source-only inclusion bug. No P1-P8 directly fits."
+    },
+    "D-NEW-44": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "MoE+TP _save_moe_checkpoint short-circuits on exp_dp_rank!=0, only one mp_rank file written instead of tp_world_size files. Detection: function_call_counting; expected K=tp_size writes, observed 1 → P4 Invocation Frequency."
+    },
+    "D-NEW-45": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Closure late-binds stale group index `i`; all backward hooks fire with last value, gradients routed to wrong reduction bucket → owning rank's reduced grad mismatches expected. Cross-rank/owner replication violation → P3."
+    },
+    "D-NEW-46": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P8"],
+      "rationale": "ZeRO eagerly calls inner optimizer.step() at init, incrementing Adam state[step] before any real update. Could be P8 counter-consistency between init and reset (step counter starts at 1 not 0), but P8 examples target micro_step_id; below 60% confidence."
+    },
+    "D-NEW-47": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "ZeRO+bf16 auto-selects fp32 grad_accum_dtype while reduction runs bf16; accumulation buffer dtype mismatches model dtype. Detection: config_invariant on dtype matching → P1 dtype preservation."
+    },
+    "D-NEW-48": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "is_gradient_accumulation_boundary flag never propagated to ZeRO; reduce-grad fires on every micro-batch instead of once per GAS. Detection: function_call_counting (1 True per GAS, GAS-1 Falses) → P4 Invocation Frequency."
+    },
+    "D-NEW-49": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "DeepSpeedDataLoader.len returns sample count not batch count; downstream LR scheduler total_num_steps drift. Source-level off-by-batch_size issue without runtime-rank invariant; not P6 (no model-structure mismatch)."
+    },
+    "D-NEW-50": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "BF16_Optimizer always allocates fp32_groups_gradients_flat as fp32 even when grad_acc_dtype is bf16 — buffer dtype mismatches configured dtype. Direct dtype_invariant → P1."
+    },
+    "D-NEW-51": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "extra_large_param_to_reduce assigned even when contiguous_gradients=False; stale ref poisons next backward. Source-level dead-store + cross-iteration leak; symptom is wrong reduction next step but no clean P1-P8 binding (not strictly counter or replication)."
+    },
+    "D-NEW-53": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "AutoEP per-rank loss not multiplied by ep_size before backward — expert grads scaled by 1/ep_size. Missing N scaling factor across EP ranks → direct P2 Scaling Consistency."
+    },
+    "D-NEW-54": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P5"],
+      "rationale": "MoE ckpt records dp_world_size instead of seq_dp_world_size; resume re-shards experts with wrong replication factor. P5 round-trip applies but the cause is build-side metadata not state-restoration; below 60% confidence."
+    },
+    "D-NEW-55": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "Expert grads pre-divided by edp_world_size then bucket-final divide by dp_size skipped — net divisor is dp/edp not dp. Missing/extra cross-rank scaling factor → P2 Scaling Consistency."
+    },
+    "D-NEW-56": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "topkgating drop_tokens=False forgets to recompute locations after capacity update; tokens scattered to wrong slots. Algorithmic bug; cumsum-equality invariant is bug-specific, not in P1-P8 catalog."
+    },
+    "D-NEW-57": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "ds_secondary_tensor not refreshed after ckpt resume / load_state_dict — stale cached partition poisons next allgather. State-restoration after load_checkpoint violates equality with ds_tensor → P5."
+    },
+    "D-NEW-58": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "Asymmetric dequantize<float> hard-codes output cast to __half — fp32 mantissa truncated despite fp32 output type. Non-cast template fn input/output dtype contract broken → P1 dtype preservation (output should preserve template T)."
+    },
+    "D-NEW-59": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P6"],
+      "rationale": "C++ all_to_all_quant_reduce hard-codes gpu_per_node=16; intra-node split divisor wrong for non-16-GPU nodes. Could be P6 structural mismatch (built topology vs actual world_size), but P6 targets layer/dims; below 60% confidence."
+    },
+    "D-NEW-60": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "Universal ckpt uses local_rank not global DP rank for slicing; on multi-node load, global ranks 0&4 both load slice 0 etc. Replicated load result diverges from intended per-DP-rank slice → P3 Cross-Rank Replication."
+    },
+    "D-NEW-61": {
+      "patterns_hit": ["P3"],
+      "patterns_uncertain": [],
+      "rationale": "ZeRO-1 fp16 overflow allreduce guarded by partition_gradients=True flag; ZeRO1 has it False so allreduce skipped — each rank decides overflow independently, ranks diverge on loss_scale and step decision. P3 Cross-Rank Replication."
+    },
+    "D-NEW-62": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "BF16_Optimizer.step() runs Adam on bf16 grads when grad_acc_dtype is bf16 — at the moment optimizer.step is called param_partition.grad.dtype != param_partition.dtype (fp32). Direct dtype_invariant → P1."
+    },
+    "D-NEW-63": {
+      "patterns_hit": ["P8"],
+      "patterns_uncertain": [],
+      "rationale": "CPUAdam IncrementStep non-idempotent across same-step subgroup updates; _step counter drifts so betta1_t/betta2_t differ between subgroups. Counter-consistency between init/reset path → P8."
+    },
+    "D-NEW-64": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "FP16 fused optimizer grad-norm reduces only TP-rank-0 gradients — TP-sliced params under-counted by sqrt(tp_size). Missing N-factor when aggregating across TP → P2 Scaling Consistency."
+    },
+    "D-NEW-65": {
+      "patterns_hit": ["P4"],
+      "patterns_uncertain": [],
+      "rationale": "PipelineEngine non-last-stage backward double-updates hp_grads when bfloat16_immediate_grad_update; update_hp_grads called twice per param per step instead of once. Direct P4 Invocation Frequency (K=1 expected, observed 2)."
+    },
+    "D-NEW-66": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "set_local_grad does not refresh norm_for_param_grads; CPU-offload aggregate norm reflects pre-modification gradients. Cache-staleness within rank; not cross-rank, not dtype, not counter — no P1-P8 directly fires."
+    },
+    "D-NEW-67": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "ZeRO-0 + torch.autocast(fp16) trains without GradScaler; fp16 grads underflow to zero. Source-level missing-component bug; loss_scale==1 is a config invariant but not in catalog (P2 targets cross-rank N scaling)."
+    },
+    "D-NEW-68": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "ipg double-buffer swap not synchronized — current backward writes into bucket while previous reduce still reads. Stream-sync race producing non-deterministic corruption; same class as D-021/D-NEW-16, no P1-P8 fits."
+    },
+    "D-NEW-69": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "current_stream does not wait_stream(reduction_stream) after async reduce — IPG buffer race when comm>compute. Stream-sync race; non-deterministic corruption; outside P1-P8."
+    },
+    "D-NEW-70": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "average_tensor passes whole pre-allocated ipg_buffer instead of narrow(0, 0, elements_in_ipg_bucket); tail garbage averaged in. Buffer-slice/structural bug at the call site; structural_invariant tag but not model-structure (P6); no clean P1-P8 fit."
+    },
+    "D-NEW-71": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "ZeRO-3 padding allocated with torch.empty (uninitialized); padded reduce_scatter mixes garbage into other ranks' partitions. Padding=0 invariant is bug-specific; not cross-rank-equality of intended values, not dtype, not call count."
+    },
+    "D-NEW-72": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "single_all_to_all reshape collapses batch+seq dims, QKV permuted into wrong tokens. Round-trip identity invariant is bug-specific shape-correctness; not P1-P8 (no dtype, no call count, no scaling)."
+    },
+    "D-NEW-73": {
+      "patterns_hit": ["P2"],
+      "patterns_uncertain": [],
+      "rationale": "Manual loss.backward path skips AutoEP-specific multiplication by _autoep_output_grad_scale — expert grads under-scaled by ep_size. Missing N scaling factor → P2 Scaling Consistency (parallel to D-NEW-53)."
+    },
+    "D-NEW-74": {
+      "patterns_hit": ["P5"],
+      "patterns_uncertain": [],
+      "rationale": "ZeRO-3 NVMe optimizer ckpt save copies all ranks' tensors to one shared dir without per-rank subdir; load gets arbitrary mix. Checkpoint round-trip equality of optimizer state violated → P5 State Restoration."
+    },
+    "D-NEW-75": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "CPU Adam passes params.size(0) instead of numel() — only first dim's worth of elements stepped. Algorithmic kernel-arg bug; per-element update invariant is bug-specific, not in P1-P8 (not cross-rank, not dtype, not scaling-by-N)."
+    },
+    "D-NEW-76": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "ZeRO-3 init dist.broadcast invoked on requires_grad=True param; broadcast op recorded by autograd, gradients silently corrupted. Source-level autograd-graph contamination; no clean P1-P8 invariant (not dtype, not value-replication mismatch in normal sense)."
+    },
+    "D-NEW-77": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "_partition_param_sec async copy not stream-synchronized; next allgather reads garbage. Stream-sync race, identical class to D-NEW-68/69; non-deterministic, no P1-P8 fit."
+    },
+    "D-NEW-78": {
+      "patterns_hit": ["P1"],
+      "patterns_uncertain": [],
+      "rationale": "allreduce_bucket default kwarg communication_data_type=fp16 hard-coded; bf16 grads silently downcast for reduction. Direct dtype_invariant: tensor_to_allreduce.dtype != self.communication_data_type → P1 dtype preservation."
+    },
+    "D-NEW-79": {
+      "patterns_hit": [],
+      "patterns_uncertain": ["P6"],
+      "rationale": "WarmupLR/LRRangeTest/OneCycle do not write min_lr into optimizer.param_groups[0]['lr'] at construction; first step uses peak instead of warmup_min. Could be P6 structural-style invariant on scheduler-optimizer LR alignment, but P6 examples target model-shape; below 60% confidence."
+    },
+    "D-NEW-8": {
+      "patterns_hit": [],
+      "patterns_uncertain": [],
+      "rationale": "WarmupLR ignores optimizer LR, always uses hardcoded 0.001. Source-level config-default bug; LR mismatch with optimizer is observable but not as cross-rank, dtype, scaling-N, count, or residual issue. Closest is P6 structural (LR-vs-optimizer) but not a strong fit."
+    }
+  }
+}

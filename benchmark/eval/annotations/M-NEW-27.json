@@ -1,0 +1,14 @@
+{
+  "bug_id": "M-NEW-27",
+  "framework": "megatron-lm",
+  "category": "moe",
+  "parallel_dimension": "EP",
+  "invariant_type": "value_range",
+  "required_trace_fields": ["router_logits.grad", "router_probs.grad", "moe_router_topk", "use_pre_softmax"],
+  "check_stage": "after_backward",
+  "minimum_sufficient_layer": "schema_topo_precond",
+  "pattern_id": "P5",
+  "tier_field": "Tier 1",
+  "rationale": "topk=1 then post-topk softmax over [N,1] = 1.0, so router_logits.grad is zero. Assert grad norm > 0 at routed expert. value_range (non-zero bound), not implementation_equivalence (no ref impl). P5, Tier 1. Layer=schema_topo_precond: precond is topk==1 AND use_pre_softmax=False.",
+  "borderline_flags": ["PATTERN_AMBIGUOUS_P1_P5"]
+}

@@ -1,0 +1,14 @@
+{
+  "bug_id": "OC-NEW-67",
+  "framework": "olmo-core",
+  "category": "lr_schedule",
+  "parallel_dimension": "combo",
+  "invariant_type": "implementation_equivalence",
+  "required_trace_fields": [],
+  "check_stage": "other",
+  "minimum_sufficient_layer": "none",
+  "pattern_id": "none",
+  "tier_field": "exceeds_tier6",
+  "rationale": "OLMoE3 recipe used CosWithWarmup where WSD was intended. Both schedulers produce monotonic finite lr curves; runtime trace cannot tell which scheduler class is 'correct' for a given recipe — only the recipe author knows the intent. Per anti-example 11, this is implementation_equivalence (need reference WSD run for ground truth). Per anti-example 9, source-only intent mismatch ⇒ pattern=none, layer=none, tier=exceeds_tier6. Original 'scheduler' category mapped to lr_schedule.",
+  "borderline_flags": ["SOURCE_ONLY_DETECTION", "CATEGORY_AMBIGUOUS_lr_schedule_control_flow"]
+}

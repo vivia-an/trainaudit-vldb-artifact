@@ -1,0 +1,26 @@
+id: P14
+name: Sharded State Completeness
+type: A
+rule_r: On checkpoint save/load and optimizer-group construction, the union of saved keys/shards/param-groups
+  across the writing rank-set must equal the full global param/state set implied by the active
+  parallel topology; pruning/eviction policies must preserve at-least-one valid resume point.
+scope_sigma: Save/load entry points (state_dict, save_checkpoint, load_state_dict), shard-list
+  sorting, async future-callback completion, optimizer-group filters (requires_grad, no-decay
+  regex), and ckpt retention managers.
+mode_m: A
+precond_rho: Triggered at save/load time (collected via trace SQL after the save coordinator
+  finishes); requires (ZeRO stage, TP/PP/DP/EP size, MoE expert count) recorded in ckpt metadata
+  so the expected key-set can be reconstructed.
+example_bugs:
+- D-022
+- D-043
+- D-046
+- D-NEW-3
+- D-NEW-54
+- M-042
+- M-NEW-33
+- O-008
+covers_count_estimate: 16
+related_existing_pattern: 'Generalises P3 (cross-rank replication) to the save-time writer-set:
+  P3 demands equality across replicas at runtime; P14 demands union-coverage across writers
+  at checkpoint time.'

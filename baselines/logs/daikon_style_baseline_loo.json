@@ -1,0 +1,95 @@
+{
+  "protocol": "leave-one-out over 5 clean configs; range=union envelope, const/rank_eq=intersection",
+  "folds": {
+    "dp_normal": {
+      "invariants": {
+        "constant": 200,
+        "rank_equal": 455,
+        "range": 792
+      },
+      "fires": {
+        "constant": 0,
+        "rank_equal": 0,
+        "range": 64858
+      },
+      "evals": {
+        "constant": 43500,
+        "rank_equal": 2255,
+        "range": 172260
+      }
+    },
+    "tp_normal": {
+      "invariants": {
+        "constant": 200,
+        "rank_equal": 798,
+        "range": 792
+      },
+      "fires": {
+        "constant": 0,
+        "rank_equal": 1715,
+        "range": 49537
+      },
+      "evals": {
+        "constant": 43500,
+        "rank_equal": 3970,
+        "range": 172260
+      }
+    },
+    "mixed_precision": {
+      "invariants": {
+        "constant": 200,
+        "rank_equal": 455,
+        "range": 792
+      },
+      "fires": {
+        "constant": 0,
+        "rank_equal": 0,
+        "range": 0
+      },
+      "evals": {
+        "constant": 43500,
+        "rank_equal": 2255,
+        "range": 172260
+      }
+    },
+    "dist_optimizer": {
+      "invariants": {
+        "constant": 200,
+        "rank_equal": 455,
+        "range": 792
+      },
+      "fires": {
+        "constant": 0,
+        "rank_equal": 0,
+        "range": 18
+      },
+      "evals": {
+        "constant": 43500,
+        "rank_equal": 2255,
+        "range": 172260
+      }
+    }
+  },
+  "summary": {
+    "clean_fp_per_million": 132903.8,
+    "per_rule": {
+      "constant": {
+        "fires": 0,
+        "evals": 174000,
+        "fp_per_million": 0.0
+      },
+      "rank_equal": {
+        "fires": 1715,
+        "evals": 10735,
+        "fp_per_million": 159757.8
+      },
+      "range": {
+        "fires": 114413,
+        "evals": 689040,
+        "fp_per_million": 166047.0
+      }
+    },
+    "total_fires": 116128,
+    "total_evals": 873775
+  }
+}

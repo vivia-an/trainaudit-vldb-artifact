@@ -1,0 +1,10 @@
+session,configuration,role,log,n_iters,warmup_step_ms,steady_mean_ms,steady_median_ms,steady_min_ms,steady_max_ms,vs_baseline_x
+2026-06-30,baseline (collector off),baseline,session_20260630/overhead_baseline.log,8,6383.4,731.9,704.9,681.0,820.5,1.0
+2026-06-30,"naive: SHA-256 + host stats, full dump",reported,session_20260630/overhead_collect.log,8,131820.2,191914.6,191709.5,191038.7,193493.1,262.2
+2026-06-30,+ GPU fingerprint (checksum),reported,session_20260630/overhead_fast_collect.log,8,25224.6,27491.6,27548.5,27152.0,27715.2,37.6
+2026-06-30,+ fused GPU statistics,reported,session_20260630/overhead_fast2_collect.log,8,21091.8,24995.8,24904.2,24564.8,25415.6,34.2
+2026-06-30,rejected variant: async hook worker,rejected,session_20260630/overhead_async_collect.log,8,18879.6,29842.1,35811.0,17500.4,39851.9,40.8
+2026-06-30,rejected variant: per-row batched insert,rejected,session_20260630/overhead_batch_collect.log,8,13755.8,30224.9,30696.1,26732.0,31460.1,41.3
+2026-07-12,baseline (collector off),baseline,session_20260712/overhead_baseline.log,8,7385.4,727.3,693.4,683.1,890.1,1.0
+2026-07-12,"naive: SHA-256 + host stats, full dump",replication,session_20260712/overhead_full_collect.log,8,129687.1,190446.5,190362.8,189808.6,191618.6,261.9
+2026-07-12,optimised (fingerprint + fused stats),replication,session_20260712/overhead_fast_collect.log,8,21681.4,25093.0,25069.5,24828.0,25487.9,34.5

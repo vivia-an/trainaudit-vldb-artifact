@@ -1,0 +1,47 @@
+Warning: Permanently added '[183.242.150.6]:32462' (ED25519) to the list of known hosts.
+===== TrainAudit T0 on BUGGY (2b6cf996~1) =====
+=== 1/17 violations ===
+  [ok       ] T0-attention-head-uniformity: All attention modules have uniform per-head output l2.
+  [ok       ] T0-checkpoint-preserve-rng: no checkpoint.call events (rule passive)
+  [ok       ] T0-clip-grad-bounded: all 0 clip_grad calls bounded by max_norm
+  [ok       ] T0-dtype-propagation: checked 5 non-cast layer outputs (passive at T0; full join with pre-event is a T1 feature)
+  [ok       ] T0-evaluator-eval-mode: all 5 module fwd events were consistent (no_grad ⇒ eval mode, or grad ⇒ train mode)
+  [ok       ] T0-grad-norm-finite: all 5 optim.step.pre events have finite non-zero grad norm
+  [ok       ] T0-initial-lr-present: no scheduler.init events (rule passive)
+  [ok       ] T0-build-has-modules: build snapshot has parameters and modules (1 snapshots)
+  [ok       ] T0-loss-per-token-dispersion: All loss.call events have bounded per-token dispersion.
+  [ok       ] T0-loss-reduction-mode-correct: All loss calls used reduction='mean'.
+  [ok       ] T0-no-nan-inf: no NaN/Inf detected
+  [ok       ] T0-norm-output-unit-rms: all 0 normalizer outputs within RMS [0.5,2.0]
+  [ok       ] T0-optim-lr-positive: all 1 param_groups have positive lr
+  [VIOLATION] T0-optim-step-counter-monotonic: optim state['step'] failed to increment in 4/4 transitions
+  [ok       ] T0-param-update-applied: All optim.step.post events show param updates were applied.
+  [ok       ] T0-softmax-degenerate: checked 0 softmax/router outputs, none degenerate
+  [ok       ] T0-token-id-in-vocab: no dataloader.batch events captured (rule passive)
+
+[OC-NEW-2/trainaudit] BUG DETECTED via 1 rule(s):
+   - T0-optim-step-counter-monotonic: optim state['step'] failed to increment in 4/4 transitions
+     evidence: {'sample': [{'event_id': 11, 'optimizer_class': 'SkipStepAdamW', 'prev_step_max': 0.0, 'cur_step_max': 0.0}, {'event_id': 16, 'optimizer_class': 'SkipStepAdamW', 'prev_step_max': 0.0, 'cur_step_max': 0.0}, {'event_id': 21, 'optimizer_class': 'SkipStepAdamW', 'prev_step_max': 0.0, 'cur_step_max': 0.0}], 'violation_event_ids': [11, 16, 21, 26]}
+
+===== TrainAudit T0 on FIXED (2b6cf996) =====
+=== 0/17 violations ===
+  [ok       ] T0-attention-head-uniformity: All attention modules have uniform per-head output l2.
+  [ok       ] T0-checkpoint-preserve-rng: no checkpoint.call events (rule passive)
+  [ok       ] T0-clip-grad-bounded: all 0 clip_grad calls bounded by max_norm
+  [ok       ] T0-dtype-propagation: checked 5 non-cast layer outputs (passive at T0; full join with pre-event is a T1 feature)
+  [ok       ] T0-evaluator-eval-mode: all 5 module fwd events were consistent (no_grad ⇒ eval mode, or grad ⇒ train mode)
+  [ok       ] T0-grad-norm-finite: all 5 optim.step.pre events have finite non-zero grad norm
+  [ok       ] T0-initial-lr-present: no scheduler.init events (rule passive)
+  [ok       ] T0-build-has-modules: build snapshot has parameters and modules (1 snapshots)
+  [ok       ] T0-loss-per-token-dispersion: All loss.call events have bounded per-token dispersion.
+  [ok       ] T0-loss-reduction-mode-correct: All loss calls used reduction='mean'.
+  [ok       ] T0-no-nan-inf: no NaN/Inf detected
+  [ok       ] T0-norm-output-unit-rms: all 0 normalizer outputs within RMS [0.5,2.0]
+  [ok       ] T0-optim-lr-positive: all 1 param_groups have positive lr
+  [ok       ] T0-optim-step-counter-monotonic: state['step'] monotonic across 5 optim.step events
+  [ok       ] T0-param-update-applied: All optim.step.post events show param updates were applied.
+  [ok       ] T0-softmax-degenerate: checked 0 softmax/router outputs, none degenerate
+  [ok       ] T0-token-id-in-vocab: no dataloader.batch events captured (rule passive)
+
+[OC-NEW-2/trainaudit] CLEAN: no rule violations
+

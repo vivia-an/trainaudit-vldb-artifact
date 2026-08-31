@@ -1,0 +1,26 @@
+id: P12
+name: Algorithm Variant / Formula Equivalence
+type: B
+rule_r: "When config selects an algorithmic variant v \u2208 V (LR schedule, norm formula,\
+  \ attention scale, fused vs reference kernel, soft-CE mixing, log-sum-exp reduction), the\
+  \ observed output must match the reference formula spec_v(input) within tolerance \u03B5\
+  \ on a synthetic probe; numerical-stability invariants (no log(0), no exp underflow, no\
+  \ NaN propagation) must hold."
+scope_sigma: 'Algorithm-variant call sites: scheduler.step(), norm forward, attention softmax_scale,
+  fused loss kernels, MoE router scoring, DTensor-aware reductions, masked-mean reductions.'
+mode_m: B
+precond_rho: Triggered when the variant flag is non-default or the input is in the formula's
+  defined domain (e.g. mask not all-zero, logits finite); checked once per phase (build/forward/optim)
+  depending on where the variant is selected.
+example_bugs:
+- B11
+- B9
+- M-014
+- M-022
+- M-NEW-27
+- M-NEW-34
+- M-NEW-39
+- M-NEW-4
+covers_count_estimate: 21
+related_existing_pattern: 'Adjacent to P1 (dtype preservation) but orthogonal: P1 checks a
+  single op''s metadata; P12 checks an algorithmic chain matches its reference equation.'

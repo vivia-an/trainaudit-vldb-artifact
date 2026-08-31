@@ -1,0 +1,15 @@
+>>> B11
+[B11] BUG DETECTED: traincheck:11/604 failed invariants
+>>> B12
+[B12] BUG DETECTED: traincheck:24/478 failed invariants
+>>> M-014
+[M-014] BUG DETECTED: traincheck:3/432 failed invariants
+>>> O-NEW-1
+[O-NEW-1] BUG DETECTED: traincheck:1/683 failed invariants
+>>> OC-NEW-2
+[OC-NEW-2] BUG DETECTED: traincheck:18/506 failed invariants
+>>> O-005
+[O-005] FAIL: infer:     assert not isinstance(            ^^^^^^^^^^^^^^^ AssertionError: Exceptions or incomplete function calls don't have return values. 
+>>> O-NEW-9
+[O-NEW-9] CLEAN: traincheck:0/260 failed
+DONE batch t0; results in /volume/qscai/cqs/workspace/paper/sdc_llm_icml_2025/benchmark/eval/traincheck_surrogates/batch_t0_results.txt
